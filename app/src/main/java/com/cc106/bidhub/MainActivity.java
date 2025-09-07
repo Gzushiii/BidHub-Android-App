@@ -15,7 +15,7 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView textViewWelcome, textViewCredits;
+    private TextView textViewWelcome, textViewCredits, textViewAlias;
     private Button buttonBrowseItems, buttonPostItem, buttonTopUp, buttonMyBids, buttonLogout;
     private DatabaseHelper dbHelper;
 
@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
         // Initialize Views
         textViewWelcome = findViewById(R.id.textViewWelcome);
         textViewCredits = findViewById(R.id.textViewCredits);
+        textViewAlias = findViewById(R.id.textViewAlias);
         buttonBrowseItems = findViewById(R.id.buttonBrowseItems);
         buttonPostItem = findViewById(R.id.buttonPostItem);
         buttonTopUp = findViewById(R.id.buttonTopUp);
@@ -81,7 +82,8 @@ public class MainActivity extends AppCompatActivity {
             double credits = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_CREDITS));
 
             // Update the UI
-            textViewWelcome.setText("Welcome, " + alias + "!");
+            textViewWelcome.setText("Welcome back!");
+            textViewAlias.setText(alias);
             textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", credits));
 
             cursor.close();
