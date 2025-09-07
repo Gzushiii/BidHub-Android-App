@@ -9,40 +9,37 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "bidhub.db";
     private static final int DATABASE_VERSION = 1;
 
-    // Table Names
+    // Table Name
     public static final String TABLE_USERS = "users";
-    public static final String TABLE_ITEMS = "items";
 
-    // Users Table Columns
+    // Common Columns
     public static final String COLUMN_USER_ID = "id";
     public static final String COLUMN_USER_EMAIL = "email";
-    public static final String COLUMN_USER_ALIAS = "alias";
-    public static final String COLUMN_USER_PASSWORD = "password"; // This will store the hash
-    public static final String COLUMN_USER_SALT = "salt";         // New column for the salt
+    public static final String COLUMN_USER_PASSWORD = "password";
+    public static final String COLUMN_USER_SALT = "salt";
     public static final String COLUMN_USER_CREDITS = "credits";
 
-    // Items Table Columns (Unchanged)
-    public static final String COLUMN_ITEM_ID = "id";
-    public static final String COLUMN_ITEM_NAME = "name";
-    // ... other item columns
+    // New Registration Columns
+    public static final String COLUMN_USER_USERNAME = "username";
+    public static final String COLUMN_USER_PHONE = "phone_number";
+    public static final String COLUMN_USER_FIRST_NAME = "first_name";
+    public static final String COLUMN_USER_LAST_NAME = "last_name";
+    public static final String COLUMN_USER_ALIAS = "alias";
 
-    // Create Table Statement for Users (with new salt column)
+
+    // Create Table Statement
     private static final String CREATE_TABLE_USERS = "CREATE TABLE " + TABLE_USERS + "("
             + COLUMN_USER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + COLUMN_USER_USERNAME + " TEXT NOT NULL UNIQUE,"
             + COLUMN_USER_EMAIL + " TEXT NOT NULL UNIQUE,"
-            + COLUMN_USER_ALIAS + " TEXT NOT NULL UNIQUE,"
-            + COLUMN_USER_PASSWORD + " BLOB NOT NULL," // Use BLOB for binary hash data
-            + COLUMN_USER_SALT + " BLOB NOT NULL,"     // Use BLOB for binary salt data
+            + COLUMN_USER_PHONE + " TEXT NOT NULL,"
+            + COLUMN_USER_PASSWORD + " BLOB NOT NULL,"
+            + COLUMN_USER_SALT + " BLOB NOT NULL,"
+            + COLUMN_USER_FIRST_NAME + " TEXT NOT NULL,"
+            + COLUMN_USER_LAST_NAME + " TEXT NOT NULL,"
+            + COLUMN_USER_ALIAS + " TEXT NOT NULL,"
             + COLUMN_USER_CREDITS + " REAL DEFAULT 0.0"
             + ")";
-
-    // Create Table Statement for Items (Unchanged)
-    private static final String CREATE_TABLE_ITEMS = "CREATE TABLE " + TABLE_ITEMS + "("
-            + COLUMN_ITEM_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + COLUMN_ITEM_NAME + " TEXT NOT NULL,"
-            + "description TEXT, starting_bid REAL, current_bid REAL, seller_id INTEGER, deadline TEXT"
-            + ")";
-
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -51,13 +48,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE_USERS);
-        db.execSQL(CREATE_TABLE_ITEMS);
+        // We will create the items table later
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ITEMS);
         onCreate(db);
     }
 }
