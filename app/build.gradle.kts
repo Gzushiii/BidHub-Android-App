@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace = "com.cc106.bidhub"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.cc106.bidhub"
         minSdk = 21
-        targetSdk = 36
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 

@@ -6,3 +6,5 @@
         android:endColor="@color/primary_blue_dark"
         android:angle="135" />
 </shape>
+
+

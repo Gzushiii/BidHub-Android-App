@@ -79,3 +79,5 @@ public class AliasGenerator {
         return hasAdjective && hasNoun;
     }
 }
+
+
