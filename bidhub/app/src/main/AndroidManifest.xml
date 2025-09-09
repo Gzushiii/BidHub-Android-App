@@ -39,6 +39,23 @@
             android:name=".RegisterActivity"
             android:exported="false" />
 
+        <!-- Bottom Navigation Activities -->
+        <activity
+            android:name=".BrowseActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".PostActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".CreditsActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".ProfileActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

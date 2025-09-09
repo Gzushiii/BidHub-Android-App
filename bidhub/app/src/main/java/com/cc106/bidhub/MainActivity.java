@@ -11,14 +11,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
     private TextView textViewWelcome, textViewCredits, textViewAlias;
-    private LinearLayout buttonBrowseItems, buttonPostItem, buttonTopUp, buttonMyBids;
     private Button buttonLogout;
+    private BottomNavigationView bottomNavigationView;
     private DatabaseHelper dbHelper;
 
     private String loggedInUserEmail;
@@ -34,11 +35,8 @@ public class MainActivity extends AppCompatActivity {
         textViewWelcome = findViewById(R.id.textViewWelcome);
         textViewCredits = findViewById(R.id.textViewCredits);
         textViewAlias = findViewById(R.id.textViewAlias);
-        buttonBrowseItems = findViewById(R.id.buttonBrowseItems);
-        buttonPostItem = findViewById(R.id.buttonPostItem);
-        buttonTopUp = findViewById(R.id.buttonTopUp);
-        buttonMyBids = findViewById(R.id.buttonMyBids);
         buttonLogout = findViewById(R.id.buttonLogout);
+        bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
         // Get the logged-in user's email from the Intent
         loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
@@ -47,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
         loadUserData();
 
         // --- Set OnClick Listeners for Buttons ---
-
         buttonLogout.setOnClickListener(v -> {
             // Navigate back to LoginActivity
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
@@ -55,11 +52,31 @@ public class MainActivity extends AppCompatActivity {
             finish(); // Close MainActivity
         });
 
-        // Placeholder listeners for other features
-        buttonBrowseItems.setOnClickListener(v -> Toast.makeText(MainActivity.this, "Browse Items clicked!", Toast.LENGTH_SHORT).show());
-        buttonPostItem.setOnClickListener(v -> Toast.makeText(MainActivity.this, "Post an Item clicked!", Toast.LENGTH_SHORT).show());
-        buttonTopUp.setOnClickListener(v -> Toast.makeText(MainActivity.this, "Top-Up Credits clicked!", Toast.LENGTH_SHORT).show());
-        buttonMyBids.setOnClickListener(v -> Toast.makeText(MainActivity.this, "My Bids clicked!", Toast.LENGTH_SHORT).show());
+        // --- Set Up Bottom Navigation ---
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_home) {
+                // Already on home, do nothing
+                return true;
+            } else if (itemId == R.id.nav_browse) {
+                Intent intent = new Intent(MainActivity.this, BrowseActivity.class);
+                startActivity(intent);
+                return true;
+            } else if (itemId == R.id.nav_post) {
+                Intent intent = new Intent(MainActivity.this, PostActivity.class);
+                startActivity(intent);
+                return true;
+            } else if (itemId == R.id.nav_credits) {
+                Intent intent = new Intent(MainActivity.this, CreditsActivity.class);
+                startActivity(intent);
+                return true;
+            } else if (itemId == R.id.nav_profile) {
+                Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
+                startActivity(intent);
+                return true;
+            }
+            return false;
+        });
     }
 
     private void loadUserData() {
