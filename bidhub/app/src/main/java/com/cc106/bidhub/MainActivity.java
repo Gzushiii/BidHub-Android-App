@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,7 +17,8 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     private TextView textViewWelcome, textViewCredits, textViewAlias;
-    private Button buttonBrowseItems, buttonPostItem, buttonTopUp, buttonMyBids, buttonLogout;
+    private LinearLayout buttonBrowseItems, buttonPostItem, buttonTopUp, buttonMyBids;
+    private Button buttonLogout;
     private DatabaseHelper dbHelper;
 
     private String loggedInUserEmail;

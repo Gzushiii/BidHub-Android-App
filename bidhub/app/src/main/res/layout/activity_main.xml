@@ -151,6 +151,7 @@
                     app:cardBackgroundColor="@color/white">
 
                     <LinearLayout
+                        android:id="@+id/buttonBrowseItems"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical"
@@ -191,6 +192,7 @@
                     app:cardBackgroundColor="@color/white">
 
                     <LinearLayout
+                        android:id="@+id/buttonPostItem"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical"
@@ -231,6 +233,7 @@
                     app:cardBackgroundColor="@color/white">
 
                     <LinearLayout
+                        android:id="@+id/buttonTopUp"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical"
@@ -271,6 +274,7 @@
                     app:cardBackgroundColor="@color/white">
 
                     <LinearLayout
+                        android:id="@+id/buttonMyBids"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical"
