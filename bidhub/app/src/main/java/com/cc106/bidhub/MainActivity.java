@@ -15,11 +15,10 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     private TextView textViewWelcome, textViewCredits, textViewAlias;
     private Button buttonLogout;
-    private BottomNavigationView bottomNavigationView;
     private DatabaseHelper dbHelper;
 
     private String loggedInUserEmail;
@@ -27,7 +26,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        
+        // Inflate the main content into the content frame
+        getLayoutInflater().inflate(R.layout.activity_main_content, findViewById(R.id.content_frame));
 
         dbHelper = new DatabaseHelper(this);
 
@@ -36,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
         textViewCredits = findViewById(R.id.textViewCredits);
         textViewAlias = findViewById(R.id.textViewAlias);
         buttonLogout = findViewById(R.id.buttonLogout);
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
         // Get the logged-in user's email from the Intent
         loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
@@ -52,31 +52,7 @@ public class MainActivity extends AppCompatActivity {
             finish(); // Close MainActivity
         });
 
-        // --- Set Up Bottom Navigation ---
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                // Already on home, do nothing
-                return true;
-            } else if (itemId == R.id.nav_browse) {
-                Intent intent = new Intent(MainActivity.this, BrowseActivity.class);
-                startActivity(intent);
-                return true;
-            } else if (itemId == R.id.nav_post) {
-                Intent intent = new Intent(MainActivity.this, PostActivity.class);
-                startActivity(intent);
-                return true;
-            } else if (itemId == R.id.nav_credits) {
-                Intent intent = new Intent(MainActivity.this, CreditsActivity.class);
-                startActivity(intent);
-                return true;
-            } else if (itemId == R.id.nav_profile) {
-                Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
-                startActivity(intent);
-                return true;
-            }
-            return false;
-        });
+        // Bottom navigation is handled by BaseActivity
     }
 
     private void loadUserData() {
@@ -108,5 +84,20 @@ public class MainActivity extends AppCompatActivity {
             cursor.close();
         }
         db.close();
+    }
+
+    @Override
+    protected boolean isCurrentActivity(int itemId) {
+        return itemId == R.id.nav_home;
+    }
+
+    @Override
+    protected void setCurrentTabSelected() {
+        bottomNavigationView.setSelectedItemId(R.id.nav_home);
+    }
+
+    @Override
+    protected String getCurrentUserEmail() {
+        return loggedInUserEmail;
     }
 }

@@ -2,16 +2,37 @@ package com.cc106.bidhub;
 
 import android.os.Bundle;
 import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
 
-public class CreditsActivity extends AppCompatActivity {
+public class CreditsActivity extends BaseActivity {
+
+    private String loggedInUserEmail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_credits);
+        
+        // Inflate the credits content into the content frame
+        getLayoutInflater().inflate(R.layout.activity_credits_content, findViewById(R.id.content_frame));
+        
+        // Get the logged-in user's email from the Intent
+        loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
         
         // TODO: Implement credits functionality
         Toast.makeText(this, "Credits Management - Coming Soon!", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected boolean isCurrentActivity(int itemId) {
+        return itemId == R.id.nav_credits;
+    }
+
+    @Override
+    protected void setCurrentTabSelected() {
+        bottomNavigationView.setSelectedItemId(R.id.nav_credits);
+    }
+
+    @Override
+    protected String getCurrentUserEmail() {
+        return loggedInUserEmail;
     }
 }
