@@ -24,11 +24,9 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_base);
         
-        // Inflate main content into the base layout
-        View mainContent = LayoutInflater.from(this).inflate(R.layout.activity_main, null);
-        ((android.widget.FrameLayout) findViewById(R.id.content_frame)).addView(mainContent);
+        // Inflate the main content into the content frame
+        getLayoutInflater().inflate(R.layout.activity_main_content, findViewById(R.id.content_frame));
 
         dbHelper = new DatabaseHelper(this);
 
@@ -54,6 +52,8 @@ public class MainActivity extends BaseActivity {
             startActivity(intent);
             finish(); // Close MainActivity
         });
+
+        // Bottom navigation is handled by BaseActivity
     }
 
     private void loadUserData() {
@@ -85,5 +85,20 @@ public class MainActivity extends BaseActivity {
             cursor.close();
         }
         db.close();
+    }
+
+    @Override
+    protected boolean isCurrentActivity(int itemId) {
+        return itemId == R.id.nav_home;
+    }
+
+    @Override
+    protected void setCurrentTabSelected() {
+        bottomNavigationView.setSelectedItemId(R.id.nav_home);
+    }
+
+    @Override
+    protected String getCurrentUserEmail() {
+        return loggedInUserEmail;
     }
 }

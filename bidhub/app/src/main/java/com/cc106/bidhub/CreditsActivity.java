@@ -7,19 +7,34 @@ import android.widget.Toast;
 
 public class CreditsActivity extends BaseActivity {
 
+    private String loggedInUserEmail;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_base);
         
-        // Inflate credits content into the base layout
-        View creditsContent = LayoutInflater.from(this).inflate(R.layout.activity_credits, null);
-        ((android.widget.FrameLayout) findViewById(R.id.content_frame)).addView(creditsContent);
+        // Inflate the credits content into the content frame
+        getLayoutInflater().inflate(R.layout.activity_credits_content, findViewById(R.id.content_frame));
         
-        // Set selected navigation item
-        setSelectedNavItem(R.id.nav_credits);
+        // Get the logged-in user's email from the Intent
+        loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
         
         // TODO: Implement credits functionality
         Toast.makeText(this, "Credits Management - Coming Soon!", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected boolean isCurrentActivity(int itemId) {
+        return itemId == R.id.nav_credits;
+    }
+
+    @Override
+    protected void setCurrentTabSelected() {
+        bottomNavigationView.setSelectedItemId(R.id.nav_credits);
+    }
+
+    @Override
+    protected String getCurrentUserEmail() {
+        return loggedInUserEmail;
     }
 }

@@ -4,10 +4,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -15,7 +13,7 @@ import java.util.Locale;
 
 public class ProfileActivity extends BaseActivity {
 
-    private TextView textViewAlias, textViewEmail, textViewCredits, textViewUsername;
+    private TextView textViewWelcome, textViewCredits, textViewAlias, textViewEmail, textViewUsername;
     private Button buttonLogout, buttonRegenerateAlias, buttonViewBids, buttonTransactionHistory;
     private DatabaseHelper dbHelper;
     private String loggedInUserEmail;
@@ -23,38 +21,31 @@ public class ProfileActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_base);
         
-        // Inflate profile content into the base layout
-        View profileContent = LayoutInflater.from(this).inflate(R.layout.activity_profile, null);
-        ((android.widget.FrameLayout) findViewById(R.id.content_frame)).addView(profileContent);
-        
-        // Set selected navigation item
-        setSelectedNavItem(R.id.nav_profile);
-        
-        dbHelper = new DatabaseHelper(this);
+        // Inflate the profile content into the content frame
+        getLayoutInflater().inflate(R.layout.activity_profile_content, findViewById(R.id.content_frame));
         
         // Get the logged-in user's email from the Intent
         loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
-        if (loggedInUserEmail == null) {
-            // If no email passed, get from MainActivity or use default
-            loggedInUserEmail = "user@example.com"; // This should be passed from MainActivity
-        }
         
-        initializeViews();
-        loadUserData();
-        setupClickListeners();
-    }
-
-    private void initializeViews() {
+        dbHelper = new DatabaseHelper(this);
+        
+        // Initialize Views
+        textViewWelcome = findViewById(R.id.textViewWelcome);
+        textViewCredits = findViewById(R.id.textViewCredits);
         textViewAlias = findViewById(R.id.textViewAlias);
         textViewEmail = findViewById(R.id.textViewEmail);
-        textViewCredits = findViewById(R.id.textViewCredits);
         textViewUsername = findViewById(R.id.textViewUsername);
         buttonLogout = findViewById(R.id.buttonLogout);
         buttonRegenerateAlias = findViewById(R.id.buttonRegenerateAlias);
         buttonViewBids = findViewById(R.id.buttonViewBids);
         buttonTransactionHistory = findViewById(R.id.buttonTransactionHistory);
+        
+        // Load user data and display it
+        loadUserData();
+        
+        // Set up click listeners
+        setupClickListeners();
     }
 
     private void setupClickListeners() {
@@ -63,15 +54,15 @@ public class ProfileActivity extends BaseActivity {
             startActivity(intent);
             finish();
         });
-
+        
         buttonRegenerateAlias.setOnClickListener(v -> {
             regenerateAlias();
         });
-
+        
         buttonViewBids.setOnClickListener(v -> {
             Toast.makeText(this, "My Bids - Coming Soon!", Toast.LENGTH_SHORT).show();
         });
-
+        
         buttonTransactionHistory.setOnClickListener(v -> {
             Toast.makeText(this, "Transaction History - Coming Soon!", Toast.LENGTH_SHORT).show();
         });
@@ -87,9 +78,9 @@ public class ProfileActivity extends BaseActivity {
         Cursor cursor = db.query(
                 DatabaseHelper.TABLE_USERS,
                 new String[]{
-                    DatabaseHelper.COLUMN_USER_ALIAS,
-                    DatabaseHelper.COLUMN_USER_CREDITS,
                     DatabaseHelper.COLUMN_USER_USERNAME,
+                    DatabaseHelper.COLUMN_USER_ALIAS, 
+                    DatabaseHelper.COLUMN_USER_CREDITS,
                     DatabaseHelper.COLUMN_USER_EMAIL
                 },
                 DatabaseHelper.COLUMN_USER_EMAIL + " = ?",
@@ -98,15 +89,17 @@ public class ProfileActivity extends BaseActivity {
         );
 
         if (cursor != null && cursor.moveToFirst()) {
+            String username = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_USERNAME));
             String alias = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_ALIAS));
             double credits = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_CREDITS));
-            String username = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_USERNAME));
             String email = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_EMAIL));
 
-            textViewAlias.setText(alias);
-            textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", credits));
+            // Update the UI
+            textViewWelcome.setText("Profile");
             textViewUsername.setText(username);
+            textViewAlias.setText(alias);
             textViewEmail.setText(email);
+            textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", credits));
 
             cursor.close();
         }
@@ -129,11 +122,26 @@ public class ProfileActivity extends BaseActivity {
         
         if (rowsAffected > 0) {
             textViewAlias.setText(newAlias);
-            Toast.makeText(this, "New alias generated: " + newAlias, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Alias regenerated: " + newAlias, Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(this, "Failed to regenerate alias", Toast.LENGTH_SHORT).show();
         }
         
         db.close();
+    }
+
+    @Override
+    protected boolean isCurrentActivity(int itemId) {
+        return itemId == R.id.nav_profile;
+    }
+
+    @Override
+    protected void setCurrentTabSelected() {
+        bottomNavigationView.setSelectedItemId(R.id.nav_profile);
+    }
+
+    @Override
+    protected String getCurrentUserEmail() {
+        return loggedInUserEmail;
     }
 }

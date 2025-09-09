@@ -1,115 +1,77 @@
 package com.cc106.bidhub;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-public abstract class BaseActivity extends AppCompatActivity {
+public abstract class BaseActivity extends AppCompatActivity implements BottomNavigationView.OnItemSelectedListener {
 
     protected BottomNavigationView bottomNavigationView;
-    protected SharedPreferences sharedPreferences;
-    private static final String PREFS_NAME = "BidHubPrefs";
-    private static final String KEY_DARK_MODE = "dark_mode_enabled";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Apply theme before setContentView
-        applyTheme();
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_with_bottom_nav);
         
-        // Initialize shared preferences
-        sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        bottomNavigationView.setOnItemSelectedListener(this);
         
-        // Set up bottom navigation
-        setupBottomNavigation();
+        // Set the current tab as selected
+        setCurrentTabSelected();
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.top_app_bar, menu);
+    public boolean onNavigationItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+        
+        // Don't navigate if already on the current activity
+        if (isCurrentActivity(itemId)) {
+            return true;
+        }
+        
+        if (itemId == R.id.nav_home) {
+            if (!(this instanceof MainActivity)) {
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.putExtra("USER_EMAIL", getCurrentUserEmail());
+                startActivity(intent);
+                finish();
+            }
+        } else if (itemId == R.id.nav_browse) {
+            if (!(this instanceof BrowseActivity)) {
+                Intent intent = new Intent(this, BrowseActivity.class);
+                intent.putExtra("USER_EMAIL", getCurrentUserEmail());
+                startActivity(intent);
+                finish();
+            }
+        } else if (itemId == R.id.nav_post) {
+            if (!(this instanceof PostActivity)) {
+                Intent intent = new Intent(this, PostActivity.class);
+                intent.putExtra("USER_EMAIL", getCurrentUserEmail());
+                startActivity(intent);
+                finish();
+            }
+        } else if (itemId == R.id.nav_credits) {
+            if (!(this instanceof CreditsActivity)) {
+                Intent intent = new Intent(this, CreditsActivity.class);
+                intent.putExtra("USER_EMAIL", getCurrentUserEmail());
+                startActivity(intent);
+                finish();
+            }
+        } else if (itemId == R.id.nav_profile) {
+            if (!(this instanceof ProfileActivity)) {
+                Intent intent = new Intent(this, ProfileActivity.class);
+                intent.putExtra("USER_EMAIL", getCurrentUserEmail());
+                startActivity(intent);
+                finish();
+            }
+        }
+        
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int itemId = item.getItemId();
-        if (itemId == R.id.action_dark_mode) {
-            toggleDarkMode();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void setupBottomNavigation() {
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
-        if (bottomNavigationView != null) {
-            bottomNavigationView.setOnItemSelectedListener(item -> {
-                int itemId = item.getItemId();
-                Class<?> targetActivity = getTargetActivity(itemId);
-                
-                if (targetActivity != null && !this.getClass().equals(targetActivity)) {
-                    Intent intent = new Intent(this, targetActivity);
-                    startActivity(intent);
-                    return true;
-                }
-                return false;
-            });
-        }
-    }
-
-    private Class<?> getTargetActivity(int itemId) {
-        if (itemId == R.id.nav_home) {
-            return MainActivity.class;
-        } else if (itemId == R.id.nav_browse) {
-            return BrowseActivity.class;
-        } else if (itemId == R.id.nav_post) {
-            return PostActivity.class;
-        } else if (itemId == R.id.nav_credits) {
-            return CreditsActivity.class;
-        } else if (itemId == R.id.nav_profile) {
-            return ProfileActivity.class;
-        }
-        return null;
-    }
-
-    private void applyTheme() {
-        sharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        boolean isDarkMode = sharedPreferences.getBoolean(KEY_DARK_MODE, false);
-        
-        if (isDarkMode) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-        }
-    }
-
-    private void toggleDarkMode() {
-        boolean currentMode = sharedPreferences.getBoolean(KEY_DARK_MODE, false);
-        boolean newMode = !currentMode;
-        
-        sharedPreferences.edit().putBoolean(KEY_DARK_MODE, newMode).apply();
-        
-        if (newMode) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-            Toast.makeText(this, "Dark mode enabled", Toast.LENGTH_SHORT).show();
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-            Toast.makeText(this, "Light mode enabled", Toast.LENGTH_SHORT).show();
-        }
-        
-        // Recreate activity to apply theme changes
-        recreate();
-    }
-
-    protected void setSelectedNavItem(int navItemId) {
-        if (bottomNavigationView != null) {
-            bottomNavigationView.setSelectedItemId(navItemId);
-        }
-    }
+    protected abstract boolean isCurrentActivity(int itemId);
+    protected abstract void setCurrentTabSelected();
+    protected abstract String getCurrentUserEmail();
 }
