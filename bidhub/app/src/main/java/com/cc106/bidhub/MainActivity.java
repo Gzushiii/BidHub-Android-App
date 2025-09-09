@@ -4,22 +4,19 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     private TextView textViewWelcome, textViewCredits, textViewAlias;
     private Button buttonLogout;
-    private BottomNavigationView bottomNavigationView;
     private DatabaseHelper dbHelper;
 
     private String loggedInUserEmail;
@@ -27,7 +24,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_base);
+        
+        // Inflate main content into the base layout
+        View mainContent = LayoutInflater.from(this).inflate(R.layout.activity_main, null);
+        ((android.widget.FrameLayout) findViewById(R.id.content_frame)).addView(mainContent);
 
         dbHelper = new DatabaseHelper(this);
 
@@ -36,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
         textViewCredits = findViewById(R.id.textViewCredits);
         textViewAlias = findViewById(R.id.textViewAlias);
         buttonLogout = findViewById(R.id.buttonLogout);
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
         // Get the logged-in user's email from the Intent
         loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
@@ -44,38 +44,15 @@ public class MainActivity extends AppCompatActivity {
         // Load user data and display it
         loadUserData();
 
+        // Set selected navigation item
+        setSelectedNavItem(R.id.nav_home);
+
         // --- Set OnClick Listeners for Buttons ---
         buttonLogout.setOnClickListener(v -> {
             // Navigate back to LoginActivity
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
             startActivity(intent);
             finish(); // Close MainActivity
-        });
-
-        // --- Set Up Bottom Navigation ---
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                // Already on home, do nothing
-                return true;
-            } else if (itemId == R.id.nav_browse) {
-                Intent intent = new Intent(MainActivity.this, BrowseActivity.class);
-                startActivity(intent);
-                return true;
-            } else if (itemId == R.id.nav_post) {
-                Intent intent = new Intent(MainActivity.this, PostActivity.class);
-                startActivity(intent);
-                return true;
-            } else if (itemId == R.id.nav_credits) {
-                Intent intent = new Intent(MainActivity.this, CreditsActivity.class);
-                startActivity(intent);
-                return true;
-            } else if (itemId == R.id.nav_profile) {
-                Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
-                startActivity(intent);
-                return true;
-            }
-            return false;
         });
     }
 
