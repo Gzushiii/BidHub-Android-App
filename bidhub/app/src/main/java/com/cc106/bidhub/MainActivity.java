@@ -50,12 +50,10 @@ public class MainActivity extends BaseActivity {
 
         // --- Set OnClick Listeners for Buttons ---
         buttonLogout.setOnClickListener(v -> {
-            UIUtils.animateButtonPress(buttonLogout, () -> {
-                // Navigate back to LoginActivity
-                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                startActivity(intent);
-                finish(); // Close MainActivity
-            });
+            // Navigate back to LoginActivity
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish(); // Close MainActivity
         });
 
         // Bottom navigation is handled by BaseActivity

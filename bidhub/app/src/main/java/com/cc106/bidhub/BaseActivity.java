@@ -29,10 +29,11 @@ public abstract class BaseActivity extends AppCompatActivity implements BottomNa
      * Call this method after inflating content in child activities
      */
     protected void animateContentIn() {
-        View contentFrame = findViewById(R.id.content_frame);
-        if (contentFrame != null) {
-            UIUtils.fadeInView(contentFrame, 300);
-        }
+        // Temporarily disabled to debug crash
+        // View contentFrame = findViewById(R.id.content_frame);
+        // if (contentFrame != null) {
+        //     UIUtils.fadeInView(contentFrame, 300);
+        // }
     }
 
     @Override
@@ -77,17 +78,12 @@ public abstract class BaseActivity extends AppCompatActivity implements BottomNa
             Intent intent = new Intent(this, activityClass);
             intent.putExtra("USER_EMAIL", getCurrentUserEmail());
             
-            // Create activity options for smooth transition
-            ActivityOptionsCompat options = ActivityOptionsCompat.makeCustomAnimation(
-                this,
-                R.anim.slide_in_right,
-                R.anim.slide_out_left
-            );
-            
-            startActivity(intent, options.toBundle());
+            // Temporarily use simple navigation without custom animations
+            startActivity(intent);
             finish();
         } catch (Exception e) {
-            UIUtils.showStyledToast(this, "Navigation error: " + e.getMessage(), true);
+            // Use simple toast for now
+            Toast.makeText(this, "Navigation error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
     
@@ -95,14 +91,14 @@ public abstract class BaseActivity extends AppCompatActivity implements BottomNa
      * Shows error message with consistent styling
      */
     protected void showError(String message) {
-        UIUtils.showStyledToast(this, message, true);
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
     
     /**
      * Shows success message with consistent styling
      */
     protected void showSuccess(String message) {
-        UIUtils.showStyledToast(this, message, false);
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
     
     /**

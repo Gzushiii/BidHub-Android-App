@@ -53,29 +53,21 @@ public class ProfileActivity extends BaseActivity {
 
     private void setupClickListeners() {
         buttonLogout.setOnClickListener(v -> {
-            UIUtils.animateButtonPress(buttonLogout, () -> {
-                Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
-                startActivity(intent);
-                finish();
-            });
+            Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish();
         });
         
         buttonRegenerateAlias.setOnClickListener(v -> {
-            UIUtils.animateButtonPress(buttonRegenerateAlias, () -> {
-                regenerateAlias();
-            });
+            regenerateAlias();
         });
         
         buttonViewBids.setOnClickListener(v -> {
-            UIUtils.animateButtonPress(buttonViewBids, () -> {
-                showSuccess("My Bids - Coming Soon!");
-            });
+            showSuccess("My Bids - Coming Soon!");
         });
         
         buttonTransactionHistory.setOnClickListener(v -> {
-            UIUtils.animateButtonPress(buttonTransactionHistory, () -> {
-                showSuccess("Transaction History - Coming Soon!");
-            });
+            showSuccess("Transaction History - Coming Soon!");
         });
     }
 
