@@ -75,11 +75,8 @@ public class MainActivity extends BaseActivity {
     
     private void initializeFragments() {
         try {
-            Toast.makeText(this, "Starting fragment initialization...", Toast.LENGTH_SHORT).show();
-            
             // Create fragments one by one with individual error handling
             homeFragment = new HomeFragment();
-            Toast.makeText(this, "HomeFragment created: " + (homeFragment != null), Toast.LENGTH_SHORT).show();
             if (homeFragment == null) {
                 Toast.makeText(this, "Error: Failed to create HomeFragment", Toast.LENGTH_LONG).show();
                 return;
@@ -118,8 +115,6 @@ public class MainActivity extends BaseActivity {
             postFragment.setArguments(args);
             creditsFragment.setArguments(args);
             profileFragment.setArguments(args);
-            
-            Toast.makeText(this, "All fragments initialized successfully", Toast.LENGTH_SHORT).show();
             
         } catch (Exception e) {
             Toast.makeText(this, "Error initializing fragments: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -233,32 +228,22 @@ public class MainActivity extends BaseActivity {
         if (itemId == R.id.nav_home) {
             if (homeFragment != null) {
                 showFragment(homeFragment, newTabPosition);
-            } else {
-                Toast.makeText(this, "Error: HomeFragment not available after re-initialization", Toast.LENGTH_SHORT).show();
             }
         } else if (itemId == R.id.nav_browse) {
             if (browseFragment != null) {
                 showFragment(browseFragment, newTabPosition);
-            } else {
-                Toast.makeText(this, "Error: BrowseFragment not available", Toast.LENGTH_SHORT).show();
             }
         } else if (itemId == R.id.nav_post) {
             if (postFragment != null) {
                 showFragment(postFragment, newTabPosition);
-            } else {
-                Toast.makeText(this, "Error: PostFragment not available", Toast.LENGTH_SHORT).show();
             }
         } else if (itemId == R.id.nav_credits) {
             if (creditsFragment != null) {
                 showFragment(creditsFragment, newTabPosition);
-            } else {
-                Toast.makeText(this, "Error: CreditsFragment not available", Toast.LENGTH_SHORT).show();
             }
         } else if (itemId == R.id.nav_profile) {
             if (profileFragment != null) {
                 showFragment(profileFragment, newTabPosition);
-            } else {
-                Toast.makeText(this, "Error: ProfileFragment not available", Toast.LENGTH_SHORT).show();
             }
         }
         
@@ -301,7 +286,6 @@ public class MainActivity extends BaseActivity {
     private void ensureFragmentsInitialized() {
         if (homeFragment == null || browseFragment == null || postFragment == null || 
             creditsFragment == null || profileFragment == null) {
-            Toast.makeText(this, "Some fragments are null, re-initializing...", Toast.LENGTH_SHORT).show();
             initializeFragments();
         }
     }
