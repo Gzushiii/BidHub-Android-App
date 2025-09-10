@@ -41,6 +41,12 @@
     <color name="text_hint">#FFBDBDBD</color>
     <color name="text_white">#FFFFFFFF</color>
     
+    <!-- Password Strength Colors -->
+    <color name="password_weak">#FFF44336</color>
+    <color name="password_fair">#FFFF9800</color>
+    <color name="password_good">#FFFFC107</color>
+    <color name="password_strong">#FF4CAF50</color>
+    
     <!-- Legacy Colors (for compatibility) -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>

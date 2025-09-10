@@ -123,6 +123,7 @@
 
                 <!-- Username Input -->
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/usernameInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
@@ -175,6 +176,7 @@
 
                 <!-- Email Input -->
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/emailInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
@@ -223,9 +225,10 @@
 
                 <!-- Password Input -->
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/passwordInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="24dp"
+                    android:layout_marginBottom="8dp"
                     android:hint="Password"
                     app:boxCornerRadiusTopStart="12dp"
                     app:boxCornerRadiusTopEnd="12dp"
@@ -236,9 +239,7 @@
                     app:startIconDrawable="@android:drawable/ic_lock_lock"
                     app:startIconTint="@color/primary_blue"
                     app:endIconMode="password_toggle"
-                    app:endIconTint="@color/primary_blue"
-                    app:helperText="Minimum 8 characters"
-                    app:helperTextTextColor="@color/text_hint">
+                    app:endIconTint="@color/primary_blue">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextPassword"
@@ -248,6 +249,13 @@
                         android:textColor="@color/text_primary" />
 
                 </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Password Strength Indicator -->
+                <com.cc106.bidhub.PasswordStrengthIndicator
+                    android:id="@+id/passwordStrengthIndicator"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp" />
 
                 <!-- Terms and Privacy Checkboxes -->
                 <LinearLayout
