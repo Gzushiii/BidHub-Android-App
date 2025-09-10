@@ -75,8 +75,11 @@ public class MainActivity extends BaseActivity {
     
     private void initializeFragments() {
         try {
+            Toast.makeText(this, "Starting fragment initialization...", Toast.LENGTH_SHORT).show();
+            
             // Create fragments one by one with individual error handling
             homeFragment = new HomeFragment();
+            Toast.makeText(this, "HomeFragment created: " + (homeFragment != null), Toast.LENGTH_SHORT).show();
             if (homeFragment == null) {
                 Toast.makeText(this, "Error: Failed to create HomeFragment", Toast.LENGTH_LONG).show();
                 return;
@@ -116,7 +119,7 @@ public class MainActivity extends BaseActivity {
             creditsFragment.setArguments(args);
             profileFragment.setArguments(args);
             
-            Toast.makeText(this, "Fragments initialized successfully", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "All fragments initialized successfully", Toast.LENGTH_SHORT).show();
             
         } catch (Exception e) {
             Toast.makeText(this, "Error initializing fragments: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -223,12 +226,15 @@ public class MainActivity extends BaseActivity {
             return true;
         }
         
+        // Check if fragments need to be re-initialized
+        ensureFragmentsInitialized();
+        
         // Show fragment with directional intelligence
         if (itemId == R.id.nav_home) {
             if (homeFragment != null) {
                 showFragment(homeFragment, newTabPosition);
             } else {
-                Toast.makeText(this, "Error: HomeFragment not available", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Error: HomeFragment not available after re-initialization", Toast.LENGTH_SHORT).show();
             }
         } else if (itemId == R.id.nav_browse) {
             if (browseFragment != null) {
@@ -287,5 +293,16 @@ public class MainActivity extends BaseActivity {
     @Override
     protected String getCurrentUserEmail() {
         return loggedInUserEmail;
+    }
+    
+    /**
+     * Check and re-initialize fragments if needed
+     */
+    private void ensureFragmentsInitialized() {
+        if (homeFragment == null || browseFragment == null || postFragment == null || 
+            creditsFragment == null || profileFragment == null) {
+            Toast.makeText(this, "Some fragments are null, re-initializing...", Toast.LENGTH_SHORT).show();
+            initializeFragments();
+        }
     }
 }
