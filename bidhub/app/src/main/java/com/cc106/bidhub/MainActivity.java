@@ -106,19 +106,38 @@ public class MainActivity extends BaseActivity {
                 return;
             }
             
-            // Pass user email to all fragments
-            Bundle args = new Bundle();
-            args.putString("USER_EMAIL", loggedInUserEmail);
-            
-            homeFragment.setArguments(args);
-            browseFragment.setArguments(args);
-            postFragment.setArguments(args);
-            creditsFragment.setArguments(args);
-            profileFragment.setArguments(args);
+            // Always pass user email to all fragments (important for re-initialization)
+            setFragmentArguments();
             
         } catch (Exception e) {
             Toast.makeText(this, "Error initializing fragments: " + e.getMessage(), Toast.LENGTH_LONG).show();
             e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Set arguments for all fragments
+     */
+    private void setFragmentArguments() {
+        if (loggedInUserEmail != null && !loggedInUserEmail.isEmpty()) {
+            Bundle args = new Bundle();
+            args.putString("USER_EMAIL", loggedInUserEmail);
+            
+            if (homeFragment != null) {
+                homeFragment.setArguments(args);
+            }
+            if (browseFragment != null) {
+                browseFragment.setArguments(args);
+            }
+            if (postFragment != null) {
+                postFragment.setArguments(args);
+            }
+            if (creditsFragment != null) {
+                creditsFragment.setArguments(args);
+            }
+            if (profileFragment != null) {
+                profileFragment.setArguments(args);
+            }
         }
     }
     
@@ -287,6 +306,9 @@ public class MainActivity extends BaseActivity {
         if (homeFragment == null || browseFragment == null || postFragment == null || 
             creditsFragment == null || profileFragment == null) {
             initializeFragments();
+        } else {
+            // Even if fragments exist, ensure they have the correct arguments
+            setFragmentArguments();
         }
     }
 }
