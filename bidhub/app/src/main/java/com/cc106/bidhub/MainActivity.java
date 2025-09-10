@@ -42,8 +42,8 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         
         try {
-        // Get the logged-in user's email from the Intent
-        loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
+            // Get the logged-in user's email from the Intent
+            loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
 
             if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
                 Toast.makeText(this, "Error: No user email provided", Toast.LENGTH_LONG).show();
@@ -57,7 +57,7 @@ public class MainActivity extends BaseActivity {
             // Show home fragment by default
             showFragment(homeFragment);
 
-        // Set selected navigation item
+            // Set selected navigation item
             setCurrentTabSelected();
             
         } catch (Exception e) {
@@ -73,6 +73,13 @@ public class MainActivity extends BaseActivity {
             postFragment = new PostFragment();
             creditsFragment = new CreditsFragment();
             profileFragment = new ProfileFragment();
+            
+            // Verify all fragments were created successfully
+            if (homeFragment == null || browseFragment == null || postFragment == null || 
+                creditsFragment == null || profileFragment == null) {
+                Toast.makeText(this, "Error: Failed to create fragments", Toast.LENGTH_LONG).show();
+                return;
+            }
             
             // Pass user email to all fragments
             Bundle args = new Bundle();
@@ -106,6 +113,18 @@ public class MainActivity extends BaseActivity {
      */
     private void showFragment(Fragment fragment, int newTabPosition) {
         try {
+            // Check if fragment is null
+            if (fragment == null) {
+                Toast.makeText(this, "Error: Fragment is null", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            // Check if content frame exists
+            if (findViewById(R.id.content_frame) == null) {
+                Toast.makeText(this, "Error: Content frame not found", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
             
             // Determine slide direction based on tab position
