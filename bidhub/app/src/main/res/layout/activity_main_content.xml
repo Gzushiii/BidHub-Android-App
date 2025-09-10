@@ -311,8 +311,8 @@
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:textColor="@color/error_red"
-                    android:background="@drawable/button_secondary_background"
-                    android:backgroundTint="@color/white" />
+                    android:background="@drawable/ripple_effect"
+                    android:stateListAnimator="@null" />
 
             </LinearLayout>
 

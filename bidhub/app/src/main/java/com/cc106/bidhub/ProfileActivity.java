@@ -50,27 +50,35 @@ public class ProfileActivity extends BaseActivity {
 
     private void setupClickListeners() {
         buttonLogout.setOnClickListener(v -> {
-            Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
-            startActivity(intent);
-            finish();
+            UIUtils.animateButtonPress(buttonLogout, () -> {
+                Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
+                startActivity(intent);
+                finish();
+            });
         });
         
         buttonRegenerateAlias.setOnClickListener(v -> {
-            regenerateAlias();
+            UIUtils.animateButtonPress(buttonRegenerateAlias, () -> {
+                regenerateAlias();
+            });
         });
         
         buttonViewBids.setOnClickListener(v -> {
-            Toast.makeText(this, "My Bids - Coming Soon!", Toast.LENGTH_SHORT).show();
+            UIUtils.animateButtonPress(buttonViewBids, () -> {
+                showSuccess("My Bids - Coming Soon!");
+            });
         });
         
         buttonTransactionHistory.setOnClickListener(v -> {
-            Toast.makeText(this, "Transaction History - Coming Soon!", Toast.LENGTH_SHORT).show();
+            UIUtils.animateButtonPress(buttonTransactionHistory, () -> {
+                showSuccess("Transaction History - Coming Soon!");
+            });
         });
     }
 
     private void loadUserData() {
         if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
-            Toast.makeText(this, "Error: User not identified.", Toast.LENGTH_SHORT).show();
+            showError("Error: User not identified.");
             return;
         }
 
@@ -122,9 +130,9 @@ public class ProfileActivity extends BaseActivity {
         
         if (rowsAffected > 0) {
             textViewAlias.setText(newAlias);
-            Toast.makeText(this, "Alias regenerated: " + newAlias, Toast.LENGTH_LONG).show();
+            showSuccess("Alias regenerated: " + newAlias);
         } else {
-            Toast.makeText(this, "Failed to regenerate alias", Toast.LENGTH_SHORT).show();
+            showError("Failed to regenerate alias");
         }
         
         db.close();

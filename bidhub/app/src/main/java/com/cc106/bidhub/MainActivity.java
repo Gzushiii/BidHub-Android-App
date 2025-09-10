@@ -47,10 +47,12 @@ public class MainActivity extends BaseActivity {
 
         // --- Set OnClick Listeners for Buttons ---
         buttonLogout.setOnClickListener(v -> {
-            // Navigate back to LoginActivity
-            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-            startActivity(intent);
-            finish(); // Close MainActivity
+            UIUtils.animateButtonPress(buttonLogout, () -> {
+                // Navigate back to LoginActivity
+                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                startActivity(intent);
+                finish(); // Close MainActivity
+            });
         });
 
         // Bottom navigation is handled by BaseActivity
@@ -59,7 +61,7 @@ public class MainActivity extends BaseActivity {
     private void loadUserData() {
         if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
             // Should not happen if coming from a successful login
-            Toast.makeText(this, "Error: User not identified.", Toast.LENGTH_SHORT).show();
+            showError("Error: User not identified.");
             return;
         }
 

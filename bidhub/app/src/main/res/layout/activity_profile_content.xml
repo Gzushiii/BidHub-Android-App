@@ -171,10 +171,11 @@
                             android:layout_height="36dp"
                             android:text="Regenerate"
                             android:textSize="12sp"
-                            android:background="@drawable/button_primary_background"
+                            android:background="@drawable/button_press_selector"
                             android:textColor="@color/white"
                             android:paddingStart="12dp"
-                            android:paddingEnd="12dp" />
+                            android:paddingEnd="12dp"
+                            android:stateListAnimator="@null" />
 
                     </LinearLayout>
 
@@ -257,8 +258,9 @@
                         android:layout_height="wrap_content"
                         android:text="View"
                         android:textSize="12sp"
-                        android:background="@drawable/button_secondary_background"
-                        android:textColor="@color/primary_blue" />
+                        android:background="@drawable/ripple_effect"
+                        android:textColor="@color/primary_blue"
+                        android:stateListAnimator="@null" />
 
                 </LinearLayout>
 
@@ -308,8 +310,9 @@
                         android:layout_height="wrap_content"
                         android:text="View"
                         android:textSize="12sp"
-                        android:background="@drawable/button_secondary_background"
-                        android:textColor="@color/primary_blue" />
+                        android:background="@drawable/ripple_effect"
+                        android:textColor="@color/primary_blue"
+                        android:stateListAnimator="@null" />
 
                 </LinearLayout>
 
@@ -384,8 +387,8 @@
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/error_red"
-                android:background="@drawable/button_secondary_background"
-                android:backgroundTint="@color/white" />
+                android:background="@drawable/ripple_effect"
+                android:stateListAnimator="@null" />
 
         </LinearLayout>
 

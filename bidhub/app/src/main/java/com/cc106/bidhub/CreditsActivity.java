@@ -20,7 +20,7 @@ public class CreditsActivity extends BaseActivity {
         loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
         
         // TODO: Implement credits functionality
-        Toast.makeText(this, "Credits Management - Coming Soon!", Toast.LENGTH_SHORT).show();
+        showSuccess("Credits Management - Coming Soon!");
     }
 
     @Override

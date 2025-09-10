@@ -23,6 +23,8 @@
         app:menu="@menu/bottom_navigation_menu"
         app:itemIconTint="@color/primary_blue"
         app:itemTextColor="@color/text_primary"
-        app:labelVisibilityMode="labeled" />
+        app:labelVisibilityMode="labeled"
+        app:itemRippleColor="@color/primary_blue_light"
+        app:itemActiveIndicatorStyle="@style/Widget.Material3.BottomNavigationView.ActiveIndicator" />
 
 </LinearLayout>

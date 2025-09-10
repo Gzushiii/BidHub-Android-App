@@ -19,7 +19,7 @@ public class BrowseActivity extends BaseActivity {
         loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
         
         // TODO: Implement browse functionality
-        Toast.makeText(this, "Browse Items - Coming Soon!", Toast.LENGTH_SHORT).show();
+        showSuccess("Browse Items - Coming Soon!");
     }
 
     @Override
