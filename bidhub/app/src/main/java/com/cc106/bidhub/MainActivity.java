@@ -3,6 +3,7 @@ package com.cc106.bidhub;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -28,47 +29,69 @@ public class MainActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // Get the logged-in user's email from the Intent
-        loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
-        
-        // Initialize fragments
-        initializeFragments();
-        
-        // Show home fragment by default
-        showFragment(homeFragment);
-        
-        // Set selected navigation item
-        setCurrentTabSelected();
+        try {
+            // Get the logged-in user's email from the Intent
+            loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
+            
+            if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
+                Toast.makeText(this, "Error: No user email provided", Toast.LENGTH_LONG).show();
+                finish();
+                return;
+            }
+            
+            // Initialize fragments
+            initializeFragments();
+            
+            // Show home fragment by default
+            showFragment(homeFragment);
+            
+            // Set selected navigation item
+            setCurrentTabSelected();
+            
+        } catch (Exception e) {
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
     }
     
     private void initializeFragments() {
-        homeFragment = new HomeFragment();
-        browseFragment = new BrowseFragment();
-        postFragment = new PostFragment();
-        creditsFragment = new CreditsFragment();
-        profileFragment = new ProfileFragment();
-        
-        // Pass user email to all fragments
-        Bundle args = new Bundle();
-        args.putString("USER_EMAIL", loggedInUserEmail);
-        
-        homeFragment.setArguments(args);
-        browseFragment.setArguments(args);
-        postFragment.setArguments(args);
-        creditsFragment.setArguments(args);
-        profileFragment.setArguments(args);
+        try {
+            homeFragment = new HomeFragment();
+            browseFragment = new BrowseFragment();
+            postFragment = new PostFragment();
+            creditsFragment = new CreditsFragment();
+            profileFragment = new ProfileFragment();
+            
+            // Pass user email to all fragments
+            Bundle args = new Bundle();
+            args.putString("USER_EMAIL", loggedInUserEmail);
+            
+            homeFragment.setArguments(args);
+            browseFragment.setArguments(args);
+            postFragment.setArguments(args);
+            creditsFragment.setArguments(args);
+            profileFragment.setArguments(args);
+        } catch (Exception e) {
+            Toast.makeText(this, "Error initializing fragments: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
     }
     
     private void showFragment(Fragment fragment) {
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.setCustomAnimations(
-            R.anim.slide_in_right,
-            R.anim.slide_out_left,
-            R.anim.slide_in_left,
-            R.anim.slide_out_right
-        );
-        transaction.replace(R.id.content_frame, fragment);
-        transaction.commit();
+        try {
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            transaction.setCustomAnimations(
+                R.anim.slide_in_right,
+                R.anim.slide_out_left,
+                R.anim.slide_in_left,
+                R.anim.slide_out_right
+            );
+            transaction.replace(R.id.content_frame, fragment);
+            transaction.commit();
+        } catch (Exception e) {
+            Toast.makeText(this, "Error showing fragment: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
     }
 
     @Override
