@@ -33,9 +33,7 @@
     
     <!-- Background Colors -->
     <color name="background_light">#FFFAFAFA</color>
-    <color name="background_dark">#FF121212</color>
     <color name="surface_light">#FFFFFFFF</color>
-    <color name="surface_dark">#FF1E1E1E</color>
     
     <!-- Text Colors -->
     <color name="text_primary">#FF212121</color>
