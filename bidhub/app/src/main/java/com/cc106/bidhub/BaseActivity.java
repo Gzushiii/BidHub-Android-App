@@ -38,36 +38,8 @@ public abstract class BaseActivity extends AppCompatActivity implements BottomNa
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        int itemId = item.getItemId();
-        
-        // Don't navigate if already on the current activity
-        if (isCurrentActivity(itemId)) {
-            return true;
-        }
-        
-        if (itemId == R.id.nav_home) {
-            if (!(this instanceof MainActivity)) {
-                navigateToActivity(MainActivity.class);
-            }
-        } else if (itemId == R.id.nav_browse) {
-            if (!(this instanceof BrowseActivity)) {
-                navigateToActivity(BrowseActivity.class);
-            }
-        } else if (itemId == R.id.nav_post) {
-            if (!(this instanceof PostActivity)) {
-                navigateToActivity(PostActivity.class);
-            }
-        } else if (itemId == R.id.nav_credits) {
-            if (!(this instanceof CreditsActivity)) {
-                navigateToActivity(CreditsActivity.class);
-            }
-        } else if (itemId == R.id.nav_profile) {
-            if (!(this instanceof ProfileActivity)) {
-                navigateToActivity(ProfileActivity.class);
-            }
-        }
-        
-        return true;
+        // This method will be overridden in MainActivity for fragment navigation
+        return false;
     }
 
     /**
