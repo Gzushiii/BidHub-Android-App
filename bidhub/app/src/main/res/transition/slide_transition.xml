@@ -4,9 +4,7 @@
     android:interpolator="@android:anim/decelerate_interpolator">
     
     <slide
-        android:slideEdge="end"
-        android:mode="enter" />
+        android:slideEdge="end" />
     
-    <fade
-        android:mode="enter" />
+    <fade />
 </transitionSet>

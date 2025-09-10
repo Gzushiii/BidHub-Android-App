@@ -11,6 +11,8 @@ import android.os.Vibrator;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.AccelerateInterpolator;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -116,7 +118,7 @@ public class UIUtils {
         view.animate()
             .alpha(1f)
             .setDuration(duration)
-            .setInterpolator(android.view.animation.DecelerateInterpolator())
+            .setInterpolator(new DecelerateInterpolator())
             .start();
     }
     
@@ -127,7 +129,7 @@ public class UIUtils {
         view.animate()
             .alpha(0f)
             .setDuration(duration)
-            .setInterpolator(android.view.animation.AccelerateInterpolator())
+            .setInterpolator(new AccelerateInterpolator())
             .withEndAction(onComplete)
             .start();
     }

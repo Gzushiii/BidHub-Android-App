@@ -43,7 +43,7 @@ public class MainActivity extends BaseActivity {
         loadUserData();
 
         // Set selected navigation item
-        setSelectedNavItem(R.id.nav_home);
+        setCurrentTabSelected();
 
         // --- Set OnClick Listeners for Buttons ---
         buttonLogout.setOnClickListener(v -> {
