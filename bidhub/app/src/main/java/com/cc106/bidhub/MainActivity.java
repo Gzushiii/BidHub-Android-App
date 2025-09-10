@@ -61,6 +61,9 @@ public class MainActivity extends BaseActivity {
                 return;
             }
             
+            // Ensure arguments are set before showing the fragment
+            setFragmentArguments();
+            
             // Show home fragment by default
             showFragment(homeFragment);
 

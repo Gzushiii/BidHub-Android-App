@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.cc106.bidhub.DatabaseHelper;
+import com.cc106.bidhub.MainActivity;
 import com.cc106.bidhub.R;
 
 import java.util.Locale;
@@ -57,6 +58,20 @@ public class HomeFragment extends Fragment {
     }
     
     private void loadUserData() {
+        // Try to get user email from arguments first
+        if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
+            if (getArguments() != null) {
+                loggedInUserEmail = getArguments().getString("USER_EMAIL");
+            }
+        }
+        
+        // If still null, try to get it from MainActivity
+        if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
+            if (getActivity() instanceof MainActivity) {
+                loggedInUserEmail = ((MainActivity) getActivity()).getCurrentUserEmail();
+            }
+        }
+        
         if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
             Toast.makeText(getContext(), "Error: User not identified.", Toast.LENGTH_SHORT).show();
             return;
