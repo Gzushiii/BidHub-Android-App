@@ -29,6 +29,9 @@ public class MainActivity extends BaseActivity {
         getLayoutInflater().inflate(R.layout.activity_main_content, findViewById(R.id.content_frame));
 
         dbHelper = new DatabaseHelper(this);
+        
+        // Animate content in after inflation
+        animateContentIn();
 
         // Initialize Views
         textViewWelcome = findViewById(R.id.textViewWelcome);

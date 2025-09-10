@@ -19,8 +19,11 @@ public class PostActivity extends BaseActivity {
         // Get the logged-in user's email from the Intent
         loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
         
+        // Animate content in after inflation
+        animateContentIn();
+        
         // TODO: Implement post item functionality
-        Toast.makeText(this, "Post Item - Coming Soon!", Toast.LENGTH_SHORT).show();
+        showSuccess("Post Item - Coming Soon!");
     }
 
     @Override

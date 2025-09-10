@@ -19,6 +19,9 @@ public class CreditsActivity extends BaseActivity {
         // Get the logged-in user's email from the Intent
         loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
         
+        // Animate content in after inflation
+        animateContentIn();
+        
         // TODO: Implement credits functionality
         showSuccess("Credits Management - Coming Soon!");
     }

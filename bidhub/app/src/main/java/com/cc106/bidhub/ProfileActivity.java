@@ -30,6 +30,9 @@ public class ProfileActivity extends BaseActivity {
         
         dbHelper = new DatabaseHelper(this);
         
+        // Animate content in after inflation
+        animateContentIn();
+        
         // Initialize Views
         textViewWelcome = findViewById(R.id.textViewWelcome);
         textViewCredits = findViewById(R.id.textViewCredits);

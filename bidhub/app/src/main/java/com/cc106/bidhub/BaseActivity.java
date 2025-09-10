@@ -23,8 +23,12 @@ public abstract class BaseActivity extends AppCompatActivity implements BottomNa
         
         // Set the current tab as selected
         setCurrentTabSelected();
-        
-        // Add fade-in animation to content
+    }
+    
+    /**
+     * Call this method after inflating content in child activities
+     */
+    protected void animateContentIn() {
         View contentFrame = findViewById(R.id.content_frame);
         if (contentFrame != null) {
             UIUtils.fadeInView(contentFrame, 300);
