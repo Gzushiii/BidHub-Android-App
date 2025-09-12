@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.view.MenuItem;
-import android.widget.Toast;
+import com.cc106.bidhub.toast.ToastHelper;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -46,7 +46,7 @@ public class MainActivity extends BaseActivity {
             loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
 
             if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
-                Toast.makeText(this, "Error: No user email provided", Toast.LENGTH_LONG).show();
+                ToastHelper.showError(this, "Error: No user email provided");
                 finish();
                 return;
             }
@@ -56,7 +56,7 @@ public class MainActivity extends BaseActivity {
             
             // Check if fragments were initialized successfully before showing
             if (homeFragment == null) {
-                Toast.makeText(this, "Error: HomeFragment is null, cannot proceed", Toast.LENGTH_LONG).show();
+                ToastHelper.showError(this, "Error: HomeFragment is null, cannot proceed");
                 finish();
                 return;
             }
@@ -71,7 +71,7 @@ public class MainActivity extends BaseActivity {
             setCurrentTabSelected();
             
         } catch (Exception e) {
-            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            ToastHelper.showError(this, "Error: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -81,31 +81,31 @@ public class MainActivity extends BaseActivity {
             // Create fragments one by one with individual error handling
             homeFragment = new HomeFragment();
             if (homeFragment == null) {
-                Toast.makeText(this, "Error: Failed to create HomeFragment", Toast.LENGTH_LONG).show();
+                ToastHelper.showError(this, "Error: Failed to create HomeFragment");
                 return;
             }
             
             browseFragment = new BrowseFragment();
             if (browseFragment == null) {
-                Toast.makeText(this, "Error: Failed to create BrowseFragment", Toast.LENGTH_LONG).show();
+                ToastHelper.showError(this, "Error: Failed to create BrowseFragment");
                 return;
             }
             
             postFragment = new PostFragment();
             if (postFragment == null) {
-                Toast.makeText(this, "Error: Failed to create PostFragment", Toast.LENGTH_LONG).show();
+                ToastHelper.showError(this, "Error: Failed to create PostFragment");
                 return;
             }
             
             creditsFragment = new CreditsFragment();
             if (creditsFragment == null) {
-                Toast.makeText(this, "Error: Failed to create CreditsFragment", Toast.LENGTH_LONG).show();
+                ToastHelper.showError(this, "Error: Failed to create CreditsFragment");
                 return;
             }
             
             profileFragment = new ProfileFragment();
             if (profileFragment == null) {
-                Toast.makeText(this, "Error: Failed to create ProfileFragment", Toast.LENGTH_LONG).show();
+                ToastHelper.showError(this, "Error: Failed to create ProfileFragment");
                 return;
             }
             
@@ -113,7 +113,7 @@ public class MainActivity extends BaseActivity {
             setFragmentArguments();
             
         } catch (Exception e) {
-            Toast.makeText(this, "Error initializing fragments: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            ToastHelper.showError(this, "Error initializing fragments: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -163,13 +163,13 @@ public class MainActivity extends BaseActivity {
         try {
             // Check if fragment is null
             if (fragment == null) {
-                Toast.makeText(this, "Error: Fragment is null", Toast.LENGTH_SHORT).show();
+                ToastHelper.showError(this, "Error: Fragment is null");
                 return;
             }
             
             // Check if content frame exists
             if (findViewById(R.id.content_frame) == null) {
-                Toast.makeText(this, "Error: Content frame not found", Toast.LENGTH_SHORT).show();
+                ToastHelper.showError(this, "Error: Content frame not found");
                 return;
             }
             
@@ -202,7 +202,7 @@ public class MainActivity extends BaseActivity {
             provideHapticFeedback();
             
         } catch (Exception e) {
-            Toast.makeText(this, "Error showing fragment: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            ToastHelper.showError(this, "Error showing fragment: " + e.getMessage());
             e.printStackTrace();
         }
     }

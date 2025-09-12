@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.cc106.bidhub.toast.ToastHelper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -73,7 +73,7 @@ public class HomeFragment extends Fragment {
         }
         
         if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
-            Toast.makeText(getContext(), "Error: User not identified.", Toast.LENGTH_SHORT).show();
+            ToastHelper.showError(getContext(), "Error: User not identified.");
             return;
         }
 

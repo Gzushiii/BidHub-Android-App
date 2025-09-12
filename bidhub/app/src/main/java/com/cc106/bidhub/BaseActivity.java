@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
+import com.cc106.bidhub.toast.ToastHelper;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityOptionsCompat;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -54,8 +54,8 @@ public abstract class BaseActivity extends AppCompatActivity implements BottomNa
             startActivity(intent);
             finish();
         } catch (Exception e) {
-            // Use simple toast for now
-            Toast.makeText(this, "Navigation error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            // Use new toast system
+            ToastHelper.showError(this, "Navigation error: " + e.getMessage());
         }
     }
     
@@ -63,14 +63,14 @@ public abstract class BaseActivity extends AppCompatActivity implements BottomNa
      * Shows error message with consistent styling
      */
     protected void showError(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        ToastHelper.showError(this, message);
     }
     
     /**
      * Shows success message with consistent styling
      */
     protected void showSuccess(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        ToastHelper.showSuccess(this, message);
     }
     
     /**

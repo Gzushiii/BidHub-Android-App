@@ -14,7 +14,7 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.AccelerateInterpolator;
 import android.widget.Button;
-import android.widget.Toast;
+import com.cc106.bidhub.toast.ToastHelper;
 
 import androidx.core.content.ContextCompat;
 
@@ -89,25 +89,36 @@ public class UIUtils {
     
     /**
      * Shows a styled toast message with better positioning
+     * @deprecated Use ToastHelper instead for better functionality
      */
+    @Deprecated
     public static void showStyledToast(Context context, String message, boolean isError) {
-        Toast toast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
-        
-        // Position toast at top for better visibility
-        toast.setGravity(android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL, 0, 200);
-        
-        // Style the toast background
-        View toastView = toast.getView();
-        if (toastView != null) {
-            if (isError) {
-                toastView.setBackgroundColor(ContextCompat.getColor(context, R.color.error_red));
-            } else {
-                toastView.setBackgroundColor(ContextCompat.getColor(context, R.color.primary_blue));
-            }
-            toastView.setPadding(32, 16, 32, 16);
+        if (isError) {
+            ToastHelper.showError(context, message);
+        } else {
+            ToastHelper.showSuccess(context, message);
         }
-        
-        toast.show();
+    }
+    
+    /**
+     * Shows a quick success toast
+     */
+    public static void showQuickSuccess(Context context, String message) {
+        ToastHelper.quickSuccess(context, message);
+    }
+    
+    /**
+     * Shows a quick error toast
+     */
+    public static void showQuickError(Context context, String message) {
+        ToastHelper.quickError(context, message);
+    }
+    
+    /**
+     * Shows a loading toast
+     */
+    public static void showLoading(Context context, String message) {
+        ToastHelper.showLoading(context, message);
     }
     
     /**

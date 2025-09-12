@@ -8,7 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.cc106.bidhub.toast.ToastHelper;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -53,7 +53,7 @@ public class LoginActivity extends AppCompatActivity {
         String password = editTextPassword.getText().toString().trim();
 
         if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+            ToastHelper.showWarning(this, "Please fill all fields");
             return;
         }
 
@@ -73,21 +73,21 @@ public class LoginActivity extends AppCompatActivity {
 
             // Use our hasher to verify the password
             if (PasswordHasher.verifyPassword(password, storedHash, salt)) {
-                Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show();
+                ToastHelper.showSuccess(this, "Login Successful!");
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 intent.putExtra("USER_EMAIL", email);
                 startActivity(intent);
                 finish();
             } else {
                 // Password was incorrect
-                Toast.makeText(this, "Invalid email or password", Toast.LENGTH_SHORT).show();
+                ToastHelper.showError(this, "Invalid email or password");
             }
         } else {
             // User with that email was not found
             if(cursor != null) {
                 cursor.close();
             }
-            Toast.makeText(this, "Invalid email or password", Toast.LENGTH_SHORT).show();
+            ToastHelper.showError(this, "Invalid email or password");
         }
     }
 }

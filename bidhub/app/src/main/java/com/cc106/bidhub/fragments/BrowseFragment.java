@@ -4,7 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import com.cc106.bidhub.toast.ToastHelper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,7 +27,7 @@ public class BrowseFragment extends Fragment {
         }
         
         // TODO: Implement browse functionality
-        Toast.makeText(getContext(), "Browse Items - Coming Soon!", Toast.LENGTH_SHORT).show();
+        ToastHelper.showInfo(getContext(), "Browse Items - Coming Soon!");
         
         return view;
     }

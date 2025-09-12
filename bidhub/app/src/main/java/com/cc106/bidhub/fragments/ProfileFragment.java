@@ -9,7 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.cc106.bidhub.toast.ToastHelper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -73,17 +73,17 @@ public class ProfileFragment extends Fragment {
         });
         
         buttonViewBids.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "My Bids - Coming Soon!", Toast.LENGTH_SHORT).show();
+            ToastHelper.showInfo(getContext(), "My Bids - Coming Soon!");
         });
         
         buttonTransactionHistory.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Transaction History - Coming Soon!", Toast.LENGTH_SHORT).show();
+            ToastHelper.showInfo(getContext(), "Transaction History - Coming Soon!");
         });
     }
 
     private void loadUserData() {
         if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
-            Toast.makeText(getContext(), "Error: User not identified.", Toast.LENGTH_SHORT).show();
+            ToastHelper.showError(getContext(), "Error: User not identified.");
             return;
         }
 
@@ -135,9 +135,9 @@ public class ProfileFragment extends Fragment {
         
         if (rowsAffected > 0) {
             textViewAlias.setText(newAlias);
-            Toast.makeText(getContext(), "Alias regenerated: " + newAlias, Toast.LENGTH_LONG).show();
+            ToastHelper.showSuccess(getContext(), "Alias regenerated: " + newAlias);
         } else {
-            Toast.makeText(getContext(), "Failed to regenerate alias", Toast.LENGTH_SHORT).show();
+            ToastHelper.showError(getContext(), "Failed to regenerate alias");
         }
         
         db.close();

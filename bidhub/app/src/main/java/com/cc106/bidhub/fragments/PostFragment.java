@@ -4,7 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import com.cc106.bidhub.toast.ToastHelper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,7 +27,7 @@ public class PostFragment extends Fragment {
         }
         
         // TODO: Implement post item functionality
-        Toast.makeText(getContext(), "Post Item - Coming Soon!", Toast.LENGTH_SHORT).show();
+        ToastHelper.showInfo(getContext(), "Post Item - Coming Soon!");
         
         return view;
     }

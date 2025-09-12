@@ -13,7 +13,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.cc106.bidhub.toast.ToastHelper;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputLayout;
 import java.util.Map;
@@ -312,23 +312,23 @@ public class RegisterActivity extends AppCompatActivity {
             // --- Enhanced Form Validation ---
             if (TextUtils.isEmpty(firstName) || TextUtils.isEmpty(lastName) || TextUtils.isEmpty(username) ||
                     TextUtils.isEmpty(email) || TextUtils.isEmpty(phone) || TextUtils.isEmpty(password)) {
-                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+                ToastHelper.showWarning(this, "Please fill all fields");
                 return;
             }
 
             if (!checkboxTerms.isChecked() || !checkboxPrivacy.isChecked()) {
-                Toast.makeText(this, "You must accept the Terms and Privacy Policy", Toast.LENGTH_SHORT).show();
+                ToastHelper.showWarning(this, "You must accept the Terms and Privacy Policy");
                 return;
             }
             
             // Final validation check
             if (!isEmailValid || !isUsernameValid || !isPasswordValid) {
-                Toast.makeText(this, "Please fix validation errors before registering", Toast.LENGTH_SHORT).show();
+                ToastHelper.showWarning(this, "Please fix validation errors before registering");
                 return;
             }
             
             if (!isEmailAvailable || !isUsernameAvailable) {
-                Toast.makeText(this, "Email or username is already taken", Toast.LENGTH_SHORT).show();
+                ToastHelper.showError(this, "Email or username is already taken");
                 return;
             }
 
@@ -338,7 +338,7 @@ public class RegisterActivity extends AppCompatActivity {
             ValidationUtils.PasswordStrengthResult passwordResult = ValidationUtils.validatePassword(password);
             
             if (!emailResult.isValid || !usernameResult.isValid || !passwordResult.isValid) {
-                Toast.makeText(this, "Please fix all validation errors before registering", Toast.LENGTH_SHORT).show();
+                ToastHelper.showWarning(this, "Please fix all validation errors before registering");
                 return;
             }
 
@@ -375,17 +375,17 @@ public class RegisterActivity extends AppCompatActivity {
 
                     runOnUiThread(() -> {
                         if (newRowId != -1) {
-                            Toast.makeText(this, "Registration successful! Your alias: " + alias, Toast.LENGTH_LONG).show();
+                            ToastHelper.showSuccess(this, "Registration successful! Your alias: " + alias);
                             finish(); // Go back to the login screen
                         } else {
-                            Toast.makeText(this, "Registration failed. Please try again.", Toast.LENGTH_LONG).show();
+                            ToastHelper.showError(this, "Registration failed. Please try again.");
                             buttonRegister.setEnabled(true);
                             buttonRegister.setText("Create Account");
                         }
                     });
                 } catch (Exception e) {
                     runOnUiThread(() -> {
-                        Toast.makeText(this, "Registration failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        ToastHelper.showError(this, "Registration failed: " + e.getMessage());
                         buttonRegister.setEnabled(true);
                         buttonRegister.setText("Create Account");
                     });
@@ -393,7 +393,7 @@ public class RegisterActivity extends AppCompatActivity {
             }).start();
 
         } catch (Exception e) {
-            Toast.makeText(this, "Registration failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            ToastHelper.showError(this, "Registration failed: " + e.getMessage());
             buttonRegister.setEnabled(true);
             buttonRegister.setText("Create Account");
         }
