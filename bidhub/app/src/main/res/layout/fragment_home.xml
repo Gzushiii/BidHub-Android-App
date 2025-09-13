@@ -58,7 +58,7 @@
                 <ImageView
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:src="@drawable/logo_bidhub_header"
+                    android:src="@drawable/logo_bidhub"
                     android:background="@drawable/card_background"
                     android:backgroundTint="@color/white"
                     android:padding="8dp"
