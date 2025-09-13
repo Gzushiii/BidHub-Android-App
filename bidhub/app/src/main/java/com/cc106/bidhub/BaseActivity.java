@@ -82,5 +82,5 @@ public abstract class BaseActivity extends AppCompatActivity implements BottomNa
 
     protected abstract boolean isCurrentActivity(int itemId);
     protected abstract void setCurrentTabSelected();
-    protected abstract String getCurrentUserEmail();
+    public abstract String getCurrentUserEmail();
 }

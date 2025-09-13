@@ -298,7 +298,7 @@ public class MainActivity extends BaseActivity {
     }
 
     @Override
-    protected String getCurrentUserEmail() {
+    public String getCurrentUserEmail() {
         return loggedInUserEmail;
     }
     
