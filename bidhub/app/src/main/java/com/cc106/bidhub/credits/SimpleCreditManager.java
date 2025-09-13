@@ -24,6 +24,7 @@ public class SimpleCreditManager {
     public static final String TRANSACTION_BID = "bid";
     public static final String TRANSACTION_REFUND = "refund";
     public static final String TRANSACTION_TRANSFER = "transfer";
+    public static final String TRANSACTION_REDEMPTION = "redemption";
     
     // Transaction statuses
     public static final String STATUS_PENDING = "pending";
@@ -298,7 +299,10 @@ public class SimpleCreditManager {
      * Get user ID from email (simplified implementation)
      */
     public String getUserIdFromEmail(String email) {
+        Log.d(TAG, "getUserIdFromEmail called with email: " + email);
+        
         if (email == null || email.trim().isEmpty()) {
+            Log.e(TAG, "Email is null or empty");
             return null;
         }
         
@@ -307,11 +311,16 @@ public class SimpleCreditManager {
                       " FROM " + DatabaseHelper.TABLE_USERS + 
                       " WHERE " + DatabaseHelper.COLUMN_USER_EMAIL + " = ?";
         
+        Log.d(TAG, "Executing query: " + query + " with email: " + email);
+        
         Cursor cursor = db.rawQuery(query, new String[]{email});
         String userId = null;
         
         if (cursor.moveToFirst()) {
             userId = cursor.getString(0);
+            Log.d(TAG, "Found userId: " + userId);
+        } else {
+            Log.e(TAG, "No user found with email: " + email);
         }
         cursor.close();
         
