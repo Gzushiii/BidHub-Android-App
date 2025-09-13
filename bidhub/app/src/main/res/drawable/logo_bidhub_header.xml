@@ -7,31 +7,31 @@
     
     <!-- Background gradient -->
     <path
-        android:fillColor="@color/primary_blue"
+        android:fillColor="#FF2196F3"
         android:pathData="M20,3.5 L33.5,10 L33.5,30 L20,36.5 L6.5,30 L6.5,10 Z" />
     
     <!-- Gavel head -->
     <path
-        android:fillColor="@color/white"
+        android:fillColor="#FFFFFFFF"
         android:pathData="M25,8.5 L31.5,7 L33,12 L26.5,13.5 Z" />
     
     <!-- Gavel handle -->
     <path
-        android:fillColor="@color/white"
+        android:fillColor="#FFFFFFFF"
         android:pathData="M28.5,13.5 L27,20 L25,18.5 L26.5,13.5 Z" />
     
     <!-- Outer loop -->
     <path
-        android:fillColor="@color/white"
-        android:strokeColor="@color/white"
+        android:fillColor="#FFFFFFFF"
+        android:strokeColor="#FFFFFFFF"
         android:strokeWidth="2.5"
         android:pathData="M25,18.5 Q20,23 15,20 Q10,17 11.5,12 Q13,7 18,10 Q23,13 25,18.5"
         android:fillType="evenOdd" />
     
     <!-- Inner loop -->
     <path
-        android:fillColor="@color/white"
-        android:strokeColor="@color/white"
+        android:fillColor="#FFFFFFFF"
+        android:strokeColor="#FFFFFFFF"
         android:strokeWidth="1.5"
         android:pathData="M23.5,17 Q20,20 17,18.5 Q14,17 15,14 Q16,11 18,12.5 Q20,14 23.5,17"
         android:fillType="evenOdd" />
