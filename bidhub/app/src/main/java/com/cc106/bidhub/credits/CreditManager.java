@@ -131,7 +131,7 @@ public class CreditManager {
             return false;
         }
         
-        CreditBalance balance = getCreditBalance(userId);
+        CreditBalance balance = getCreditBalanceObject(userId);
         return balance.getAvailableCredits() >= amount;
     }
     
@@ -153,7 +153,7 @@ public class CreditManager {
             db.beginTransaction();
             
             // Get current balance
-            CreditBalance balance = getCreditBalance(userId);
+            CreditBalance balance = getCreditBalanceObject(userId);
             
             // Deduct from available credits
             double newAvailableCredits = balance.getAvailableCredits() - amount;
@@ -203,7 +203,7 @@ public class CreditManager {
             db.beginTransaction();
             
             // Get current balance
-            CreditBalance balance = getCreditBalance(userId);
+            CreditBalance balance = getCreditBalanceObject(userId);
             
             // Add to available credits
             double newAvailableCredits = balance.getAvailableCredits() + amount;
