@@ -2,7 +2,7 @@ package com.cc106.bidhub;
 
 import android.os.Bundle;
 import android.view.MenuItem;
-import android.widget.Toast;
+import com.cc106.bidhub.toast.ToastHelper;
 
 public class BrowseActivity extends BaseActivity {
 
@@ -22,7 +22,7 @@ public class BrowseActivity extends BaseActivity {
         animateContentIn();
         
         // TODO: Implement browse functionality
-        showSuccess("Browse Items - Coming Soon!");
+        ToastHelper.showInfo(this, "Browse Items - Coming Soon!");
     }
 
     @Override
@@ -36,7 +36,7 @@ public class BrowseActivity extends BaseActivity {
     }
 
     @Override
-    protected String getCurrentUserEmail() {
+    public String getCurrentUserEmail() {
         return loggedInUserEmail;
     }
 }

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="60dp"
+    android:height="60dp"
+    android:viewportWidth="60"
+    android:viewportHeight="60">
+    
+    <!-- Background gradient -->
+    <path
+        android:fillColor="@color/primary_blue"
+        android:pathData="M30,5 L55,17.5 L55,42.5 L30,55 L5,42.5 L5,17.5 Z" />
+    
+    <!-- Gavel head -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M37.5,12.5 L47.5,10 L50,17.5 L40,20 Z" />
+    
+    <!-- Gavel handle -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M42.5,20 L40,30 L37.5,27.5 L40,20 Z" />
+    
+    <!-- Outer loop -->
+    <path
+        android:fillColor="@color/white"
+        android:strokeColor="@color/white"
+        android:strokeWidth="4"
+        android:pathData="M37.5,27.5 Q30,35 22.5,30 Q15,25 17.5,17.5 Q20,10 27.5,15 Q35,20 37.5,27.5"
+        android:fillType="evenOdd" />
+    
+    <!-- Inner loop -->
+    <path
+        android:fillColor="@color/white"
+        android:strokeColor="@color/white"
+        android:strokeWidth="2"
+        android:pathData="M35,25 Q30,30 25,27.5 Q20,25 21,20 Q22,15 27,17.5 Q32,20 35,25"
+        android:fillType="evenOdd" />
+        
+</vector>

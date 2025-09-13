@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
+import com.cc106.bidhub.toast.ToastHelper;
 
 import java.util.Locale;
 
@@ -63,17 +63,17 @@ public class ProfileActivity extends BaseActivity {
         });
         
         buttonViewBids.setOnClickListener(v -> {
-            showSuccess("My Bids - Coming Soon!");
+            ToastHelper.showInfo(this, "My Bids - Coming Soon!");
         });
         
         buttonTransactionHistory.setOnClickListener(v -> {
-            showSuccess("Transaction History - Coming Soon!");
+            ToastHelper.showInfo(this, "Transaction History - Coming Soon!");
         });
     }
 
     private void loadUserData() {
         if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
-            showError("Error: User not identified.");
+            ToastHelper.showError(this, "Error: User not identified.");
             return;
         }
 
@@ -125,9 +125,9 @@ public class ProfileActivity extends BaseActivity {
         
         if (rowsAffected > 0) {
             textViewAlias.setText(newAlias);
-            showSuccess("Alias regenerated: " + newAlias);
+            ToastHelper.showSuccess(this, "Alias regenerated: " + newAlias);
         } else {
-            showError("Failed to regenerate alias");
+            ToastHelper.showError(this, "Failed to regenerate alias");
         }
         
         db.close();
@@ -144,7 +144,7 @@ public class ProfileActivity extends BaseActivity {
     }
 
     @Override
-    protected String getCurrentUserEmail() {
+    public String getCurrentUserEmail() {
         return loggedInUserEmail;
     }
 }

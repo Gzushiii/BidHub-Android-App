@@ -3,7 +3,7 @@ package com.cc106.bidhub;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Toast;
+import com.cc106.bidhub.toast.ToastHelper;
 
 public class PostActivity extends BaseActivity {
 
@@ -23,7 +23,7 @@ public class PostActivity extends BaseActivity {
         animateContentIn();
         
         // TODO: Implement post item functionality
-        showSuccess("Post Item - Coming Soon!");
+        ToastHelper.showInfo(this, "Post Item - Coming Soon!");
     }
 
     @Override
@@ -37,7 +37,7 @@ public class PostActivity extends BaseActivity {
     }
 
     @Override
-    protected String getCurrentUserEmail() {
+    public String getCurrentUserEmail() {
         return loggedInUserEmail;
     }
 }

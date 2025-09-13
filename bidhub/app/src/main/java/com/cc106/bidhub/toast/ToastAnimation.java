@@ -1,5 +1,7 @@
 package com.cc106.bidhub.toast;
 
+import com.cc106.bidhub.R;
+
 /**
  * Enumeration of toast notification animations
  */

@@ -54,12 +54,15 @@
 
                 </LinearLayout>
 
-                <!-- Profile Icon -->
-                <View
+                <!-- BidHub Logo -->
+                <ImageView
                     android:layout_width="48dp"
                     android:layout_height="48dp"
+                    android:src="@drawable/logo_bidhub_header"
                     android:background="@drawable/card_background"
-                    android:backgroundTint="@color/white" />
+                    android:backgroundTint="@color/white"
+                    android:padding="8dp"
+                    android:contentDescription="BidHub Logo" />
 
             </LinearLayout>
 

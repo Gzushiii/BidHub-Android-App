@@ -23,12 +23,13 @@
             android:layout_marginTop="24dp"
             android:layout_marginBottom="32dp">
 
-            <!-- Logo/Icon Placeholder -->
-            <View
+            <!-- BidHub Logo -->
+            <ImageView
                 android:layout_width="60dp"
                 android:layout_height="60dp"
-                android:background="@drawable/gradient_background"
-                android:layout_marginBottom="16dp" />
+                android:src="@drawable/logo_bidhub_small"
+                android:layout_marginBottom="16dp"
+                android:contentDescription="BidHub Logo" />
 
             <TextView
                 android:layout_width="wrap_content"

@@ -3,7 +3,7 @@ package com.cc106.bidhub;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Toast;
+import com.cc106.bidhub.toast.ToastHelper;
 
 public class CreditsActivity extends BaseActivity {
 
@@ -23,7 +23,7 @@ public class CreditsActivity extends BaseActivity {
         animateContentIn();
         
         // TODO: Implement credits functionality
-        showSuccess("Credits Management - Coming Soon!");
+        ToastHelper.showInfo(this, "Credits Management - Coming Soon!");
     }
 
     @Override
@@ -37,7 +37,7 @@ public class CreditsActivity extends BaseActivity {
     }
 
     @Override
-    protected String getCurrentUserEmail() {
+    public String getCurrentUserEmail() {
         return loggedInUserEmail;
     }
 }
