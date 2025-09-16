@@ -123,3 +123,4 @@ public class CreditsTestActivity extends BaseActivity {
         return "test@example.com";
     }
 }
+

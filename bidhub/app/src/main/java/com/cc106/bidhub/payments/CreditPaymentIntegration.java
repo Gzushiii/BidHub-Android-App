@@ -143,7 +143,7 @@ public class CreditPaymentIntegration {
     }
     
     /**
-     * Check if payment method is supported
+     * Check if payment meqthod is supported
      */
     public boolean isPaymentMethodSupported(String paymentMethod) {
         return paymentManager.validatePaymentMethod(paymentMethod);

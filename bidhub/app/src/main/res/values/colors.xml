@@ -54,6 +54,7 @@
     <!-- UI Colors -->
     <color name="primary_color">#FF2196F3</color>
     <color name="success_color">#FF4CAF50</color>
+    <color name="error_color">#FFF44336</color>
     <color name="border_light">#FFE0E0E0</color>
     <color name="info_background">#FFF3F4F6</color>
     
