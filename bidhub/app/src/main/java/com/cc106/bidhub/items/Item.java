@@ -291,6 +291,10 @@ public class Item {
         this.highestBidderName = highestBidderName;
     }
     
+    public void setCurrentBidderId(String currentBidderId) {
+        this.highestBidderId = currentBidderId;
+    }
+    
     public boolean isFeatured() {
         return isFeatured;
     }
