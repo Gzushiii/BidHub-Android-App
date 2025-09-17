@@ -89,6 +89,9 @@ public class LoginActivity extends AppCompatActivity {
             }
             ToastHelper.showError(this, "Invalid email or password");
         }
+        
+        // Always close the database connection
+        db.close();
     }
 }
 
