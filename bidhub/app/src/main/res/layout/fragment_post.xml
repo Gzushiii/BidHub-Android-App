@@ -102,19 +102,21 @@
                     android:textColor="@color/text_primary"
                     android:layout_marginBottom="8dp" />
 
-        <LinearLayout
+                <!-- Main Category Dropdown -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:background="@drawable/card_background"
                     android:padding="16dp"
-                    android:gravity="center_vertical">
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="8dp">
 
                     <AutoCompleteTextView
                         android:id="@+id/actv_category"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:text="Choose"
                         android:textColor="@color/text_secondary"
                         android:inputType="none"
@@ -127,6 +129,37 @@
                         android:layout_height="16dp"
                         android:src="@drawable/ic_dropdown_arrow"
                         android:contentDescription="Dropdown" />
+
+                </LinearLayout>
+
+                <!-- Subcategory Dropdown (initially hidden) -->
+                <LinearLayout
+                    android:id="@+id/layout_subcategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:background="@drawable/card_background"
+                    android:padding="16dp"
+                    android:gravity="center_vertical"
+                    android:visibility="gone">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/actv_subcategory"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Choose Subcategory"
+                        android:textColor="@color/text_secondary"
+                        android:inputType="none"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:background="@android:color/transparent" />
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_dropdown_arrow"
+                        android:contentDescription="Subcategory Dropdown" />
 
                 </LinearLayout>
 

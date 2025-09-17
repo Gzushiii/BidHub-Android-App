@@ -50,7 +50,6 @@ bidhub/
   - `AliasGenerator` - User alias generation functionality
 
 ## Database Schema
-
 The application uses SQLite with the following main table:
 - `users` - Stores user information including email, alias, password hash, and credits
 

@@ -49,6 +49,7 @@ public class PostActivity extends BaseActivity implements
     private TextInputEditText etItemTitle;
     private TextInputEditText etItemDescription;
     private AutoCompleteTextView actvCategory;
+    private AutoCompleteTextView actvSubcategory;
     private AutoCompleteTextView actvCondition;
     private TextInputEditText etStartingPrice;
     private AutoCompleteTextView actvSize;
@@ -70,6 +71,7 @@ public class PostActivity extends BaseActivity implements
     
     // Layouts
     private LinearLayout layoutOptionalDetails;
+    private LinearLayout layoutSubcategory;
     
     // Adapters
     private ItemImageAdapter imageAdapter;
@@ -79,6 +81,8 @@ public class PostActivity extends BaseActivity implements
     private List<String> selectedImages;
     private List<String> selectedTags;
     private List<Category> categories;
+    private List<Category> subcategories;
+    private String selectedMainCategoryId;
     private boolean isForSale = true;
     private boolean isOptionalDetailsVisible = true;
 
@@ -96,6 +100,8 @@ public class PostActivity extends BaseActivity implements
         // Initialize data
         selectedImages = new ArrayList<>();
         selectedTags = new ArrayList<>();
+        subcategories = new ArrayList<>();
+        selectedMainCategoryId = null;
         categories = categoryManager.getAllMainCategories();
         
         // Set content view
@@ -112,6 +118,7 @@ public class PostActivity extends BaseActivity implements
         etItemTitle = findViewById(R.id.et_item_title);
         etItemDescription = findViewById(R.id.et_item_description);
         actvCategory = findViewById(R.id.actv_category);
+        actvSubcategory = findViewById(R.id.actv_subcategory);
         actvCondition = findViewById(R.id.actv_condition);
         etStartingPrice = findViewById(R.id.et_starting_price);
         actvSize = findViewById(R.id.actv_size);
@@ -132,6 +139,7 @@ public class PostActivity extends BaseActivity implements
         
         // Layouts
         layoutOptionalDetails = findViewById(R.id.layout_optional_details);
+        layoutSubcategory = findViewById(R.id.layout_subcategory);
     }
     
     private void setupAdapters() {
@@ -149,11 +157,16 @@ public class PostActivity extends BaseActivity implements
     }
     
     private void setupDropdowns() {
-        // Category dropdown - using CategoryManager
-        List<String> categoryNames = categoryManager.getMainCategoryNames();
+        // Main Category dropdown - only show main categories
+        List<String> mainCategoryNames = categoryManager.getMainCategoryNames();
+        mainCategoryNames.add(0, "Choose"); // Add "Choose" at the beginning
         ArrayAdapter<String> categoryAdapter = new ArrayAdapter<>(this, 
-                android.R.layout.simple_dropdown_item_1line, categoryNames);
+                android.R.layout.simple_dropdown_item_1line, mainCategoryNames);
         actvCategory.setAdapter(categoryAdapter);
+        setupMainCategoryDropdownListener(actvCategory);
+        
+        // Subcategory dropdown - initially hidden
+        setupSubcategoryDropdownListener(actvSubcategory);
         
         // Condition dropdown
         String[] conditions = {"New", "Like New", "Good", "Fair", "Poor"};
@@ -185,6 +198,147 @@ public class PostActivity extends BaseActivity implements
         btnForFree.setOnClickListener(v -> togglePriceMode(false));
         btnToggleOptional.setOnClickListener(v -> toggleOptionalDetails());
         btnPostItem.setOnClickListener(v -> postItem());
+    }
+    
+    private void setupMainCategoryDropdownListener(AutoCompleteTextView autoCompleteTextView) {
+        try {
+            // Prevent text editing
+            autoCompleteTextView.setKeyListener(null);
+            
+            // Show dropdown on click
+            autoCompleteTextView.setOnClickListener(v -> {
+                autoCompleteTextView.showDropDown();
+            });
+            
+            // Show dropdown on focus
+            autoCompleteTextView.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) {
+                    autoCompleteTextView.showDropDown();
+                }
+            });
+            
+            // Handle item selection
+            autoCompleteTextView.setOnItemClickListener((parent, view, position, id) -> {
+                String selectedItem = (String) parent.getItemAtPosition(position);
+                autoCompleteTextView.setText(selectedItem, false);
+                autoCompleteTextView.dismissDropDown();
+                
+                // Handle main category selection
+                handleMainCategorySelection(selectedItem);
+            });
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error setting up main category dropdown listener: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private void setupSubcategoryDropdownListener(AutoCompleteTextView autoCompleteTextView) {
+        try {
+            // Prevent text editing
+            autoCompleteTextView.setKeyListener(null);
+            
+            // Show dropdown on click
+            autoCompleteTextView.setOnClickListener(v -> {
+                if (layoutSubcategory.getVisibility() == View.VISIBLE) {
+                    autoCompleteTextView.showDropDown();
+                }
+            });
+            
+            // Show dropdown on focus
+            autoCompleteTextView.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus && layoutSubcategory.getVisibility() == View.VISIBLE) {
+                    autoCompleteTextView.showDropDown();
+                }
+            });
+            
+            // Handle item selection
+            autoCompleteTextView.setOnItemClickListener((parent, view, position, id) -> {
+                String selectedItem = (String) parent.getItemAtPosition(position);
+                autoCompleteTextView.setText(selectedItem, false);
+                autoCompleteTextView.dismissDropDown();
+            });
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error setting up subcategory dropdown listener: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private void handleMainCategorySelection(String selectedCategoryName) {
+        try {
+            if (selectedCategoryName.equals("Choose")) {
+                // Hide subcategory dropdown and reset
+                hideSubcategoryDropdown();
+                selectedMainCategoryId = null;
+                return;
+            }
+            
+            // Find the selected main category
+            Category selectedCategory = null;
+            for (Category category : categories) {
+                if (category.getName().equals(selectedCategoryName)) {
+                    selectedCategory = category;
+                    break;
+                }
+            }
+            
+            if (selectedCategory != null) {
+                selectedMainCategoryId = selectedCategory.getCategoryId();
+                
+                // Get subcategories for the selected main category
+                subcategories = categoryManager.getSubCategories(selectedMainCategoryId);
+                
+                if (subcategories != null && !subcategories.isEmpty()) {
+                    // Show subcategory dropdown with subcategories
+                    showSubcategoryDropdown(subcategories);
+                } else {
+                    // No subcategories available, hide the dropdown
+                    hideSubcategoryDropdown();
+                }
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error handling main category selection: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private void showSubcategoryDropdown(List<Category> subcategories) {
+        try {
+            if (layoutSubcategory != null && actvSubcategory != null) {
+                // Create subcategory names list
+                List<String> subcategoryNames = new ArrayList<>();
+                subcategoryNames.add("Choose Subcategory");
+                
+                for (Category subcategory : subcategories) {
+                    subcategoryNames.add(subcategory.getName());
+                }
+                
+                // Set up subcategory adapter
+                ArrayAdapter<String> subcategoryAdapter = new ArrayAdapter<>(this, 
+                        android.R.layout.simple_dropdown_item_1line, subcategoryNames);
+                actvSubcategory.setAdapter(subcategoryAdapter);
+                actvSubcategory.setThreshold(0);
+                
+                // Show the subcategory layout
+                layoutSubcategory.setVisibility(View.VISIBLE);
+                actvSubcategory.setText("Choose Subcategory", false);
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error showing subcategory dropdown: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private void hideSubcategoryDropdown() {
+        try {
+            if (layoutSubcategory != null && actvSubcategory != null) {
+                layoutSubcategory.setVisibility(View.GONE);
+                actvSubcategory.setText("", false);
+                actvSubcategory.setAdapter(null);
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error hiding subcategory dropdown: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     private void togglePriceMode(boolean forSale) {
@@ -382,13 +536,27 @@ public class PostActivity extends BaseActivity implements
     }
     
     private String getSelectedCategoryId() {
-        String selectedCategoryName = actvCategory.getText().toString().trim();
-        for (Category category : categories) {
-            if (category.getName().equals(selectedCategoryName)) {
-                return category.getCategoryId();
+        // First check if a subcategory is selected
+        String selectedSubcategoryName = actvSubcategory.getText().toString().trim();
+        if (!TextUtils.isEmpty(selectedSubcategoryName) && 
+            !selectedSubcategoryName.equals("Choose Subcategory") && 
+            !selectedSubcategoryName.equals("Choose")) {
+            
+            // Find the subcategory ID
+            for (Category subcategory : subcategories) {
+                if (subcategory.getName().equals(selectedSubcategoryName)) {
+                    return subcategory.getCategoryId();
+                }
             }
         }
-        return "";
+        
+        // If no subcategory selected, use main category
+        String selectedCategoryName = actvCategory.getText().toString().trim();
+        if (!TextUtils.isEmpty(selectedCategoryName) && !selectedCategoryName.equals("Choose")) {
+            return selectedMainCategoryId;
+        }
+        
+        return null;
     }
     
     private void setAuctionDuration(ItemData itemData) {
@@ -409,6 +577,11 @@ public class PostActivity extends BaseActivity implements
         actvSize.setText("Choose");
         actvFeatures.setText("Choose");
         actvOrigin.setText("Choose");
+        
+        // Reset subcategory dropdown
+        hideSubcategoryDropdown();
+        selectedMainCategoryId = null;
+        subcategories.clear();
         
         // Reset checkboxes
         cbQuantity.setChecked(false);
