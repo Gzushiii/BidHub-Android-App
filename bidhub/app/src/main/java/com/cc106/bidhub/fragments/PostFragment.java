@@ -2,6 +2,10 @@ package com.cc106.bidhub.fragments;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -15,6 +19,7 @@ import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -40,6 +45,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class PostFragment extends Fragment implements 
         ItemImageAdapter.OnImageClickListener, 
@@ -78,6 +85,9 @@ public class PostFragment extends Fragment implements
     private Button btnToggleOptional;
     private Button btnPostItem;
     private ProgressBar progressBar;
+    private LinearLayout layoutImageProgress;
+    private ProgressBar progressImageUpload;
+    private TextView tvImageProgress;
     
     // Checkboxes
     private CheckBox cbQuantity;
@@ -102,6 +112,11 @@ public class PostFragment extends Fragment implements
     private String selectedMainCategoryId;
     private boolean isForSale = true;
     private boolean isOptionalDetailsVisible = true;
+    
+    // Auto-save functionality
+    private Timer autoSaveTimer;
+    private static final long AUTO_SAVE_INTERVAL = 30000; // 30 seconds
+    private boolean hasUnsavedChanges = false;
 
     @Nullable
     @Override
@@ -143,6 +158,7 @@ public class PostFragment extends Fragment implements
             setupAdapters();
             setupDropdowns();
             setupClickListeners(view);
+            setupAutoSave();
         } catch (Exception e) {
             ToastHelper.showError(getContext(), "Error initializing UI: " + e.getMessage());
             e.printStackTrace();
@@ -158,6 +174,10 @@ public class PostFragment extends Fragment implements
         actvSubcategory = view.findViewById(R.id.actv_subcategory);
         actvCondition = view.findViewById(R.id.actv_condition);
         etStartingPrice = view.findViewById(R.id.et_starting_price);
+        etBuyNowPrice = view.findViewById(R.id.et_buy_now_price);
+        actvAuctionDuration = view.findViewById(R.id.actv_auction_duration);
+        etLocation = view.findViewById(R.id.et_location);
+        etShippingInfo = view.findViewById(R.id.et_shipping_info);
         actvSize = view.findViewById(R.id.actv_size);
         actvFeatures = view.findViewById(R.id.actv_features);
         actvOrigin = view.findViewById(R.id.actv_origin);
@@ -168,6 +188,9 @@ public class PostFragment extends Fragment implements
         btnToggleOptional = view.findViewById(R.id.btn_toggle_optional);
         btnPostItem = view.findViewById(R.id.btn_post_item);
         progressBar = view.findViewById(R.id.progress_bar);
+        layoutImageProgress = view.findViewById(R.id.layout_image_progress);
+        progressImageUpload = view.findViewById(R.id.progress_image_upload);
+        tvImageProgress = view.findViewById(R.id.tv_image_progress);
         
         // Back button
         ImageView btnBack = view.findViewById(R.id.btn_back);
@@ -274,6 +297,16 @@ public class PostFragment extends Fragment implements
                 actvOrigin.setAdapter(originAdapter);
                 actvOrigin.setThreshold(0); // Show dropdown immediately
                 setupDropdownClickListener(actvOrigin);
+            }
+            
+            // Auction duration dropdown
+            if (actvAuctionDuration != null) {
+                String[] durations = {"1 Day", "3 Days", "5 Days", "7 Days", "10 Days", "14 Days"};
+                ArrayAdapter<String> durationAdapter = new ArrayAdapter<>(getContext(), 
+                        android.R.layout.simple_dropdown_item_1line, durations);
+                actvAuctionDuration.setAdapter(durationAdapter);
+                actvAuctionDuration.setThreshold(0); // Show dropdown immediately
+                setupDropdownClickListener(actvAuctionDuration);
             }
         } catch (Exception e) {
             ToastHelper.showError(getContext(), "Error setting up dropdowns: " + e.getMessage());
@@ -582,22 +615,162 @@ public class PostFragment extends Fragment implements
         
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK) {
             if (data != null) {
-                if (data.getClipData() != null) {
-                    // Multiple images selected
-                    int count = data.getClipData().getItemCount();
-                    for (int i = 0; i < count && selectedImages.size() < MAX_IMAGES; i++) {
-                        Uri imageUri = data.getClipData().getItemAt(i).getUri();
-                        selectedImages.add(imageUri.toString());
+                try {
+                    // Show progress indicator
+                    showImageProgress(true);
+                    
+                    if (data.getClipData() != null) {
+                        // Multiple images selected
+                        int count = data.getClipData().getItemCount();
+                        int processedCount = 0;
+                        
+                        for (int i = 0; i < count && selectedImages.size() < MAX_IMAGES; i++) {
+                            Uri imageUri = data.getClipData().getItemAt(i).getUri();
+                            updateImageProgress("Processing image " + (i + 1) + " of " + count);
+                            
+                            String compressedImagePath = compressImage(imageUri);
+                            if (compressedImagePath != null) {
+                                selectedImages.add(compressedImagePath);
+                                processedCount++;
+                            }
+                        }
+                        
+                        ToastHelper.showSuccess(getContext(), "Images added: " + processedCount);
+                    } else if (data.getData() != null) {
+                        // Single image selected
+                        Uri imageUri = data.getData();
+                        updateImageProgress("Processing image...");
+                        
+                        String compressedImagePath = compressImage(imageUri);
+                        if (compressedImagePath != null) {
+                            selectedImages.add(compressedImagePath);
+                            ToastHelper.showSuccess(getContext(), "Image added successfully");
+                        }
                     }
-                } else if (data.getData() != null) {
-                    // Single image selected
-                    Uri imageUri = data.getData();
-                    selectedImages.add(imageUri.toString());
+                    
+                    imageAdapter.notifyDataSetChanged();
+                } catch (Exception e) {
+                    ToastHelper.showError(getContext(), "Error processing images: " + e.getMessage());
+                } finally {
+                    // Hide progress indicator
+                    showImageProgress(false);
                 }
-                
-                imageAdapter.notifyDataSetChanged();
-                ToastHelper.showSuccess(getContext(), "Images added: " + selectedImages.size());
             }
+        }
+    }
+    
+    private void showImageProgress(boolean show) {
+        if (layoutImageProgress != null) {
+            layoutImageProgress.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
+    }
+    
+    private void updateImageProgress(String message) {
+        if (tvImageProgress != null) {
+            tvImageProgress.setText(message);
+        }
+    }
+    
+    private String compressImage(Uri imageUri) {
+        try {
+            // Get input stream from URI
+            android.content.ContentResolver contentResolver = getContext().getContentResolver();
+            java.io.InputStream inputStream = contentResolver.openInputStream(imageUri);
+            
+            // Decode image with options to reduce memory usage
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(inputStream, null, options);
+            inputStream.close();
+            
+            // Calculate sample size for compression
+            int maxWidth = 1920;
+            int maxHeight = 1080;
+            int sampleSize = calculateInSampleSize(options, maxWidth, maxHeight);
+            
+            // Decode image with calculated sample size
+            options.inJustDecodeBounds = false;
+            options.inSampleSize = sampleSize;
+            options.inPreferredConfig = Bitmap.Config.RGB_565; // Reduce memory usage
+            
+            inputStream = contentResolver.openInputStream(imageUri);
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream, null, options);
+            inputStream.close();
+            
+            if (bitmap == null) {
+                return null;
+            }
+            
+            // Rotate image if needed
+            bitmap = rotateImageIfRequired(bitmap, imageUri);
+            
+            // Compress and save
+            String fileName = "compressed_" + System.currentTimeMillis() + ".jpg";
+            java.io.File outputDir = new java.io.File(getContext().getCacheDir(), "compressed_images");
+            if (!outputDir.exists()) {
+                outputDir.mkdirs();
+            }
+            
+            java.io.File outputFile = new java.io.File(outputDir, fileName);
+            java.io.FileOutputStream outputStream = new java.io.FileOutputStream(outputFile);
+            
+            // Compress with quality 85%
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream);
+            outputStream.close();
+            bitmap.recycle();
+            
+            return outputFile.getAbsolutePath();
+            
+        } catch (Exception e) {
+            ToastHelper.showError(getContext(), "Error compressing image: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+        
+        if (height > reqHeight || width > reqWidth) {
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+            
+            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+        
+        return inSampleSize;
+    }
+    
+    private Bitmap rotateImageIfRequired(Bitmap bitmap, Uri imageUri) {
+        try {
+            android.content.ContentResolver contentResolver = getContext().getContentResolver();
+            java.io.InputStream inputStream = contentResolver.openInputStream(imageUri);
+            ExifInterface exifInterface = new ExifInterface(inputStream);
+            inputStream.close();
+            
+            int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+            
+            Matrix matrix = new Matrix();
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    matrix.postRotate(90);
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    matrix.postRotate(180);
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    matrix.postRotate(270);
+                    break;
+                default:
+                    return bitmap;
+            }
+            
+            return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        } catch (Exception e) {
+            return bitmap;
         }
     }
     
@@ -681,12 +854,31 @@ public class PostFragment extends Fragment implements
         itemData.setDescription(etItemDescription.getText().toString().trim());
         itemData.setCategoryId(getSelectedCategoryId());
         itemData.setCondition(actvCondition.getText().toString().trim());
+        itemData.setLocation(etLocation.getText().toString().trim());
+        itemData.setShippingInfo(etShippingInfo.getText().toString().trim());
         
         // Pricing
         if (isForSale) {
             try {
                 double startingPrice = Double.parseDouble(etStartingPrice.getText().toString().trim());
                 itemData.setStartingPrice(startingPrice);
+                
+                // Handle Buy Now price
+                String buyNowPriceText = etBuyNowPrice.getText().toString().trim();
+                if (!TextUtils.isEmpty(buyNowPriceText)) {
+                    try {
+                        double buyNowPrice = Double.parseDouble(buyNowPriceText);
+                        if (buyNowPrice > startingPrice) {
+                            itemData.setBuyNowPrice(buyNowPrice);
+                        } else {
+                            ToastHelper.showError(getContext(), "Buy Now price must be higher than starting price");
+                            return null;
+                        }
+                    } catch (NumberFormatException e) {
+                        ToastHelper.showError(getContext(), "Invalid Buy Now price format");
+                        return null;
+                    }
+                }
             } catch (NumberFormatException e) {
                 ToastHelper.showError(getContext(), "Invalid price format");
                 return null;
@@ -786,14 +978,14 @@ public class PostFragment extends Fragment implements
         if (isForSale) {
             String priceText = etStartingPrice.getText().toString().trim();
             if (TextUtils.isEmpty(priceText)) {
-                ToastHelper.showError(getContext(), "Price is required for items for sale");
+                ToastHelper.showError(getContext(), "Starting price is required for items for sale");
                 etStartingPrice.requestFocus();
                 return false;
             }
             try {
                 double price = Double.parseDouble(priceText);
-                if (price < 0) {
-                    ToastHelper.showError(getContext(), "Price cannot be negative");
+                if (price < 1) {
+                    ToastHelper.showError(getContext(), "Starting price must be at least ₱1");
                     etStartingPrice.requestFocus();
                     return false;
                 }
@@ -802,8 +994,30 @@ public class PostFragment extends Fragment implements
                     etStartingPrice.requestFocus();
                     return false;
                 }
+                
+                // Validate Buy Now price if provided
+                String buyNowPriceText = etBuyNowPrice.getText().toString().trim();
+                if (!TextUtils.isEmpty(buyNowPriceText)) {
+                    try {
+                        double buyNowPrice = Double.parseDouble(buyNowPriceText);
+                        if (buyNowPrice <= price) {
+                            ToastHelper.showError(getContext(), "Buy Now price must be higher than starting price");
+                            etBuyNowPrice.requestFocus();
+                            return false;
+                        }
+                        if (buyNowPrice > 1000000) {
+                            ToastHelper.showError(getContext(), "Buy Now price seems too high. Please verify the amount");
+                            etBuyNowPrice.requestFocus();
+                            return false;
+                        }
+                    } catch (NumberFormatException e) {
+                        ToastHelper.showError(getContext(), "Please enter a valid Buy Now price");
+                        etBuyNowPrice.requestFocus();
+                        return false;
+                    }
+                }
             } catch (NumberFormatException e) {
-                ToastHelper.showError(getContext(), "Please enter a valid price");
+                ToastHelper.showError(getContext(), "Please enter a valid starting price");
                 etStartingPrice.requestFocus();
                 return false;
             }
@@ -832,6 +1046,27 @@ public class PostFragment extends Fragment implements
         if (!TextUtils.isEmpty(description) && description.length() > 1000) {
             ToastHelper.showError(getContext(), "Description must be less than 1000 characters");
             etItemDescription.requestFocus();
+            return false;
+        }
+        
+        // Validate location
+        String location = etLocation.getText().toString().trim();
+        if (TextUtils.isEmpty(location)) {
+            ToastHelper.showError(getContext(), "Location is required");
+            etLocation.requestFocus();
+            return false;
+        }
+        if (location.length() < 3) {
+            ToastHelper.showError(getContext(), "Please provide a more specific location");
+            etLocation.requestFocus();
+            return false;
+        }
+        
+        // Validate auction duration
+        String duration = actvAuctionDuration.getText().toString().trim();
+        if (TextUtils.isEmpty(duration) || duration.equals("Choose")) {
+            ToastHelper.showError(getContext(), "Auction duration is required");
+            actvAuctionDuration.requestFocus();
             return false;
         }
         
@@ -876,25 +1111,30 @@ public class PostFragment extends Fragment implements
         itemData.setStartDate(calendar.getTime());
         
         int days = 7; // Default
-        switch (duration) {
-            case "1 Day":
-                days = 1;
-                break;
-            case "3 Days":
-                days = 3;
-                break;
-            case "5 Days":
-                days = 5;
-                break;
-            case "7 Days":
-                days = 7;
-                break;
-            case "10 Days":
-                days = 10;
-                break;
-            case "14 Days":
-                days = 14;
-                break;
+        if (!TextUtils.isEmpty(duration)) {
+            switch (duration) {
+                case "1 Day":
+                    days = 1;
+                    break;
+                case "3 Days":
+                    days = 3;
+                    break;
+                case "5 Days":
+                    days = 5;
+                    break;
+                case "7 Days":
+                    days = 7;
+                    break;
+                case "10 Days":
+                    days = 10;
+                    break;
+                case "14 Days":
+                    days = 14;
+                    break;
+                default:
+                    days = 7; // Default fallback
+                    break;
+            }
         }
         
         calendar.add(Calendar.DAY_OF_MONTH, days);
@@ -907,6 +1147,10 @@ public class PostFragment extends Fragment implements
         actvCategory.setText("Choose");
         actvCondition.setText("Choose");
         etStartingPrice.setText("");
+        etBuyNowPrice.setText("");
+        actvAuctionDuration.setText("7 Days");
+        etLocation.setText("");
+        etShippingInfo.setText("");
         actvSize.setText("Choose");
         actvFeatures.setText("Choose");
         actvOrigin.setText("Choose");
@@ -963,5 +1207,97 @@ public class PostFragment extends Fragment implements
     
     public void updateUserEmail(String email) {
         this.loggedInUserEmail = email;
+    }
+    
+    // Auto-save functionality
+    private void setupAutoSave() {
+        try {
+            // Set up text change listeners for auto-save
+            if (etItemTitle != null) {
+                etItemTitle.addTextChangedListener(new android.text.TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                    
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        hasUnsavedChanges = true;
+                        scheduleAutoSave();
+                    }
+                    
+                    @Override
+                    public void afterTextChanged(android.text.Editable s) {}
+                });
+            }
+            
+            if (etItemDescription != null) {
+                etItemDescription.addTextChangedListener(new android.text.TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                    
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        hasUnsavedChanges = true;
+                        scheduleAutoSave();
+                    }
+                    
+                    @Override
+                    public void afterTextChanged(android.text.Editable s) {}
+                });
+            }
+            
+            if (etStartingPrice != null) {
+                etStartingPrice.addTextChangedListener(new android.text.TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                    
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        hasUnsavedChanges = true;
+                        scheduleAutoSave();
+                    }
+                    
+                    @Override
+                    public void afterTextChanged(android.text.Editable s) {}
+                });
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(getContext(), "Error setting up auto-save: " + e.getMessage());
+        }
+    }
+    
+    private void scheduleAutoSave() {
+        try {
+            if (autoSaveTimer != null) {
+                autoSaveTimer.cancel();
+            }
+            
+            autoSaveTimer = new Timer();
+            autoSaveTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (hasUnsavedChanges && getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            saveAsDraft();
+                            hasUnsavedChanges = false;
+                        });
+                    }
+                }
+            }, AUTO_SAVE_INTERVAL);
+        } catch (Exception e) {
+            ToastHelper.showError(getContext(), "Error scheduling auto-save: " + e.getMessage());
+        }
+    }
+    
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        try {
+            if (autoSaveTimer != null) {
+                autoSaveTimer.cancel();
+                autoSaveTimer = null;
+            }
+        } catch (Exception e) {
+            // Ignore cleanup errors
+        }
     }
 }
