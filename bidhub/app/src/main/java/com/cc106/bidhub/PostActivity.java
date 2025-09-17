@@ -175,24 +175,28 @@ public class PostActivity extends BaseActivity implements
         ArrayAdapter<String> conditionAdapter = new ArrayAdapter<>(this, 
                 android.R.layout.simple_dropdown_item_1line, conditions);
         actvCondition.setAdapter(conditionAdapter);
+        setupDropdownClickListener(actvCondition);
         
         // Size dropdown
         String[] sizes = {"XS", "S", "M", "L", "XL", "XXL", "XXXL", "One Size", "Custom"};
         ArrayAdapter<String> sizeAdapter = new ArrayAdapter<>(this, 
                 android.R.layout.simple_dropdown_item_1line, sizes);
         actvSize.setAdapter(sizeAdapter);
+        setupDropdownClickListener(actvSize);
         
         // Features dropdown
         String[] features = {"Brand New", "Used", "Vintage", "Limited Edition", "Rare", "Collectible", "Custom"};
         ArrayAdapter<String> featuresAdapter = new ArrayAdapter<>(this, 
                 android.R.layout.simple_dropdown_item_1line, features);
         actvFeatures.setAdapter(featuresAdapter);
+        setupDropdownClickListener(actvFeatures);
         
         // Origin dropdown
         String[] origins = {"Local", "Imported", "Overseas", "Online Purchase", "Gift", "Unknown"};
         ArrayAdapter<String> originAdapter = new ArrayAdapter<>(this, 
                 android.R.layout.simple_dropdown_item_1line, origins);
         actvOrigin.setAdapter(originAdapter);
+        setupDropdownClickListener(actvOrigin);
     }
     
     private void setupClickListeners() {
@@ -200,6 +204,35 @@ public class PostActivity extends BaseActivity implements
         btnForFree.setOnClickListener(v -> togglePriceMode(false));
         btnToggleOptional.setOnClickListener(v -> toggleOptionalDetails());
         btnPostItem.setOnClickListener(v -> postItem());
+    }
+    
+    private void setupDropdownClickListener(AutoCompleteTextView autoCompleteTextView) {
+        try {
+            // Prevent text editing
+            autoCompleteTextView.setKeyListener(null);
+            
+            // Show dropdown on click
+            autoCompleteTextView.setOnClickListener(v -> {
+                autoCompleteTextView.showDropDown();
+            });
+            
+            // Show dropdown on focus
+            autoCompleteTextView.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) {
+                    autoCompleteTextView.showDropDown();
+                }
+            });
+            
+            // Handle item selection
+            autoCompleteTextView.setOnItemClickListener((parent, view, position, id) -> {
+                String selectedItem = (String) parent.getItemAtPosition(position);
+                autoCompleteTextView.setText(selectedItem, false);
+                autoCompleteTextView.dismissDropDown();
+            });
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error setting up dropdown listener: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     private void setupMainCategoryDropdownListener(AutoCompleteTextView autoCompleteTextView) {
@@ -458,15 +491,34 @@ public class PostActivity extends BaseActivity implements
     }
     
     private void postItem() {
-        ItemData itemData = createItemData();
-        if (itemData != null) {
-            try {
-                itemManager.createItem(itemData, loggedInUserEmail);
-                ToastHelper.showSuccess(this, "Item posted successfully!");
-                clearForm();
-            } catch (Exception e) {
-                ToastHelper.showError(this, "Failed to post item");
+        try {
+            // Validate user email
+            if (TextUtils.isEmpty(loggedInUserEmail)) {
+                ToastHelper.showError(this, "User not logged in. Please log in again.");
+                return;
             }
+            
+            ItemData itemData = createItemData();
+            if (itemData != null) {
+                // Show loading state
+                btnPostItem.setEnabled(false);
+                btnPostItem.setText("Posting...");
+                
+                boolean success = itemManager.createItem(itemData, loggedInUserEmail);
+                if (success) {
+                    ToastHelper.showSuccess(this, "Item posted successfully!");
+                    clearForm();
+                } else {
+                    ToastHelper.showError(this, "Failed to post item. Please try again.");
+                }
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error posting item: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            // Reset button state
+            btnPostItem.setEnabled(true);
+            btnPostItem.setText("List it!");
         }
     }
     
@@ -536,32 +588,82 @@ public class PostActivity extends BaseActivity implements
     }
     
     private boolean validateForm() {
-        if (TextUtils.isEmpty(etItemTitle.getText())) {
+        // Validate title
+        String title = etItemTitle.getText().toString().trim();
+        if (TextUtils.isEmpty(title)) {
             ToastHelper.showError(this, "Listing title is required");
             etItemTitle.requestFocus();
             return false;
         }
+        if (title.length() < 3) {
+            ToastHelper.showError(this, "Title must be at least 3 characters long");
+            etItemTitle.requestFocus();
+            return false;
+        }
+        if (title.length() > 100) {
+            ToastHelper.showError(this, "Title must be less than 100 characters");
+            etItemTitle.requestFocus();
+            return false;
+        }
         
-        if (TextUtils.isEmpty(actvCategory.getText()) || actvCategory.getText().toString().equals("Choose")) {
+        // Validate category
+        String category = actvCategory.getText().toString().trim();
+        if (TextUtils.isEmpty(category) || category.equals("Choose")) {
             ToastHelper.showError(this, "Category is required");
             actvCategory.requestFocus();
             return false;
         }
         
-        if (isForSale && TextUtils.isEmpty(etStartingPrice.getText())) {
-            ToastHelper.showError(this, "Price is required for items for sale");
-            etStartingPrice.requestFocus();
-            return false;
+        // Validate price for sale items
+        if (isForSale) {
+            String priceText = etStartingPrice.getText().toString().trim();
+            if (TextUtils.isEmpty(priceText)) {
+                ToastHelper.showError(this, "Price is required for items for sale");
+                etStartingPrice.requestFocus();
+                return false;
+            }
+            try {
+                double price = Double.parseDouble(priceText);
+                if (price < 0) {
+                    ToastHelper.showError(this, "Price cannot be negative");
+                    etStartingPrice.requestFocus();
+                    return false;
+                }
+                if (price > 1000000) {
+                    ToastHelper.showError(this, "Price seems too high. Please verify the amount");
+                    etStartingPrice.requestFocus();
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                ToastHelper.showError(this, "Please enter a valid price");
+                etStartingPrice.requestFocus();
+                return false;
+            }
         }
         
-        if (TextUtils.isEmpty(actvCondition.getText()) || actvCondition.getText().toString().equals("Choose")) {
+        // Validate condition
+        String condition = actvCondition.getText().toString().trim();
+        if (TextUtils.isEmpty(condition) || condition.equals("Choose")) {
             ToastHelper.showError(this, "Condition is required");
             actvCondition.requestFocus();
             return false;
         }
         
+        // Validate images
         if (selectedImages.isEmpty()) {
             ToastHelper.showError(this, "At least one photo is required");
+            return false;
+        }
+        if (selectedImages.size() > MAX_IMAGES) {
+            ToastHelper.showError(this, "Maximum " + MAX_IMAGES + " photos allowed");
+            return false;
+        }
+        
+        // Validate description length
+        String description = etItemDescription.getText().toString().trim();
+        if (!TextUtils.isEmpty(description) && description.length() > 1000) {
+            ToastHelper.showError(this, "Description must be less than 1000 characters");
+            etItemDescription.requestFocus();
             return false;
         }
         

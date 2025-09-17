@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -76,6 +77,7 @@ public class PostFragment extends Fragment implements
     private Button btnForFree;
     private Button btnToggleOptional;
     private Button btnPostItem;
+    private ProgressBar progressBar;
     
     // Checkboxes
     private CheckBox cbQuantity;
@@ -165,6 +167,7 @@ public class PostFragment extends Fragment implements
         btnForFree = view.findViewById(R.id.btn_for_free);
         btnToggleOptional = view.findViewById(R.id.btn_toggle_optional);
         btnPostItem = view.findViewById(R.id.btn_post_item);
+        progressBar = view.findViewById(R.id.progress_bar);
         
         // Back button
         ImageView btnBack = view.findViewById(R.id.btn_back);
@@ -628,16 +631,39 @@ public class PostFragment extends Fragment implements
     }
     
     private void postItem() {
-        ItemData itemData = createItemData();
-        if (itemData != null) {
-            boolean success = itemManager.createItem(itemData, loggedInUserEmail);
-            if (success) {
-                // Set item status to active
-                // This would require updating the ItemManager to support status changes
-                ToastHelper.showSuccess(getContext(), "Item posted successfully!");
-                clearForm();
-            } else {
-                ToastHelper.showError(getContext(), "Failed to post item");
+        try {
+            // Validate user email
+            if (TextUtils.isEmpty(loggedInUserEmail)) {
+                ToastHelper.showError(getContext(), "User not logged in. Please log in again.");
+                return;
+            }
+            
+            ItemData itemData = createItemData();
+            if (itemData != null) {
+                // Show loading state
+                btnPostItem.setEnabled(false);
+                btnPostItem.setText("Posting...");
+                if (progressBar != null) {
+                    progressBar.setVisibility(View.VISIBLE);
+                }
+                
+                boolean success = itemManager.createItem(itemData, loggedInUserEmail);
+                if (success) {
+                    ToastHelper.showSuccess(getContext(), "Item posted successfully!");
+                    clearForm();
+                } else {
+                    ToastHelper.showError(getContext(), "Failed to post item. Please try again.");
+                }
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(getContext(), "Error posting item: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            // Reset button state
+            btnPostItem.setEnabled(true);
+            btnPostItem.setText("List it!");
+            if (progressBar != null) {
+                progressBar.setVisibility(View.GONE);
             }
         }
     }
@@ -730,32 +756,82 @@ public class PostFragment extends Fragment implements
     }
     
     private boolean validateForm() {
-        if (TextUtils.isEmpty(etItemTitle.getText())) {
+        // Validate title
+        String title = etItemTitle.getText().toString().trim();
+        if (TextUtils.isEmpty(title)) {
             ToastHelper.showError(getContext(), "Listing title is required");
             etItemTitle.requestFocus();
             return false;
         }
+        if (title.length() < 3) {
+            ToastHelper.showError(getContext(), "Title must be at least 3 characters long");
+            etItemTitle.requestFocus();
+            return false;
+        }
+        if (title.length() > 100) {
+            ToastHelper.showError(getContext(), "Title must be less than 100 characters");
+            etItemTitle.requestFocus();
+            return false;
+        }
         
-        if (TextUtils.isEmpty(actvCategory.getText()) || actvCategory.getText().toString().equals("Choose")) {
+        // Validate category
+        String category = actvCategory.getText().toString().trim();
+        if (TextUtils.isEmpty(category) || category.equals("Choose")) {
             ToastHelper.showError(getContext(), "Category is required");
             actvCategory.requestFocus();
             return false;
         }
         
-        if (isForSale && TextUtils.isEmpty(etStartingPrice.getText())) {
-            ToastHelper.showError(getContext(), "Price is required for items for sale");
-            etStartingPrice.requestFocus();
-            return false;
+        // Validate price for sale items
+        if (isForSale) {
+            String priceText = etStartingPrice.getText().toString().trim();
+            if (TextUtils.isEmpty(priceText)) {
+                ToastHelper.showError(getContext(), "Price is required for items for sale");
+                etStartingPrice.requestFocus();
+                return false;
+            }
+            try {
+                double price = Double.parseDouble(priceText);
+                if (price < 0) {
+                    ToastHelper.showError(getContext(), "Price cannot be negative");
+                    etStartingPrice.requestFocus();
+                    return false;
+                }
+                if (price > 1000000) {
+                    ToastHelper.showError(getContext(), "Price seems too high. Please verify the amount");
+                    etStartingPrice.requestFocus();
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                ToastHelper.showError(getContext(), "Please enter a valid price");
+                etStartingPrice.requestFocus();
+                return false;
+            }
         }
         
-        if (TextUtils.isEmpty(actvCondition.getText()) || actvCondition.getText().toString().equals("Choose")) {
+        // Validate condition
+        String condition = actvCondition.getText().toString().trim();
+        if (TextUtils.isEmpty(condition) || condition.equals("Choose")) {
             ToastHelper.showError(getContext(), "Condition is required");
             actvCondition.requestFocus();
             return false;
         }
         
+        // Validate images
         if (selectedImages.isEmpty()) {
             ToastHelper.showError(getContext(), "At least one photo is required");
+            return false;
+        }
+        if (selectedImages.size() > MAX_IMAGES) {
+            ToastHelper.showError(getContext(), "Maximum " + MAX_IMAGES + " photos allowed");
+            return false;
+        }
+        
+        // Validate description length
+        String description = etItemDescription.getText().toString().trim();
+        if (!TextUtils.isEmpty(description) && description.length() > 1000) {
+            ToastHelper.showError(getContext(), "Description must be less than 1000 characters");
+            etItemDescription.requestFocus();
             return false;
         }
         

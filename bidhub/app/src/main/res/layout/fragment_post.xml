@@ -79,7 +79,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Tap to edit photos. Drag and drop to reorder."
+                    android:text="Tap to add photos. Drag to reorder. Maximum 10 photos."
                     android:textSize="12sp"
                     android:textColor="@color/text_secondary"
                     android:layout_marginTop="8dp" />
@@ -186,7 +186,9 @@
                     android:layout_height="wrap_content"
                     android:hint="Name your listing"
                     app:boxStrokeColor="@color/border_light"
-                    app:hintTextColor="@color/text_secondary">
+                    app:hintTextColor="@color/text_secondary"
+                    app:counterEnabled="true"
+                    app:counterMaxLength="100">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_item_title"
@@ -331,7 +333,9 @@
                     android:layout_height="wrap_content"
                     android:hint="Describe what you are selling and include any details a buyer might be interested in. People love items with stories!"
                     app:boxStrokeColor="@color/border_light"
-                    app:hintTextColor="@color/text_secondary">
+                    app:hintTextColor="@color/text_secondary"
+                    app:counterEnabled="true"
+                    app:counterMaxLength="1000">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/et_item_description"
@@ -695,6 +699,15 @@
                 android:textColor="@color/white"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="24dp" />
+                
+            <!-- Progress Bar (initially hidden) -->
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
+                android:visibility="gone" />
 
     </LinearLayout>
 
