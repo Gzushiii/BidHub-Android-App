@@ -140,7 +140,38 @@ public class ItemManager {
     }
     
     /**
-     * Update item
+     * Update item with Item object
+     */
+    public boolean updateItem(String itemId, Item item) {
+        Log.i(TAG, "Updating item: " + itemId);
+        
+        try {
+            if (item == null) {
+                Log.e(TAG, "Item is null");
+                return false;
+            }
+            
+            // Check if item can be edited
+            if (!item.getStatus().canBeEdited()) {
+                Log.e(TAG, "Item cannot be edited: " + item.getStatus());
+                return false;
+            }
+            
+            // Update item
+            item.setUpdatedAt(new Date());
+            items.put(itemId, item);
+            
+            Log.i(TAG, "Item updated successfully: " + itemId);
+            return true;
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating item", e);
+            return false;
+        }
+    }
+    
+    /**
+     * Update item with ItemData
      */
     public boolean updateItem(String itemId, ItemData itemData) {
         Log.i(TAG, "Updating item: " + itemId);
