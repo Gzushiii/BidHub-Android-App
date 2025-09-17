@@ -62,6 +62,7 @@ public class ItemManager {
         this.itemBidCounts = new ConcurrentHashMap<>();
         
         initializeDefaultCategories();
+        initializeSampleData();
         startCleanupTask();
     }
     
@@ -709,6 +710,16 @@ public class ItemManager {
                 .collect(Collectors.toList());
     }
     
+    /**
+     * Get all active items
+     */
+    public List<Item> getAllActiveItems() {
+        return items.values().stream()
+                .filter(item -> item.getStatus() == ItemStatus.ACTIVE)
+                .sorted(Comparator.comparing(Item::getCreatedAt).reversed())
+                .collect(Collectors.toList());
+    }
+    
     // ==================== UTILITY METHODS ====================
     
     /**
@@ -841,6 +852,118 @@ public class ItemManager {
         }
         
         Log.d(TAG, "Updated trending items");
+    }
+    
+    /**
+     * Initialize sample data for testing
+     */
+    private void initializeSampleData() {
+        // Sample Electronics Items
+        Item laptop = new Item("MacBook Pro 13-inch", "Excellent condition MacBook Pro with M1 chip", 25000.0, "seller1");
+        laptop.setCategoryId("electronics");
+        laptop.setCategoryName("Electronics");
+        laptop.setCondition("Like New");
+        laptop.setLocation("Manila");
+        laptop.setStatus(ItemStatus.ACTIVE);
+        laptop.setCurrentPrice(25000.0);
+        laptop.setBidCount(5);
+        laptop.setViewCount(120);
+        laptop.setFeatured(true);
+        laptop.setEndDate(new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)); // 7 days from now
+        items.put(laptop.getItemId(), laptop);
+        
+        Item phone = new Item("iPhone 14 Pro", "Brand new iPhone 14 Pro 128GB", 45000.0, "seller2");
+        phone.setCategoryId("electronics");
+        phone.setCategoryName("Electronics");
+        phone.setCondition("New");
+        phone.setLocation("Quezon City");
+        phone.setStatus(ItemStatus.ACTIVE);
+        phone.setCurrentPrice(45000.0);
+        phone.setBidCount(12);
+        phone.setViewCount(200);
+        phone.setTrending(true);
+        phone.setEndDate(new Date(System.currentTimeMillis() + 5 * 24 * 60 * 60 * 1000)); // 5 days from now
+        items.put(phone.getItemId(), phone);
+        
+        Item camera = new Item("Canon EOS R5", "Professional mirrorless camera", 180000.0, "seller3");
+        camera.setCategoryId("electronics");
+        camera.setCategoryName("Electronics");
+        camera.setCondition("Excellent");
+        camera.setLocation("Makati");
+        camera.setStatus(ItemStatus.ACTIVE);
+        camera.setCurrentPrice(180000.0);
+        camera.setBidCount(3);
+        camera.setViewCount(85);
+        camera.setEndDate(new Date(System.currentTimeMillis() + 10 * 24 * 60 * 60 * 1000)); // 10 days from now
+        items.put(camera.getItemId(), camera);
+        
+        // Sample Fashion Items
+        Item watch = new Item("Rolex Submariner", "Vintage Rolex Submariner watch", 80000.0, "seller4");
+        watch.setCategoryId("fashion");
+        watch.setCategoryName("Fashion");
+        watch.setCondition("Good");
+        watch.setLocation("Taguig");
+        watch.setStatus(ItemStatus.ACTIVE);
+        watch.setCurrentPrice(80000.0);
+        watch.setBidCount(8);
+        watch.setViewCount(150);
+        watch.setFeatured(true);
+        watch.setEndDate(new Date(System.currentTimeMillis() + 3 * 24 * 60 * 60 * 1000)); // 3 days from now
+        items.put(watch.getItemId(), watch);
+        
+        Item shoes = new Item("Nike Air Jordan 1", "Classic red and white colorway", 8000.0, "seller5");
+        shoes.setCategoryId("fashion");
+        shoes.setCategoryName("Fashion");
+        shoes.setCondition("Like New");
+        shoes.setLocation("Pasig");
+        shoes.setStatus(ItemStatus.ACTIVE);
+        shoes.setCurrentPrice(8000.0);
+        shoes.setBidCount(15);
+        shoes.setViewCount(300);
+        shoes.setTrending(true);
+        shoes.setEndDate(new Date(System.currentTimeMillis() + 2 * 24 * 60 * 60 * 1000)); // 2 days from now
+        items.put(shoes.getItemId(), shoes);
+        
+        // Sample Home & Garden Items
+        Item furniture = new Item("Vintage Wooden Dining Table", "Beautiful antique dining table", 15000.0, "seller6");
+        furniture.setCategoryId("home_garden");
+        furniture.setCategoryName("Home & Garden");
+        furniture.setCondition("Good");
+        furniture.setLocation("Marikina");
+        furniture.setStatus(ItemStatus.ACTIVE);
+        furniture.setCurrentPrice(15000.0);
+        furniture.setBidCount(4);
+        furniture.setViewCount(90);
+        furniture.setEndDate(new Date(System.currentTimeMillis() + 6 * 24 * 60 * 60 * 1000)); // 6 days from now
+        items.put(furniture.getItemId(), furniture);
+        
+        // Sample Sports Items
+        Item bike = new Item("Mountain Bike", "Trek mountain bike in excellent condition", 25000.0, "seller7");
+        bike.setCategoryId("sports");
+        bike.setCategoryName("Sports");
+        bike.setCondition("Very Good");
+        bike.setLocation("Mandaluyong");
+        bike.setStatus(ItemStatus.ACTIVE);
+        bike.setCurrentPrice(25000.0);
+        bike.setBidCount(6);
+        bike.setViewCount(110);
+        bike.setEndDate(new Date(System.currentTimeMillis() + 4 * 24 * 60 * 60 * 1000)); // 4 days from now
+        items.put(bike.getItemId(), bike);
+        
+        // Sample Books
+        Item book = new Item("Programming Book Collection", "Set of 5 programming books", 2000.0, "seller8");
+        book.setCategoryId("books");
+        book.setCategoryName("Books");
+        book.setCondition("Good");
+        book.setLocation("San Juan");
+        book.setStatus(ItemStatus.ACTIVE);
+        book.setCurrentPrice(2000.0);
+        book.setBidCount(2);
+        book.setViewCount(45);
+        book.setEndDate(new Date(System.currentTimeMillis() + 8 * 24 * 60 * 60 * 1000)); // 8 days from now
+        items.put(book.getItemId(), book);
+        
+        Log.d(TAG, "Initialized " + items.size() + " sample items");
     }
     
     /**
