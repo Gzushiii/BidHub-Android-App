@@ -72,6 +72,7 @@ public class PostActivity extends BaseActivity implements
     // Layouts
     private LinearLayout layoutOptionalDetails;
     private LinearLayout layoutSubcategory;
+    private LinearLayout layoutSize;
     
     // Adapters
     private ItemImageAdapter imageAdapter;
@@ -140,6 +141,7 @@ public class PostActivity extends BaseActivity implements
         // Layouts
         layoutOptionalDetails = findViewById(R.id.layout_optional_details);
         layoutSubcategory = findViewById(R.id.layout_subcategory);
+        layoutSize = findViewById(R.id.layout_size);
     }
     
     private void setupAdapters() {
@@ -266,8 +268,9 @@ public class PostActivity extends BaseActivity implements
     private void handleMainCategorySelection(String selectedCategoryName) {
         try {
             if (selectedCategoryName.equals("Choose")) {
-                // Hide subcategory dropdown and reset
+                // Hide subcategory dropdown and size dropdown, reset
                 hideSubcategoryDropdown();
+                hideSizeDropdown();
                 selectedMainCategoryId = null;
                 return;
             }
@@ -283,6 +286,13 @@ public class PostActivity extends BaseActivity implements
             
             if (selectedCategory != null) {
                 selectedMainCategoryId = selectedCategory.getCategoryId();
+                
+                // Show/hide size dropdown based on Fashion category
+                if (selectedCategoryName.equals("Fashion")) {
+                    showSizeDropdown();
+                } else {
+                    hideSizeDropdown();
+                }
                 
                 // Get subcategories for the selected main category
                 subcategories = categoryManager.getSubCategories(selectedMainCategoryId);
@@ -337,6 +347,29 @@ public class PostActivity extends BaseActivity implements
             }
         } catch (Exception e) {
             ToastHelper.showError(this, "Error hiding subcategory dropdown: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private void showSizeDropdown() {
+        try {
+            if (layoutSize != null) {
+                layoutSize.setVisibility(View.VISIBLE);
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error showing size dropdown: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private void hideSizeDropdown() {
+        try {
+            if (layoutSize != null && actvSize != null) {
+                layoutSize.setVisibility(View.GONE);
+                actvSize.setText("Choose", false);
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error hiding size dropdown: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -578,8 +611,9 @@ public class PostActivity extends BaseActivity implements
         actvFeatures.setText("Choose");
         actvOrigin.setText("Choose");
         
-        // Reset subcategory dropdown
+        // Reset subcategory dropdown and size dropdown
         hideSubcategoryDropdown();
+        hideSizeDropdown();
         selectedMainCategoryId = null;
         subcategories.clear();
         

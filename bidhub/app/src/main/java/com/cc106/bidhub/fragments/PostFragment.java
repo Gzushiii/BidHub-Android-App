@@ -86,6 +86,7 @@ public class PostFragment extends Fragment implements
     // Layouts
     private LinearLayout layoutOptionalDetails;
     private LinearLayout layoutSubcategory;
+    private LinearLayout layoutSize;
     
     // Adapters
     private ItemImageAdapter imageAdapter;
@@ -177,6 +178,7 @@ public class PostFragment extends Fragment implements
         // Layouts
         layoutOptionalDetails = view.findViewById(R.id.layout_optional_details);
         layoutSubcategory = view.findViewById(R.id.layout_subcategory);
+        layoutSize = view.findViewById(R.id.layout_size);
     }
     
     private void setupAdapters() {
@@ -371,8 +373,9 @@ public class PostFragment extends Fragment implements
     private void handleMainCategorySelection(String selectedCategoryName) {
         try {
             if (selectedCategoryName.equals("Choose")) {
-                // Hide subcategory dropdown and reset
+                // Hide subcategory dropdown and size dropdown, reset
                 hideSubcategoryDropdown();
+                hideSizeDropdown();
                 selectedMainCategoryId = null;
                 return;
             }
@@ -388,6 +391,13 @@ public class PostFragment extends Fragment implements
             
             if (selectedCategory != null) {
                 selectedMainCategoryId = selectedCategory.getCategoryId();
+                
+                // Show/hide size dropdown based on Fashion category
+                if (selectedCategoryName.equals("Fashion")) {
+                    showSizeDropdown();
+                } else {
+                    hideSizeDropdown();
+                }
                 
                 // Get subcategories for the selected main category
                 subcategories = categoryManager.getSubCategories(selectedMainCategoryId);
@@ -442,6 +452,29 @@ public class PostFragment extends Fragment implements
             }
         } catch (Exception e) {
             ToastHelper.showError(getContext(), "Error hiding subcategory dropdown: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private void showSizeDropdown() {
+        try {
+            if (layoutSize != null) {
+                layoutSize.setVisibility(View.VISIBLE);
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(getContext(), "Error showing size dropdown: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private void hideSizeDropdown() {
+        try {
+            if (layoutSize != null && actvSize != null) {
+                layoutSize.setVisibility(View.GONE);
+                actvSize.setText("Choose", false);
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(getContext(), "Error hiding size dropdown: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -802,8 +835,9 @@ public class PostFragment extends Fragment implements
         actvFeatures.setText("Choose");
         actvOrigin.setText("Choose");
         
-        // Reset subcategory dropdown
+        // Reset subcategory dropdown and size dropdown
         hideSubcategoryDropdown();
+        hideSizeDropdown();
         selectedMainCategoryId = null;
         subcategories.clear();
         
