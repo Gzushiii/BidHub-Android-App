@@ -46,16 +46,36 @@
 
             </LinearLayout>
 
-            <!-- Filter Button -->
-            <ImageButton
-                android:id="@+id/btn_filter"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/ic_filter"
-                android:background="@drawable/card_background"
-                android:backgroundTint="@color/primary_blue_light"
-                android:contentDescription="Filter Items"
-                android:padding="12dp" />
+            <!-- Action Buttons -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- Sort Button -->
+                <ImageButton
+                    android:id="@+id/btn_sort"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_sort"
+                    android:background="@drawable/card_background"
+                    android:backgroundTint="@color/accent_orange_light"
+                    android:contentDescription="Sort Items"
+                    android:padding="12dp"
+                    android:layout_marginEnd="8dp" />
+
+                <!-- Filter Button -->
+                <ImageButton
+                    android:id="@+id/btn_filter"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_filter"
+                    android:background="@drawable/card_background"
+                    android:backgroundTint="@color/primary_blue_light"
+                    android:contentDescription="Filter Items"
+                    android:padding="12dp" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

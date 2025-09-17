@@ -1,5 +1,6 @@
 package com.cc106.bidhub.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -13,11 +14,14 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import androidx.appcompat.app.AlertDialog;
 import com.cc106.bidhub.toast.ToastHelper;
 import com.cc106.bidhub.adapters.ItemCardAdapter;
 import com.cc106.bidhub.items.Item;
 import com.cc106.bidhub.items.ItemManager;
 import com.cc106.bidhub.items.FilterCriteria;
+import com.cc106.bidhub.items.Category;
+import com.cc106.bidhub.ItemDetailActivity;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
@@ -41,6 +45,7 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     // UI Components
     private TextInputEditText etSearch;
     private ImageButton btnFilter;
+    private ImageButton btnSort;
     private RecyclerView rvItems;
     private ProgressBar progressBar;
     private LinearLayout layoutEmptyState;
@@ -83,6 +88,7 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     private void initializeViews(View view) {
         etSearch = view.findViewById(R.id.et_search);
         btnFilter = view.findViewById(R.id.btn_filter);
+        btnSort = view.findViewById(R.id.btn_sort);
         rvItems = view.findViewById(R.id.rv_items);
         progressBar = view.findViewById(R.id.progress_bar);
         layoutEmptyState = view.findViewById(R.id.layout_empty_state);
@@ -131,6 +137,61 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     
     private void setupFilter() {
         btnFilter.setOnClickListener(v -> showFilterDialog());
+        btnSort.setOnClickListener(v -> showSortDialog());
+    }
+    
+    
+    private void showSortDialog() {
+        String[] sortOptions = {
+            "Newest First",
+            "Oldest First", 
+            "Price: Low to High",
+            "Price: High to Low",
+            "Ending Soon",
+            "Most Popular",
+            "Most Bids"
+        };
+        
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Sort Items")
+               .setItems(sortOptions, (dialog, which) -> {
+                   applySorting(which);
+               });
+        builder.show();
+    }
+    
+    private void applySorting(int sortIndex) {
+        switch (sortIndex) {
+            case 0: // Newest First
+                currentFilter.setSortBy("createdAt");
+                currentFilter.setSortOrder("DESC");
+                break;
+            case 1: // Oldest First
+                currentFilter.setSortBy("createdAt");
+                currentFilter.setSortOrder("ASC");
+                break;
+            case 2: // Price: Low to High
+                currentFilter.setSortBy("price");
+                currentFilter.setSortOrder("ASC");
+                break;
+            case 3: // Price: High to Low
+                currentFilter.setSortBy("price");
+                currentFilter.setSortOrder("DESC");
+                break;
+            case 4: // Ending Soon
+                currentFilter.setSortBy("endDate");
+                currentFilter.setSortOrder("ASC");
+                break;
+            case 5: // Most Popular
+                currentFilter.setSortBy("viewCount");
+                currentFilter.setSortOrder("DESC");
+                break;
+            case 6: // Most Bids
+                currentFilter.setSortBy("bidCount");
+                currentFilter.setSortOrder("DESC");
+                break;
+        }
+        applyFilters();
     }
     
     private void performSearch(String query) {
@@ -197,8 +258,57 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     }
     
     private void showFilterDialog() {
-        // TODO: Implement filter dialog
-        ToastHelper.showInfo(getContext(), "Filter functionality coming soon!");
+        FilterDialogFragment dialog = new FilterDialogFragment();
+        dialog.setFilterCriteria(currentFilter);
+        dialog.setOnFilterAppliedListener(this::onFilterApplied);
+        dialog.show(getParentFragmentManager(), "FilterDialog");
+    }
+    
+    private void onFilterApplied(FilterCriteria newFilter) {
+        currentFilter = newFilter;
+        applyFilters();
+        updateFilterChips();
+    }
+    
+    private void updateFilterChips() {
+        // Clear existing chips
+        layoutFilterChips.removeAllViews();
+        activeFilters.clear();
+        
+        // Add chips based on active filters
+        if (currentFilter.getCategoryId() != null) {
+            Category category = itemManager.getCategoryById(currentFilter.getCategoryId());
+            if (category != null) {
+                addFilterChip("Category: " + category.getName());
+            }
+        }
+        
+        if (currentFilter.hasPriceRange()) {
+            String priceText = "Price: ";
+            if (currentFilter.getMinPrice() != null) {
+                priceText += "₱" + String.format("%.0f", currentFilter.getMinPrice());
+            }
+            if (currentFilter.getMaxPrice() != null) {
+                priceText += " - ₱" + String.format("%.0f", currentFilter.getMaxPrice());
+            }
+            addFilterChip(priceText);
+        }
+        
+        if (currentFilter.getCondition() != null) {
+            addFilterChip("Condition: " + currentFilter.getCondition());
+        }
+        
+        if (currentFilter.getLocation() != null) {
+            addFilterChip("Location: " + currentFilter.getLocation());
+        }
+        
+        if (currentFilter.getIsFeatured() != null && currentFilter.getIsFeatured()) {
+            addFilterChip("Featured");
+        }
+        
+        if (currentFilter.getIsTrending() != null && currentFilter.getIsTrending()) {
+            addFilterChip("Trending");
+        }
     }
     
     private void addFilterChip(String filterText) {
@@ -231,8 +341,11 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     
     @Override
     public void onItemClick(Item item) {
-        // TODO: Navigate to item detail activity
-        ToastHelper.showInfo(getContext(), "Item details: " + item.getTitle());
+        // Navigate to item detail activity
+        Intent intent = new Intent(getContext(), ItemDetailActivity.class);
+        intent.putExtra("ITEM_ID", item.getItemId());
+        intent.putExtra("USER_EMAIL", loggedInUserEmail);
+        startActivity(intent);
     }
     
     public void updateUserEmail(String email) {
