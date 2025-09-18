@@ -15,8 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 public class LoginActivity extends AppCompatActivity {
 
     private EditText editTextEmail, editTextPassword;
-    private Button buttonLogin;
-    private TextView textViewRegisterLink;
+    private Button buttonLogin, buttonTestPasswordRecovery;
+    private TextView textViewRegisterLink, textViewForgotPassword;
     private DatabaseHelper dbHelper;
 
     @Override
@@ -29,7 +29,9 @@ public class LoginActivity extends AppCompatActivity {
         editTextEmail = findViewById(R.id.editTextEmail);
         editTextPassword = findViewById(R.id.editTextPassword);
         buttonLogin = findViewById(R.id.buttonLogin);
+        buttonTestPasswordRecovery = findViewById(R.id.buttonTestPasswordRecovery);
         textViewRegisterLink = findViewById(R.id.textViewRegisterLink);
+        textViewForgotPassword = findViewById(R.id.textViewForgotPassword);
 
         buttonLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -43,6 +45,24 @@ public class LoginActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Intent to open RegisterActivity
                 Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        textViewForgotPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Intent to open PasswordRecoveryRequestActivity
+                Intent intent = new Intent(LoginActivity.this, PasswordRecoveryRequestActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        buttonTestPasswordRecovery.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Intent to open PasswordRecoveryTestActivity
+                Intent intent = new Intent(LoginActivity.this, PasswordRecoveryTestActivity.class);
                 startActivity(intent);
             }
         });
