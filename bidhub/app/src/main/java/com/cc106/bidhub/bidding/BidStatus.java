@@ -76,3 +76,4 @@ public enum BidStatus {
         return displayName;
     }
 }
+
