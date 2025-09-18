@@ -189,3 +189,4 @@ public class Bid {
         return bidId != null ? bidId.hashCode() : 0;
     }
 }
+

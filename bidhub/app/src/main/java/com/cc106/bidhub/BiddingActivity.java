@@ -222,3 +222,4 @@ public class BiddingActivity extends AppCompatActivity {
         loadItemData();
     }
 }
+
