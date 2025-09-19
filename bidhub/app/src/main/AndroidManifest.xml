@@ -77,6 +77,27 @@
         <activity
             android:name=".ItemDetailActivity"
             android:exported="false" />
+        
+        <!-- Profile Management Activities -->
+        <activity
+            android:name=".ProfileEditActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".ProfileSettingsActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".ChangePasswordActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".PrivacySettingsActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".AccountSecurityActivity"
+            android:exported="false" />
 
     </application>
 
