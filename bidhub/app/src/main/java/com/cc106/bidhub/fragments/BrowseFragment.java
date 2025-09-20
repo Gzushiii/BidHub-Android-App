@@ -9,6 +9,7 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -49,8 +50,10 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     private RecyclerView rvItems;
     private ProgressBar progressBar;
     private LinearLayout layoutEmptyState;
+    private LinearLayout layoutFilterChipsContainer;
     private HorizontalScrollView hsvFilterChips;
     private LinearLayout layoutFilterChips;
+    private Button btnClearAllFilters;
     
     // Adapter and Data
     private ItemCardAdapter itemAdapter;
@@ -92,8 +95,10 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         rvItems = view.findViewById(R.id.rv_items);
         progressBar = view.findViewById(R.id.progress_bar);
         layoutEmptyState = view.findViewById(R.id.layout_empty_state);
+        layoutFilterChipsContainer = view.findViewById(R.id.layout_filter_chips_container);
         hsvFilterChips = view.findViewById(R.id.hsv_filter_chips);
         layoutFilterChips = view.findViewById(R.id.layout_filter_chips);
+        btnClearAllFilters = view.findViewById(R.id.btn_clear_all_filters);
         
         itemManager = ItemManager.getInstance(getContext());
         allItems = new ArrayList<>();
@@ -125,9 +130,13 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                     searchHandler.removeCallbacks(searchRunnable);
                 }
                 
-                // Schedule new search
-                searchRunnable = () -> performSearch(s.toString());
-                searchHandler.postDelayed(searchRunnable, SEARCH_DELAY);
+                // Only search if there's actual text or if we're clearing the search
+                String query = s.toString().trim();
+                if (!query.isEmpty() || before > 0) {
+                    // Schedule new search
+                    searchRunnable = () -> performSearch(query);
+                    searchHandler.postDelayed(searchRunnable, SEARCH_DELAY);
+                }
             }
             
             @Override
@@ -138,6 +147,7 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     private void setupFilter() {
         btnFilter.setOnClickListener(v -> showFilterDialog());
         btnSort.setOnClickListener(v -> showSortDialog());
+        btnClearAllFilters.setOnClickListener(v -> clearAllFilters());
     }
     
     
@@ -195,7 +205,7 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     }
     
     private void performSearch(String query) {
-        currentFilter.setQuery(query);
+        currentFilter.setQuery(query.isEmpty() ? null : query);
         applyFilters();
     }
     
@@ -251,9 +261,38 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         if (filteredItems.isEmpty()) {
             layoutEmptyState.setVisibility(View.VISIBLE);
             rvItems.setVisibility(View.GONE);
+            updateEmptyStateMessage();
         } else {
             layoutEmptyState.setVisibility(View.GONE);
             rvItems.setVisibility(View.VISIBLE);
+        }
+    }
+    
+    private void updateEmptyStateMessage() {
+        // Find the empty state text views
+        TextView tvEmptyTitle = layoutEmptyState.findViewById(R.id.tv_empty_title);
+        TextView tvEmptySubtitle = layoutEmptyState.findViewById(R.id.tv_empty_subtitle);
+        
+        if (tvEmptyTitle == null || tvEmptySubtitle == null) {
+            return; // Views not found, use default layout
+        }
+        
+        // Determine the type of empty state based on current filters
+        boolean hasSearchQuery = currentFilter.getQuery() != null && !currentFilter.getQuery().trim().isEmpty();
+        boolean hasActiveFilters = !activeFilters.isEmpty();
+        
+        if (hasSearchQuery && hasActiveFilters) {
+            tvEmptyTitle.setText("No items found");
+            tvEmptySubtitle.setText("No items match your search and filter criteria");
+        } else if (hasSearchQuery) {
+            tvEmptyTitle.setText("No search results");
+            tvEmptySubtitle.setText("No items match your search terms");
+        } else if (hasActiveFilters) {
+            tvEmptyTitle.setText("No filtered results");
+            tvEmptySubtitle.setText("No items match your filter criteria");
+        } else {
+            tvEmptyTitle.setText("No items available");
+            tvEmptySubtitle.setText("There are currently no items to browse");
         }
     }
     
@@ -321,22 +360,75 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         Chip chip = new Chip(getContext());
         chip.setText(filterText);
         chip.setCloseIconVisible(true);
+        chip.setCloseIconTint(getResources().getColorStateList(android.R.color.white));
+        chip.setChipBackgroundColorResource(R.color.primary_blue);
+        chip.setTextColor(getResources().getColor(android.R.color.white));
+        chip.setChipStrokeWidth(0);
+        chip.setChipCornerRadius(16);
+        chip.setPadding(16, 8, 16, 8);
         chip.setOnCloseIconClickListener(v -> removeFilterChip(chip, filterText));
         
+        // Add margin to the chip
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, 0, 8, 0);
+        chip.setLayoutParams(params);
+        
         layoutFilterChips.addView(chip);
-        hsvFilterChips.setVisibility(View.VISIBLE);
+        layoutFilterChipsContainer.setVisibility(View.VISIBLE);
     }
     
     private void removeFilterChip(Chip chip, String filterText) {
         activeFilters.remove(filterText);
         layoutFilterChips.removeView(chip);
         
+        // Reset the corresponding filter criteria
+        resetFilterCriteria(filterText);
+        
         if (activeFilters.isEmpty()) {
-            hsvFilterChips.setVisibility(View.GONE);
+            layoutFilterChipsContainer.setVisibility(View.GONE);
         }
         
         // Reapply filters
         applyFilters();
+    }
+    
+    private void resetFilterCriteria(String filterText) {
+        if (filterText.startsWith("Category:")) {
+            currentFilter.setCategoryId(null);
+        } else if (filterText.startsWith("Price:")) {
+            currentFilter.setMinPrice(null);
+            currentFilter.setMaxPrice(null);
+        } else if (filterText.startsWith("Condition:")) {
+            currentFilter.setCondition(null);
+        } else if (filterText.startsWith("Location:")) {
+            currentFilter.setLocation(null);
+        } else if (filterText.equals("Featured")) {
+            currentFilter.setIsFeatured(null);
+        } else if (filterText.equals("Trending")) {
+            currentFilter.setIsTrending(null);
+        }
+    }
+    
+    /**
+     * Clear all active filters and search query
+     */
+    public void clearAllFilters() {
+        // Clear search
+        etSearch.setText("");
+        
+        // Reset filter criteria
+        currentFilter = new FilterCriteria();
+        
+        // Clear filter chips
+        layoutFilterChips.removeAllViews();
+        activeFilters.clear();
+        layoutFilterChipsContainer.setVisibility(View.GONE);
+        
+        // Reload items
+        loadItems();
     }
     
     @Override
