@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="16dp">
 
         <!-- Header Section -->
         <LinearLayout
@@ -20,8 +20,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="32dp">
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="20dp">
 
             <!-- BidHub Logo with enhanced styling -->
             <ImageView
@@ -65,93 +65,93 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="28dp">
+                android:padding="20dp">
 
                 <!-- First Name Input -->
                 <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_height="56dp"
+                    android:layout_marginBottom="8dp"
                     android:hint="First Name"
-                    app:boxCornerRadiusTopStart="16dp"
-                    app:boxCornerRadiusTopEnd="16dp"
-                    app:boxCornerRadiusBottomStart="16dp"
                     app:boxCornerRadiusBottomEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusTopStart="16dp"
                     app:boxStrokeColor="@color/gray_300"
-                    app:hintTextColor="@color/text_hint"
-                    app:startIconDrawable="@drawable/ic_person_outline"
-                    app:startIconTint="@color/primary_blue"
                     app:errorEnabled="true"
                     app:errorTextColor="@color/error_red"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                    app:hintTextColor="@color/text_hint"
+                    app:startIconDrawable="@drawable/ic_person_outline"
+                    app:startIconTint="@color/primary_blue">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextFirstName"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:inputType="textPersonName"
+                        android:padding="16dp"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:padding="16dp" />
+                        android:textSize="16sp" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Last Name Input -->
                 <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_height="56dp"
+                    android:layout_marginBottom="8dp"
                     android:hint="Last Name"
-                    app:boxCornerRadiusTopStart="16dp"
-                    app:boxCornerRadiusTopEnd="16dp"
-                    app:boxCornerRadiusBottomStart="16dp"
                     app:boxCornerRadiusBottomEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusTopStart="16dp"
                     app:boxStrokeColor="@color/gray_300"
-                    app:hintTextColor="@color/text_hint"
-                    app:startIconDrawable="@drawable/ic_person_outline"
-                    app:startIconTint="@color/primary_blue"
                     app:errorEnabled="true"
                     app:errorTextColor="@color/error_red"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                    app:hintTextColor="@color/text_hint"
+                    app:startIconDrawable="@drawable/ic_person_outline"
+                    app:startIconTint="@color/primary_blue">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextLastName"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="textPersonName"
+                        android:padding="16dp"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:padding="16dp" />
+                        android:textSize="16sp" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Username Input -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/usernameInputLayout"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_height="56dp"
+                    android:layout_marginBottom="8dp"
                     android:hint="Username"
-                    app:boxCornerRadiusTopStart="16dp"
-                    app:boxCornerRadiusTopEnd="16dp"
-                    app:boxCornerRadiusBottomStart="16dp"
                     app:boxCornerRadiusBottomEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusTopStart="16dp"
                     app:boxStrokeColor="@color/gray_300"
-                    app:hintTextColor="@color/text_hint"
-                    app:startIconDrawable="@drawable/ic_username_outline"
-                    app:startIconTint="@color/primary_blue"
                     app:errorEnabled="true"
                     app:errorTextColor="@color/error_red"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                    app:hintTextColor="@color/text_hint"
+                    app:startIconDrawable="@drawable/ic_username_outline"
+                    app:startIconTint="@color/primary_blue">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextUsername"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text"
+                        android:padding="16dp"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:padding="16dp" />
+                        android:textSize="16sp" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -161,8 +161,8 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp"
-                    android:padding="12dp"
+                    android:layout_marginBottom="12dp"
+                    android:padding="8dp"
                     android:background="@color/primary_blue_light">
 
                     <TextView
@@ -186,91 +186,91 @@
                 <!-- Email Input -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/emailInputLayout"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_height="56dp"
+                    android:layout_marginBottom="8dp"
                     android:hint="Email Address"
-                    app:boxCornerRadiusTopStart="16dp"
-                    app:boxCornerRadiusTopEnd="16dp"
-                    app:boxCornerRadiusBottomStart="16dp"
                     app:boxCornerRadiusBottomEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusTopStart="16dp"
                     app:boxStrokeColor="@color/gray_300"
-                    app:hintTextColor="@color/text_hint"
-                    app:startIconDrawable="@drawable/ic_email_outline"
-                    app:startIconTint="@color/primary_blue"
                     app:errorEnabled="true"
                     app:errorTextColor="@color/error_red"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                    app:hintTextColor="@color/text_hint"
+                    app:startIconDrawable="@drawable/ic_email_outline"
+                    app:startIconTint="@color/primary_blue">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextEmail"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="textEmailAddress"
+                        android:padding="16dp"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:padding="16dp" />
+                        android:textSize="16sp" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Phone Input -->
                 <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_height="56dp"
+                    android:layout_marginBottom="8dp"
                     android:hint="Phone Number"
-                    app:boxCornerRadiusTopStart="16dp"
-                    app:boxCornerRadiusTopEnd="16dp"
-                    app:boxCornerRadiusBottomStart="16dp"
                     app:boxCornerRadiusBottomEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusTopStart="16dp"
                     app:boxStrokeColor="@color/gray_300"
-                    app:hintTextColor="@color/text_hint"
-                    app:startIconDrawable="@drawable/ic_phone_outline"
-                    app:startIconTint="@color/primary_blue"
                     app:errorEnabled="true"
                     app:errorTextColor="@color/error_red"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                    app:hintTextColor="@color/text_hint"
+                    app:startIconDrawable="@drawable/ic_phone_outline"
+                    app:startIconTint="@color/primary_blue">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextPhone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="phone"
+                        android:padding="16dp"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:padding="16dp" />
+                        android:textSize="16sp" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Password Input -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/passwordInputLayout"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
+                    android:layout_height="56dp"
+                    android:layout_marginBottom="6dp"
                     android:hint="Password"
-                    app:boxCornerRadiusTopStart="16dp"
-                    app:boxCornerRadiusTopEnd="16dp"
-                    app:boxCornerRadiusBottomStart="16dp"
                     app:boxCornerRadiusBottomEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusTopStart="16dp"
                     app:boxStrokeColor="@color/gray_300"
-                    app:hintTextColor="@color/text_hint"
-                    app:startIconDrawable="@drawable/ic_lock_outline"
-                    app:startIconTint="@color/primary_blue"
                     app:endIconMode="password_toggle"
                     app:endIconTint="@color/primary_blue"
                     app:errorEnabled="true"
                     app:errorTextColor="@color/error_red"
-                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+                    app:hintTextColor="@color/text_hint"
+                    app:startIconDrawable="@drawable/ic_lock_outline"
+                    app:startIconTint="@color/primary_blue">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextPassword"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="textPassword"
+                        android:padding="16dp"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:padding="16dp" />
+                        android:textSize="16sp" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -279,14 +279,14 @@
                     android:id="@+id/passwordStrengthIndicator"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginBottom="12dp" />
 
                 <!-- Terms and Privacy Checkboxes -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginBottom="24dp">
+                    android:layout_marginBottom="16dp">
 
                     <CheckBox
                         android:id="@+id/checkboxTerms"
@@ -296,7 +296,7 @@
                         android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:buttonTint="@color/primary_blue"
-                        android:layout_marginBottom="8dp"
+                        android:layout_marginBottom="4dp"
                         android:padding="4dp" />
 
                     <CheckBox
@@ -316,17 +316,16 @@
                     android:id="@+id/buttonRegister"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
+                    android:backgroundTint="@color/primary_blue"
+                    android:contentDescription="Create your new account"
+                    android:stateListAnimator="@null"
                     android:text="Create Account"
+                    android:textColor="@color/white"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="@color/white"
-                    android:backgroundTint="@color/primary_blue"
                     app:cornerRadius="16dp"
                     app:elevation="6dp"
-                    app:rippleColor="@color/primary_blue_light"
-                    android:stateListAnimator="@null"
-                    android:contentDescription="Create your new account"
- />
+                    app:rippleColor="@color/primary_blue_light" />
 
             </LinearLayout>
 
@@ -338,7 +337,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="16dp">
 
             <TextView
                 android:layout_width="wrap_content"
