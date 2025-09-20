@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.cc106.bidhub.toast.ToastHelper;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,13 +23,14 @@ public class RegisterActivity extends AppCompatActivity {
 
     private EditText editTextFirstName, editTextLastName, editTextUsername, editTextEmail, editTextPhone, editTextPassword;
     private CheckBox checkboxTerms, checkboxPrivacy;
-    private Button buttonRegister;
+    private com.google.android.material.button.MaterialButton buttonRegister;
     private TextView textViewLoginLink;
     private DatabaseHelper dbHelper;
     
     // TextInputLayouts for validation feedback
     private TextInputLayout usernameInputLayout, emailInputLayout, passwordInputLayout;
     private PasswordStrengthIndicator passwordStrengthIndicator;
+    private ProgressBar progressBar;
     
     // Validation state
     private boolean isEmailValid = false;
@@ -68,6 +70,7 @@ public class RegisterActivity extends AppCompatActivity {
         emailInputLayout = findViewById(R.id.emailInputLayout);
         passwordInputLayout = findViewById(R.id.passwordInputLayout);
         passwordStrengthIndicator = findViewById(R.id.passwordStrengthIndicator);
+        progressBar = findViewById(R.id.progressBar);
 
         // Set up real-time validation
         setupValidationListeners();
@@ -86,6 +89,15 @@ public class RegisterActivity extends AppCompatActivity {
         if (usernameValidationRunnable != null) {
             usernameValidationHandler.removeCallbacks(usernameValidationRunnable);
         }
+    }
+
+    /**
+     * Show loading state
+     */
+    private void showLoading(boolean show) {
+        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        buttonRegister.setEnabled(!show);
+        buttonRegister.setText(show ? "Creating Account..." : "Create Account");
     }
 
     /**
@@ -342,9 +354,8 @@ public class RegisterActivity extends AppCompatActivity {
                 return;
             }
 
-            // Disable register button to prevent double submission
-            buttonRegister.setEnabled(false);
-            buttonRegister.setText("Creating Account...");
+            // Show loading state
+            showLoading(true);
 
             // --- Database Insertion ---
             new Thread(() -> {
@@ -379,23 +390,20 @@ public class RegisterActivity extends AppCompatActivity {
                             finish(); // Go back to the login screen
                         } else {
                             ToastHelper.showError(this, "Registration failed. Please try again.");
-                            buttonRegister.setEnabled(true);
-                            buttonRegister.setText("Create Account");
+                            showLoading(false);
                         }
                     });
                 } catch (Exception e) {
                     runOnUiThread(() -> {
                         ToastHelper.showError(this, "Registration failed: " + e.getMessage());
-                        buttonRegister.setEnabled(true);
-                        buttonRegister.setText("Create Account");
+                        showLoading(false);
                     });
                 }
             }).start();
 
         } catch (Exception e) {
             ToastHelper.showError(this, "Registration failed: " + e.getMessage());
-            buttonRegister.setEnabled(true);
-            buttonRegister.setText("Create Account");
+            showLoading(false);
         }
     }
 }

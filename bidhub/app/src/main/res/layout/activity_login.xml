@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light"
+    android:background="@drawable/gradient_background"
     android:fillViewport="true"
     tools:context=".LoginActivity">
 
@@ -20,24 +20,25 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center"
-            android:layout_marginTop="48dp"
-            android:layout_marginBottom="48dp">
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="40dp">
 
-            <!-- BidHub Logo -->
+            <!-- BidHub Logo with enhanced styling -->
             <ImageView
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
                 android:src="@drawable/logo_bidhub"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="20dp"
                 android:contentDescription="BidHub Logo" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="BidHub"
-                android:textSize="32sp"
+                android:textSize="36sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
+                android:letterSpacing="0.02"
                 android:layout_marginBottom="8dp" />
 
             <TextView
@@ -46,15 +47,26 @@
                 android:text="Your bid, your win"
                 android:textSize="16sp"
                 android:textColor="@color/text_secondary"
-                android:layout_marginBottom="32dp" />
+                android:letterSpacing="0.01"
+                android:layout_marginBottom="24dp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Welcome Back"
-                android:textSize="24sp"
+                android:textSize="28sp"
                 android:textStyle="bold"
-                android:textColor="@color/text_primary" />
+                android:textColor="@color/text_primary"
+                android:letterSpacing="0.01" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sign in to continue your bidding journey"
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginTop="8dp"
+                android:gravity="center" />
 
         </LinearLayout>
 
@@ -63,63 +75,75 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="8dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="12dp"
             app:cardBackgroundColor="@color/white">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="24dp">
+                android:padding="28dp">
 
                 <!-- Email Input -->
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/emailInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="20dp"
                     android:hint="Email Address"
-                    app:boxCornerRadiusTopStart="12dp"
-                    app:boxCornerRadiusTopEnd="12dp"
-                    app:boxCornerRadiusBottomStart="12dp"
-                    app:boxCornerRadiusBottomEnd="12dp"
+                    app:boxCornerRadiusTopStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusBottomEnd="16dp"
                     app:boxStrokeColor="@color/gray_300"
                     app:hintTextColor="@color/text_hint"
-                    app:startIconDrawable="@android:drawable/ic_dialog_email"
-                    app:startIconTint="@color/primary_blue">
+                    app:startIconDrawable="@drawable/ic_email_outline"
+                    app:startIconTint="@color/primary_blue"
+                    app:errorEnabled="true"
+                    app:errorTextColor="@color/error_red"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextEmail"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="textEmailAddress"
-                        android:textColor="@color/text_primary" />
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:padding="16dp" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Password Input -->
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/passwordInputLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="24dp"
+                    android:layout_marginBottom="8dp"
                     android:hint="Password"
-                    app:boxCornerRadiusTopStart="12dp"
-                    app:boxCornerRadiusTopEnd="12dp"
-                    app:boxCornerRadiusBottomStart="12dp"
-                    app:boxCornerRadiusBottomEnd="12dp"
+                    app:boxCornerRadiusTopStart="16dp"
+                    app:boxCornerRadiusTopEnd="16dp"
+                    app:boxCornerRadiusBottomStart="16dp"
+                    app:boxCornerRadiusBottomEnd="16dp"
                     app:boxStrokeColor="@color/gray_300"
                     app:hintTextColor="@color/text_hint"
-                    app:startIconDrawable="@android:drawable/ic_lock_lock"
+                    app:startIconDrawable="@drawable/ic_lock_outline"
                     app:startIconTint="@color/primary_blue"
                     app:endIconMode="password_toggle"
-                    app:endIconTint="@color/primary_blue">
+                    app:endIconTint="@color/primary_blue"
+                    app:errorEnabled="true"
+                    app:errorTextColor="@color/error_red"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextPassword"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="textPassword"
-                        android:textColor="@color/text_primary" />
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:padding="16dp" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -133,12 +157,13 @@
                     android:textColor="@color/primary_blue"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:background="?android:attr/selectableItemBackground"
-                    android:padding="8dp"
-                    android:layout_marginBottom="16dp" />
+                    android:background="@drawable/ripple_effect"
+                    android:padding="12dp"
+                    android:layout_marginBottom="24dp"
+                    android:drawablePadding="4dp" />
 
                 <!-- Login Button -->
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/buttonLogin"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
@@ -146,8 +171,13 @@
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/white"
-                    android:background="@drawable/button_primary_background"
-                    android:elevation="4dp" />
+                    android:backgroundTint="@color/primary_blue"
+                    app:cornerRadius="16dp"
+                    app:elevation="6dp"
+                    app:rippleColor="@color/primary_blue_light"
+                    android:stateListAnimator="@null"
+                    android:contentDescription="Sign in to your account"
+ />
 
             </LinearLayout>
 
@@ -159,7 +189,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginBottom="32dp">
+            android:layout_marginBottom="24dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -176,10 +206,20 @@
                 android:textColor="@color/primary_blue"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:background="?android:attr/selectableItemBackground"
-                android:padding="8dp" />
+                android:background="@drawable/ripple_effect"
+                android:padding="12dp" />
 
         </LinearLayout>
+
+        <!-- Loading Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            android:indeterminateTint="@color/primary_blue" />
 
         <!-- Test Button (for development only) -->
         <Button
@@ -190,7 +230,7 @@
             android:text="Test Password Recovery"
             android:textSize="12sp"
             android:textColor="@color/primary_blue"
-            android:background="?android:attr/selectableItemBackground"
+            android:background="@drawable/ripple_effect"
             android:padding="8dp"
             android:layout_marginBottom="16dp" />
 
