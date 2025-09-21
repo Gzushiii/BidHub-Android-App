@@ -88,7 +88,7 @@ public class ProfileActivity extends BaseActivity {
         });
         
         buttonSettings.setOnClickListener(v -> {
-            Intent intent = new Intent(this, AccountSettingsActivity.class);
+            Intent intent = new Intent(this, SettingsActivity.class);
             intent.putExtra("USER_EMAIL", loggedInUserEmail);
             startActivity(intent);
         });
