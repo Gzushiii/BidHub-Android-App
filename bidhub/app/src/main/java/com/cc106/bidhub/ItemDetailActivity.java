@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -28,6 +29,8 @@ public class ItemDetailActivity extends BaseActivity {
     private ItemManager itemManager;
     
     // UI Components
+    private ImageButton btnBack;
+    private ImageButton btnShare;
     private RecyclerView rvImageGallery;
     private TextView tvTitle;
     private TextView tvDescription;
@@ -69,6 +72,8 @@ public class ItemDetailActivity extends BaseActivity {
     }
     
     private void initializeViews() {
+        btnBack = findViewById(R.id.btn_back);
+        btnShare = findViewById(R.id.btn_share);
         rvImageGallery = findViewById(R.id.rv_image_gallery);
         tvTitle = findViewById(R.id.tv_item_title);
         tvDescription = findViewById(R.id.tv_item_description);
@@ -90,6 +95,8 @@ public class ItemDetailActivity extends BaseActivity {
         dateFormat = new SimpleDateFormat("MMM dd, yyyy 'at' HH:mm", Locale.getDefault());
         
         // Setup click listeners
+        btnBack.setOnClickListener(v -> finish());
+        btnShare.setOnClickListener(v -> shareItem());
         btnPlaceBid.setOnClickListener(v -> showBidDialog());
         btnBuyNow.setOnClickListener(v -> showBuyNowDialog());
     }
@@ -174,6 +181,19 @@ public class ItemDetailActivity extends BaseActivity {
     private void showBuyNowDialog() {
         // TODO: Implement buy now dialog
         ToastHelper.showInfo(this, "Buy Now functionality coming soon!");
+    }
+    
+    private void shareItem() {
+        if (item != null) {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, item.getTitle());
+            shareIntent.putExtra(Intent.EXTRA_TEXT, 
+                "Check out this item on BidHub: " + item.getTitle() + 
+                " - Current bid: " + currencyFormat.format(item.getCurrentPrice()) +
+                " - " + item.getDescription());
+            startActivity(Intent.createChooser(shareIntent, "Share Item"));
+        }
     }
     
     private void showLoading(boolean show) {

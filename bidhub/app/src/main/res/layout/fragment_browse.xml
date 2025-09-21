@@ -38,6 +38,7 @@
                     android:layout_marginBottom="4dp" />
 
                 <TextView
+                    android:id="@+id/tv_item_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Discover amazing items to bid on"
@@ -51,6 +52,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
+
+                <!-- View Toggle Button -->
+                <ImageButton
+                    android:id="@+id/btn_view_toggle"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_grid_view"
+                    android:background="@drawable/card_background"
+                    android:backgroundTint="@color/accent_green_light"
+                    android:contentDescription="Toggle View"
+                    android:padding="12dp"
+                    android:layout_marginEnd="8dp" />
 
                 <!-- Sort Button -->
                 <ImageButton
@@ -184,6 +197,7 @@
             android:visibility="gone">
 
             <ImageView
+                android:id="@+id/iv_empty_icon"
                 android:layout_width="120dp"
                 android:layout_height="120dp"
                 android:src="@drawable/ic_search"
@@ -212,19 +226,23 @@
                 android:layout_marginBottom="8dp" />
 
             <TextView
+                android:id="@+id/tv_empty_suggestions_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Try these suggestions:"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_secondary"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="16dp"
+                android:visibility="gone" />
 
             <LinearLayout
+                android:id="@+id/layout_empty_suggestions"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:gravity="center">
+                android:gravity="center"
+                android:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -256,6 +274,38 @@
                     android:text="• Try different keywords"
                     android:textSize="14sp"
                     android:textColor="@color/text_secondary" />
+
+            </LinearLayout>
+
+            <!-- Action Buttons for Empty State -->
+            <LinearLayout
+                android:id="@+id/layout_empty_actions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="24dp"
+                android:visibility="gone">
+
+                <Button
+                    android:id="@+id/btn_clear_search"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Clear Search"
+                    android:textColor="@color/primary_blue"
+                    android:background="@android:color/transparent"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp"
+                    android:layout_marginEnd="16dp" />
+
+                <Button
+                    android:id="@+id/btn_browse_categories"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Browse Categories"
+                    android:textColor="@color/white"
+                    android:background="@drawable/button_primary"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp" />
 
             </LinearLayout>
 

@@ -1,5 +1,6 @@
 package com.cc106.bidhub.items;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
@@ -8,7 +9,7 @@ import java.util.Date;
  * Category Model
  * Represents an item category
  */
-public class Category {
+public class Category implements Serializable {
     private String categoryId;
     private String name;
     private String description;
