@@ -223,3 +223,4 @@ public class BiddingActivity extends AppCompatActivity {
     }
 }
 
+

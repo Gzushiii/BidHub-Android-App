@@ -58,6 +58,12 @@
     <color name="border_light">#FFD1D1D6</color>
     <color name="info_background">#FFE3F2FD</color>
     
+    <!-- Additional Accent Colors -->
+    <color name="accent_green">#FF4CAF50</color>
+    <color name="accent_green_light">#FFE8F5E8</color>
+    <color name="accent_red">#FFFF5722</color>
+    <color name="accent_red_light">#FFFFEBEE</color>
+    
     <!-- Legacy Colors (for compatibility) -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>

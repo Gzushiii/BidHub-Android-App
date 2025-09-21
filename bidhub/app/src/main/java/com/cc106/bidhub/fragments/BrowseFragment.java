@@ -1,5 +1,6 @@
 package com.cc106.bidhub.fragments;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -23,6 +25,8 @@ import com.cc106.bidhub.items.ItemManager;
 import com.cc106.bidhub.items.FilterCriteria;
 import com.cc106.bidhub.items.Category;
 import com.cc106.bidhub.ItemDetailActivity;
+import com.cc106.bidhub.AdvancedFilterActivity;
+import com.cc106.bidhub.CategorySelectionActivity;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
@@ -31,6 +35,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.cc106.bidhub.R;
@@ -47,6 +52,7 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     private TextInputEditText etSearch;
     private ImageButton btnFilter;
     private ImageButton btnSort;
+    private ImageButton btnViewToggle;
     private RecyclerView rvItems;
     private ProgressBar progressBar;
     private LinearLayout layoutEmptyState;
@@ -54,6 +60,13 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     private HorizontalScrollView hsvFilterChips;
     private LinearLayout layoutFilterChips;
     private Button btnClearAllFilters;
+    private TextView tvItemCount;
+    private ImageView ivEmptyIcon;
+    private TextView tvEmptySuggestionsTitle;
+    private LinearLayout layoutEmptySuggestions;
+    private LinearLayout layoutEmptyActions;
+    private Button btnClearSearch;
+    private Button btnBrowseCategories;
     
     // Adapter and Data
     private ItemCardAdapter itemAdapter;
@@ -68,6 +81,9 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     
     // Filter chips
     private List<String> activeFilters;
+    
+    // View state
+    private boolean isGridView = true;
 
     @Nullable
     @Override
@@ -92,6 +108,7 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         etSearch = view.findViewById(R.id.et_search);
         btnFilter = view.findViewById(R.id.btn_filter);
         btnSort = view.findViewById(R.id.btn_sort);
+        btnViewToggle = view.findViewById(R.id.btn_view_toggle);
         rvItems = view.findViewById(R.id.rv_items);
         progressBar = view.findViewById(R.id.progress_bar);
         layoutEmptyState = view.findViewById(R.id.layout_empty_state);
@@ -99,6 +116,13 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         hsvFilterChips = view.findViewById(R.id.hsv_filter_chips);
         layoutFilterChips = view.findViewById(R.id.layout_filter_chips);
         btnClearAllFilters = view.findViewById(R.id.btn_clear_all_filters);
+        tvItemCount = view.findViewById(R.id.tv_item_count);
+        ivEmptyIcon = view.findViewById(R.id.iv_empty_icon);
+        tvEmptySuggestionsTitle = view.findViewById(R.id.tv_empty_suggestions_title);
+        layoutEmptySuggestions = view.findViewById(R.id.layout_empty_suggestions);
+        layoutEmptyActions = view.findViewById(R.id.layout_empty_actions);
+        btnClearSearch = view.findViewById(R.id.btn_clear_search);
+        btnBrowseCategories = view.findViewById(R.id.btn_browse_categories);
         
         itemManager = ItemManager.getInstance(getContext());
         allItems = new ArrayList<>();
@@ -109,12 +133,22 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     }
     
     private void setupRecyclerView() {
-        itemAdapter = new ItemCardAdapter(filteredItems);
-        itemAdapter.setOnItemClickListener(this);
+        if (itemAdapter == null) {
+            itemAdapter = new ItemCardAdapter(filteredItems);
+            itemAdapter.setOnItemClickListener(this);
+        } else {
+            itemAdapter.updateItems(filteredItems);
+        }
         
-        // Use GridLayoutManager for 2 columns
-        GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
-        rvItems.setLayoutManager(layoutManager);
+        // Set layout manager based on view type
+        if (isGridView) {
+            GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
+            rvItems.setLayoutManager(layoutManager);
+        } else {
+            LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+            rvItems.setLayoutManager(layoutManager);
+        }
+        
         rvItems.setAdapter(itemAdapter);
     }
     
@@ -148,6 +182,9 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         btnFilter.setOnClickListener(v -> showFilterDialog());
         btnSort.setOnClickListener(v -> showSortDialog());
         btnClearAllFilters.setOnClickListener(v -> clearAllFilters());
+        btnViewToggle.setOnClickListener(v -> toggleView());
+        btnClearSearch.setOnClickListener(v -> clearSearch());
+        btnBrowseCategories.setOnClickListener(v -> showCategorySelection());
     }
     
     
@@ -224,6 +261,7 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                 
                 showLoading(false);
                 updateEmptyState();
+                updateItemCount();
             });
         }).start();
     }
@@ -284,23 +322,39 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         if (hasSearchQuery && hasActiveFilters) {
             tvEmptyTitle.setText("No items found");
             tvEmptySubtitle.setText("No items match your search and filter criteria");
+            ivEmptyIcon.setImageResource(R.drawable.ic_search);
+            tvEmptySuggestionsTitle.setVisibility(View.VISIBLE);
+            layoutEmptySuggestions.setVisibility(View.VISIBLE);
+            layoutEmptyActions.setVisibility(View.VISIBLE);
         } else if (hasSearchQuery) {
             tvEmptyTitle.setText("No search results");
             tvEmptySubtitle.setText("No items match your search terms");
+            ivEmptyIcon.setImageResource(R.drawable.ic_search);
+            tvEmptySuggestionsTitle.setVisibility(View.VISIBLE);
+            layoutEmptySuggestions.setVisibility(View.VISIBLE);
+            layoutEmptyActions.setVisibility(View.VISIBLE);
         } else if (hasActiveFilters) {
             tvEmptyTitle.setText("No filtered results");
             tvEmptySubtitle.setText("No items match your filter criteria");
+            ivEmptyIcon.setImageResource(R.drawable.ic_filter);
+            tvEmptySuggestionsTitle.setVisibility(View.VISIBLE);
+            layoutEmptySuggestions.setVisibility(View.VISIBLE);
+            layoutEmptyActions.setVisibility(View.VISIBLE);
         } else {
             tvEmptyTitle.setText("No items available");
             tvEmptySubtitle.setText("There are currently no items to browse");
+            ivEmptyIcon.setImageResource(R.drawable.ic_shopping_bag);
+            tvEmptySuggestionsTitle.setVisibility(View.GONE);
+            layoutEmptySuggestions.setVisibility(View.GONE);
+            layoutEmptyActions.setVisibility(View.GONE);
         }
     }
     
     private void showFilterDialog() {
-        FilterDialogFragment dialog = new FilterDialogFragment();
-        dialog.setFilterCriteria(currentFilter);
-        dialog.setOnFilterAppliedListener(this::onFilterApplied);
-        dialog.show(getParentFragmentManager(), "FilterDialog");
+        Intent intent = new Intent(getContext(), AdvancedFilterActivity.class);
+        intent.putExtra("USER_EMAIL", loggedInUserEmail);
+        intent.putExtra("FILTER_CRITERIA", currentFilter);
+        startActivityForResult(intent, 1001);
     }
     
     private void onFilterApplied(FilterCriteria newFilter) {
@@ -449,5 +503,80 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         super.onResume();
         // Refresh items when returning to this fragment
         loadItems();
+    }
+    
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        if (resultCode == Activity.RESULT_OK) {
+            switch (requestCode) {
+                case 1001: // AdvancedFilterActivity
+                    if (data != null && data.getSerializableExtra("FILTER_CRITERIA") != null) {
+                        FilterCriteria newFilter = (FilterCriteria) data.getSerializableExtra("FILTER_CRITERIA");
+                        onFilterApplied(newFilter);
+                    }
+                    break;
+                case 1002: // CategorySelectionActivity
+                    if (data != null && data.getSerializableExtra("SELECTED_CATEGORY") != null) {
+                        Category selectedCategory = (Category) data.getSerializableExtra("SELECTED_CATEGORY");
+                        currentFilter.setCategoryId(selectedCategory.getCategoryId());
+                        applyFilters();
+                        updateFilterChips();
+                    }
+                    break;
+            }
+        }
+    }
+    
+    /**
+     * Toggle between grid and list view
+     */
+    private void toggleView() {
+        isGridView = !isGridView;
+        
+        // Update button icon
+        if (isGridView) {
+            btnViewToggle.setImageResource(R.drawable.ic_grid_view);
+        } else {
+            btnViewToggle.setImageResource(R.drawable.ic_list_view);
+        }
+        
+        // Update RecyclerView layout
+        setupRecyclerView();
+    }
+    
+    /**
+     * Clear search query and refresh
+     */
+    private void clearSearch() {
+        etSearch.setText("");
+        currentFilter.setQuery(null);
+        applyFilters();
+    }
+    
+    /**
+     * Show category selection dialog
+     */
+    private void showCategorySelection() {
+        Intent intent = new Intent(getContext(), CategorySelectionActivity.class);
+        intent.putExtra("USER_EMAIL", loggedInUserEmail);
+        startActivityForResult(intent, 1002);
+    }
+    
+    /**
+     * Update item count display
+     */
+    private void updateItemCount() {
+        if (tvItemCount != null) {
+            int totalItems = allItems.size();
+            int filteredCount = filteredItems.size();
+            
+            if (filteredCount == totalItems) {
+                tvItemCount.setText(totalItems + " items available");
+            } else {
+                tvItemCount.setText(filteredCount + " of " + totalItems + " items");
+            }
+        }
     }
 }

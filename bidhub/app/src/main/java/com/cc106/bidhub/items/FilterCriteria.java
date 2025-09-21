@@ -1,5 +1,6 @@
 package com.cc106.bidhub.items;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
@@ -8,7 +9,7 @@ import java.util.Date;
  * Filter Criteria Model
  * Contains criteria for filtering items
  */
-public class FilterCriteria {
+public class FilterCriteria implements Serializable {
     private String query;
     private String categoryId;
     private List<String> tags;
