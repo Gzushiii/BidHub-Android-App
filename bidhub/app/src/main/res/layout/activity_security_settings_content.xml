@@ -22,7 +22,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Privacy Settings"
+                android:text="Security Settings"
                 android:textColor="@color/white"
                 android:textSize="24sp"
                 android:textStyle="bold"
@@ -31,13 +31,13 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Control your privacy and data preferences"
+                android:text="Protect your account with advanced security features"
                 android:textColor="@color/white"
                 android:textSize="14sp" />
 
         </LinearLayout>
 
-        <!-- Profile Privacy Section -->
+        <!-- Security Status Section -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -53,23 +53,31 @@
                 android:padding="20dp">
 
                 <TextView
-                    android:id="@+id/textViewPrivacyInfo"
+                    android:id="@+id/textViewSecurityStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Profile Privacy"
+                    android:text="Security Status"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Profile Visibility -->
+                <!-- Security Score -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     android:padding="12dp"
-                    android:layout_marginBottom="8dp">
+                    android:background="@color/success_green_light"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🛡️"
+                        android:textSize="24sp"
+                        android:layout_marginEnd="12dp" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -80,104 +88,52 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Profile Visibility"
-                            android:textColor="@color/text_primary"
+                            android:text="Security Score: 85/100"
+                            android:textColor="@color/success_green_dark"
                             android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Make your profile visible to other users"
-                            android:textColor="@color/text_secondary"
+                            android:text="Your account is well protected"
+                            android:textColor="@color/success_green_dark"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
-                    <Switch
-                        android:id="@+id/switchProfileVisibility"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checked="true" />
-
                 </LinearLayout>
 
-                <!-- Bidding History -->
+                <!-- Quick Actions -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="12dp"
-                    android:layout_marginBottom="8dp">
+                    android:gravity="center">
 
-                    <LinearLayout
+                    <Button
+                        android:id="@+id/buttonChangePassword"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="40dp"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:layout_marginEnd="8dp"
+                        android:text="Change Password"
+                        android:textSize="12sp"
+                        android:background="@drawable/button_primary_background"
+                        android:textColor="@color/white"
+                        android:stateListAnimator="@null" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Bidding History"
-                            android:textColor="@color/text_primary"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Show your bidding history to others"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
-
-                    </LinearLayout>
-
-                    <Switch
-                        android:id="@+id/switchBiddingHistory"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checked="false" />
-
-                </LinearLayout>
-
-                <!-- Activity Status -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="12dp">
-
-                    <LinearLayout
+                    <Button
+                        android:id="@+id/buttonEnable2FA"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="40dp"
                         android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Activity Status"
-                            android:textColor="@color/text_primary"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Show when you're online"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
-
-                    </LinearLayout>
-
-                    <Switch
-                        android:id="@+id/switchActivityStatus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checked="true" />
+                        android:layout_marginStart="8dp"
+                        android:text="Enable 2FA"
+                        android:textSize="12sp"
+                        android:background="@drawable/button_secondary_background"
+                        android:textColor="@color/primary_blue"
+                        android:stateListAnimator="@null" />
 
                 </LinearLayout>
 
@@ -185,7 +141,7 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Data Control Section -->
+        <!-- Authentication Settings Section -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -203,16 +159,16 @@
                 android:padding="20dp">
 
                 <TextView
-                    android:id="@+id/textViewDataControl"
+                    android:id="@+id/textViewAuthSettings"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Data Control"
+                    android:text="Authentication"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Data Collection -->
+                <!-- Two-Factor Authentication -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -230,7 +186,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Data Collection"
+                            android:text="Two-Factor Authentication"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -238,21 +194,21 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Allow collection of usage data"
+                            android:text="Add an extra layer of security"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchDataCollection"
+                        android:id="@+id/switchTwoFactorAuth"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="true" />
+                        android:checked="false" />
 
                 </LinearLayout>
 
-                <!-- Analytics -->
+                <!-- Biometric Login -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -270,7 +226,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Analytics"
+                            android:text="Biometric Login"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -278,21 +234,21 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Help improve the app with analytics"
+                            android:text="Use fingerprint or face recognition"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchAnalytics"
+                        android:id="@+id/switchBiometricLogin"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:checked="true" />
 
                 </LinearLayout>
 
-                <!-- Personalized Ads -->
+                <!-- Auto Lock -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -309,7 +265,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Personalized Ads"
+                            android:text="Auto Lock"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -317,17 +273,17 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Show ads based on your interests"
+                            android:text="Lock app after inactivity"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchPersonalizedAds"
+                        android:id="@+id/switchAutoLock"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="false" />
+                        android:checked="true" />
 
                 </LinearLayout>
 
@@ -335,7 +291,7 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Data Sharing Section -->
+        <!-- Device Settings Section -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -353,16 +309,16 @@
                 android:padding="20dp">
 
                 <TextView
-                    android:id="@+id/textViewDataSharing"
+                    android:id="@+id/textViewDeviceSettings"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Data Sharing"
+                    android:text="Device &amp; Privacy"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Location Tracking -->
+                <!-- Login Alerts -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -380,7 +336,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Location Tracking"
+                            android:text="Login Alerts"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -388,21 +344,21 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Allow location-based features"
+                            android:text="Get notified of new logins"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchLocationTracking"
+                        android:id="@+id/switchLoginAlerts"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="false" />
+                        android:checked="true" />
 
                 </LinearLayout>
 
-                <!-- Contact Sync -->
+                <!-- Device Management -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -420,7 +376,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Contact Sync"
+                            android:text="Device Management"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -428,21 +384,21 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Sync contacts for friend suggestions"
+                            android:text="Manage trusted devices"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchContactSync"
+                        android:id="@+id/switchDeviceManagement"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="false" />
+                        android:checked="true" />
 
                 </LinearLayout>
 
-                <!-- Data Sharing -->
+                <!-- Secure Browsing -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -459,7 +415,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Data Sharing"
+                            android:text="Secure Browsing"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -467,17 +423,17 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Share data with third parties"
+                            android:text="Use secure connections only"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchDataSharing"
+                        android:id="@+id/switchSecureBrowsing"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="false" />
+                        android:checked="true" />
 
                 </LinearLayout>
 
@@ -485,7 +441,7 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Data Management Section -->
+        <!-- Security Actions Section -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -505,13 +461,13 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Data Management"
+                    android:text="Security Actions"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Data Export -->
+                <!-- Manage Devices -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -538,7 +494,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Export Data"
+                            android:text="Manage Devices"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -546,17 +502,17 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Download your personal data"
+                            android:text="View and manage trusted devices"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Button
-                        android:id="@+id/buttonDataExport"
+                        android:id="@+id/buttonManageDevices"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Export"
+                        android:text="Manage"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
                         android:textColor="@color/primary_blue"
@@ -564,7 +520,7 @@
 
                 </LinearLayout>
 
-                <!-- Data Delete -->
+                <!-- Backup Codes -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -591,7 +547,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Delete Data"
+                            android:text="Backup Codes"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -599,25 +555,78 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Permanently delete your data"
+                            android:text="Generate backup codes for 2FA"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Button
-                        android:id="@+id/buttonDataDelete"
+                        android:id="@+id/buttonBackupCodes"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Delete"
+                        android:text="Generate"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/error_red"
+                        android:textColor="@color/primary_blue"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
 
-                <!-- Privacy Policy -->
+                <!-- Security Questions -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="12dp"
+                    android:background="?android:attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginBottom="8dp">
+
+                    <View
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/button_primary_background"
+                        android:layout_marginEnd="16dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Security Questions"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Set up security questions"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/buttonSecurityQuestions"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Setup"
+                        android:textSize="12sp"
+                        android:background="@drawable/ripple_effect"
+                        android:textColor="@color/primary_blue"
+                        android:stateListAnimator="@null" />
+
+                </LinearLayout>
+
+                <!-- Security Report -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -643,7 +652,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Privacy Policy"
+                            android:text="Security Report"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -651,17 +660,17 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Read our privacy policy"
+                            android:text="View your security activity"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Button
-                        android:id="@+id/buttonPrivacyPolicy"
+                        android:id="@+id/buttonSecurityReport"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="View"
+                        android:text="Report"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
                         android:textColor="@color/primary_blue"

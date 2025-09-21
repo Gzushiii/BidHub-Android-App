@@ -1,3 +1,273 @@
 <resources>
     <string name="app_name">BidHub</string>
+    
+    <!-- Profile & Settings -->
+    <string name="profile">Profile</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="account_settings">Account Settings</string>
+    <string name="privacy_settings">Privacy Settings</string>
+    <string name="notification_preferences">Notification Preferences</string>
+    <string name="security_settings">Security Settings</string>
+    <string name="help_support">Help &amp; Support</string>
+    <string name="about_app">About App</string>
+    
+    <!-- Common Actions -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="edit">Edit</string>
+    <string name="settings">Settings</string>
+    <string name="manage">Manage</string>
+    <string name="change">Change</string>
+    <string name="enable">Enable</string>
+    <string name="disable">Disable</string>
+    <string name="view">View</string>
+    <string name="test">Test</string>
+    <string name="reset">Reset</string>
+    <string name="export">Export</string>
+    <string name="delete">Delete</string>
+    <string name="contact">Contact</string>
+    <string name="help">Help</string>
+    <string name="info">Info</string>
+    <string name="rate">Rate</string>
+    <string name="share">Share</string>
+    <string name="check">Check</string>
+    <string name="generate">Generate</string>
+    <string name="setup">Setup</string>
+    <string name="report">Report</string>
+    <string name="history">History</string>
+    <string name="terms">Terms</string>
+    <string name="policy">Policy</string>
+    <string name="guide">Guide</string>
+    <string name="chat">Chat</string>
+    <string name="email">Email</string>
+    <string name="request">Request</string>
+    
+    <!-- Profile Information -->
+    <string name="account_information">Account Information</string>
+    <string name="personal_information">Personal Information</string>
+    <string name="profile_picture">Profile Picture</string>
+    <string name="username">Username</string>
+    <string name="email_address">Email Address</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="available_credits">Available Credits</string>
+    <string name="bidding_alias">Bidding Alias</string>
+    <string name="regenerate">Regenerate</string>
+    <string name="tap_to_change_photo">Tap to change photo</string>
+    <string name="tap_to_add_photo">Tap to add photo</string>
+    
+    <!-- Settings Categories -->
+    <string name="account_management">Account Management</string>
+    <string name="notification_settings">Notification Settings</string>
+    <string name="privacy_data">Privacy &amp; Data</string>
+    <string name="app_support">App &amp; Support</string>
+    <string name="authentication">Authentication</string>
+    <string name="device_privacy">Device &amp; Privacy</string>
+    <string name="security_actions">Security Actions</string>
+    <string name="data_management">Data Management</string>
+    <string name="help_resources">Help Resources</string>
+    <string name="legal_support">Legal &amp; Support</string>
+    <string name="app_actions">App Actions</string>
+    <string name="contact_support">Contact Support</string>
+    <string name="security_status">Security Status</string>
+    <string name="notification_actions">Notification Actions</string>
+    
+    <!-- Notification Types -->
+    <string name="email_notifications">Email Notifications</string>
+    <string name="push_notifications">Push Notifications</string>
+    <string name="bid_alerts">Bid Alerts</string>
+    <string name="marketing_emails">Marketing Emails</string>
+    <string name="auction_updates">Auction Updates</string>
+    <string name="payment_notifications">Payment Notifications</string>
+    <string name="system_updates">System Updates</string>
+    <string name="security_alerts">Security Alerts</string>
+    <string name="weekly_digest">Weekly Digest</string>
+    <string name="login_alerts">Login Alerts</string>
+    
+    <!-- Privacy Settings -->
+    <string name="profile_visibility">Profile Visibility</string>
+    <string name="bidding_history">Bidding History</string>
+    <string name="activity_status">Activity Status</string>
+    <string name="data_collection">Data Collection</string>
+    <string name="analytics">Analytics</string>
+    <string name="personalized_ads">Personalized Ads</string>
+    <string name="location_tracking">Location Tracking</string>
+    <string name="contact_sync">Contact Sync</string>
+    <string name="data_sharing">Data Sharing</string>
+    <string name="data_export">Export Data</string>
+    <string name="data_delete">Delete Data</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    
+    <!-- Security Settings -->
+    <string name="two_factor_authentication">Two-Factor Authentication</string>
+    <string name="biometric_login">Biometric Login</string>
+    <string name="auto_lock">Auto Lock</string>
+    <string name="device_management">Device Management</string>
+    <string name="secure_browsing">Secure Browsing</string>
+    <string name="backup_codes">Backup Codes</string>
+    <string name="security_questions">Security Questions</string>
+    <string name="security_report">Security Report</string>
+    <string name="change_password">Change Password</string>
+    <string name="account_security">Account Security</string>
+    
+    <!-- Help & Support -->
+    <string name="live_chat">Live Chat</string>
+    <string name="report_bug">Report Bug</string>
+    <string name="feature_request">Feature Request</string>
+    <string name="frequently_asked_questions">Frequently Asked Questions</string>
+    <string name="user_guide">User Guide</string>
+    <string name="terms_of_service">Terms of Service</string>
+    <string name="test_notification">Test Notification</string>
+    <string name="notification_history">Notification History</string>
+    <string name="reset_to_defaults">Reset to Defaults</string>
+    
+    <!-- About App -->
+    <string name="about_bidhub">About BidHub</string>
+    <string name="app_information">App Information</string>
+    <string name="version">Version</string>
+    <string name="build">Build</string>
+    <string name="developer">Developer</string>
+    <string name="copyright">Copyright</string>
+    <string name="rate_app">Rate App</string>
+    <string name="share_app">Share App</string>
+    <string name="check_updates">Check Updates</string>
+    <string name="open_source">Open Source</string>
+    <string name="contact_us">Contact Us</string>
+    
+    <!-- Descriptions -->
+    <string name="manage_account_preferences">Manage your account preferences and security</string>
+    <string name="control_privacy_data">Control your privacy and data preferences</string>
+    <string name="customize_notifications">Customize how and when you receive notifications</string>
+    <string name="protect_account_security">Protect your account with advanced security features</string>
+    <string name="get_help_support">Get help and contact our support team</string>
+    <string name="learn_more_app">Learn more about our app and team</string>
+    <string name="update_personal_info">Update your personal information</string>
+    <string name="manage_account_settings">Manage your account and settings</string>
+    
+    <!-- Quick Actions -->
+    <string name="quick_actions">Quick Actions</string>
+    <string name="my_bids">My Bids</string>
+    <string name="transaction_history">Transaction History</string>
+    <string name="view_active_past_bids">View your active and past bids</string>
+    <string name="view_credit_transactions">View your credit transactions</string>
+    <string name="anonymous_bidding">Anonymous Bidding</string>
+    <string name="real_identity_protected">Your real identity is protected during auctions</string>
+    <string name="sign_out">Sign Out</string>
+    
+    <!-- Security Status -->
+    <string name="security_score">Security Score: 85/100</string>
+    <string name="account_well_protected">Your account is well protected</string>
+    <string name="add_extra_security">Add an extra layer of security</string>
+    <string name="use_fingerprint_face">Use fingerprint or face recognition</string>
+    <string name="lock_app_inactivity">Lock app after inactivity</string>
+    <string name="get_notified_logins">Get notified of new logins</string>
+    <string name="manage_trusted_devices">Manage trusted devices</string>
+    <string name="use_secure_connections">Use secure connections only</string>
+    <string name="view_manage_devices">View and manage trusted devices</string>
+    <string name="generate_backup_codes">Generate backup codes for 2FA</string>
+    <string name="setup_security_questions">Set up security questions</string>
+    <string name="view_security_activity">View your security activity</string>
+    
+    <!-- App Information -->
+    <string name="app_description">A modern auction platform that connects buyers and sellers through secure, anonymous bidding. Experience the thrill of competitive bidding while maintaining your privacy.</string>
+    <string name="app_detailed_info">BidHub revolutionizes the auction experience with cutting-edge technology, ensuring fair play and user privacy. Our platform provides a secure environment for competitive bidding across various categories.\n\nKey Features:\n• Anonymous bidding system\n• Secure payment processing\n• Real-time auction updates\n• User-friendly interface\n• Privacy protection\n• Credit-based system</string>
+    <string name="developed_by">Developed by CC106 Group 5</string>
+    <string name="all_rights_reserved">© 2024 BidHub. All rights reserved.</string>
+    
+    <!-- FAQ Questions -->
+    <string name="faq_how_place_bid">How do I place a bid?</string>
+    <string name="faq_add_credits">How do I add credits to my account?</string>
+    <string name="faq_win_auction">What happens if I win an auction?</string>
+    <string name="faq_change_password">How do I change my password?</string>
+    <string name="faq_cancel_bid">Can I cancel a bid?</string>
+    <string name="faq_contact_support">How do I contact support?</string>
+    <string name="faq_secure_info">Is my personal information secure?</string>
+    <string name="faq_delete_account">How do I delete my account?</string>
+    
+    <!-- FAQ Answers -->
+    <string name="faq_answer_place_bid">To place a bid, browse items, select one you like, and tap the \'Place Bid\' button. Enter your bid amount and confirm.</string>
+    <string name="faq_answer_add_credits">You can add credits through the Credits section. We accept various payment methods including GCash and Maya.</string>
+    <string name="faq_answer_win_auction">If you win an auction, you\'ll receive a notification and can redeem your item using the provided redemption code.</string>
+    <string name="faq_answer_change_password">Go to Settings > Account Settings > Change Password to update your password securely.</string>
+    <string name="faq_answer_cancel_bid">Bids cannot be cancelled once placed to maintain auction integrity. Please bid carefully.</string>
+    <string name="faq_answer_contact_support">You can contact support through this help section, email, or the in-app chat feature.</string>
+    <string name="faq_answer_secure_info">Yes, we use industry-standard encryption and follow strict privacy policies to protect your data.</string>
+    <string name="faq_answer_delete_account">Account deletion can be requested through the Privacy Settings section or by contacting support.</string>
+    
+    <!-- Coming Soon Messages -->
+    <string name="coming_soon">Coming Soon!</string>
+    <string name="my_bids_coming_soon">My Bids - Coming Soon!</string>
+    <string name="transaction_history_coming_soon">Transaction History - Coming Soon!</string>
+    <string name="device_management_coming_soon">Device management coming soon!</string>
+    <string name="security_report_coming_soon">Security report coming soon!</string>
+    <string name="backup_codes_coming_soon">Backup codes coming soon!</string>
+    <string name="security_questions_coming_soon">Security questions coming soon!</string>
+    <string name="notification_history_coming_soon">Notification history coming soon!</string>
+    <string name="user_guide_browser">User guide will open in browser</string>
+    <string name="terms_browser">Terms of service will open in browser</string>
+    <string name="privacy_policy_browser">Privacy policy will open in browser</string>
+    <string name="checking_updates">Checking for updates...</string>
+    <string name="test_notification_sent">Test notification sent!</string>
+    <string name="notification_preferences_reset">Notification preferences reset to defaults</string>
+    <string name="two_factor_setup_coming_soon">Two-factor authentication setup coming soon!</string>
+    <string name="two_factor_disabled">Two-factor authentication disabled</string>
+    <string name="opening_support_chat">Opening support chat...</string>
+    <string name="data_export_coming_soon">Data export feature coming soon!</string>
+    <string name="data_deletion_coming_soon">Data deletion feature coming soon!</string>
+    
+    <!-- Success Messages -->
+    <string name="profile_updated_successfully">Profile updated successfully!</string>
+    <string name="alias_regenerated">Alias regenerated: %s</string>
+    <string name="profile_picture_updated">Profile picture updated!</string>
+    <string name="preferences_saved">Preferences saved successfully</string>
+    
+    <!-- Error Messages -->
+    <string name="error_user_not_identified">Error: User not identified.</string>
+    <string name="failed_regenerate_alias">Failed to regenerate alias</string>
+    <string name="failed_update_profile">Failed to update profile</string>
+    <string name="failed_save_profile_picture">Failed to save profile picture</string>
+    <string name="failed_load_image">Failed to load selected image</string>
+    
+    <!-- Validation Messages -->
+    <string name="first_name_required">First name is required</string>
+    <string name="first_name_min_length">First name must be at least 2 characters</string>
+    <string name="last_name_required">Last name is required</string>
+    <string name="last_name_min_length">Last name must be at least 2 characters</string>
+    <string name="username_required">Username is required</string>
+    <string name="username_min_length">Username must be at least 3 characters</string>
+    <string name="username_invalid_chars">Username can only contain letters, numbers, and underscores</string>
+    <string name="email_required">Email is required</string>
+    <string name="email_invalid">Please enter a valid email address</string>
+    <string name="phone_required">Phone number is required</string>
+    <string name="phone_invalid">Please enter a valid phone number</string>
+    <string name="username_exists">Username already exists</string>
+    <string name="email_exists">Email already exists</string>
+    
+    <!-- Email Subjects -->
+    <string name="support_request_subject">BidHub Support Request</string>
+    <string name="bug_report_subject">Bug Report - BidHub App</string>
+    <string name="feature_request_subject">Feature Request - BidHub App</string>
+    <string name="contact_subject">BidHub App - Contact</string>
+    <string name="share_app_subject">Check out BidHub!</string>
+    
+    <!-- Email Templates -->
+    <string name="support_email_template">Please describe your issue:\n\n</string>
+    <string name="bug_report_template">Please describe the bug:\n\nSteps to reproduce:\n1.\n2.\n3.\n\nExpected behavior:\n\nActual behavior:\n\nDevice info:\n</string>
+    <string name="feature_request_template">Please describe your feature request:\n\nWhy would this feature be useful?\n\nHow should it work?\n\n</string>
+    <string name="contact_template">Hello BidHub team,\n\n</string>
+    <string name="share_app_template">I\'ve been using BidHub for auctions and it\'s amazing! Download it from: https://play.google.com/store/apps/details?id=%s</string>
+    
+    <!-- URLs -->
+    <string name="github_url">https://github.com/bidhub/android</string>
+    <string name="terms_url">https://bidhub.com/terms</string>
+    <string name="privacy_url">https://bidhub.com/privacy</string>
+    <string name="contact_email">contact@bidhub.com</string>
+    <string name="support_email">support@bidhub.com</string>
+    <string name="bugs_email">bugs@bidhub.com</string>
+    <string name="features_email">features@bidhub.com</string>
+    
+    <!-- App Store -->
+    <string name="play_store_url">https://play.google.com/store/apps/details?id=%s</string>
+    <string name="market_url">market://details?id=%s</string>
 </resources>
