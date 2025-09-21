@@ -22,7 +22,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Privacy Settings"
+                android:text="Notification Preferences"
                 android:textColor="@color/white"
                 android:textSize="24sp"
                 android:textStyle="bold"
@@ -31,13 +31,13 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Control your privacy and data preferences"
+                android:text="Customize how and when you receive notifications"
                 android:textColor="@color/white"
                 android:textSize="14sp" />
 
         </LinearLayout>
 
-        <!-- Profile Privacy Section -->
+        <!-- Email Notifications Section -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -53,16 +53,16 @@
                 android:padding="20dp">
 
                 <TextView
-                    android:id="@+id/textViewPrivacyInfo"
+                    android:id="@+id/textViewEmailSettings"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Profile Privacy"
+                    android:text="Email Notifications"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Profile Visibility -->
+                <!-- Email Notifications -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -80,7 +80,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Profile Visibility"
+                            android:text="Email Notifications"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -88,21 +88,21 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Make your profile visible to other users"
+                            android:text="Receive notifications via email"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchProfileVisibility"
+                        android:id="@+id/switchEmailNotifications"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:checked="true" />
 
                 </LinearLayout>
 
-                <!-- Bidding History -->
+                <!-- Marketing Emails -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -120,7 +120,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Bidding History"
+                            android:text="Marketing Emails"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -128,21 +128,21 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Show your bidding history to others"
+                            android:text="Receive promotional content and updates"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchBiddingHistory"
+                        android:id="@+id/switchMarketingEmails"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:checked="false" />
 
                 </LinearLayout>
 
-                <!-- Activity Status -->
+                <!-- Weekly Digest -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -159,7 +159,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Activity Status"
+                            android:text="Weekly Digest"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -167,17 +167,17 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Show when you're online"
+                            android:text="Get weekly summary of your activity"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchActivityStatus"
+                        android:id="@+id/switchWeeklyDigest"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="true" />
+                        android:checked="false" />
 
                 </LinearLayout>
 
@@ -185,7 +185,7 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Data Control Section -->
+        <!-- Push Notifications Section -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -203,16 +203,16 @@
                 android:padding="20dp">
 
                 <TextView
-                    android:id="@+id/textViewDataControl"
+                    android:id="@+id/textViewPushSettings"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Data Control"
+                    android:text="Push Notifications"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Data Collection -->
+                <!-- Push Notifications -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -230,7 +230,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Data Collection"
+                            android:text="Push Notifications"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -238,21 +238,21 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Allow collection of usage data"
+                            android:text="Receive push notifications on device"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchDataCollection"
+                        android:id="@+id/switchPushNotifications"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:checked="true" />
 
                 </LinearLayout>
 
-                <!-- Analytics -->
+                <!-- Bid Alerts -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -270,7 +270,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Analytics"
+                            android:text="Bid Alerts"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -278,21 +278,21 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Help improve the app with analytics"
+                            android:text="Get notified about bid updates"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchAnalytics"
+                        android:id="@+id/switchBidAlerts"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:checked="true" />
 
                 </LinearLayout>
 
-                <!-- Personalized Ads -->
+                <!-- Auction Updates -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -309,7 +309,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Personalized Ads"
+                            android:text="Auction Updates"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -317,17 +317,17 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Show ads based on your interests"
+                            android:text="Get notified about auction changes"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchPersonalizedAds"
+                        android:id="@+id/switchAuctionUpdates"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="false" />
+                        android:checked="true" />
 
                 </LinearLayout>
 
@@ -335,7 +335,7 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Data Sharing Section -->
+        <!-- Alert Settings Section -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -353,16 +353,16 @@
                 android:padding="20dp">
 
                 <TextView
-                    android:id="@+id/textViewDataSharing"
+                    android:id="@+id/textViewAlertSettings"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Data Sharing"
+                    android:text="Alert Settings"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Location Tracking -->
+                <!-- Payment Notifications -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -380,7 +380,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Location Tracking"
+                            android:text="Payment Notifications"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -388,21 +388,21 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Allow location-based features"
+                            android:text="Get notified about payment activities"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchLocationTracking"
+                        android:id="@+id/switchPaymentNotifications"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="false" />
+                        android:checked="true" />
 
                 </LinearLayout>
 
-                <!-- Contact Sync -->
+                <!-- System Updates -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -420,7 +420,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Contact Sync"
+                            android:text="System Updates"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -428,21 +428,21 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Sync contacts for friend suggestions"
+                            android:text="Get notified about app updates"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchContactSync"
+                        android:id="@+id/switchSystemUpdates"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="false" />
+                        android:checked="true" />
 
                 </LinearLayout>
 
-                <!-- Data Sharing -->
+                <!-- Security Alerts -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -459,7 +459,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Data Sharing"
+                            android:text="Security Alerts"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -467,17 +467,17 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Share data with third parties"
+                            android:text="Get notified about security events"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Switch
-                        android:id="@+id/switchDataSharing"
+                        android:id="@+id/switchSecurityAlerts"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="false" />
+                        android:checked="true" />
 
                 </LinearLayout>
 
@@ -485,7 +485,7 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Data Management Section -->
+        <!-- Action Buttons Section -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -505,13 +505,13 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Data Management"
+                    android:text="Notification Actions"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="16dp" />
 
-                <!-- Data Export -->
+                <!-- Test Notification -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -538,7 +538,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Export Data"
+                            android:text="Test Notification"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -546,17 +546,17 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Download your personal data"
+                            android:text="Send a test notification to verify settings"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Button
-                        android:id="@+id/buttonDataExport"
+                        android:id="@+id/buttonTestNotification"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Export"
+                        android:text="Test"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
                         android:textColor="@color/primary_blue"
@@ -564,7 +564,7 @@
 
                 </LinearLayout>
 
-                <!-- Data Delete -->
+                <!-- Notification History -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -591,7 +591,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Delete Data"
+                            android:text="Notification History"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -599,25 +599,25 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Permanently delete your data"
+                            android:text="View your notification history"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Button
-                        android:id="@+id/buttonDataDelete"
+                        android:id="@+id/buttonNotificationHistory"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Delete"
+                        android:text="History"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/error_red"
+                        android:textColor="@color/primary_blue"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
 
-                <!-- Privacy Policy -->
+                <!-- Reset Defaults -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -643,7 +643,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Privacy Policy"
+                            android:text="Reset to Defaults"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -651,20 +651,20 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Read our privacy policy"
+                            android:text="Reset all notification settings to default"
                             android:textColor="@color/text_secondary"
                             android:textSize="12sp" />
 
                     </LinearLayout>
 
                     <Button
-                        android:id="@+id/buttonPrivacyPolicy"
+                        android:id="@+id/buttonResetDefaults"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="View"
+                        android:text="Reset"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/error_red"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>

@@ -11,11 +11,12 @@ import android.widget.Switch;
 import android.widget.TextView;
 import com.cc106.bidhub.toast.ToastHelper;
 
-public class ProfileSettingsActivity extends BaseActivity {
+public class AccountSettingsActivity extends BaseActivity {
 
     private Switch switchEmailNotifications, switchPushNotifications, switchBidAlerts, switchMarketingEmails;
-    private Button buttonChangePassword, buttonPrivacySettings, buttonAccountSecurity;
-    private TextView textViewAccountInfo, textViewNotificationSettings, textViewPrivacySettings;
+    private Switch switchProfileVisibility, switchBiddingHistory, switchActivityStatus;
+    private Button buttonChangePassword, buttonPrivacySettings, buttonAccountSecurity, buttonHelpSupport, buttonAboutApp;
+    private TextView textViewAccountInfo, textViewNotificationSettings, textViewPrivacySettings, textViewAppSettings;
     private DatabaseHelper dbHelper;
     private String loggedInUserEmail;
 
@@ -23,8 +24,8 @@ public class ProfileSettingsActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // Inflate the profile settings content into the content frame
-        getLayoutInflater().inflate(R.layout.activity_profile_settings_content, findViewById(R.id.content_frame));
+        // Inflate the account settings content into the content frame
+        getLayoutInflater().inflate(R.layout.activity_account_settings_content, findViewById(R.id.content_frame));
         
         // Get the logged-in user's email from the Intent
         loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
@@ -51,24 +52,35 @@ public class ProfileSettingsActivity extends BaseActivity {
         switchBidAlerts = findViewById(R.id.switchBidAlerts);
         switchMarketingEmails = findViewById(R.id.switchMarketingEmails);
         
+        // Privacy switches
+        switchProfileVisibility = findViewById(R.id.switchProfileVisibility);
+        switchBiddingHistory = findViewById(R.id.switchBiddingHistory);
+        switchActivityStatus = findViewById(R.id.switchActivityStatus);
+        
         // Action buttons
         buttonChangePassword = findViewById(R.id.buttonChangePassword);
         buttonPrivacySettings = findViewById(R.id.buttonPrivacySettings);
         buttonAccountSecurity = findViewById(R.id.buttonAccountSecurity);
+        buttonHelpSupport = findViewById(R.id.buttonHelpSupport);
+        buttonAboutApp = findViewById(R.id.buttonAboutApp);
         
         // Section headers
         textViewAccountInfo = findViewById(R.id.textViewAccountInfo);
         textViewNotificationSettings = findViewById(R.id.textViewNotificationSettings);
         textViewPrivacySettings = findViewById(R.id.textViewPrivacySettings);
+        textViewAppSettings = findViewById(R.id.textViewAppSettings);
     }
 
     private void loadUserSettings() {
+        // Load settings from database or use defaults
         // For now, we'll use default settings since we don't have a user_preferences table yet
-        // In a real implementation, you would load these from the database
         switchEmailNotifications.setChecked(true);
         switchPushNotifications.setChecked(true);
         switchBidAlerts.setChecked(true);
         switchMarketingEmails.setChecked(false);
+        switchProfileVisibility.setChecked(true);
+        switchBiddingHistory.setChecked(false);
+        switchActivityStatus.setChecked(true);
     }
 
     private void setupClickListeners() {
@@ -89,6 +101,19 @@ public class ProfileSettingsActivity extends BaseActivity {
             saveNotificationPreference("marketing_emails", isChecked);
         });
         
+        // Privacy switches
+        switchProfileVisibility.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            savePrivacyPreference("profile_visibility", isChecked);
+        });
+        
+        switchBiddingHistory.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            savePrivacyPreference("bidding_history", isChecked);
+        });
+        
+        switchActivityStatus.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            savePrivacyPreference("activity_status", isChecked);
+        });
+        
         // Action buttons
         buttonChangePassword.setOnClickListener(v -> {
             Intent intent = new Intent(this, ChangePasswordActivity.class);
@@ -103,13 +128,32 @@ public class ProfileSettingsActivity extends BaseActivity {
         });
         
         buttonAccountSecurity.setOnClickListener(v -> {
-            Intent intent = new Intent(this, SecuritySettingsActivity.class);
+            Intent intent = new Intent(this, AccountSecurityActivity.class);
+            intent.putExtra("USER_EMAIL", loggedInUserEmail);
+            startActivity(intent);
+        });
+        
+        buttonHelpSupport.setOnClickListener(v -> {
+            Intent intent = new Intent(this, HelpSupportActivity.class);
+            intent.putExtra("USER_EMAIL", loggedInUserEmail);
+            startActivity(intent);
+        });
+        
+        buttonAboutApp.setOnClickListener(v -> {
+            Intent intent = new Intent(this, AboutAppActivity.class);
             intent.putExtra("USER_EMAIL", loggedInUserEmail);
             startActivity(intent);
         });
     }
 
     private void saveNotificationPreference(String preference, boolean value) {
+        // TODO: Implement proper preference saving to database
+        // For now, just show a toast
+        String message = preference.replace("_", " ").toUpperCase() + " " + (value ? "enabled" : "disabled");
+        ToastHelper.showInfo(this, message);
+    }
+    
+    private void savePrivacyPreference(String preference, boolean value) {
         // TODO: Implement proper preference saving to database
         // For now, just show a toast
         String message = preference.replace("_", " ").toUpperCase() + " " + (value ? "enabled" : "disabled");
