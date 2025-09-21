@@ -98,6 +98,31 @@
         <activity
             android:name=".AccountSecurityActivity"
             android:exported="false" />
+        
+        <!-- Bidding System Activities -->
+        <activity
+            android:name=".BidConfirmationActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".BidHistoryActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".ActiveBidsActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".WonAuctionsActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".LostAuctionsActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".AuctionCountdownActivity"
+            android:exported="false" />
 
     </application>
 

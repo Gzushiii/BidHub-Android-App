@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/item_title_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Item Title"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
+
+                <TextView
+                    android:id="@+id/status_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ACTIVE"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/success_green"
+                    android:layout_marginTop="4dp" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/time_remaining_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2d 5h 30m"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@color/warning_yellow"
+                android:background="@drawable/time_badge"
+                android:padding="8dp"
+                android:gravity="center" />
+
+        </LinearLayout>
+
+        <!-- Countdown Progress -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="12dp">
+
+            <ProgressBar
+                android:id="@+id/countdown_progress_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="6dp"
+                android:progress="25"
+                android:progressTint="@color/primary_color" />
+
+        </LinearLayout>
+
+        <!-- Bid Details Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Current Bid"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/current_bid_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="₱0.00"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary_color" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bidders"
+                    android:textSize="12sp"
+                    android:textColor="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/bidder_count_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="12 bidders"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- My Bid Status -->
+        <TextView
+            android:id="@+id/my_bid_status_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="You are winning!"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@color/success_green"
+            android:gravity="center"
+            android:background="@drawable/status_badge_active"
+            android:padding="8dp"
+            android:layout_marginBottom="8dp"
+            android:visibility="gone" />
+
+        <!-- Action Button -->
+        <Button
+            android:id="@+id/view_auction_button"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="View Auction"
+            android:textSize="12sp"
+            android:textColor="@color/primary_color"
+            android:background="@drawable/button_secondary" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
