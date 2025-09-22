@@ -402,6 +402,20 @@ public class MainActivity extends BaseActivity {
     }
     
     /**
+     * Switch to browse tab programmatically
+     */
+    public void switchToBrowseTab() {
+        try {
+            if (bottomNavigationView != null) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_browse);
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error switching to browse tab: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
      * Handle back button press
      */
     @Override
