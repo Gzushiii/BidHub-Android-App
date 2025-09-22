@@ -35,6 +35,7 @@ public class HomeFragment extends Fragment {
     private ImageButton btnMenu, btnInbox, btnNotifications;
     private ImageView imgProfile;
     private TextView textViewWelcome, textViewCredits, textViewAlias;
+    private View searchBar;
     
     // Onboarding components
     private ProgressBar progressOnboarding;
@@ -45,9 +46,6 @@ public class HomeFragment extends Fragment {
     
     // Promotional banner
     private Button btnClaimOffer;
-    
-    // Primary action buttons
-    private Button btnBuy, btnPost;
     
     // Stats components
     private TextView textActiveBids, textItemsPosted;
@@ -114,6 +112,7 @@ public class HomeFragment extends Fragment {
         textViewWelcome = view.findViewById(R.id.textViewWelcome);
         textViewCredits = view.findViewById(R.id.textViewCredits);
         textViewAlias = view.findViewById(R.id.textViewAlias);
+        searchBar = view.findViewById(R.id.searchBar);
         
         // Onboarding components
         progressOnboarding = view.findViewById(R.id.progressOnboarding);
@@ -127,10 +126,6 @@ public class HomeFragment extends Fragment {
         
         // Promotional banner
         btnClaimOffer = view.findViewById(R.id.btnClaimOffer);
-        
-        // Primary action buttons
-        btnBuy = view.findViewById(R.id.btnBuy);
-        btnPost = view.findViewById(R.id.btnPost);
         
         // Stats components
         textActiveBids = view.findViewById(R.id.textActiveBids);
@@ -163,6 +158,23 @@ public class HomeFragment extends Fragment {
             btnNotifications.setOnClickListener(v -> {
                 // TODO: Navigate to notifications
                 ToastHelper.showInfo(getContext(), "Notifications clicked");
+            });
+        }
+        
+        // Search bar click listener
+        if (searchBar != null) {
+            searchBar.setOnClickListener(v -> {
+                try {
+                    // Navigate to browse tab
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).switchToBrowseTab();
+                    }
+                } catch (Exception e) {
+                    if (getContext() != null) {
+                        ToastHelper.showError(getContext(), "Error opening browse: " + e.getMessage());
+                    }
+                    e.printStackTrace();
+                }
             });
         }
         
@@ -255,37 +267,6 @@ public class HomeFragment extends Fragment {
                 } catch (Exception e) {
                     if (getContext() != null) {
                         ToastHelper.showError(getContext(), "Error opening credits: " + e.getMessage());
-                    }
-                    e.printStackTrace();
-                }
-            });
-        }
-        
-        // Primary action buttons
-        if (btnBuy != null) {
-            btnBuy.setOnClickListener(v -> {
-                try {
-                    Intent intent = new Intent(getContext(), BrowseActivity.class);
-                    intent.putExtra("USER_EMAIL", loggedInUserEmail);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    if (getContext() != null) {
-                        ToastHelper.showError(getContext(), "Error opening browse: " + e.getMessage());
-                    }
-                    e.printStackTrace();
-                }
-            });
-        }
-        
-        if (btnPost != null) {
-            btnPost.setOnClickListener(v -> {
-                try {
-                    Intent intent = new Intent(getContext(), PostActivity.class);
-                    intent.putExtra("USER_EMAIL", loggedInUserEmail);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    if (getContext() != null) {
-                        ToastHelper.showError(getContext(), "Error opening post: " + e.getMessage());
                     }
                     e.printStackTrace();
                 }
