@@ -78,11 +78,16 @@ public class MainActivity extends BaseActivity {
      * Initialize UI components
      */
     private void initializeUI() {
-        contentFrame = findViewById(R.id.content_frame);
-        loadingIndicator = findViewById(R.id.loading_indicator);
-        
-        if (loadingIndicator != null) {
-            loadingIndicator.setVisibility(View.GONE);
+        try {
+            contentFrame = findViewById(R.id.content_frame);
+            loadingIndicator = findViewById(R.id.loading_indicator);
+            
+            if (loadingIndicator != null) {
+                loadingIndicator.setVisibility(View.GONE);
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error initializing UI: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     

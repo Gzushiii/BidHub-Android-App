@@ -43,6 +43,7 @@
         app:itemIconTint="@drawable/bottom_nav_item_color"
         app:itemTextColor="@drawable/bottom_nav_item_color"
         app:labelVisibilityMode="labeled"
-        app:itemRippleColor="@color/primary_blue_light" />
+        app:itemRippleColor="@color/primary_blue_light"
+        app:itemActiveIndicatorStyle="@style/ActiveIndicator" />
 
 </LinearLayout>
