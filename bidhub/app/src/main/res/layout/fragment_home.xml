@@ -71,7 +71,22 @@
                     android:src="@drawable/ic_notifications"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Notifications"
-                    android:tint="@color/primary_blue" />
+                    android:tint="@color/primary_blue"
+                    android:layout_marginEnd="4dp" />
+
+                <!-- Profile Avatar -->
+                <ImageView
+                    android:id="@+id/imgProfile"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_profile"
+                    android:background="@drawable/circle_background"
+                    android:backgroundTint="@color/white"
+                    android:padding="8dp"
+                    android:contentDescription="Profile"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackground" />
 
             </LinearLayout>
 
@@ -108,17 +123,6 @@
                         android:textStyle="bold" />
 
                 </LinearLayout>
-
-                <!-- Profile Avatar -->
-                <ImageView
-                    android:id="@+id/imgProfile"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:src="@drawable/ic_profile"
-                    android:background="@drawable/circle_background"
-                    android:backgroundTint="@color/white"
-                    android:padding="8dp"
-                    android:contentDescription="Profile" />
 
             </LinearLayout>
 
