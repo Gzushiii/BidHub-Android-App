@@ -67,7 +67,7 @@
                         android:layout_weight="1"
                         android:layout_marginStart="8dp"
                         android:text="Search items..."
-                        android:textColor="@color/white"
+                        android:textColor="@color/primary_blue"
                         android:textSize="14sp"
                         android:alpha="0.7" />
 
@@ -115,7 +115,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Welcome back!"
-                        android:textColor="@color/white"
+                        android:textColor="@color/primary_blue"
                         android:textSize="16sp"
                         android:textStyle="normal" />
 
@@ -124,7 +124,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="SwiftBidder42"
-                        android:textColor="@color/white"
+                        android:textColor="@color/primary_blue"
                         android:textSize="24sp"
                         android:textStyle="bold" />
 
