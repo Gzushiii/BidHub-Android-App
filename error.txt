@@ -10,13 +10,7 @@ Executing tasks: [:app:assembleDebug] in project /home/dane/Desktop/CC106-G5-BID
 > Task :app:generateDebugResValues UP-TO-DATE
 > Task :app:mapDebugSourceSetPaths
 > Task :app:generateDebugResources
-
-> Task :app:mergeDebugResources FAILED
-AGPBI: {"kind":"error","text":"Found item Color/primary_blue_light more than one time","sources":[{"file":"/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/res/values/colors.xml"}],"tool":"Resource and asset merger"}
-
-> Task :app:packageDebugResources FAILED
-AGPBI: {"kind":"error","text":"Found item Color/primary_blue_light more than one time","sources":[{"file":"/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/res/values/colors.xml"}],"tool":"Resource and asset merger"}
-
+> Task :app:packageDebugResources
 > Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
 > Task :app:extractDeepLinksDebug UP-TO-DATE
 > Task :app:processDebugMainManifest UP-TO-DATE
@@ -39,22 +33,154 @@ AGPBI: {"kind":"error","text":"Found item Color/primary_blue_light more than one
 > Task :app:validateSigningDebug UP-TO-DATE
 > Task :app:writeDebugAppMetadata UP-TO-DATE
 > Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:mergeDebugResources
+> Task :app:parseDebugLocalResources
+> Task :app:processDebugResources
 
-FAILURE: Build completed with 2 failures.
+> Task :app:compileDebugJavaWithJavac
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:100: error: cannot find symbol
+        textOnboardingProgress = view.findViewById(R.id.textOnboardingProgress);
+                                                       ^
+  symbol:   variable textOnboardingProgress
+  location: class id
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:103: error: cannot find symbol
+        cardBrowse = view.findViewById(R.id.cardBrowse);
+                                           ^
+  symbol:   variable cardBrowse
+  location: class id
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:104: error: cannot find symbol
+        cardSell = view.findViewById(R.id.cardSell);
+                                         ^
+  symbol:   variable cardSell
+  location: class id
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:105: error: cannot find symbol
+        cardCredits = view.findViewById(R.id.cardCredits);
+                                            ^
+  symbol:   variable cardCredits
+  location: class id
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:106: error: cannot find symbol
+        cardHelp = view.findViewById(R.id.cardHelp);
+                                         ^
+  symbol:   variable cardHelp
+  location: class id
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:296: error: cannot find symbol
+            " WHERE " + DatabaseHelper.COLUMN_BIDDER_EMAIL + " = ? AND " + 
+                                      ^
+  symbol:   variable COLUMN_BIDDER_EMAIL
+  location: class DatabaseHelper
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:297: error: cannot find symbol
+            DatabaseHelper.COLUMN_BID_STATUS + " = 'ACTIVE'",
+                          ^
+  symbol:   variable COLUMN_BID_STATUS
+  location: class DatabaseHelper
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:309: error: cannot find symbol
+            " WHERE " + DatabaseHelper.COLUMN_SELLER_EMAIL + " = ?",
+                                      ^
+  symbol:   variable COLUMN_SELLER_EMAIL
+  location: class DatabaseHelper
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:342: error: cannot find symbol
+                    DatabaseHelper.COLUMN_USER_PROFILE_PICTURE,
+                                  ^
+  symbol:   variable COLUMN_USER_PROFILE_PICTURE
+  location: class DatabaseHelper
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:343: error: cannot find symbol
+                    DatabaseHelper.COLUMN_USER_VERIFIED
+                                  ^
+  symbol:   variable COLUMN_USER_VERIFIED
+  location: class DatabaseHelper
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:367: error: cannot find symbol
+            String profilePicture = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_PROFILE_PICTURE));
+                                                                                                ^
+  symbol:   variable COLUMN_USER_PROFILE_PICTURE
+  location: class DatabaseHelper
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:373: error: cannot find symbol
+            int verified = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_VERIFIED));
+                                                                                    ^
+  symbol:   variable COLUMN_USER_VERIFIED
+  location: class DatabaseHelper
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+12 errors
 
-1: Task failed with an exception.
------------
+> Task :app:compileDebugJavaWithJavac FAILED
+
+[Incubating] Problems report is available at: file:///home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
 * What went wrong:
-Execution failed for task ':app:mergeDebugResources'.
-> /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/res/values/colors.xml: Error: Found item Color/primary_blue_light more than one time
+Execution failed for task ':app:compileDebugJavaWithJavac'.
+> Compilation failed; see the compiler output below.
+  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:100: error: cannot find symbol
+          textOnboardingProgress = view.findViewById(R.id.textOnboardingProgress);
+                                                         ^
+    symbol:   variable textOnboardingProgress
+    location: class id
+  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:103: error: cannot find symbol
+          cardBrowse = view.findViewById(R.id.cardBrowse);
+                                             ^
+    symbol:   variable cardBrowse
+    location: class id
+  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:104: error: cannot find symbol
+          cardSell = view.findViewById(R.id.cardSell);
+                                           ^
+    symbol:   variable cardSell
+    location: class id
+  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:105: error: cannot find symbol
+          cardCredits = view.findViewById(R.id.cardCredits);
+                                              ^
+    symbol:   variable cardCredits
+    location: class id
+  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:106: error: cannot find symbol
+          cardHelp = view.findViewById(R.id.cardHelp);
+                                           ^
+    symbol:   variable cardHelp
+    location: class id
+  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:296: error: cannot find symbol
+              " WHERE " + DatabaseHelper.COLUMN_BIDDER_EMAIL + " = ? AND " + 
+                                        ^
+    symbol:   variable COLUMN_BIDDER_EMAIL
+    location: class DatabaseHelper
+  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:297: error: cannot find symbol
+              DatabaseHelper.COLUMN_BID_STATUS + " = 'ACTIVE'",
+                            ^
+    symbol:   variable COLUMN_BID_STATUS
+    location: class DatabaseHelper
+  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:309: error: cannot find symbol
+              " WHERE " + DatabaseHelper.COLUMN_SELLER_EMAIL + " = ?",
+                                        ^
+    symbol:   variable COLUMN_SELLER_EMAIL
+    location: class DatabaseHelper
+  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:342: error: cannot find symbol
+                      DatabaseHelper.COLUMN_USER_PROFILE_PICTURE,
+                                    ^
+    symbol:   variable COLUMN_USER_PROFILE_PICTURE
+    location: class DatabaseHelper
+  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:343: error: cannot find symbol
+                      DatabaseHelper.COLUMN_USER_VERIFIED
+                                    ^
+    symbol:   variable COLUMN_USER_VERIFIED
+    location: class DatabaseHelper
+  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:367: error: cannot find symbol
+              String profilePicture = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_PROFILE_PICTURE));
+                                                                                                  ^
+    symbol:   variable COLUMN_USER_PROFILE_PICTURE
+    location: class DatabaseHelper
+  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:373: error: cannot find symbol
+              int verified = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_VERIFIED));
+                                                                                      ^
+    symbol:   variable COLUMN_USER_VERIFIED
+    location: class DatabaseHelper
+  Note: Some input files use or override a deprecated API.
+  Note: Recompile with -Xlint:deprecation for details.
+  12 errors
 
 * Try:
-> Run with --info or --debug option to get more log output.
+> Check your code and dependencies to fix the compilation error(s)
 > Run with --scan to get full insights.
-> Get more help at https://help.gradle.org.
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:mergeDebugResources'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileDebugJavaWithJavac'.
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:130)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:293)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:128)
@@ -87,11 +213,100 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:mer
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
-Caused by: com.android.build.gradle.tasks.ResourceException: /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/res/values/colors.xml: Error: Found item Color/primary_blue_light more than one time
-	at com.android.build.gradle.tasks.MergeResources.doTaskAction(MergeResources.kt:479)
-	at com.android.build.gradle.internal.tasks.NewIncrementalTask$taskAction$$inlined$recordTaskAction$1.invoke(BaseTask.kt:82)
-	at com.android.build.gradle.internal.tasks.Blocks.recordSpan(Blocks.java:51)
-	at com.android.build.gradle.internal.tasks.NewIncrementalTask.taskAction(NewIncrementalTask.kt:46)
+Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:100: error: cannot find symbol
+        textOnboardingProgress = view.findViewById(R.id.textOnboardingProgress);
+                                                       ^
+  symbol:   variable textOnboardingProgress
+  location: class id
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:103: error: cannot find symbol
+        cardBrowse = view.findViewById(R.id.cardBrowse);
+                                           ^
+  symbol:   variable cardBrowse
+  location: class id
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:104: error: cannot find symbol
+        cardSell = view.findViewById(R.id.cardSell);
+                                         ^
+  symbol:   variable cardSell
+  location: class id
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:105: error: cannot find symbol
+        cardCredits = view.findViewById(R.id.cardCredits);
+                                            ^
+  symbol:   variable cardCredits
+  location: class id
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:106: error: cannot find symbol
+        cardHelp = view.findViewById(R.id.cardHelp);
+                                         ^
+  symbol:   variable cardHelp
+  location: class id
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:296: error: cannot find symbol
+            " WHERE " + DatabaseHelper.COLUMN_BIDDER_EMAIL + " = ? AND " + 
+                                      ^
+  symbol:   variable COLUMN_BIDDER_EMAIL
+  location: class DatabaseHelper
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:297: error: cannot find symbol
+            DatabaseHelper.COLUMN_BID_STATUS + " = 'ACTIVE'",
+                          ^
+  symbol:   variable COLUMN_BID_STATUS
+  location: class DatabaseHelper
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:309: error: cannot find symbol
+            " WHERE " + DatabaseHelper.COLUMN_SELLER_EMAIL + " = ?",
+                                      ^
+  symbol:   variable COLUMN_SELLER_EMAIL
+  location: class DatabaseHelper
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:342: error: cannot find symbol
+                    DatabaseHelper.COLUMN_USER_PROFILE_PICTURE,
+                                  ^
+  symbol:   variable COLUMN_USER_PROFILE_PICTURE
+  location: class DatabaseHelper
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:343: error: cannot find symbol
+                    DatabaseHelper.COLUMN_USER_VERIFIED
+                                  ^
+  symbol:   variable COLUMN_USER_VERIFIED
+  location: class DatabaseHelper
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:367: error: cannot find symbol
+            String profilePicture = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_PROFILE_PICTURE));
+                                                                                                ^
+  symbol:   variable COLUMN_USER_PROFILE_PICTURE
+  location: class DatabaseHelper
+/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:373: error: cannot find symbol
+            int verified = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_VERIFIED));
+                                                                                    ^
+  symbol:   variable COLUMN_USER_VERIFIED
+  location: class DatabaseHelper
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+12 errors
+	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
+	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
+	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
+	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:52)
+	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:38)
+	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:52)
+	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:38)
+	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:46)
+	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:36)
+	at org.gradle.jvm.toolchain.internal.DefaultToolchainJavaCompiler.execute(DefaultToolchainJavaCompiler.java:57)
+	at org.gradle.api.tasks.compile.JavaCompile.lambda$createToolchainCompiler$3(JavaCompile.java:206)
+	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.lambda$execute$0(SelectiveCompiler.java:101)
+	at org.gradle.api.internal.tasks.compile.incremental.transaction.CompileTransaction.execute(CompileTransaction.java:108)
+	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:95)
+	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:44)
+	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:66)
+	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:52)
+	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$1.call(CompileJavaBuildOperationReportingCompiler.java:64)
+	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$1.call(CompileJavaBuildOperationReportingCompiler.java:48)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler.execute(CompileJavaBuildOperationReportingCompiler.java:48)
+	at org.gradle.api.tasks.compile.JavaCompile.performCompilation(JavaCompile.java:224)
+	at org.gradle.api.tasks.compile.JavaCompile.performIncrementalCompilation(JavaCompile.java:165)
+	at org.gradle.api.tasks.compile.JavaCompile.compile(JavaCompile.java:150)
 	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
 	at org.gradle.internal.reflect.JavaMethod.invoke(JavaMethod.java:125)
 	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.doExecute(IncrementalTaskAction.java:45)
@@ -161,7 +376,7 @@ Caused by: com.android.build.gradle.tasks.ResourceException: /home/dane/Desktop/
 	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:64)
 	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:43)
 	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.executeWithNonEmptySources(AbstractSkipEmptyWorkStep.java:125)
-	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:56)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:61)
 	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:36)
 	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
 	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:36)
@@ -212,210 +427,7 @@ Caused by: com.android.build.gradle.tasks.ResourceException: /home/dane/Desktop/
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
-Caused by: /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/res/values/colors.xml: Error: Found item Color/primary_blue_light more than one time
-	at com.android.ide.common.resources.MergingException$Builder.build(MergingException.java:152)
-	at com.android.ide.common.resources.ValueResourceParser2.checkDuplicate(ValueResourceParser2.java:296)
-	at com.android.ide.common.resources.ValueResourceParser2.parseFile(ValueResourceParser2.java:118)
-	at com.android.ide.common.resources.ResourceSet.doHandleChangedFile(ResourceSet.java:402)
-	at com.android.ide.common.resources.ResourceSet.handleChangedFile(ResourceSet.java:369)
-	at com.android.ide.common.resources.DataSet.updateWith(DataSet.java:534)
-	at com.android.build.gradle.tasks.MergeResources.tryUpdateResourceSetsWithChangedFile(MergeResources.kt:506)
-	at com.android.build.gradle.tasks.MergeResources.doTaskAction(MergeResources.kt:417)
-	... 123 more
 
-==============================================================================
 
-2: Task failed with an exception.
------------
-* What went wrong:
-Execution failed for task ':app:packageDebugResources'.
-> /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/res/values/colors.xml: Error: Found item Color/primary_blue_light more than one time
-
-* Try:
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
-> Get more help at https://help.gradle.org.
-
-* Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:packageDebugResources'.
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:130)
-	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:293)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:128)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
-	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:40)
-	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
-	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
-	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
-	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
-	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
-	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
-	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
-	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
-	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
-	at java.base/java.lang.Thread.run(Unknown Source)
-Caused by: com.android.build.gradle.tasks.ResourceException: /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/res/values/colors.xml: Error: Found item Color/primary_blue_light more than one time
-	at com.android.build.gradle.tasks.MergeResources.doTaskAction(MergeResources.kt:479)
-	at com.android.build.gradle.internal.tasks.NewIncrementalTask$taskAction$$inlined$recordTaskAction$1.invoke(BaseTask.kt:82)
-	at com.android.build.gradle.internal.tasks.Blocks.recordSpan(Blocks.java:51)
-	at com.android.build.gradle.internal.tasks.NewIncrementalTask.taskAction(NewIncrementalTask.kt:46)
-	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
-	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
-	at org.gradle.internal.reflect.JavaMethod.invoke(JavaMethod.java:125)
-	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.doExecute(IncrementalTaskAction.java:45)
-	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:51)
-	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.execute(IncrementalTaskAction.java:26)
-	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:29)
-	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:244)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:27)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:48)
-	at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:229)
-	at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:212)
-	at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:195)
-	at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:162)
-	at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:105)
-	at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:44)
-	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:59)
-	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:56)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
-	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:56)
-	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:44)
-	at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:42)
-	at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:75)
-	at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
-	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:50)
-	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:28)
-	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:67)
-	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:37)
-	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:61)
-	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:26)
-	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:69)
-	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:46)
-	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:40)
-	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:29)
-	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:189)
-	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$execute$1(BuildCacheStep.java:75)
-	at org.gradle.internal.Either$Right.fold(Either.java:175)
-	at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:62)
-	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:73)
-	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:48)
-	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:46)
-	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:35)
-	at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:75)
-	at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:53)
-	at java.base/java.util.Optional.orElseGet(Unknown Source)
-	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:53)
-	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:35)
-	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
-	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
-	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:49)
-	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:27)
-	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:71)
-	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:39)
-	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:65)
-	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:36)
-	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:107)
-	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:56)
-	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:64)
-	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:43)
-	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.executeWithNonEmptySources(AbstractSkipEmptyWorkStep.java:125)
-	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:56)
-	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:36)
-	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
-	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:36)
-	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:23)
-	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:75)
-	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:41)
-	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.lambda$execute$0(AssignMutableWorkspaceStep.java:35)
-	at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:289)
-	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:31)
-	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:22)
-	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:40)
-	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:23)
-	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$2(ExecuteWorkBuildOperationFiringStep.java:67)
-	at java.base/java.util.Optional.orElseGet(Unknown Source)
-	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:67)
-	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:39)
-	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:46)
-	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:34)
-	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:48)
-	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:35)
-	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:61)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:127)
-	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
-	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:40)
-	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
-	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
-	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
-	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
-	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
-	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
-	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
-	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
-	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
-	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
-	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
-	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
-	at java.base/java.lang.Thread.run(Unknown Source)
-Caused by: /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/res/values/colors.xml: Error: Found item Color/primary_blue_light more than one time
-	at com.android.ide.common.resources.MergingException$Builder.build(MergingException.java:152)
-	at com.android.ide.common.resources.ValueResourceParser2.checkDuplicate(ValueResourceParser2.java:296)
-	at com.android.ide.common.resources.ValueResourceParser2.parseFile(ValueResourceParser2.java:118)
-	at com.android.ide.common.resources.ResourceSet.doHandleChangedFile(ResourceSet.java:402)
-	at com.android.ide.common.resources.ResourceSet.handleChangedFile(ResourceSet.java:369)
-	at com.android.ide.common.resources.DataSet.updateWith(DataSet.java:534)
-	at com.android.build.gradle.tasks.MergeResources.tryUpdateResourceSetsWithChangedFile(MergeResources.kt:506)
-	at com.android.build.gradle.tasks.MergeResources.doTaskAction(MergeResources.kt:417)
-	... 129 more
-
-==============================================================================
-
-BUILD FAILED in 1s
-26 actionable tasks: 5 executed, 21 up-to-date
+BUILD FAILED in 7s
+29 actionable tasks: 8 executed, 21 up-to-date

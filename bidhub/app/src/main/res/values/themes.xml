@@ -112,4 +112,12 @@
         <item name="android:windowBackground">@color/white</item>
         <item name="android:windowElevation">8dp</item>
     </style>
+    
+    <!-- Bottom Navigation Active Indicator -->
+    <style name="ActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:width">64dp</item>
+        <item name="android:height">32dp</item>
+        <item name="android:background">@drawable/active_indicator_background</item>
+        <item name="cornerRadius">16dp</item>
+    </style>
 </resources>

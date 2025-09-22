@@ -77,4 +77,9 @@
     
     <!-- Additional UI Colors -->
     <color name="error_red_light">#FFFFEBEE</color>
+    
+    <!-- Credit System Colors -->
+    <color name="credit_gold">#FFFFD700</color>
+    <color name="credit_gold_light">#FFFFF8DC</color>
+    <color name="credit_gold_dark">#FFB8860B</color>
 </resources>
