@@ -32,7 +32,7 @@ import java.util.Locale;
 public class HomeFragment extends Fragment {
 
     // Header components
-    private ImageButton btnInbox, btnNotifications;
+    private ImageButton btnNotifications;
     private ImageView imgProfile;
     private TextView textViewWelcome, textViewCredits, textViewAlias;
     private View searchBar;
@@ -105,7 +105,6 @@ public class HomeFragment extends Fragment {
         }
         
         // Header components
-        btnInbox = view.findViewById(R.id.btnInbox);
         btnNotifications = view.findViewById(R.id.btnNotifications);
         imgProfile = view.findViewById(R.id.imgProfile);
         textViewWelcome = view.findViewById(R.id.textViewWelcome);
@@ -139,13 +138,6 @@ public class HomeFragment extends Fragment {
      */
     private void setupClickListeners() {
         // Header buttons
-        if (btnInbox != null) {
-            btnInbox.setOnClickListener(v -> {
-                // TODO: Navigate to inbox/messages
-                ToastHelper.showInfo(getContext(), "Inbox clicked");
-            });
-        }
-        
         if (btnNotifications != null) {
             btnNotifications.setOnClickListener(v -> {
                 // TODO: Navigate to notifications
