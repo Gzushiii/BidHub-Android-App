@@ -60,17 +60,17 @@ public class HomeFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         try {
-            View view = inflater.inflate(R.layout.fragment_home, container, false);
-            
-            // Get the logged-in user's email from arguments
-            if (getArguments() != null) {
-                loggedInUserEmail = getArguments().getString("USER_EMAIL");
-            }
-            
+        View view = inflater.inflate(R.layout.fragment_home, container, false);
+        
+        // Get the logged-in user's email from arguments
+        if (getArguments() != null) {
+            loggedInUserEmail = getArguments().getString("USER_EMAIL");
+        }
+        
             // Initialize database helper
             if (getContext() != null) {
                 try {
-                    dbHelper = new DatabaseHelper(getContext());
+        dbHelper = new DatabaseHelper(getContext());
                 } catch (Exception e) {
                     ToastHelper.showError(getContext(), "Error initializing database: " + e.getMessage());
                     e.printStackTrace();
@@ -308,7 +308,7 @@ public class HomeFragment extends Fragment {
         
         if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
             if (getContext() != null) {
-                ToastHelper.showError(getContext(), "Error: User not identified.");
+            ToastHelper.showError(getContext(), "Error: User not identified.");
             }
             return;
         }
@@ -326,27 +326,27 @@ public class HomeFragment extends Fragment {
         try {
             db = dbHelper.getReadableDatabase();
             cursor = db.query(
-                    DatabaseHelper.TABLE_USERS,
-                    new String[]{DatabaseHelper.COLUMN_USER_ALIAS, DatabaseHelper.COLUMN_USER_CREDITS},
-                    DatabaseHelper.COLUMN_USER_EMAIL + " = ?",
-                    new String[]{loggedInUserEmail},
-                    null, null, null
-            );
+                DatabaseHelper.TABLE_USERS,
+                new String[]{DatabaseHelper.COLUMN_USER_ALIAS, DatabaseHelper.COLUMN_USER_CREDITS},
+                DatabaseHelper.COLUMN_USER_EMAIL + " = ?",
+                new String[]{loggedInUserEmail},
+                null, null, null
+        );
 
-            if (cursor != null && cursor.moveToFirst()) {
-                // Get data from the cursor
-                String alias = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_ALIAS));
-                double credits = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_CREDITS));
+        if (cursor != null && cursor.moveToFirst()) {
+            // Get data from the cursor
+            String alias = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_ALIAS));
+            double credits = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_CREDITS));
 
-                // Update the UI
+            // Update the UI
                 if (textViewWelcome != null) {
-                    textViewWelcome.setText("Welcome back!");
+            textViewWelcome.setText("Welcome back!");
                 }
                 if (textViewAlias != null) {
                     textViewAlias.setText(alias != null ? alias : "User");
                 }
                 if (textViewCredits != null) {
-                    textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", credits));
+            textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", credits));
                 }
             }
         } catch (Exception e) {
@@ -512,7 +512,7 @@ public class HomeFragment extends Fragment {
             e.printStackTrace();
         } finally {
             if (cursor != null) {
-                cursor.close();
+            cursor.close();
             }
             if (db != null) {
                 db.close();
