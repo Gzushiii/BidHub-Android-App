@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BidHub Mobile Bidding Platform</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#0663ef",
+            "background-light": "#f5f7f8",
+            "background-dark": "#0f1723",
+          },
+          fontFamily: {
+            "display": ["Inter"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24
+    }
+    .material-symbols-outlined.fill {
+      font-variation-settings: 'FILL' 1;
+    }
+    .modal-open {
+      overflow: hidden;
+    }
+    .modal-open .modal-backdrop {
+      display: flex;
+    }
+    .modal-open .modal-content {
+        animation: slide-up 0.3s ease-out;
+    }
+    @keyframes slide-up {
+        from {
+            transform: translateY(100%);
+        }
+        to {
+            transform: translateY(0);
+        }
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body :class="{ 'modal-open': isModalOpen }" class="font-display bg-background-light dark:bg-background-dark text-black dark:text-white" x-data="{ isModalOpen: false }">
+<div class="flex flex-col h-screen justify-between max-w-md mx-auto">
+<header class="bg-background-light dark:bg-background-dark sticky top-0 z-10 px-2 py-3">
+<div class="flex items-center justify-between">
+<button class="p-2">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold">New Listing</h1>
+<button class="text-primary font-bold px-2 py-2">Save</button>
+</div>
+</header>
+<main class="flex-grow overflow-y-auto px-4 space-y-6 pb-6">
+<div class="space-y-4">
+<label class="block text-sm font-medium text-black/70 dark:text-white/70" for="item-title">Item Title</label>
+<input class="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-4 h-14 focus:ring-primary focus:ring-2 placeholder:text-black/40 dark:placeholder:text-white/40" id="item-title" placeholder="e.g. Vintage Leather Jacket" type="text"/>
+</div>
+<div class="space-y-4">
+<label class="block text-sm font-medium text-black/70 dark:text-white/70" for="item-description">Item Description</label>
+<textarea class="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-4 focus:ring-primary focus:ring-2 placeholder:text-black/40 dark:placeholder:text-white/40" id="item-description" placeholder="Describe your item in detail..." rows="4"></textarea>
+</div>
+<div>
+<h2 class="text-sm font-medium text-black/70 dark:text-white/70 mb-2">Add Photos</h2>
+<div class="grid grid-cols-3 gap-2">
+<div class="relative aspect-square bg-black/5 dark:bg-white/5 rounded-lg flex items-center justify-center">
+<button @click="isModalOpen = true" class="flex flex-col items-center justify-center text-primary">
+<span class="material-symbols-outlined">add_a_photo</span>
+<span class="text-xs">Add Photo</span>
+</button>
+</div>
+<div class="relative aspect-square bg-black/5 dark:bg-white/5 rounded-lg flex items-center justify-center">
+<button @click="isModalOpen = true" class="flex flex-col items-center justify-center text-primary">
+<span class="material-symbols-outlined">add_a_photo</span>
+<span class="text-xs">Add Photo</span>
+</button>
+</div>
+<div class="relative aspect-square bg-black/5 dark:bg-white/5 rounded-lg flex items-center justify-center">
+<button @click="isModalOpen = true" class="flex flex-col items-center justify-center text-primary">
+<span class="material-symbols-outlined">add_a_photo</span>
+<span class="text-xs">Add Photo</span>
+</button>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-2">
+<label class="block text-sm font-medium text-black/70 dark:text-white/70" for="category">Category</label>
+<select class="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-4 h-14 focus:ring-primary focus:ring-2 appearance-none bg-no-repeat bg-right-4" id="category" style="background-image: url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3e%3cpath stroke=%27%236b7280%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27M6 8l4 4 4-4%27/%3e%3c/svg%3e');">
+<option>Electronics</option>
+<option>Fashion</option>
+<option>Home Goods</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="block text-sm font-medium text-black/70 dark:text-white/70" for="condition">Condition</label>
+<select class="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-4 h-14 focus:ring-primary focus:ring-2 appearance-none bg-no-repeat bg-right-4" id="condition" style="background-image: url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3e%3cpath stroke=%27%236b7280%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27M6 8l4 4 4-4%27/%3e%3c/svg%3e');">
+<option>New</option>
+<option>Used - Like New</option>
+<option>Used - Good</option>
+</select>
+</div>
+</div>
+<div class="space-y-2">
+<label class="block text-sm font-medium text-black/70 dark:text-white/70" for="starting-bid">Starting Bid</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 flex items-center pl-4 text-black/40 dark:text-white/40">$</span>
+<input class="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-4 pl-8 h-14 focus:ring-primary focus:ring-2 placeholder:text-black/40 dark:placeholder:text-white/40" id="starting-bid" placeholder="25.00" type="number"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="block text-sm font-medium text-black/70 dark:text-white/70" for="auction-duration">Auction Duration</label>
+<select class="w-full bg-black/5 dark:bg-white/5 border-none rounded-lg p-4 h-14 focus:ring-primary focus:ring-2 appearance-none bg-no-repeat bg-right-4" id="auction-duration" style="background-image: url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3e%3cpath stroke=%27%236b7280%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27M6 8l4 4 4-4%27/%3e%3c/svg%3e');">
+<option>1 Day</option>
+<option>3 Days</option>
+<option>5 Days</option>
+<option selected="">7 Days</option>
+</select>
+</div>
+<button class="w-full bg-primary text-white font-bold h-14 rounded-xl shadow-lg shadow-primary/30">List Item</button>
+</main>
+<footer class="bg-background-light dark:bg-background-dark border-t border-black/10 dark:border-white/10 sticky bottom-0 z-10 px-2 pt-2 pb-4">
+<nav class="flex justify-around">
+<a class="flex flex-col items-center gap-1 text-black/60 dark:text-white/60" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-xs">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-black/60 dark:text-white/60" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="text-xs">Browse</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<div class="bg-primary/20 dark:bg-primary/30 p-3 rounded-full">
+<span class="material-symbols-outlined fill text-primary">add_box</span>
+</div>
+<span class="text-xs font-bold">Post</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-black/60 dark:text-white/60" href="#">
+<span class="material-symbols-outlined">credit_card</span>
+<span class="text-xs">Credits</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-black/60 dark:text-white/60" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-xs">Profile</span>
+</a>
+</nav>
+</footer>
+</div>
+<div @click.self="isModalOpen = false" class="modal-backdrop fixed inset-0 bg-black/50 z-50 items-end" style="display: none;" x-show="isModalOpen">
+<div class="modal-content bg-background-light dark:bg-background-dark w-full max-w-md mx-auto rounded-t-xl max-h-[90dvh] flex flex-col" x-show="isModalOpen" x-transition="">
+<header class="flex items-center justify-between p-4 border-b border-black/10 dark:border-white/10">
+<h2 class="text-lg font-bold">Add Photos</h2>
+<button @click="isModalOpen = false" class="p-2">
+<span class="material-symbols-outlined">close</span>
+</button>
+</header>
+<div class="p-4 flex-grow overflow-y-auto">
+<div class="flex gap-4 mb-4">
+<button class="flex-1 flex flex-col items-center justify-center gap-2 p-4 bg-primary/10 dark:bg-primary/20 rounded-lg text-primary">
+<span class="material-symbols-outlined text-4xl">photo_camera</span>
+<span class="font-medium">Take Photo</span>
+</button>
+<button class="flex-1 flex flex-col items-center justify-center gap-2 p-4 bg-primary/10 dark:bg-primary/20 rounded-lg text-primary">
+<span class="material-symbols-outlined text-4xl">photo_library</span>
+<span class="font-medium">Choose from Gallery</span>
+</button>
+</div>
+<div class="flex justify-between items-center mb-2">
+<h3 class="text-sm font-medium text-black/70 dark:text-white/70">Selected Photos</h3>
+<span class="text-sm text-black/70 dark:text-white/70">3/10</span>
+</div>
+<div class="grid grid-cols-3 gap-2">
+<div class="relative group aspect-square rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCk2Q6msgvJ9NsEX5yPD1zh2gJvCLEdQgejnpOeVvj5nd_V25FyekD_55T7b4V_pnrOKon7yz4CrGX99uPuuD6bcEpExn9u2WlTqGhfWFTlNI3CbbIq65rlZq3vCI108A6fk3xczafGfqZ3wjjEmY0XgJqkS0ZBnatZPUYdu9_P4LNd5UJfQSACul5Q-Km7xzIlCEz1Qs_KuXjs_rviD5xI0VOJv9yjHVgkxVc3vwBZ8CA3lWB6GQzRbQLI8SbwkYuZiPeRc2MOaTA"/>
+<div class="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 bg-white/20 rounded-full text-white"><span class="material-symbols-outlined text-base">drag_indicator</span></button>
+<button class="p-1.5 bg-white/20 rounded-full text-white"><span class="material-symbols-outlined text-base">delete</span></button>
+</div>
+<div class="absolute top-1 right-1 text-xs bg-black/50 text-white rounded-full h-5 w-5 flex items-center justify-center">1</div>
+</div>
+<div class="relative group aspect-square rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCk2Q6msgvJ9NsEX5yPD1zh2gJvCLEdQgejnpOeVvj5nd_V25FyekD_55T7b4V_pnrOKon7yz4CrGX99uPuuD6bcEpExn9u2WlTqGhfWFTlNI3CbbIq65rlZq3vCI108A6fk3xczafGfqZ3wjjEmY0XgJqkS0ZBnatZPUYdu9_P4LNd5UJfQSACul5Q-Km7xzIlCEz1Qs_KuXjs_rviD5xI0VOJv9yjHVgkxVc3vwBZ8CA3lWB6GQzRbQLI8SbwkYuZiPeRc2MOaTA"/>
+<div class="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 bg-white/20 rounded-full text-white"><span class="material-symbols-outlined text-base">drag_indicator</span></button>
+<button class="p-1.5 bg-white/20 rounded-full text-white"><span class="material-symbols-outlined text-base">delete</span></button>
+</div>
+<div class="absolute top-1 right-1 text-xs bg-black/50 text-white rounded-full h-5 w-5 flex items-center justify-center">2</div>
+</div>
+<div class="relative group aspect-square rounded-lg overflow-hidden">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCk2Q6msgvJ9NsEX5yPD1zh2gJvCLEdQgejnpOeVvj5nd_V25FyekD_55T7b4V_pnrOKon7yz4CrGX99uPuuD6bcEpExn9u2WlTqGhfWFTlNI3CbbIq65rlZq3vCI108A6fk3xczafGfqZ3wjjEmY0XgJqkS0ZBnatZPUYdu9_P4LNd5UJfQSACul5Q-Km7xzIlCEz1Qs_KuXjs_rviD5xI0VOJv9yjHVgkxVc3vwBZ8CA3lWB6GQzRbQLI8SbwkYuZiPeRc2MOaTA"/>
+<div class="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 bg-white/20 rounded-full text-white"><span class="material-symbols-outlined text-base">drag_indicator</span></button>
+<button class="p-1.5 bg-white/20 rounded-full text-white"><span class="material-symbols-outlined text-base">delete</span></button>
+</div>
+<div class="absolute top-1 right-1 text-xs bg-black/50 text-white rounded-full h-5 w-5 flex items-center justify-center">3</div>
+</div>
+</div>
+<div class="mt-4">
+<div class="flex justify-between mb-1">
+<span class="text-sm font-medium text-black/70 dark:text-white/70">Uploading...</span>
+<span class="text-sm font-medium text-primary">75%</span>
+</div>
+<div class="w-full bg-black/10 dark:bg-white/10 rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 75%"></div>
+</div>
+</div>
+</div>
+<footer class="p-4 border-t border-black/10 dark:border-white/10">
+<button @click="isModalOpen = false" class="w-full bg-primary text-white font-bold h-12 rounded-lg shadow-lg shadow-primary/30">Done</button>
+</footer>
+</div>
+</div>
+<script defer="" src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+</body></html>

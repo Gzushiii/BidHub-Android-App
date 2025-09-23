@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BidHub Mobile Bidding Platform</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#0663ef",
+            "background-light": "#f5f7f8",
+            "background-dark": "#0f1723",
+          },
+          fontFamily: {
+            display: ["Inter"],
+          },
+          borderRadius: {
+            DEFAULT: "0.25rem",
+            lg: "0.5rem",
+            xl: "0.75rem",
+            full: "9999px",
+          },
+        },
+      },
+    };
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    }
+    .range-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #0663ef;
+      cursor: pointer;
+    }
+    .range-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #0663ef;
+      cursor: pointer;
+    }
+    #filter-modal {
+      transition: transform 0.3s ease-in-out;
+    }
+    input:checked~#filter-modal {
+      transform: translateY(0);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+<div class="relative flex min-h-screen w-full flex-col justify-between">
+<main class="flex-grow">
+<header class="sticky top-0 z-10 bg-background-light/80 p-4 backdrop-blur-sm dark:bg-background-dark/80">
+<div class="flex items-center justify-between">
+<h1 class="flex-1 text-center text-xl font-bold text-gray-900 dark:text-white">
+            Browse
+          </h1>
+<button class="flex h-10 w-10 items-center justify-center rounded-full text-gray-700 dark:text-gray-300">
+<span class="material-symbols-outlined text-2xl"> search </span>
+</button>
+</div>
+<div class="relative mt-4">
+<span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+            search
+          </span>
+<input class="w-full rounded-full border-transparent bg-gray-200/50 py-2 pl-10 pr-4 text-gray-900 placeholder-gray-500 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary dark:bg-gray-800/50 dark:text-white dark:placeholder-gray-400 dark:ring-gray-700 dark:focus:ring-primary" placeholder="Search items" type="text"/>
+</div>
+</header>
+<div class="px-4 py-2">
+<div class="flex items-center justify-between">
+<div class="flex space-x-2 overflow-x-auto pb-2">
+<button class="flex-shrink-0 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary dark:bg-primary/20">
+              Electronics
+            </button>
+<button class="flex-shrink-0 rounded-full bg-gray-200/50 px-4 py-2 text-sm font-medium text-gray-700 dark:bg-gray-800/50 dark:text-gray-300">
+              Fashion
+            </button>
+<button class="flex-shrink-0 rounded-full bg-gray-200/50 px-4 py-2 text-sm font-medium text-gray-700 dark:bg-gray-800/50 dark:text-gray-300">
+              Home
+            </button>
+<button class="flex-shrink-0 rounded-full bg-gray-200/50 px-4 py-2 text-sm font-medium text-gray-700 dark:bg-gray-800/50 dark:text-gray-300">
+              Collectibles
+            </button>
+</div>
+<label class="cursor-pointer" for="filter-toggle">
+<div class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200/50 text-gray-700 dark:bg-gray-800/50 dark:text-gray-300">
+<span class="material-symbols-outlined text-2xl">
+                tune
+              </span>
+</div>
+</label>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 p-4">
+<div class="overflow-hidden rounded-lg bg-white dark:bg-gray-800">
+<div class="aspect-square w-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAIhcgwGHLLt1lGawLczEWPjLyKsrs7nX0WVvJlr97sZPIjuzIRVPL5oRnal6jcaEOdNPeXbZ2AfroDwtex28BPmsOdwcZDKfWcQ1Jz83w_VWpRIkJm3lqvAGBUXEqUIGu4MTqnLlzL2-zTNzgN1RKrENoFSFpLUSqfKnyVBqYlT_WpN1PX7_2lBkyVqH9NL6jWiYJ6D1a49vcqaUU-XWaVb-lp_UxjsPunPJ1L7an81WiHpHZ8qA3yXrhzkM8OFAo53uVc7BI3x-0");'></div>
+<div class="p-3">
+<h3 class="font-semibold text-gray-900 dark:text-white">
+              Vintage Camera
+            </h3>
+<p class="text-sm text-gray-600 dark:text-gray-400">
+              Current Bid: $150
+            </p>
+<p class="text-xs text-red-500 dark:text-red-400">
+              2h 15m left
+            </p>
+</div>
+</div>
+<div class="overflow-hidden rounded-lg bg-white dark:bg-gray-800">
+<div class="aspect-square w-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAPPi72AjT-k6_muzORV9j-Do50zCZDiqNgZ0R6JuH_lnJxcpn5BqbuzXVUPR5r_yAlj74UXdVEMV9x16BfMvtBTkxmOL1-B5oYRUcu5Jdg8SP6BOPx66Jv22dZFIrbDp5_evA9iwnl7JSxr_ghkb8gjNyCFHsAqLyehzJZZkBDNC-Y0qyz4dq2zrMaqQ4PQJiyPnKep5pXWNXkZnNuMinC39DsvMzbmaMFS2xXlu9QELLo2_E4azMNcEjX6tyGarlpb-6zO4octJ0");'></div>
+<div class="p-3">
+<h3 class="font-semibold text-gray-900 dark:text-white">
+              Designer Handbag
+            </h3>
+<p class="text-sm text-gray-600 dark:text-gray-400">
+              Current Bid: $800
+            </p>
+<p class="text-xs text-red-500 dark:text-red-400">
+              1d 4h left
+            </p>
+</div>
+</div>
+<div class="overflow-hidden rounded-lg bg-white dark:bg-gray-800">
+<div class="aspect-square w-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDIVez9cl71Is_YqyXSuo4B63vDR_g-s8Rr_NbmKmgmVxnBulctpLgS8L_3TtbbFUW1itQwuaL4-S1UcRpzPbbzhRK0ijZaH_ATRmbOMqSHD4ET_APvMupNEbbBA0NWGOJ_ZKChAHun4DFUf4cKxAmSv40nwbX1mNKbjLyf2RexwiQNInvDEDgGAFHpHI-R70h69HKUnpiHm588P7rBp5fcxQmtRMU2-KgDCQfN47jgJ0_3OzBR1Z55Ablsu_qBMfBM5RbDDJo8ayo");'></div>
+<div class="p-3">
+<h3 class="font-semibold text-gray-900 dark:text-white">
+              Modern Sofa
+            </h3>
+<p class="text-sm text-gray-600 dark:text-gray-400">
+              Price: $1200
+            </p>
+<p class="text-xs text-green-500 dark:text-green-400">
+              Buy It Now
+            </p>
+</div>
+</div>
+<div class="overflow-hidden rounded-lg bg-white dark:bg-gray-800">
+<div class="aspect-square w-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDXTNnO-LEplXruNJphiD6xLQ-mEgqXbQ2JDWnsR-qcLR9AsFTspuYRTzTDB5_J5rZnyxewM2H_7gax6wyesZxO1IfISfOBhXM0UkhfGmbNa-B4liQbRlbYesQNUBpHzcqKmojbP0lIzR1h32W8Mbxj5GTPmenSGY6Mf51Q47UDhkf_-ZFqrarfG4Zad_CB1-_oCkceSvl5BP_8rHk_tbfSLaIZppaWmEnBr2tH5FOdjpha9eBvre0gYId5572IBffle8cuIvo1Lx0");'></div>
+<div class="p-3">
+<h3 class="font-semibold text-gray-900 dark:text-white">
+              Rare Coin
+            </h3>
+<p class="text-sm text-gray-600 dark:text-gray-400">
+              Current Bid: $50
+            </p>
+<p class="text-xs text-red-500 dark:text-red-400">
+              Ending soon
+            </p>
+</div>
+</div>
+</div>
+</main>
+<footer class="sticky bottom-0 border-t border-gray-200 bg-background-light/80 py-2 backdrop-blur-sm dark:border-gray-800 dark:bg-background-dark/80">
+<nav class="flex justify-around">
+<a class="flex flex-col items-center gap-1 text-gray-500 dark:text-gray-400" href="#">
+<span class="material-symbols-outlined"> home </span>
+<span class="text-xs font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">
+            search
+          </span>
+<span class="text-xs font-medium">Browse</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-gray-500 dark:text-gray-400" href="#">
+<span class="material-symbols-outlined"> add_box </span>
+<span class="text-xs font-medium">Post</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-gray-500 dark:text-gray-400" href="#">
+<span class="material-symbols-outlined"> credit_card </span>
+<span class="text-xs font-medium">Credits</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-gray-500 dark:text-gray-400" href="#">
+<span class="material-symbols-outlined"> person </span>
+<span class="text-xs font-medium">Profile</span>
+</a>
+</nav>
+<div class="mx-auto mt-2 h-1 w-28 rounded-full bg-gray-900 dark:bg-white"></div>
+</footer>
+</div>
+<input class="hidden" id="filter-toggle" type="checkbox"/>
+<div class="fixed inset-0 z-20 bg-black/50 opacity-0 transition-opacity duration-300 peer-checked:opacity-100" id="filter-modal-overlay">
+<label class="absolute inset-0 cursor-pointer" for="filter-toggle"></label>
+</div>
+<div class="fixed bottom-0 left-0 right-0 z-30 flex max-h-[90dvh] transform translate-y-full flex-col rounded-t-2xl bg-background-light shadow-lg dark:bg-gray-800" id="filter-modal">
+<div class="flex items-center justify-center p-4">
+<div class="h-1.5 w-8 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+</div>
+<div class="flex-shrink-0 px-4 pb-2">
+<h2 class="text-lg font-bold text-gray-900 dark:text-white">Filters</h2>
+</div>
+<div class="flex-grow overflow-y-auto px-4 pb-4">
+<div class="space-y-6">
+<div>
+<h3 class="mb-2 font-semibold text-gray-800 dark:text-gray-200">
+            Category
+          </h3>
+<div class="space-y-2">
+<label class="flex items-center">
+<input checked="" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-primary" type="checkbox"/>
+<span class="ml-2 text-gray-700 dark:text-gray-300">Electronics</span>
+</label>
+<label class="flex items-center">
+<input class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-primary" type="checkbox"/>
+<span class="ml-2 text-gray-700 dark:text-gray-300">Fashion</span>
+</label>
+<label class="flex items-center">
+<input class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-primary" type="checkbox"/>
+<span class="ml-2 text-gray-700 dark:text-gray-300">Home Goods</span>
+</label>
+<label class="flex items-center">
+<input class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-primary" type="checkbox"/>
+<span class="ml-2 text-gray-700 dark:text-gray-300">Collectibles &amp; Art</span>
+</label>
+</div>
+</div>
+<div>
+<h3 class="mb-2 font-semibold text-gray-800 dark:text-gray-200">
+            Price Range
+          </h3>
+<div class="mt-4">
+<input class="range-slider h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700" max="2000" min="0" type="range" value="500"/>
+<div class="mt-2 flex justify-between text-sm text-gray-600 dark:text-gray-400">
+<span>$0</span>
+<span>$2000+</span>
+</div>
+</div>
+</div>
+<div>
+<h3 class="mb-2 font-semibold text-gray-800 dark:text-gray-200">
+            Condition
+          </h3>
+<div class="flex space-x-2">
+<label class="flex-1">
+<input checked="" class="peer sr-only" name="condition" type="radio" value="new"/>
+<div class="rounded-full border border-gray-300 px-4 py-2 text-center text-sm peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary dark:border-gray-600 dark:peer-checked:border-primary dark:peer-checked:bg-primary/20">
+                New
+              </div>
+</label>
+<label class="flex-1">
+<input class="peer sr-only" name="condition" type="radio" value="used"/>
+<div class="rounded-full border border-gray-300 px-4 py-2 text-center text-sm peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary dark:border-gray-600 dark:peer-checked:border-primary dark:peer-checked:bg-primary/20">
+                Used
+              </div>
+</label>
+<label class="flex-1">
+<input class="peer sr-only" name="condition" type="radio" value="any"/>
+<div class="rounded-full border border-gray-300 px-4 py-2 text-center text-sm peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary dark:border-gray-600 dark:peer-checked:border-primary dark:peer-checked:bg-primary/20">
+                Any
+              </div>
+</label>
+</div>
+</div>
+<div>
+<h3 class="mb-2 font-semibold text-gray-800 dark:text-gray-200">
+            Auction Status
+          </h3>
+<div class="space-y-2">
+<label class="flex items-center">
+<input checked="" class="h-4 w-4 border-gray-300 text-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-primary" name="status" type="radio"/>
+<span class="ml-2 text-gray-700 dark:text-gray-300">All</span>
+</label>
+<label class="flex items-center">
+<input class="h-4 w-4 border-gray-300 text-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-primary" name="status" type="radio"/>
+<span class="ml-2 text-gray-700 dark:text-gray-300">Ending Soon</span>
+</label>
+<label class="flex items-center">
+<input class="h-4 w-4 border-gray-300 text-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-primary" name="status" type="radio"/>
+<span class="ml-2 text-gray-700 dark:text-gray-300">New Listings</span>
+</label>
+<label class="flex items-center">
+<input class="h-4 w-4 border-gray-300 text-primary focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:focus:ring-primary" name="status" type="radio"/>
+<span class="ml-2 text-gray-700 dark:text-gray-300">Buy Now</span>
+</label>
+</div>
+</div>
+</div>
+</div>
+<div class="sticky bottom-0 flex gap-4 border-t border-gray-200 bg-background-light p-4 dark:border-gray-700 dark:bg-gray-800">
+<button class="w-full rounded-full border border-gray-300 py-3 text-sm font-semibold text-gray-800 dark:border-gray-600 dark:text-gray-200">
+        Clear All
+      </button>
+<button class="w-full rounded-full bg-primary py-3 text-sm font-semibold text-white">
+        Apply Filters
+      </button>
+</div>
+</div>
+
+</body></html>

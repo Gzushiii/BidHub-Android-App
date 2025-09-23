@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Purchase Successful</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#06ef06",
+            "background-light": "#f5f8f5",
+            "background-dark": "#0f230f",
+          },
+          fontFamily: {
+            "display": ["Inter"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+<div class="flex flex-col h-screen">
+<header class="flex justify-end items-center p-4">
+<button class="text-gray-800 dark:text-gray-200">
+<span class="material-symbols-outlined text-3xl">close</span>
+</button>
+</header>
+<main class="flex-grow flex flex-col items-center justify-center text-center px-6">
+<div class="w-24 h-24 rounded-full bg-primary/20 dark:bg-primary/30 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary text-5xl">check</span>
+</div>
+<h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Purchase Successful</h1>
+<p class="text-gray-600 dark:text-gray-400 mb-8">Your credits are now available in your account.</p>
+<div class="w-full max-w-sm bg-background-light dark:bg-background-dark/50 rounded-lg p-6 space-y-4 border border-gray-200 dark:border-gray-700">
+<div class="flex justify-between">
+<span class="text-gray-500 dark:text-gray-400">Credits Purchased</span>
+<span class="font-semibold text-gray-900 dark:text-white">100 Credits</span>
+</div>
+<div class="flex justify-between">
+<span class="text-gray-500 dark:text-gray-400">Amount Paid</span>
+<span class="font-semibold text-gray-900 dark:text-white">$10.00</span>
+</div>
+<div class="flex justify-between">
+<span class="text-gray-500 dark:text-gray-400">Payment Method</span>
+<span class="font-semibold text-gray-900 dark:text-white">Credit Card</span>
+</div>
+<div class="border-t border-gray-200 dark:border-gray-700 my-4"></div>
+<div class="flex justify-between">
+<span class="text-gray-500 dark:text-gray-400">Transaction ID</span>
+<span class="font-semibold text-gray-900 dark:text-white text-sm">#1234567890</span>
+</div>
+</div>
+<a class="text-primary mt-6 font-medium" href="#">View Transaction History</a>
+</main>
+<footer class="p-6">
+<button class="w-full bg-primary text-gray-900 dark:text-black font-bold py-4 rounded-lg shadow-lg">
+        Continue Bidding
+      </button>
+</footer>
+</div>
+
+</body></html>

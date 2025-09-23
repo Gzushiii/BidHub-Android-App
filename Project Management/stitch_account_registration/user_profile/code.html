@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BidHub Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0663ef",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1723",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1a2431",
+                        "on-surface-light": "#0f1723",
+                        "on-surface-dark": "#f5f7f8",
+                        "on-surface-variant-light": "#6b7280",
+                        "on-surface-variant-dark": "#9ca3af",
+                        "outline-light": "#e5e7eb",
+                        "outline-dark": "#374151"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        '2': '0.5rem',
+                        '3': '0.75rem',
+                        '4': '1rem',
+                        '5': '1.25rem',
+                        '6': '1.5rem',
+                        '8': '2rem',
+                        '10': '2.5rem',
+                        '12': '3rem',
+                        '14': '3.5rem',
+                        '16': '4rem',
+                        '18': '4.5rem',
+                        '20': '5rem',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark">
+<div class="max-w-md mx-auto flex flex-col min-h-screen">
+<header class="flex items-center justify-between p-4 bg-background-light dark:bg-background-dark sticky top-0 z-10 border-b border-outline-light dark:border-outline-dark">
+<button class="p-2 text-on-surface-light dark:text-on-surface-dark">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="text-xl font-bold text-on-surface-light dark:text-on-surface-dark">Profile</h1>
+<button class="p-2 text-on-surface-light dark:text-on-surface-dark">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</header>
+<main class="flex-grow overflow-y-auto pb-28">
+<div class="flex flex-col items-center p-6 space-y-4">
+<div class="w-24 h-24 rounded-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKuxAWf-sYfjUpMeJdMYcRjHeoef2ps-4TIrMKScXrQx8iwyMggD8Be2ugX4wOQMadjJ5JnCYzyM4Ygk97kXtzNkkWZKGurFlIPD9-WkWfiLXxaw1r3000NDYgRB2tP49mP1KwGJSwHZa_KqXSV7KlFLamH6tbUFL0l3yK9CXBkp1ieNKzYvVUC-9JvggtsfuufIXHd73Uz2VFsuGcGzHfrJ7DuX7Z2A8MdNbjZPr0FNuoM_D5b9wVGACG4VKfP6ZwF6lZV6kXwvs');"></div>
+<div class="text-center">
+<p class="text-2xl font-bold text-on-surface-light dark:text-on-surface-dark">Ethan Carter</p>
+<p class="text-on-surface-variant-light dark:text-on-surface-variant-dark">@ethan_carter</p>
+<div class="flex items-center justify-center space-x-1 text-on-surface-variant-light dark:text-on-surface-variant-dark mt-1">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.8 • 125 reviews</span>
+</div>
+</div>
+</div>
+<div class="px-4 space-y-6">
+<div class="space-y-4">
+<h2 class="text-lg font-bold px-2 text-on-surface-light dark:text-on-surface-dark">Account Information</h2>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm">
+<div class="p-4 border-b border-outline-light dark:border-outline-dark">
+<p class="text-sm text-on-surface-variant-light dark:text-on-surface-variant-dark">Name</p>
+<p class="text-on-surface-light dark:text-on-surface-dark">Ethan Carter</p>
+</div>
+<div class="p-4 border-b border-outline-light dark:border-outline-dark">
+<p class="text-sm text-on-surface-variant-light dark:text-on-surface-variant-dark">Email</p>
+<p class="text-on-surface-light dark:text-on-surface-dark">ethan.carter@email.com</p>
+</div>
+<div class="p-4 border-b border-outline-light dark:border-outline-dark">
+<p class="text-sm text-on-surface-variant-light dark:text-on-surface-variant-dark">Phone</p>
+<p class="text-on-surface-light dark:text-on-surface-dark">+1 (555) 123-4567</p>
+</div>
+<div class="p-4">
+<p class="text-sm text-on-surface-variant-light dark:text-on-surface-variant-dark">Member Since</p>
+<p class="text-on-surface-light dark:text-on-surface-dark">May 2022</p>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<h2 class="text-lg font-bold px-2 text-on-surface-light dark:text-on-surface-dark">My Activity</h2>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-light dark:bg-surface-dark p-4 rounded-xl shadow-sm">
+<p class="text-on-surface-variant-light dark:text-on-surface-variant-dark">Active Bids</p>
+<p class="text-2xl font-bold text-on-surface-light dark:text-on-surface-dark">5</p>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark p-4 rounded-xl shadow-sm">
+<p class="text-on-surface-variant-light dark:text-on-surface-variant-dark">Won Auctions</p>
+<p class="text-2xl font-bold text-on-surface-light dark:text-on-surface-dark">12</p>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark p-4 rounded-xl shadow-sm">
+<p class="text-on-surface-variant-light dark:text-on-surface-variant-dark">Items Sold</p>
+<p class="text-2xl font-bold text-on-surface-light dark:text-on-surface-dark">3</p>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark p-4 rounded-xl shadow-sm">
+<p class="text-on-surface-variant-light dark:text-on-surface-variant-dark">Total Spent</p>
+<p class="text-2xl font-bold text-on-surface-light dark:text-on-surface-dark">$1,500</p>
+</div>
+</div>
+</div>
+<div class="space-y-2">
+<h2 class="text-lg font-bold px-2 text-on-surface-light dark:text-on-surface-dark">Settings</h2>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm divide-y divide-outline-light dark:divide-outline-dark">
+<a class="flex items-center justify-between p-4 hover:bg-primary/10" href="#">
+<span class="text-on-surface-light dark:text-on-surface-dark">Notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant-light dark:text-on-surface-variant-dark">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-4 hover:bg-primary/10" href="#">
+<span class="text-on-surface-light dark:text-on-surface-dark">Privacy</span>
+<span class="material-symbols-outlined text-on-surface-variant-light dark:text-on-surface-variant-dark">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-4 hover:bg-primary/10" href="#">
+<span class="text-on-surface-light dark:text-on-surface-dark">Payment Methods</span>
+<span class="material-symbols-outlined text-on-surface-variant-light dark:text-on-surface-variant-dark">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-4 hover:bg-primary/10" href="#">
+<span class="text-on-surface-light dark:text-on-surface-dark">Help &amp; Support</span>
+<span class="material-symbols-outlined text-on-surface-variant-light dark:text-on-surface-variant-dark">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-4 hover:bg-primary/10" href="#">
+<span class="text-on-surface-light dark:text-on-surface-dark">About BidHub</span>
+<span class="material-symbols-outlined text-on-surface-variant-light dark:text-on-surface-variant-dark">chevron_right</span>
+</a>
+</div>
+</div>
+<div class="pt-4">
+<button class="w-full bg-primary/20 dark:bg-primary/30 text-primary font-bold py-3 rounded-lg">
+                        Sign Out
+                    </button>
+</div>
+</div>
+</main>
+<footer class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-surface-light dark:bg-surface-dark border-t border-outline-light dark:border-outline-dark">
+<nav class="flex justify-around p-2">
+<a class="flex flex-col items-center space-y-1 text-on-surface-variant-light dark:text-on-surface-variant-dark w-1/5" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-xs">Home</span>
+</a>
+<a class="flex flex-col items-center space-y-1 text-on-surface-variant-light dark:text-on-surface-variant-dark w-1/5" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="text-xs">Browse</span>
+</a>
+<a class="flex flex-col items-center space-y-1 text-on-surface-variant-light dark:text-on-surface-variant-dark w-1/5" href="#">
+<span class="material-symbols-outlined">add_box</span>
+<span class="text-xs">Post</span>
+</a>
+<a class="flex flex-col items-center space-y-1 text-on-surface-variant-light dark:text-on-surface-variant-dark w-1/5" href="#">
+<span class="material-symbols-outlined">credit_card</span>
+<span class="text-xs">Credits</span>
+</a>
+<a class="flex flex-col items-center space-y-1 text-primary w-1/5" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="text-xs font-bold">Profile</span>
+</a>
+</nav>
+</footer>
+</div>
+
+</body></html>
