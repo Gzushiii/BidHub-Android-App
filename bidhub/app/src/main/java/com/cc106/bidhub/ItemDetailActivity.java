@@ -4,218 +4,121 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.cc106.bidhub.adapters.ImageGalleryAdapter;
-import com.cc106.bidhub.items.Item;
-import com.cc106.bidhub.items.ItemManager;
-import com.cc106.bidhub.toast.ToastHelper;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import com.cc106.bidhub.adapters.BidHistoryAdapter;
+import com.cc106.bidhub.bidding.Bid;
 
-public class ItemDetailActivity extends BaseActivity {
-    
-    private String itemId;
-    private String userEmail;
-    private Item item;
-    private ItemManager itemManager;
-    
-    // UI Components
-    private ImageButton btnBack;
-    private ImageButton btnShare;
-    private RecyclerView rvImageGallery;
-    private TextView tvTitle;
-    private TextView tvDescription;
-    private TextView tvCurrentPrice;
-    private TextView tvStartingPrice;
-    private TextView tvSeller;
-    private TextView tvCategory;
-    private TextView tvCondition;
-    private TextView tvLocation;
-    private TextView tvTimeRemaining;
-    private TextView tvBidCount;
-    private TextView tvViewCount;
-    private Button btnPlaceBid;
-    private Button btnBuyNow;
-    private ProgressBar progressBar;
-    
-    private ImageGalleryAdapter imageAdapter;
-    private NumberFormat currencyFormat;
-    private SimpleDateFormat dateFormat;
-    
+import java.util.ArrayList;
+import java.util.List;
+
+public class ItemDetailActivity extends AppCompatActivity {
+
+    private ImageView ivItemImage, ivSellerAvatar;
+    private TextView tvItemTitle, tvItemCategory, tvStartingBid, tvCurrentBid, tvTimeLeft, tvDescription, tvSellerName, tvSellerRating;
+    private EditText etBidAmount;
+    private Button btnPlaceBid, btnBuyNow;
+    private ProgressBar progressTimeLeft;
+    private RecyclerView rvBidHistory;
+    private BidHistoryAdapter bidHistoryAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_detail);
         
-        // Get data from intent
-        itemId = getIntent().getStringExtra("ITEM_ID");
-        userEmail = getIntent().getStringExtra("USER_EMAIL");
+        initializeViews();
+        setupClickListeners();
+        populateItemData();
+        setupBidHistory();
+    }
+
+    private void initializeViews() {
+        ivItemImage = findViewById(R.id.iv_item_image);
+        ivSellerAvatar = findViewById(R.id.iv_seller_avatar);
+        tvItemTitle = findViewById(R.id.tv_item_title);
+        tvItemCategory = findViewById(R.id.tv_item_category);
+        tvStartingBid = findViewById(R.id.tv_starting_bid);
+        tvCurrentBid = findViewById(R.id.tv_current_bid);
+        tvTimeLeft = findViewById(R.id.tv_time_left);
+        tvDescription = findViewById(R.id.tv_description);
+        tvSellerName = findViewById(R.id.tv_seller_name);
+        tvSellerRating = findViewById(R.id.tv_seller_rating);
+        etBidAmount = findViewById(R.id.et_bid_amount);
+        btnPlaceBid = findViewById(R.id.btn_place_bid);
+        btnBuyNow = findViewById(R.id.btn_buy_now);
+        progressTimeLeft = findViewById(R.id.progress_time_left);
+        rvBidHistory = findViewById(R.id.rv_bid_history);
+    }
+
+    private void setupClickListeners() {
+        btnPlaceBid.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Show bid confirmation dialog
+                showBidConfirmationDialog();
+            }
+        });
+
+        btnBuyNow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Navigate to buy now flow
+                Intent intent = new Intent(ItemDetailActivity.this, PaymentConfirmationActivity.class);
+                startActivity(intent);
+            }
+        });
+    }
+
+    private void populateItemData() {
+        // Set sample data - in real app, this would come from intent or API
+        tvItemTitle.setText("Luxury Watch");
+        tvItemCategory.setText("Watches · New");
+        tvStartingBid.setText("$500");
+        tvCurrentBid.setText("$750");
+        tvTimeLeft.setText("2d 12h 30m");
+        tvDescription.setText("This luxury watch features a stainless steel case, sapphire crystal, and automatic movement. It's water-resistant up to 100 meters and comes with a certificate of authenticity.");
+        tvSellerName.setText("Ethan Carter");
+        tvSellerRating.setText("4.8 (125 reviews)");
         
-        if (itemId == null) {
-            ToastHelper.showError(this, "Item not found");
-            finish();
+        // Set progress to 50% (example)
+        progressTimeLeft.setProgress(50);
+    }
+
+    private void setupBidHistory() {
+        // Create sample bid history data
+        List<Bid> bidHistory = new ArrayList<>();
+        // Create dummy bids for demonstration
+        Bid bid1 = new Bid("item1", "user1", "Sophia Bennett", 750.0);
+        Bid bid2 = new Bid("item1", "user2", "Liam Harper", 700.0);
+        Bid bid3 = new Bid("item1", "user3", "Emma Wilson", 650.0);
+        bidHistory.add(bid1);
+        bidHistory.add(bid2);
+        bidHistory.add(bid3);
+        
+        bidHistoryAdapter = new BidHistoryAdapter(bidHistory, bid -> {
+            // Handle bid item click
+            // For now, just show a toast
+        });
+        rvBidHistory.setLayoutManager(new LinearLayoutManager(this));
+        rvBidHistory.setAdapter(bidHistoryAdapter);
+    }
+
+    private void showBidConfirmationDialog() {
+        String bidAmount = etBidAmount.getText().toString().trim();
+        if (bidAmount.isEmpty()) {
+            etBidAmount.setError("Please enter a bid amount");
             return;
         }
         
-        initializeViews();
-        setupRecyclerView();
-        loadItemDetails();
-    }
-    
-    private void initializeViews() {
-        btnBack = findViewById(R.id.btn_back);
-        btnShare = findViewById(R.id.btn_share);
-        rvImageGallery = findViewById(R.id.rv_image_gallery);
-        tvTitle = findViewById(R.id.tv_item_title);
-        tvDescription = findViewById(R.id.tv_item_description);
-        tvCurrentPrice = findViewById(R.id.tv_current_price);
-        tvStartingPrice = findViewById(R.id.tv_starting_price);
-        tvSeller = findViewById(R.id.tv_seller);
-        tvCategory = findViewById(R.id.tv_category);
-        tvCondition = findViewById(R.id.tv_condition);
-        tvLocation = findViewById(R.id.tv_location);
-        tvTimeRemaining = findViewById(R.id.tv_time_remaining);
-        tvBidCount = findViewById(R.id.tv_bid_count);
-        tvViewCount = findViewById(R.id.tv_view_count);
-        btnPlaceBid = findViewById(R.id.btn_place_bid);
-        btnBuyNow = findViewById(R.id.btn_buy_now);
-        progressBar = findViewById(R.id.progress_bar);
-        
-        itemManager = ItemManager.getInstance(this);
-        currencyFormat = NumberFormat.getCurrencyInstance(new Locale("en", "PH"));
-        dateFormat = new SimpleDateFormat("MMM dd, yyyy 'at' HH:mm", Locale.getDefault());
-        
-        // Setup click listeners
-        btnBack.setOnClickListener(v -> finish());
-        btnShare.setOnClickListener(v -> shareItem());
-        btnPlaceBid.setOnClickListener(v -> showBidDialog());
-        btnBuyNow.setOnClickListener(v -> showBuyNowDialog());
-    }
-    
-    private void setupRecyclerView() {
-        imageAdapter = new ImageGalleryAdapter();
-        rvImageGallery.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-        rvImageGallery.setAdapter(imageAdapter);
-    }
-    
-    private void loadItemDetails() {
-        showLoading(true);
-        
-        // Load item on background thread
-        new Thread(() -> {
-            item = itemManager.getItemById(itemId);
-            
-            // Update UI on main thread
-            runOnUiThread(() -> {
-                if (item != null) {
-                    populateItemDetails();
-                    loadItemImages();
-                } else {
-                    ToastHelper.showError(this, "Item not found");
-                    finish();
-                }
-                showLoading(false);
-            });
-        }).start();
-    }
-    
-    private void populateItemDetails() {
-        tvTitle.setText(item.getTitle());
-        tvDescription.setText(item.getDescription());
-        tvCurrentPrice.setText(currencyFormat.format(item.getCurrentPrice()));
-        tvStartingPrice.setText("Starting: " + currencyFormat.format(item.getStartingPrice()));
-        tvSeller.setText("Sold by: " + item.getSellerId());
-        tvCategory.setText("Category: " + item.getCategoryName());
-        tvCondition.setText("Condition: " + item.getCondition());
-        tvLocation.setText("Location: " + item.getLocation());
-        tvBidCount.setText(item.getBidCount() + " bids");
-        tvViewCount.setText(item.getViewCount() + " views");
-        
-        // Calculate time remaining
-        if (item.getEndDate() != null) {
-            long timeRemaining = item.getEndDate().getTime() - System.currentTimeMillis();
-            if (timeRemaining > 0) {
-                long days = timeRemaining / (1000 * 60 * 60 * 24);
-                long hours = (timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60);
-                tvTimeRemaining.setText("Ends in: " + days + "d " + hours + "h");
-            } else {
-                tvTimeRemaining.setText("Auction ended");
-                btnPlaceBid.setEnabled(false);
-                btnBuyNow.setEnabled(false);
-            }
-        }
-        
-        // Show/hide Buy Now button
-        if (item.getBuyNowPrice() > 0) {
-            btnBuyNow.setText("Buy Now: " + currencyFormat.format(item.getBuyNowPrice()));
-            btnBuyNow.setVisibility(View.VISIBLE);
-        } else {
-            btnBuyNow.setVisibility(View.GONE);
-        }
-    }
-    
-    private void loadItemImages() {
-        // Load images from item
-        if (item.getImagePaths() != null && !item.getImagePaths().isEmpty()) {
-            imageAdapter.setImages(item.getImagePaths());
-        } else {
-            // Use placeholder images
-            imageAdapter.setImages(java.util.Arrays.asList("placeholder1", "placeholder2"));
-        }
-    }
-    
-    private void showBidDialog() {
-        // TODO: Implement bid dialog
-        ToastHelper.showInfo(this, "Bidding functionality coming soon!");
-    }
-    
-    private void showBuyNowDialog() {
-        // TODO: Implement buy now dialog
-        ToastHelper.showInfo(this, "Buy Now functionality coming soon!");
-    }
-    
-    private void shareItem() {
-        if (item != null) {
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType("text/plain");
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, item.getTitle());
-            shareIntent.putExtra(Intent.EXTRA_TEXT, 
-                "Check out this item on BidHub: " + item.getTitle() + 
-                " - Current bid: " + currencyFormat.format(item.getCurrentPrice()) +
-                " - " + item.getDescription());
-            startActivity(Intent.createChooser(shareIntent, "Share Item"));
-        }
-    }
-    
-    private void showLoading(boolean show) {
-        if (show) {
-            progressBar.setVisibility(View.VISIBLE);
-        } else {
-            progressBar.setVisibility(View.GONE);
-        }
-    }
-    
-    @Override
-    protected boolean isCurrentActivity(int itemId) {
-        return false; // This is not a main tab activity
-    }
-    
-    @Override
-    protected void setCurrentTabSelected() {
-        // No tab selection for detail activity
-    }
-    
-    @Override
-    public String getCurrentUserEmail() {
-        return userEmail;
+        // Show confirmation dialog
+        // TODO: Implement bid confirmation dialog
+        // For now, just show a toast
+        android.widget.Toast.makeText(this, "Bid confirmation dialog - Coming Soon!", android.widget.Toast.LENGTH_SHORT).show();
     }
 }

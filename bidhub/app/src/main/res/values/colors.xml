@@ -4,7 +4,12 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     
-    <!-- BidHub Brand Colors -->
+    <!-- BidHub Brand Colors - Updated to match HTML design -->
+    <color name="primary">#0663ef</color>
+    <color name="primary_dark">#0552c7</color>
+    <color name="primary_light">#d7e2ff</color>
+    
+    <!-- Legacy colors for compatibility -->
     <color name="primary_blue">#FF267B7E</color>
     <color name="primary_blue_dark">#FF1F5F62</color>
     <color name="primary_blue_light">#FFE3F2FD</color>
@@ -33,15 +38,31 @@
     <color name="error_red">#FFFF3B30</color>
     <color name="info_blue">#FF267B7E</color>
     
-    <!-- Background Colors -->
-    <color name="background_light">#FFFAFAFA</color>
-    <color name="surface_light">#FFFFFFFF</color>
+    <!-- Background Colors - Updated to match HTML design -->
+    <color name="background_light">#f5f7f8</color>
+    <color name="background_dark">#0f1723</color>
+    <color name="surface_light">#ffffff</color>
+    <color name="surface_dark">#1a2431</color>
     
-    <!-- Text Colors -->
-    <color name="text_primary">#FF1D1D1F</color>
-    <color name="text_secondary">#FF8E8E93</color>
-    <color name="text_hint">#FF8E8E93</color>
-    <color name="text_white">#FFFFFFFF</color>
+    <!-- Legacy colors for compatibility -->
+    <color name="surface_light_legacy">#FFFFFFFF</color>
+    
+    <!-- Text Colors - Updated to match HTML design -->
+    <color name="text_primary">#0f1723</color>
+    <color name="text_secondary">#64748b</color>
+    <color name="text_hint">#94a3b8</color>
+    <color name="text_white">#ffffff</color>
+    
+    <!-- Dark mode text colors -->
+    <color name="text_primary_dark">#f5f7f8</color>
+    <color name="text_secondary_dark">#94a3b8</color>
+    <color name="text_hint_dark">#64748b</color>
+    
+    <!-- Legacy colors for compatibility -->
+    <color name="text_primary_legacy">#FF1D1D1F</color>
+    <color name="text_secondary_legacy">#FF8E8E93</color>
+    <color name="text_hint_legacy">#FF8E8E93</color>
+    <color name="text_white_legacy">#FFFFFFFF</color>
     
     <!-- Password Strength Colors -->
     <color name="password_weak">#FFF44336</color>

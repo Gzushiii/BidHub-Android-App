@@ -5,12 +5,14 @@ Executing tasks: [:app:assembleDebug] in project /home/dane/Desktop/CC106-G5-BID
 > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
 > Task :app:javaPreCompileDebug UP-TO-DATE
 > Task :app:checkDebugAarMetadata UP-TO-DATE
-> Task :app:processDebugNavigationResources
+> Task :app:processDebugNavigationResources UP-TO-DATE
 > Task :app:compileDebugNavigationResources UP-TO-DATE
 > Task :app:generateDebugResValues UP-TO-DATE
-> Task :app:mapDebugSourceSetPaths
-> Task :app:generateDebugResources
-> Task :app:packageDebugResources
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
 > Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
 > Task :app:extractDeepLinksDebug UP-TO-DATE
 > Task :app:processDebugMainManifest UP-TO-DATE
@@ -33,154 +35,43 @@ Executing tasks: [:app:assembleDebug] in project /home/dane/Desktop/CC106-G5-BID
 > Task :app:validateSigningDebug UP-TO-DATE
 > Task :app:writeDebugAppMetadata UP-TO-DATE
 > Task :app:writeDebugSigningConfigVersions UP-TO-DATE
-> Task :app:mergeDebugResources
-> Task :app:parseDebugLocalResources
-> Task :app:processDebugResources
-
-> Task :app:compileDebugJavaWithJavac
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:100: error: cannot find symbol
-        textOnboardingProgress = view.findViewById(R.id.textOnboardingProgress);
-                                                       ^
-  symbol:   variable textOnboardingProgress
-  location: class id
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:103: error: cannot find symbol
-        cardBrowse = view.findViewById(R.id.cardBrowse);
-                                           ^
-  symbol:   variable cardBrowse
-  location: class id
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:104: error: cannot find symbol
-        cardSell = view.findViewById(R.id.cardSell);
-                                         ^
-  symbol:   variable cardSell
-  location: class id
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:105: error: cannot find symbol
-        cardCredits = view.findViewById(R.id.cardCredits);
-                                            ^
-  symbol:   variable cardCredits
-  location: class id
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:106: error: cannot find symbol
-        cardHelp = view.findViewById(R.id.cardHelp);
-                                         ^
-  symbol:   variable cardHelp
-  location: class id
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:296: error: cannot find symbol
-            " WHERE " + DatabaseHelper.COLUMN_BIDDER_EMAIL + " = ? AND " + 
-                                      ^
-  symbol:   variable COLUMN_BIDDER_EMAIL
-  location: class DatabaseHelper
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:297: error: cannot find symbol
-            DatabaseHelper.COLUMN_BID_STATUS + " = 'ACTIVE'",
-                          ^
-  symbol:   variable COLUMN_BID_STATUS
-  location: class DatabaseHelper
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:309: error: cannot find symbol
-            " WHERE " + DatabaseHelper.COLUMN_SELLER_EMAIL + " = ?",
-                                      ^
-  symbol:   variable COLUMN_SELLER_EMAIL
-  location: class DatabaseHelper
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:342: error: cannot find symbol
-                    DatabaseHelper.COLUMN_USER_PROFILE_PICTURE,
-                                  ^
-  symbol:   variable COLUMN_USER_PROFILE_PICTURE
-  location: class DatabaseHelper
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:343: error: cannot find symbol
-                    DatabaseHelper.COLUMN_USER_VERIFIED
-                                  ^
-  symbol:   variable COLUMN_USER_VERIFIED
-  location: class DatabaseHelper
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:367: error: cannot find symbol
-            String profilePicture = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_PROFILE_PICTURE));
-                                                                                                ^
-  symbol:   variable COLUMN_USER_PROFILE_PICTURE
-  location: class DatabaseHelper
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:373: error: cannot find symbol
-            int verified = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_VERIFIED));
-                                                                                    ^
-  symbol:   variable COLUMN_USER_VERIFIED
-  location: class DatabaseHelper
-Note: Some input files use or override a deprecated API.
-Note: Recompile with -Xlint:deprecation for details.
-12 errors
-
-> Task :app:compileDebugJavaWithJavac FAILED
-
-[Incubating] Problems report is available at: file:///home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/build/reports/problems/problems-report.html
+> Task :app:processDebugResources FAILED
 
 FAILURE: Build failed with an exception.
 
 * What went wrong:
-Execution failed for task ':app:compileDebugJavaWithJavac'.
-> Compilation failed; see the compiler output below.
-  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:100: error: cannot find symbol
-          textOnboardingProgress = view.findViewById(R.id.textOnboardingProgress);
-                                                         ^
-    symbol:   variable textOnboardingProgress
-    location: class id
-  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:103: error: cannot find symbol
-          cardBrowse = view.findViewById(R.id.cardBrowse);
-                                             ^
-    symbol:   variable cardBrowse
-    location: class id
-  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:104: error: cannot find symbol
-          cardSell = view.findViewById(R.id.cardSell);
-                                           ^
-    symbol:   variable cardSell
-    location: class id
-  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:105: error: cannot find symbol
-          cardCredits = view.findViewById(R.id.cardCredits);
-                                              ^
-    symbol:   variable cardCredits
-    location: class id
-  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:106: error: cannot find symbol
-          cardHelp = view.findViewById(R.id.cardHelp);
-                                           ^
-    symbol:   variable cardHelp
-    location: class id
-  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:296: error: cannot find symbol
-              " WHERE " + DatabaseHelper.COLUMN_BIDDER_EMAIL + " = ? AND " + 
-                                        ^
-    symbol:   variable COLUMN_BIDDER_EMAIL
-    location: class DatabaseHelper
-  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:297: error: cannot find symbol
-              DatabaseHelper.COLUMN_BID_STATUS + " = 'ACTIVE'",
-                            ^
-    symbol:   variable COLUMN_BID_STATUS
-    location: class DatabaseHelper
-  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:309: error: cannot find symbol
-              " WHERE " + DatabaseHelper.COLUMN_SELLER_EMAIL + " = ?",
-                                        ^
-    symbol:   variable COLUMN_SELLER_EMAIL
-    location: class DatabaseHelper
-  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:342: error: cannot find symbol
-                      DatabaseHelper.COLUMN_USER_PROFILE_PICTURE,
-                                    ^
-    symbol:   variable COLUMN_USER_PROFILE_PICTURE
-    location: class DatabaseHelper
-  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:343: error: cannot find symbol
-                      DatabaseHelper.COLUMN_USER_VERIFIED
-                                    ^
-    symbol:   variable COLUMN_USER_VERIFIED
-    location: class DatabaseHelper
-  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:367: error: cannot find symbol
-              String profilePicture = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_PROFILE_PICTURE));
-                                                                                                  ^
-    symbol:   variable COLUMN_USER_PROFILE_PICTURE
-    location: class DatabaseHelper
-  /home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:373: error: cannot find symbol
-              int verified = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_VERIFIED));
-                                                                                      ^
-    symbol:   variable COLUMN_USER_VERIFIED
-    location: class DatabaseHelper
-  Note: Some input files use or override a deprecated API.
-  Note: Recompile with -Xlint:deprecation for details.
-  12 errors
+Execution failed for task ':app:processDebugResources'.
+> A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
+   > Android resource linking failed
+     com.cc106.bidhub.app-main-33:/layout/activity_account_registration.xml:37: error: resource drawable/ic_help_outline (aka com.cc106.bidhub:drawable/ic_help_outline) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_account_registration.xml:77: error: resource drawable/ic_person (aka com.cc106.bidhub:drawable/ic_person) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_account_registration.xml:97: error: resource drawable/ic_person (aka com.cc106.bidhub:drawable/ic_person) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_account_registration.xml:117: error: resource drawable/ic_email (aka com.cc106.bidhub:drawable/ic_email) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_account_registration.xml:137: error: resource drawable/ic_phone (aka com.cc106.bidhub:drawable/ic_phone) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_account_registration.xml:158: error: resource drawable/ic_lock (aka com.cc106.bidhub:drawable/ic_lock) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_account_summary.xml:41: error: resource drawable/ic_help_outline (aka com.cc106.bidhub:drawable/ic_help_outline) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_account_summary.xml:147: error: resource drawable/ic_person (aka com.cc106.bidhub:drawable/ic_person) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_account_summary.xml:191: error: resource drawable/ic_account_balance_wallet (aka com.cc106.bidhub:drawable/ic_account_balance_wallet) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_credits_overview.xml:24: error: resource drawable/ic_arrow_back_ios (aka com.cc106.bidhub:drawable/ic_arrow_back_ios) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_item_detail.xml:25: error: resource drawable/ic_arrow_back_ios (aka com.cc106.bidhub:drawable/ic_arrow_back_ios) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_item_detail.xml:57: error: resource drawable/ic_favorite_border (aka com.cc106.bidhub:drawable/ic_favorite_border) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_item_detail.xml:86: error: resource drawable/sample_watch (aka com.cc106.bidhub:drawable/sample_watch) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_item_detail.xml:322: error: resource drawable/sample_avatar (aka com.cc106.bidhub:drawable/sample_avatar) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_item_detail.xml:351: error: resource drawable/ic_star (aka com.cc106.bidhub:drawable/ic_star) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_payment_confirmation.xml:54: error: resource drawable/ic_check (aka com.cc106.bidhub:drawable/ic_check) not found.
+     com.cc106.bidhub.app-main-33:/layout/activity_welcome.xml:35: error: resource drawable/ic_bidhub_logo (aka com.cc106.bidhub:drawable/ic_bidhub_logo) not found.
+     com.cc106.bidhub.app-main-33:/layout/fragment_home.xml:121: error: resource drawable/ic_inventory_2 (aka com.cc106.bidhub:drawable/ic_inventory_2) not found.
+     com.cc106.bidhub.app-main-33:/layout/fragment_home.xml:149: error: resource drawable/ic_add_box (aka com.cc106.bidhub:drawable/ic_add_box) not found.
+     com.cc106.bidhub.app-main-33:/layout/fragment_home.xml:177: error: resource drawable/ic_toll (aka com.cc106.bidhub:drawable/ic_toll) not found.
+
 
 * Try:
-> Check your code and dependencies to fix the compilation error(s)
+> Run with --info or --debug option to get more log output.
 > Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
 
 * Exception is:
-org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:compileDebugJavaWithJavac'.
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:processDebugResources'.
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:130)
 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:293)
 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:128)
@@ -213,107 +104,18 @@ org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':app:com
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
-Caused by: org.gradle.api.internal.tasks.compile.CompilationFailedException: Compilation failed; see the compiler output below.
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:100: error: cannot find symbol
-        textOnboardingProgress = view.findViewById(R.id.textOnboardingProgress);
-                                                       ^
-  symbol:   variable textOnboardingProgress
-  location: class id
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:103: error: cannot find symbol
-        cardBrowse = view.findViewById(R.id.cardBrowse);
-                                           ^
-  symbol:   variable cardBrowse
-  location: class id
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:104: error: cannot find symbol
-        cardSell = view.findViewById(R.id.cardSell);
-                                         ^
-  symbol:   variable cardSell
-  location: class id
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:105: error: cannot find symbol
-        cardCredits = view.findViewById(R.id.cardCredits);
-                                            ^
-  symbol:   variable cardCredits
-  location: class id
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:106: error: cannot find symbol
-        cardHelp = view.findViewById(R.id.cardHelp);
-                                         ^
-  symbol:   variable cardHelp
-  location: class id
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:296: error: cannot find symbol
-            " WHERE " + DatabaseHelper.COLUMN_BIDDER_EMAIL + " = ? AND " + 
-                                      ^
-  symbol:   variable COLUMN_BIDDER_EMAIL
-  location: class DatabaseHelper
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:297: error: cannot find symbol
-            DatabaseHelper.COLUMN_BID_STATUS + " = 'ACTIVE'",
-                          ^
-  symbol:   variable COLUMN_BID_STATUS
-  location: class DatabaseHelper
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:309: error: cannot find symbol
-            " WHERE " + DatabaseHelper.COLUMN_SELLER_EMAIL + " = ?",
-                                      ^
-  symbol:   variable COLUMN_SELLER_EMAIL
-  location: class DatabaseHelper
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:342: error: cannot find symbol
-                    DatabaseHelper.COLUMN_USER_PROFILE_PICTURE,
-                                  ^
-  symbol:   variable COLUMN_USER_PROFILE_PICTURE
-  location: class DatabaseHelper
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:343: error: cannot find symbol
-                    DatabaseHelper.COLUMN_USER_VERIFIED
-                                  ^
-  symbol:   variable COLUMN_USER_VERIFIED
-  location: class DatabaseHelper
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:367: error: cannot find symbol
-            String profilePicture = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_PROFILE_PICTURE));
-                                                                                                ^
-  symbol:   variable COLUMN_USER_PROFILE_PICTURE
-  location: class DatabaseHelper
-/home/dane/Desktop/CC106-G5-BIDHUB/BidHub-Android-App/bidhub/app/src/main/java/com/cc106/bidhub/fragments/HomeFragment.java:373: error: cannot find symbol
-            int verified = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_VERIFIED));
-                                                                                    ^
-  symbol:   variable COLUMN_USER_VERIFIED
-  location: class DatabaseHelper
-Note: Some input files use or override a deprecated API.
-Note: Recompile with -Xlint:deprecation for details.
-12 errors
-	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:89)
-	at org.gradle.api.internal.tasks.compile.JdkJavaCompiler.execute(JdkJavaCompiler.java:50)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.delegateAndHandleErrors(NormalizingJavaCompiler.java:98)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:52)
-	at org.gradle.api.internal.tasks.compile.NormalizingJavaCompiler.execute(NormalizingJavaCompiler.java:38)
-	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:52)
-	at org.gradle.api.internal.tasks.compile.AnnotationProcessorDiscoveringCompiler.execute(AnnotationProcessorDiscoveringCompiler.java:38)
-	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:46)
-	at org.gradle.api.internal.tasks.compile.ModuleApplicationNameWritingCompiler.execute(ModuleApplicationNameWritingCompiler.java:36)
-	at org.gradle.jvm.toolchain.internal.DefaultToolchainJavaCompiler.execute(DefaultToolchainJavaCompiler.java:57)
-	at org.gradle.api.tasks.compile.JavaCompile.lambda$createToolchainCompiler$3(JavaCompile.java:206)
-	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.lambda$execute$0(SelectiveCompiler.java:101)
-	at org.gradle.api.internal.tasks.compile.incremental.transaction.CompileTransaction.execute(CompileTransaction.java:108)
-	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:95)
-	at org.gradle.api.internal.tasks.compile.incremental.SelectiveCompiler.execute(SelectiveCompiler.java:44)
-	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:66)
-	at org.gradle.api.internal.tasks.compile.incremental.IncrementalResultStoringCompiler.execute(IncrementalResultStoringCompiler.java:52)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$1.call(CompileJavaBuildOperationReportingCompiler.java:64)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler$1.call(CompileJavaBuildOperationReportingCompiler.java:48)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
-	at org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationReportingCompiler.execute(CompileJavaBuildOperationReportingCompiler.java:48)
-	at org.gradle.api.tasks.compile.JavaCompile.performCompilation(JavaCompile.java:224)
-	at org.gradle.api.tasks.compile.JavaCompile.performIncrementalCompilation(JavaCompile.java:165)
-	at org.gradle.api.tasks.compile.JavaCompile.compile(JavaCompile.java:150)
-	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
-	at org.gradle.internal.reflect.JavaMethod.invoke(JavaMethod.java:125)
-	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.doExecute(IncrementalTaskAction.java:45)
-	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:51)
-	at org.gradle.api.internal.project.taskfactory.IncrementalTaskAction.execute(IncrementalTaskAction.java:26)
-	at org.gradle.api.internal.project.taskfactory.StandardTaskAction.execute(StandardTaskAction.java:29)
-	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:244)
+Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
+	at org.gradle.workers.internal.DefaultWorkerExecutor$WorkItemExecution.waitForCompletion(DefaultWorkerExecutor.java:287)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.lambda$waitForItemsAndGatherFailures$2(DefaultAsyncWorkTracker.java:130)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:335)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:318)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLock(DefaultWorkerLeaseService.java:323)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:126)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:92)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForAll(DefaultAsyncWorkTracker.java:78)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForCompletion(DefaultAsyncWorkTracker.java:66)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:252)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:27)
 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
@@ -376,7 +178,7 @@ Note: Recompile with -Xlint:deprecation for details.
 	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:64)
 	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:43)
 	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.executeWithNonEmptySources(AbstractSkipEmptyWorkStep.java:125)
-	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:61)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:56)
 	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:36)
 	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
 	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:36)
@@ -427,7 +229,118 @@ Note: Recompile with -Xlint:deprecation for details.
 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+Caused by: com.android.builder.internal.aapt.v2.Aapt2Exception: Android resource linking failed
+com.cc106.bidhub.app-main-33:/layout/activity_account_registration.xml:37: error: resource drawable/ic_help_outline (aka com.cc106.bidhub:drawable/ic_help_outline) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_account_registration.xml:77: error: resource drawable/ic_person (aka com.cc106.bidhub:drawable/ic_person) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_account_registration.xml:97: error: resource drawable/ic_person (aka com.cc106.bidhub:drawable/ic_person) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_account_registration.xml:117: error: resource drawable/ic_email (aka com.cc106.bidhub:drawable/ic_email) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_account_registration.xml:137: error: resource drawable/ic_phone (aka com.cc106.bidhub:drawable/ic_phone) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_account_registration.xml:158: error: resource drawable/ic_lock (aka com.cc106.bidhub:drawable/ic_lock) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_account_summary.xml:41: error: resource drawable/ic_help_outline (aka com.cc106.bidhub:drawable/ic_help_outline) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_account_summary.xml:147: error: resource drawable/ic_person (aka com.cc106.bidhub:drawable/ic_person) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_account_summary.xml:191: error: resource drawable/ic_account_balance_wallet (aka com.cc106.bidhub:drawable/ic_account_balance_wallet) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_credits_overview.xml:24: error: resource drawable/ic_arrow_back_ios (aka com.cc106.bidhub:drawable/ic_arrow_back_ios) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_item_detail.xml:25: error: resource drawable/ic_arrow_back_ios (aka com.cc106.bidhub:drawable/ic_arrow_back_ios) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_item_detail.xml:57: error: resource drawable/ic_favorite_border (aka com.cc106.bidhub:drawable/ic_favorite_border) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_item_detail.xml:86: error: resource drawable/sample_watch (aka com.cc106.bidhub:drawable/sample_watch) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_item_detail.xml:322: error: resource drawable/sample_avatar (aka com.cc106.bidhub:drawable/sample_avatar) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_item_detail.xml:351: error: resource drawable/ic_star (aka com.cc106.bidhub:drawable/ic_star) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_payment_confirmation.xml:54: error: resource drawable/ic_check (aka com.cc106.bidhub:drawable/ic_check) not found.
+com.cc106.bidhub.app-main-33:/layout/activity_welcome.xml:35: error: resource drawable/ic_bidhub_logo (aka com.cc106.bidhub:drawable/ic_bidhub_logo) not found.
+com.cc106.bidhub.app-main-33:/layout/fragment_home.xml:121: error: resource drawable/ic_inventory_2 (aka com.cc106.bidhub:drawable/ic_inventory_2) not found.
+com.cc106.bidhub.app-main-33:/layout/fragment_home.xml:149: error: resource drawable/ic_add_box (aka com.cc106.bidhub:drawable/ic_add_box) not found.
+com.cc106.bidhub.app-main-33:/layout/fragment_home.xml:177: error: resource drawable/ic_toll (aka com.cc106.bidhub:drawable/ic_toll) not found.
+
+	at com.android.builder.internal.aapt.v2.Aapt2Exception$Companion.create(Aapt2Exception.kt:45)
+	at com.android.builder.internal.aapt.v2.Aapt2Exception$Companion.create$default(Aapt2Exception.kt:31)
+	at com.android.builder.internal.aapt.v2.Aapt2DaemonImpl.doLink(Aapt2DaemonImpl.kt:191)
+	at com.android.builder.internal.aapt.v2.Aapt2Daemon.link(Aapt2Daemon.kt:124)
+	at com.android.builder.internal.aapt.v2.Aapt2DaemonManager$LeasedAaptDaemon.link(Aapt2DaemonManager.kt:176)
+	at com.android.builder.internal.aapt.v2.Aapt2DaemonManager$leasingAapt2Daemon$1.link(Aapt2DaemonManager.kt:199)
+	at com.android.build.gradle.internal.services.PartialInProcessResourceProcessor.link(PartialInProcessResourceProcessor.kt:51)
+	at com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnableKt.processResources(Aapt2ProcessResourcesRunnable.kt:74)
+	at com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$Companion.invokeAaptForSplit(LinkApplicationAndroidResourcesTask.kt:1060)
+	at com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$Companion.access$invokeAaptForSplit(LinkApplicationAndroidResourcesTask.kt:886)
+	at com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction.run(LinkApplicationAndroidResourcesTask.kt:463)
+	at com.android.build.gradle.internal.profile.ProfileAwareWorkAction.execute(ProfileAwareWorkAction.kt:74)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:169)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:133)
+	... 2 more
+	Suppressed: java.util.NoSuchElementException: Unable to get absolute path from com.cc106.bidhub.app-main-33:/layout/activity_account_registration.xml
+                       because com.cc106.bidhub.app-main-33 is not key in sourceSetPathMap.
+		at com.android.ide.common.resources.RelativeResourceUtils$relativeResourcePathToAbsolutePath$1.invoke(RelativeResourceUtils.kt:91)
+		at com.android.ide.common.resources.RelativeResourceUtils$relativeResourcePathToAbsolutePath$1.invoke(RelativeResourceUtils.kt:68)
+		at com.android.ide.common.resources.RelativeResourceUtils.relativeResourcePathToAbsolutePath(RelativeResourceUtils.kt:61)
+		at com.android.ide.common.blame.parser.aapt.Aapt2ErrorParser$MessageParser.parse(Aapt2ErrorParser.kt:124)
+		at com.android.ide.common.blame.parser.aapt.Aapt2ErrorParser.parse(Aapt2ErrorParser.kt:99)
+		at com.android.ide.common.blame.parser.aapt.Aapt2OutputParser.parse(Aapt2OutputParser.java:56)
+		at com.android.ide.common.blame.parser.ToolOutputParser.parseToolOutput(ToolOutputParser.java:84)
+		at com.android.build.gradle.internal.res.Aapt2ErrorUtils.rewriteException(Aapt2ErrorUtils.kt:219)
+		at com.android.build.gradle.internal.res.Aapt2ErrorUtils.rewriteLinkException(Aapt2ErrorUtils.kt:133)
+		at com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnableKt.processResources(Aapt2ProcessResourcesRunnable.kt:76)
+		at com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$Companion.invokeAaptForSplit(LinkApplicationAndroidResourcesTask.kt:1060)
+		at com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$Companion.access$invokeAaptForSplit(LinkApplicationAndroidResourcesTask.kt:886)
+		at com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction.run(LinkApplicationAndroidResourcesTask.kt:463)
+		at com.android.build.gradle.internal.profile.ProfileAwareWorkAction.execute(ProfileAwareWorkAction.kt:74)
+		at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:63)
+		at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)
+		at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)
+		at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+		at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+		at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+		at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+		at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+		at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+		at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+		at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+		at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+		at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+		at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+		at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+		at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)
+		at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:174)
+		at java.base/java.util.concurrent.FutureTask.run(Unknown Source)
+		at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:194)
+		at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:127)
+		at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:169)
+		at org.gradle.internal.Factories$1.create(Factories.java:31)
+		at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:263)
+		at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+		at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:132)
+		at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:164)
+		at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:133)
+		at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+		at java.base/java.util.concurrent.FutureTask.run(Unknown Source)
+		at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+		at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+		at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+		at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+		at java.base/java.lang.Thread.run(Unknown Source)
 
 
-BUILD FAILED in 7s
-29 actionable tasks: 8 executed, 21 up-to-date
+BUILD FAILED in 5s
+28 actionable tasks: 1 executed, 27 up-to-date

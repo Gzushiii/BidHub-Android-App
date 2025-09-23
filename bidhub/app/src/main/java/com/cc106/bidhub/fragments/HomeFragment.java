@@ -37,18 +37,14 @@ public class HomeFragment extends Fragment {
     private TextView textViewWelcome, textViewCredits, textViewAlias;
     private View searchBar;
     
-    // Onboarding components
-    private ProgressBar progressOnboarding;
-    private TextView textOnboardingProgress;
+    // Quick action buttons
+    private View cardBrowse, cardSell, cardCredits;
     
-    // Feature cards
-    private View cardBrowse, cardSell, cardCredits, cardHelp;
+    // Featured auctions
+    private TextView textFeaturedAuctions;
     
-    // Promotional banner
-    private Button btnClaimOffer;
-    
-    // Stats components
-    private TextView textActiveBids, textItemsPosted;
+    // Active bids
+    private TextView textActiveBids;
     
     // Logout button
     private Button buttonLogout;
@@ -112,22 +108,16 @@ public class HomeFragment extends Fragment {
         textViewAlias = view.findViewById(R.id.textViewAlias);
         searchBar = view.findViewById(R.id.searchBar);
         
-        // Onboarding components
-        progressOnboarding = view.findViewById(R.id.progressOnboarding);
-        textOnboardingProgress = view.findViewById(R.id.textOnboardingProgress);
-        
-        // Feature cards
+        // Quick action buttons
         cardBrowse = view.findViewById(R.id.cardBrowse);
         cardSell = view.findViewById(R.id.cardSell);
         cardCredits = view.findViewById(R.id.cardCredits);
-        cardHelp = view.findViewById(R.id.cardHelp);
         
-        // Promotional banner
-        btnClaimOffer = view.findViewById(R.id.btnClaimOffer);
+        // Featured auctions
+        textFeaturedAuctions = view.findViewById(R.id.textFeaturedAuctions);
         
-        // Stats components
+        // Active bids
         textActiveBids = view.findViewById(R.id.textActiveBids);
-        textItemsPosted = view.findViewById(R.id.textItemsPosted);
         
         // Logout button
         buttonLogout = view.findViewById(R.id.buttonLogout);
@@ -224,38 +214,6 @@ public class HomeFragment extends Fragment {
             });
         }
         
-        if (cardHelp != null) {
-            cardHelp.setOnClickListener(v -> {
-                try {
-                    Intent intent = new Intent(getContext(), HelpSupportActivity.class);
-                    intent.putExtra("USER_EMAIL", loggedInUserEmail);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    if (getContext() != null) {
-                        ToastHelper.showError(getContext(), "Error opening help: " + e.getMessage());
-                    }
-                    e.printStackTrace();
-                }
-            });
-        }
-        
-        // Promotional banner
-        if (btnClaimOffer != null) {
-            btnClaimOffer.setOnClickListener(v -> {
-                try {
-                    // Navigate to credits with special offer
-                    Intent intent = new Intent(getContext(), CreditsActivity.class);
-                    intent.putExtra("USER_EMAIL", loggedInUserEmail);
-                    intent.putExtra("SPECIAL_OFFER", true);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    if (getContext() != null) {
-                        ToastHelper.showError(getContext(), "Error opening credits: " + e.getMessage());
-                    }
-                    e.printStackTrace();
-                }
-            });
-        }
         
         // Logout button
         if (buttonLogout != null) {
@@ -349,7 +307,6 @@ public class HomeFragment extends Fragment {
         
         // Load additional data
         loadUserStats();
-        updateOnboardingProgress();
     }
     
     /**
@@ -398,9 +355,6 @@ public class HomeFragment extends Fragment {
             if (textActiveBids != null) {
                 textActiveBids.setText(String.valueOf(activeBids));
             }
-            if (textItemsPosted != null) {
-                textItemsPosted.setText(String.valueOf(itemsPosted));
-            }
             
         } catch (Exception e) {
             if (getContext() != null) {
@@ -420,89 +374,6 @@ public class HomeFragment extends Fragment {
         }
     }
     
-    /**
-     * Update onboarding progress based on user profile completion
-     */
-    private void updateOnboardingProgress() {
-        if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
-            return;
-        }
-        
-        if (dbHelper == null) {
-            return;
-        }
-        
-        SQLiteDatabase db = null;
-        Cursor cursor = null;
-        
-        try {
-            db = dbHelper.getReadableDatabase();
-            cursor = db.query(
-                    DatabaseHelper.TABLE_USERS,
-                    new String[]{
-                        DatabaseHelper.COLUMN_USER_ALIAS,
-                        DatabaseHelper.COLUMN_USER_PHONE,
-                        DatabaseHelper.COLUMN_USER_PROFILE_PICTURE,
-                        DatabaseHelper.COLUMN_USER_VERIFIED
-                    },
-                    DatabaseHelper.COLUMN_USER_EMAIL + " = ?",
-                    new String[]{loggedInUserEmail},
-                    null, null, null
-            );
-
-            if (cursor != null && cursor.moveToFirst()) {
-                int completedSteps = 0;
-                int totalSteps = 4;
-                
-                // Check if alias is set (step 1)
-                String alias = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_ALIAS));
-                if (alias != null && !alias.isEmpty()) {
-                    completedSteps++;
-                }
-                
-                // Check if phone is set (step 2)
-                String phone = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_PHONE));
-                if (phone != null && !phone.isEmpty()) {
-                    completedSteps++;
-                }
-                
-                // Check if profile picture is set (step 3)
-                String profilePicture = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_PROFILE_PICTURE));
-                if (profilePicture != null && !profilePicture.isEmpty()) {
-                    completedSteps++;
-                }
-                
-                // Check if account is verified (step 4)
-                int verified = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_VERIFIED));
-                if (verified == 1) {
-                    completedSteps++;
-                }
-                
-                // Update progress bar
-                if (progressOnboarding != null) {
-                    int progress = (completedSteps * 100) / totalSteps;
-                    progressOnboarding.setProgress(progress);
-                }
-                
-                // Update progress text
-                if (textOnboardingProgress != null) {
-                    textOnboardingProgress.setText(completedSteps + "/" + totalSteps);
-                }
-            }
-        } catch (Exception e) {
-            if (getContext() != null) {
-                ToastHelper.showError(getContext(), "Error updating onboarding progress: " + e.getMessage());
-            }
-            e.printStackTrace();
-        } finally {
-            if (cursor != null) {
-            cursor.close();
-            }
-            if (db != null) {
-                db.close();
-            }
-        }
-    }
     
     public void updateUserEmail(String email) {
         this.loggedInUserEmail = email;
