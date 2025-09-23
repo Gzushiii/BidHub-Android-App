@@ -61,8 +61,15 @@ public class BidHistoryAdapter extends RecyclerView.Adapter<BidHistoryAdapter.Bi
 
         public void bind(Bid bid) {
             tvBidderName.setText(bid.getBidderAlias());
-            tvBidTime.setText(bid.getPlacedAt().toString());
-            tvBidAmount.setText("$" + String.format("%.2f", bid.getAmount()));
+            tvBidTime.setText(formatBidTime(bid.getPlacedAt()));
+            tvBidAmount.setText("$" + String.format("%.0f", bid.getAmount()));
+        }
+
+        private String formatBidTime(java.util.Date date) {
+            if (date == null) return "Unknown time";
+            
+            java.text.SimpleDateFormat timeFormat = new java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault());
+            return timeFormat.format(date);
         }
     }
 }
