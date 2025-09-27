@@ -495,11 +495,40 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     
     @Override
     public void onItemClick(Item item) {
-        // Navigate to item detail activity
-        Intent intent = new Intent(getContext(), ItemDetailActivity.class);
-        intent.putExtra("ITEM_ID", item.getItemId());
-        intent.putExtra("USER_EMAIL", loggedInUserEmail);
-        startActivity(intent);
+        try {
+            // Validate item data
+            if (item == null) {
+                ToastHelper.showError(getContext(), "Item data is invalid");
+                return;
+            }
+            
+            if (item.getItemId() == null || item.getItemId().isEmpty()) {
+                ToastHelper.showError(getContext(), "Item ID is missing");
+                return;
+            }
+            
+            if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
+                ToastHelper.showError(getContext(), "User session expired. Please login again.");
+                return;
+            }
+            
+            // Check if fragment is still attached
+            if (!isAdded() || getContext() == null) {
+                return;
+            }
+            
+            // Navigate to item detail activity
+            Intent intent = new Intent(getContext(), ItemDetailActivity.class);
+            intent.putExtra("ITEM_ID", item.getItemId());
+            intent.putExtra("USER_EMAIL", loggedInUserEmail);
+            startActivity(intent);
+            
+        } catch (Exception e) {
+            if (getContext() != null) {
+                ToastHelper.showError(getContext(), "Error opening item details: " + e.getMessage());
+            }
+            e.printStackTrace();
+        }
     }
     
     public void updateUserEmail(String email) {

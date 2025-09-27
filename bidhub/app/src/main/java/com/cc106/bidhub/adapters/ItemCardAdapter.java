@@ -48,13 +48,21 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
     
     @Override
     public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
-        Item item = items.get(position);
-        
-        // Set item data with null safety
-        holder.titleText.setText(item.getTitle() != null ? item.getTitle() : "Untitled Item");
-        holder.priceText.setText(currencyFormat.format(item.getCurrentPrice()));
-        holder.sellerText.setText("by " + (item.getSellerName() != null ? item.getSellerName() : "Unknown"));
-        holder.bidCountText.setText(item.getBidCount() + " bids");
+        try {
+            if (position < 0 || position >= items.size()) {
+                return;
+            }
+            
+            Item item = items.get(position);
+            if (item == null) {
+                return;
+            }
+            
+            // Set item data with null safety
+            holder.titleText.setText(item.getTitle() != null ? item.getTitle() : "Untitled Item");
+            holder.priceText.setText(currencyFormat.format(item.getCurrentPrice()));
+            holder.sellerText.setText("by " + (item.getSellerName() != null ? item.getSellerName() : "Unknown"));
+            holder.bidCountText.setText(item.getBidCount() + " bids");
         
         // Set time remaining
         if (item.getEndDate() != null) {
@@ -93,12 +101,23 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             holder.trendingBadge.setVisibility(View.GONE);
         }
         
-        // Set click listener
-        holder.itemView.setOnClickListener(v -> {
-            if (onItemClickListener != null) {
-                onItemClickListener.onItemClick(item);
-            }
-        });
+            // Set click listener with error handling
+            holder.itemView.setOnClickListener(v -> {
+                try {
+                    if (onItemClickListener != null && item != null) {
+                        onItemClickListener.onItemClick(item);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    // Log error but don't crash the app
+                    android.util.Log.e("ItemCardAdapter", "Error handling item click", e);
+                }
+            });
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            android.util.Log.e("ItemCardAdapter", "Error binding view holder", e);
+        }
     }
     
     @Override

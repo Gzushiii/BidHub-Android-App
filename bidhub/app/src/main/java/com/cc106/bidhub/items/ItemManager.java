@@ -895,6 +895,7 @@ public class ItemManager {
         laptop.setCategoryName("Electronics");
         laptop.setCondition("Like New");
         laptop.setLocation("Manila");
+        laptop.setSellerName("TechGuru_Manila");
         laptop.setStatus(ItemStatus.ACTIVE);
         laptop.setCurrentPrice(25000.0);
         laptop.setBidCount(5);
@@ -908,6 +909,7 @@ public class ItemManager {
         phone.setCategoryName("Electronics");
         phone.setCondition("New");
         phone.setLocation("Quezon City");
+        phone.setSellerName("MobileDeals_QC");
         phone.setStatus(ItemStatus.ACTIVE);
         phone.setCurrentPrice(45000.0);
         phone.setBidCount(12);
@@ -921,6 +923,7 @@ public class ItemManager {
         camera.setCategoryName("Electronics");
         camera.setCondition("Excellent");
         camera.setLocation("Makati");
+        camera.setSellerName("PhotoPro_Makati");
         camera.setStatus(ItemStatus.ACTIVE);
         camera.setCurrentPrice(180000.0);
         camera.setBidCount(3);
@@ -934,6 +937,7 @@ public class ItemManager {
         watch.setCategoryName("Fashion");
         watch.setCondition("Good");
         watch.setLocation("Taguig");
+        watch.setSellerName("LuxuryWatches_Taguig");
         watch.setStatus(ItemStatus.ACTIVE);
         watch.setCurrentPrice(80000.0);
         watch.setBidCount(8);
@@ -947,6 +951,7 @@ public class ItemManager {
         shoes.setCategoryName("Fashion");
         shoes.setCondition("Like New");
         shoes.setLocation("Pasig");
+        shoes.setSellerName("SneakerHead_Pasig");
         shoes.setStatus(ItemStatus.ACTIVE);
         shoes.setCurrentPrice(8000.0);
         shoes.setBidCount(15);
@@ -961,6 +966,7 @@ public class ItemManager {
         furniture.setCategoryName("Home & Garden");
         furniture.setCondition("Good");
         furniture.setLocation("Marikina");
+        furniture.setSellerName("AntiqueFinds_Marikina");
         furniture.setStatus(ItemStatus.ACTIVE);
         furniture.setCurrentPrice(15000.0);
         furniture.setBidCount(4);
@@ -974,6 +980,7 @@ public class ItemManager {
         bike.setCategoryName("Sports");
         bike.setCondition("Very Good");
         bike.setLocation("Mandaluyong");
+        bike.setSellerName("SportsGear_Mandaluyong");
         bike.setStatus(ItemStatus.ACTIVE);
         bike.setCurrentPrice(25000.0);
         bike.setBidCount(6);
@@ -987,6 +994,7 @@ public class ItemManager {
         book.setCategoryName("Books");
         book.setCondition("Good");
         book.setLocation("San Juan");
+        book.setSellerName("BookLover_SanJuan");
         book.setStatus(ItemStatus.ACTIVE);
         book.setCurrentPrice(2000.0);
         book.setBidCount(2);

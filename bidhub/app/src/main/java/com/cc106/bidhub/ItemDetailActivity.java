@@ -39,34 +39,54 @@ public class ItemDetailActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_item_detail);
         
-        initializeViews();
-        initializeComponents();
-        setupClickListeners();
-        populateItemData();
-        setupBidHistory();
+        try {
+            setContentView(R.layout.activity_item_detail);
+            
+            initializeViews();
+            initializeComponents();
+            setupClickListeners();
+            populateItemData();
+            setupBidHistory();
+            
+        } catch (Exception e) {
+            android.widget.Toast.makeText(this, "Error initializing item details: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+            finish();
+        }
     }
 
     private void initializeViews() {
-        ivItemImage = findViewById(R.id.iv_item_image);
-        ivSellerAvatar = findViewById(R.id.iv_seller_avatar);
-        tvItemTitle = findViewById(R.id.tv_item_title);
-        tvItemCategory = findViewById(R.id.tv_item_category);
-        tvStartingBid = findViewById(R.id.tv_starting_bid);
-        tvCurrentBid = findViewById(R.id.tv_current_bid);
-        tvTimeLeft = findViewById(R.id.tv_time_left);
-        tvDescription = findViewById(R.id.tv_description);
-        tvSellerName = findViewById(R.id.tv_seller_name);
-        tvSellerRating = findViewById(R.id.tv_seller_rating);
-        etBidAmount = findViewById(R.id.et_bid_amount);
-        btnPlaceBid = findViewById(R.id.btn_place_bid);
-        btnBuyNow = findViewById(R.id.btn_buy_now);
-        btnBack = findViewById(R.id.btn_back);
-        btnShare = findViewById(R.id.btn_share);
-        btnFavorite = findViewById(R.id.btn_favorite);
-        progressTimeLeft = findViewById(R.id.progress_time_left);
-        rvBidHistory = findViewById(R.id.rv_bid_history);
+        try {
+            ivItemImage = findViewById(R.id.iv_item_image);
+            ivSellerAvatar = findViewById(R.id.iv_seller_avatar);
+            tvItemTitle = findViewById(R.id.tv_item_title);
+            tvItemCategory = findViewById(R.id.tv_item_category);
+            tvStartingBid = findViewById(R.id.tv_starting_bid);
+            tvCurrentBid = findViewById(R.id.tv_current_bid);
+            tvTimeLeft = findViewById(R.id.tv_time_left);
+            tvDescription = findViewById(R.id.tv_description);
+            tvSellerName = findViewById(R.id.tv_seller_name);
+            tvSellerRating = findViewById(R.id.tv_seller_rating);
+            etBidAmount = findViewById(R.id.et_bid_amount);
+            btnPlaceBid = findViewById(R.id.btn_place_bid);
+            btnBuyNow = findViewById(R.id.btn_buy_now);
+            btnBack = findViewById(R.id.btn_back);
+            btnShare = findViewById(R.id.btn_share);
+            btnFavorite = findViewById(R.id.btn_favorite);
+            progressTimeLeft = findViewById(R.id.progress_time_left);
+            rvBidHistory = findViewById(R.id.rv_bid_history);
+            
+            // Validate that all required views were found
+            if (tvItemTitle == null || btnBack == null) {
+                throw new RuntimeException("Required views not found in layout");
+            }
+            
+        } catch (Exception e) {
+            android.widget.Toast.makeText(this, "Error initializing views: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     private void initializeComponents() {
