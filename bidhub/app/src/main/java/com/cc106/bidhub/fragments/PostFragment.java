@@ -811,6 +811,13 @@ public class PostFragment extends Fragment implements
                 return;
             }
             
+            // Debug: Log form data before validation
+            android.util.Log.d("PostFragment", "Form data before validation:");
+            android.util.Log.d("PostFragment", "Title: " + etItemTitle.getText().toString().trim());
+            android.util.Log.d("PostFragment", "Category: " + actvCategory.getText().toString().trim());
+            android.util.Log.d("PostFragment", "Origin: " + actvOrigin.getText().toString().trim());
+            android.util.Log.d("PostFragment", "Images count: " + selectedImages.size());
+            
             ItemData itemData = createItemData();
             if (itemData != null) {
                 // Show loading state
@@ -825,8 +832,10 @@ public class PostFragment extends Fragment implements
                     ToastHelper.showSuccess(getContext(), "Item posted successfully!");
                     clearForm();
                 } else {
-                    ToastHelper.showError(getContext(), "Failed to post item. Please try again.");
+                    ToastHelper.showError(getContext(), "Failed to post item. Please check all required fields and try again.");
                 }
+            } else {
+                ToastHelper.showError(getContext(), "Please fill in all required fields correctly.");
             }
         } catch (Exception e) {
             ToastHelper.showError(getContext(), "Error posting item: " + e.getMessage());
@@ -904,6 +913,7 @@ public class PostFragment extends Fragment implements
             itemData.setMetadata(metadata);
         }
         
+        // Handle origin field (optional)
         String origin = actvOrigin.getText().toString().trim();
         if (!TextUtils.isEmpty(origin) && !origin.equals("Choose")) {
             String metadata = itemData.getMetadata();
@@ -914,6 +924,7 @@ public class PostFragment extends Fragment implements
             }
             itemData.setMetadata(metadata);
         }
+        // Note: Origin field is optional, so no validation is needed if it's empty or "Choose"
         
         // Images and tags
         itemData.setImagePaths(new ArrayList<>(selectedImages));
@@ -1077,6 +1088,9 @@ public class PostFragment extends Fragment implements
                 return false;
             }
         }
+        
+        // Origin field is optional - no validation needed
+        // This ensures the field is truly optional and doesn't cause validation failures
         
         return true;
     }

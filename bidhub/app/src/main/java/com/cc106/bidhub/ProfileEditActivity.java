@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -17,7 +18,10 @@ import android.widget.Toast;
 import com.cc106.bidhub.toast.ToastHelper;
 import com.cc106.bidhub.utils.ProfilePictureManager;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class ProfileEditActivity extends BaseActivity {
 
@@ -30,6 +34,8 @@ public class ProfileEditActivity extends BaseActivity {
     private String originalUsername, originalEmail;
     private String userId;
     private static final int PICK_IMAGE_REQUEST = 1001;
+    private static final int CROP_IMAGE_REQUEST = 1002;
+    private Uri selectedImageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -290,15 +296,88 @@ public class ProfileEditActivity extends BaseActivity {
         intent.setType("image/*");
         startActivityForResult(intent, PICK_IMAGE_REQUEST);
     }
+    
+    private void startImageCrop(Uri imageUri) {
+        try {
+            // Create a temporary file for the cropped image
+            File tempFile = new File(getCacheDir(), "cropped_profile_" + System.currentTimeMillis() + ".jpg");
+            Uri outputUri = Uri.fromFile(tempFile);
+            
+            // Use Android's built-in crop functionality
+            Intent cropIntent = new Intent("com.android.camera.action.CROP");
+            cropIntent.setDataAndType(imageUri, "image/*");
+            cropIntent.putExtra("crop", "true");
+            cropIntent.putExtra("aspectX", 1);
+            cropIntent.putExtra("aspectY", 1);
+            cropIntent.putExtra("outputX", 512);
+            cropIntent.putExtra("outputY", 512);
+            cropIntent.putExtra("scale", true);
+            cropIntent.putExtra("return-data", false);
+            cropIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputUri);
+            cropIntent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+            
+            // Check if there's an app that can handle cropping
+            if (cropIntent.resolveActivity(getPackageManager()) != null) {
+                startActivityForResult(cropIntent, CROP_IMAGE_REQUEST);
+            } else {
+                // Fallback: use a simple crop implementation
+                performSimpleCrop(imageUri);
+            }
+        } catch (Exception e) {
+            // Fallback: use a simple crop implementation
+            performSimpleCrop(imageUri);
+        }
+    }
+    
+    private void performSimpleCrop(Uri imageUri) {
+        try {
+            // Load the image
+            Bitmap originalBitmap = ProfilePictureManager.uriToBitmap(this, imageUri);
+            if (originalBitmap != null) {
+                // Create a square crop from the center
+                Bitmap croppedBitmap = createSquareCrop(originalBitmap);
+                
+                // Save the cropped image
+                String savedPath = ProfilePictureManager.saveProfilePicture(this, croppedBitmap, userId);
+                if (savedPath != null) {
+                    // Update the UI
+                    imageViewProfilePicture.setImageBitmap(croppedBitmap);
+                    textViewProfilePictureHint.setText("Tap to change photo");
+                    ToastHelper.showSuccess(this, "Profile picture updated!");
+                } else {
+                    ToastHelper.showError(this, "Failed to save profile picture");
+                }
+            } else {
+                ToastHelper.showError(this, "Failed to load selected image");
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error processing image: " + e.getMessage());
+        }
+    }
+    
+    private Bitmap createSquareCrop(Bitmap originalBitmap) {
+        int size = Math.min(originalBitmap.getWidth(), originalBitmap.getHeight());
+        int x = (originalBitmap.getWidth() - size) / 2;
+        int y = (originalBitmap.getHeight() - size) / 2;
+        
+        return Bitmap.createBitmap(originalBitmap, x, y, size, size);
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null) {
-            Uri selectedImageUri = data.getData();
+            selectedImageUri = data.getData();
             if (selectedImageUri != null) {
-                Bitmap bitmap = ProfilePictureManager.uriToBitmap(this, selectedImageUri);
+                // Start cropping the selected image
+                startImageCrop(selectedImageUri);
+            }
+        } else if (requestCode == CROP_IMAGE_REQUEST && resultCode == RESULT_OK && data != null) {
+            // Handle cropped image
+            Uri croppedImageUri = data.getData();
+            if (croppedImageUri != null) {
+                Bitmap bitmap = ProfilePictureManager.uriToBitmap(this, croppedImageUri);
                 if (bitmap != null) {
                     // Save the profile picture
                     String savedPath = ProfilePictureManager.saveProfilePicture(this, bitmap, userId);
@@ -311,7 +390,7 @@ public class ProfileEditActivity extends BaseActivity {
                         ToastHelper.showError(this, "Failed to save profile picture");
                     }
                 } else {
-                    ToastHelper.showError(this, "Failed to load selected image");
+                    ToastHelper.showError(this, "Failed to load cropped image");
                 }
             }
         }
