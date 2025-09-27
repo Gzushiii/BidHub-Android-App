@@ -253,16 +253,20 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         new Thread(() -> {
             List<Item> results = itemManager.filterItems(currentFilter);
             
-            // Update UI on main thread
-            getActivity().runOnUiThread(() -> {
-                filteredItems.clear();
-                filteredItems.addAll(results);
-                itemAdapter.notifyDataSetChanged();
-                
-                showLoading(false);
-                updateEmptyState();
-                updateItemCount();
-            });
+            // Update UI on main thread - check if fragment is still attached
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (isAdded()) { // Check if fragment is still added to activity
+                        filteredItems.clear();
+                        filteredItems.addAll(results);
+                        itemAdapter.notifyDataSetChanged();
+                        
+                        showLoading(false);
+                        updateEmptyState();
+                        updateItemCount();
+                    }
+                });
+            }
         }).start();
     }
     
@@ -273,14 +277,18 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         new Thread(() -> {
             List<Item> items = itemManager.getAllActiveItems();
             
-            // Update UI on main thread
-            getActivity().runOnUiThread(() -> {
-                allItems.clear();
-                allItems.addAll(items);
-                
-                // Apply current filters
-                applyFilters();
-            });
+            // Update UI on main thread - check if fragment is still attached
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (isAdded()) { // Check if fragment is still added to activity
+                        allItems.clear();
+                        allItems.addAll(items);
+                        
+                        // Apply current filters
+                        applyFilters();
+                    }
+                });
+            }
         }).start();
     }
     

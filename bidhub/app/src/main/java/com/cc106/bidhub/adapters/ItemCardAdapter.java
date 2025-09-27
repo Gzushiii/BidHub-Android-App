@@ -50,8 +50,8 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
     public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
         Item item = items.get(position);
         
-        // Set item data
-        holder.titleText.setText(item.getTitle());
+        // Set item data with null safety
+        holder.titleText.setText(item.getTitle() != null ? item.getTitle() : "Untitled Item");
         holder.priceText.setText(currencyFormat.format(item.getCurrentPrice()));
         holder.sellerText.setText("by " + (item.getSellerName() != null ? item.getSellerName() : "Unknown"));
         holder.bidCountText.setText(item.getBidCount() + " bids");

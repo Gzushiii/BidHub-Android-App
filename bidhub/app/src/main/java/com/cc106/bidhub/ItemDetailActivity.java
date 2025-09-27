@@ -118,15 +118,33 @@ public class ItemDetailActivity extends AppCompatActivity {
     }
 
     private void populateItemData() {
-        // Set sample data - in real app, this would come from intent or API
-        tvItemTitle.setText("Luxury Watch");
-        tvItemCategory.setText("Watches · New");
-        tvStartingBid.setText("$500");
-        tvCurrentBid.setText("$750");
-        tvTimeLeft.setText("2d 12h 30m");
-        tvDescription.setText("This luxury watch features a stainless steel case, sapphire crystal, and automatic movement. It's water-resistant up to 100 meters and comes with a certificate of authenticity.");
-        tvSellerName.setText("Ethan Carter");
-        tvSellerRating.setText("4.8 (125 reviews)");
+        // Get data from intent
+        Intent intent = getIntent();
+        String itemId = intent.getStringExtra("ITEM_ID");
+        String userEmail = intent.getStringExtra("USER_EMAIL");
+        
+        if (itemId != null) {
+            // TODO: Load actual item data from database using itemId
+            // For now, use sample data but with proper item identification
+            tvItemTitle.setText("Luxury Watch (ID: " + itemId + ")");
+            tvItemCategory.setText("Watches · New");
+            tvStartingBid.setText("$500");
+            tvCurrentBid.setText("$750");
+            tvTimeLeft.setText("2d 12h 30m");
+            tvDescription.setText("This luxury watch features a stainless steel case, sapphire crystal, and automatic movement. It's water-resistant up to 100 meters and comes with a certificate of authenticity.");
+            tvSellerName.setText("Ethan Carter");
+            tvSellerRating.setText("4.8 (125 reviews)");
+        } else {
+            // Fallback to sample data if no item ID provided
+            tvItemTitle.setText("Luxury Watch");
+            tvItemCategory.setText("Watches · New");
+            tvStartingBid.setText("$500");
+            tvCurrentBid.setText("$750");
+            tvTimeLeft.setText("2d 12h 30m");
+            tvDescription.setText("This luxury watch features a stainless steel case, sapphire crystal, and automatic movement. It's water-resistant up to 100 meters and comes with a certificate of authenticity.");
+            tvSellerName.setText("Ethan Carter");
+            tvSellerRating.setText("4.8 (125 reviews)");
+        }
         
         // Set progress to 50% (example)
         progressTimeLeft.setProgress(50);
