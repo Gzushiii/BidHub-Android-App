@@ -348,15 +348,21 @@ public class PostFragment extends Fragment implements
             // Prevent text editing
             autoCompleteTextView.setKeyListener(null);
             
-            // Show dropdown on click
+            // Show dropdown on click - ensure it works even after image uploads
             autoCompleteTextView.setOnClickListener(v -> {
-                autoCompleteTextView.showDropDown();
+                // Force refresh the dropdown to ensure it's visible
+                autoCompleteTextView.post(() -> {
+                    autoCompleteTextView.showDropDown();
+                });
             });
             
             // Show dropdown on focus
             autoCompleteTextView.setOnFocusChangeListener((v, hasFocus) -> {
                 if (hasFocus) {
-                    autoCompleteTextView.showDropDown();
+                    // Use post to ensure UI is ready
+                    autoCompleteTextView.post(() -> {
+                        autoCompleteTextView.showDropDown();
+                    });
                 }
             });
             
@@ -368,6 +374,16 @@ public class PostFragment extends Fragment implements
                 
                 // Handle main category selection
                 handleMainCategorySelection(selectedItem);
+            });
+            
+            // Additional touch listener to ensure dropdown works
+            autoCompleteTextView.setOnTouchListener((v, event) -> {
+                if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
+                    autoCompleteTextView.post(() -> {
+                        autoCompleteTextView.showDropDown();
+                    });
+                }
+                return false; // Allow other touch events to continue
             });
         } catch (Exception e) {
             ToastHelper.showError(getContext(), "Error setting up main category dropdown listener: " + e.getMessage());

@@ -94,6 +94,7 @@
 
                 <!-- Image indicators with better styling -->
                 <LinearLayout
+                    android:id="@+id/layout_image_indicators"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -398,11 +399,12 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="12dp" />
 
-                <RecyclerView
-                    android:id="@+id/rv_bid_history"
+                <!-- Simple LinearLayout for bid history instead of RecyclerView -->
+                <LinearLayout
+                    android:id="@+id/layout_bid_history"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp"
-                    android:nestedScrollingEnabled="false" />
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
 
             </LinearLayout>
 

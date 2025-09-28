@@ -5,17 +5,18 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import com.cc106.bidhub.adapters.BidHistoryAdapter;
-import com.cc106.bidhub.bidding.Bid;
 import com.cc106.bidhub.credits.CreditManager;
+import com.cc106.bidhub.items.Item;
+import com.cc106.bidhub.items.ItemManager;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -28,13 +29,22 @@ public class ItemDetailActivity extends AppCompatActivity {
     private ImageView ivItemImage, ivSellerAvatar;
     private TextView tvItemTitle, tvItemCategory, tvStartingBid, tvCurrentBid, tvTimeLeft, tvDescription, tvSellerName, tvSellerRating;
     private EditText etBidAmount;
-    private Button btnPlaceBid, btnBuyNow, btnBack, btnShare, btnFavorite;
+    private Button btnPlaceBid, btnBuyNow;
+    private ImageButton btnBack, btnShare, btnFavorite;
     private ProgressBar progressTimeLeft;
-    private RecyclerView rvBidHistory;
-    private BidHistoryAdapter bidHistoryAdapter;
+    private LinearLayout layoutBidHistory;
     private CreditManager creditManager;
     private NumberFormat currencyFormat;
     private Dialog bidConfirmationDialog;
+    
+    // New fields for enhanced functionality
+    private LinearLayout layoutImageIndicators;
+    private List<View> imageIndicators;
+    private Item currentItem;
+    private ItemManager itemManager;
+    private String loggedInUserEmail;
+    private int currentImageIndex = 0;
+    private List<String> itemImages;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,11 +53,64 @@ public class ItemDetailActivity extends AppCompatActivity {
         try {
             setContentView(R.layout.activity_item_detail);
             
-            initializeViews();
-            initializeComponents();
-            setupClickListeners();
-            populateItemData();
-            setupBidHistory();
+            // Get item ID and user email from intent
+            String itemId = getIntent().getStringExtra("ITEM_ID");
+            loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
+            
+            // Initialize views with better error handling
+            try {
+                initializeViews();
+            } catch (Exception e) {
+                android.widget.Toast.makeText(this, "Error initializing views: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+                finish();
+                return;
+            }
+            
+            try {
+                initializeComponents();
+            } catch (Exception e) {
+                android.widget.Toast.makeText(this, "Error initializing components: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+                finish();
+                return;
+            }
+            
+            try {
+                setupClickListeners();
+            } catch (Exception e) {
+                android.widget.Toast.makeText(this, "Error setting up click listeners: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+                finish();
+                return;
+            }
+            
+            try {
+                loadItemData(itemId);
+            } catch (Exception e) {
+                android.widget.Toast.makeText(this, "Error loading item data: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+                finish();
+                return;
+            }
+            
+            try {
+                setupBidHistory();
+            } catch (Exception e) {
+                android.widget.Toast.makeText(this, "Error setting up bid history: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+                finish();
+                return;
+            }
+            
+            try {
+                setupImageIndicators();
+            } catch (Exception e) {
+                android.widget.Toast.makeText(this, "Error setting up image indicators: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+                finish();
+                return;
+            }
             
         } catch (Exception e) {
             android.widget.Toast.makeText(this, "Error initializing item details: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
@@ -58,31 +121,78 @@ public class ItemDetailActivity extends AppCompatActivity {
 
     private void initializeViews() {
         try {
+            android.util.Log.d("ItemDetailActivity", "Starting view initialization...");
+            
             ivItemImage = findViewById(R.id.iv_item_image);
+            android.util.Log.d("ItemDetailActivity", "ivItemImage initialized");
+            
             ivSellerAvatar = findViewById(R.id.iv_seller_avatar);
+            android.util.Log.d("ItemDetailActivity", "ivSellerAvatar initialized");
+            
             tvItemTitle = findViewById(R.id.tv_item_title);
+            android.util.Log.d("ItemDetailActivity", "tvItemTitle initialized");
+            
             tvItemCategory = findViewById(R.id.tv_item_category);
+            android.util.Log.d("ItemDetailActivity", "tvItemCategory initialized");
+            
             tvStartingBid = findViewById(R.id.tv_starting_bid);
+            android.util.Log.d("ItemDetailActivity", "tvStartingBid initialized");
+            
             tvCurrentBid = findViewById(R.id.tv_current_bid);
+            android.util.Log.d("ItemDetailActivity", "tvCurrentBid initialized");
+            
             tvTimeLeft = findViewById(R.id.tv_time_left);
+            android.util.Log.d("ItemDetailActivity", "tvTimeLeft initialized");
+            
             tvDescription = findViewById(R.id.tv_description);
+            android.util.Log.d("ItemDetailActivity", "tvDescription initialized");
+            
             tvSellerName = findViewById(R.id.tv_seller_name);
+            android.util.Log.d("ItemDetailActivity", "tvSellerName initialized");
+            
             tvSellerRating = findViewById(R.id.tv_seller_rating);
+            android.util.Log.d("ItemDetailActivity", "tvSellerRating initialized");
+            
             etBidAmount = findViewById(R.id.et_bid_amount);
+            android.util.Log.d("ItemDetailActivity", "etBidAmount initialized");
+            
             btnPlaceBid = findViewById(R.id.btn_place_bid);
+            android.util.Log.d("ItemDetailActivity", "btnPlaceBid initialized");
+            
             btnBuyNow = findViewById(R.id.btn_buy_now);
+            android.util.Log.d("ItemDetailActivity", "btnBuyNow initialized");
+            
             btnBack = findViewById(R.id.btn_back);
+            android.util.Log.d("ItemDetailActivity", "btnBack initialized");
+            
             btnShare = findViewById(R.id.btn_share);
+            android.util.Log.d("ItemDetailActivity", "btnShare initialized");
+            
             btnFavorite = findViewById(R.id.btn_favorite);
+            android.util.Log.d("ItemDetailActivity", "btnFavorite initialized");
+            
             progressTimeLeft = findViewById(R.id.progress_time_left);
-            rvBidHistory = findViewById(R.id.rv_bid_history);
+            android.util.Log.d("ItemDetailActivity", "progressTimeLeft initialized");
+            
+            layoutBidHistory = findViewById(R.id.layout_bid_history);
+            android.util.Log.d("ItemDetailActivity", "layoutBidHistory initialized");
+            
+            // Initialize new views
+            layoutImageIndicators = findViewById(R.id.layout_image_indicators);
+            android.util.Log.d("ItemDetailActivity", "layoutImageIndicators initialized");
+            
+            imageIndicators = new ArrayList<>();
+            android.util.Log.d("ItemDetailActivity", "imageIndicators list created");
             
             // Validate that all required views were found
             if (tvItemTitle == null || btnBack == null) {
                 throw new RuntimeException("Required views not found in layout");
             }
             
+            android.util.Log.d("ItemDetailActivity", "All views initialized successfully");
+            
         } catch (Exception e) {
+            android.util.Log.e("ItemDetailActivity", "Error initializing views: " + e.getMessage(), e);
             android.widget.Toast.makeText(this, "Error initializing views: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
             e.printStackTrace();
             throw e;
@@ -91,6 +201,7 @@ public class ItemDetailActivity extends AppCompatActivity {
 
     private void initializeComponents() {
         creditManager = new CreditManager(this);
+        // ItemManager will be initialized when needed
         currencyFormat = NumberFormat.getCurrencyInstance(Locale.getDefault());
         currencyFormat.setCurrency(Currency.getInstance("USD"));
     }
@@ -102,20 +213,18 @@ public class ItemDetailActivity extends AppCompatActivity {
                 finish();
             }
         });
-
+        
         btnShare.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: Implement share functionality
-                android.widget.Toast.makeText(ItemDetailActivity.this, "Share functionality coming soon!", android.widget.Toast.LENGTH_SHORT).show();
+                shareItem();
             }
         });
-
+        
         btnFavorite.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: Implement favorite functionality
-                android.widget.Toast.makeText(ItemDetailActivity.this, "Added to favorites!", android.widget.Toast.LENGTH_SHORT).show();
+                toggleFavorite();
             }
         });
 
@@ -171,45 +280,156 @@ public class ItemDetailActivity extends AppCompatActivity {
     }
 
     private void setupBidHistory() {
-        // Create sample bid history data with realistic timestamps
-        List<Bid> bidHistory = new ArrayList<>();
+        if (layoutBidHistory == null) {
+            return;
+        }
         
-        // Create bids with different timestamps
-        java.util.Date now = new java.util.Date();
-        java.util.Calendar cal = java.util.Calendar.getInstance();
+        // Clear any existing views
+        layoutBidHistory.removeAllViews();
         
-        // Most recent bid (5 minutes ago)
-        cal.setTime(now);
-        cal.add(java.util.Calendar.MINUTE, -5);
-        Bid bid1 = new Bid("item1", "user1", "Sophia Bennett", 750.0);
-        bid1.setPlacedAt(cal.getTime());
+        // Create sample bid history data
+        String[] bidderNames = {"Sophia Bennett", "Liam Harper", "Emma Wilson"};
+        double[] bidAmounts = {750.0, 700.0, 650.0};
+        String[] bidTimes = {"10:30 AM", "10:25 AM", "10:20 AM"};
         
-        // Second bid (10 minutes ago)
-        cal.setTime(now);
-        cal.add(java.util.Calendar.MINUTE, -10);
-        Bid bid2 = new Bid("item1", "user2", "Liam Harper", 700.0);
-        bid2.setPlacedAt(cal.getTime());
+        for (int i = 0; i < bidderNames.length; i++) {
+            // Create bid item layout
+            LinearLayout bidItemLayout = new LinearLayout(this);
+            bidItemLayout.setOrientation(LinearLayout.HORIZONTAL);
+            bidItemLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ));
+            bidItemLayout.setPadding(0, 16, 0, 16);
+            
+            // Left side - bidder info
+            LinearLayout leftLayout = new LinearLayout(this);
+            leftLayout.setOrientation(LinearLayout.VERTICAL);
+            leftLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1.0f
+            ));
+            
+            TextView bidderName = new TextView(this);
+            bidderName.setText(bidderNames[i]);
+            bidderName.setTextSize(16);
+            bidderName.setTextColor(getResources().getColor(R.color.text_primary));
+            bidderName.setTypeface(null, android.graphics.Typeface.BOLD);
+            
+            TextView bidTime = new TextView(this);
+            bidTime.setText(bidTimes[i]);
+            bidTime.setTextSize(14);
+            bidTime.setTextColor(getResources().getColor(R.color.text_secondary));
+            
+            leftLayout.addView(bidderName);
+            leftLayout.addView(bidTime);
+            
+            // Right side - bid amount
+            TextView bidAmount = new TextView(this);
+            bidAmount.setText(currencyFormat.format(bidAmounts[i]));
+            bidAmount.setTextSize(16);
+            bidAmount.setTextColor(getResources().getColor(R.color.primary));
+            bidAmount.setTypeface(null, android.graphics.Typeface.BOLD);
+            
+            bidItemLayout.addView(leftLayout);
+            bidItemLayout.addView(bidAmount);
+            
+            layoutBidHistory.addView(bidItemLayout);
+        }
+    }
+    
+    private void setupImageIndicators() {
+        if (layoutImageIndicators != null) {
+            // Get all indicator views
+            for (int i = 0; i < layoutImageIndicators.getChildCount(); i++) {
+                View indicator = layoutImageIndicators.getChildAt(i);
+                imageIndicators.add(indicator);
+            }
+            
+            // Set up image carousel functionality
+            ivItemImage.setOnClickListener(v -> {
+                if (itemImages != null && itemImages.size() > 1) {
+                    currentImageIndex = (currentImageIndex + 1) % itemImages.size();
+                    updateImageDisplay();
+                    // Show toast to indicate image change
+                    android.widget.Toast.makeText(ItemDetailActivity.this, 
+                        "Image " + (currentImageIndex + 1) + " of " + itemImages.size(), 
+                        android.widget.Toast.LENGTH_SHORT).show();
+                } else if (itemImages != null && itemImages.size() == 1) {
+                    // Only one image, no need to cycle
+                    currentImageIndex = 0;
+                    updateImageDisplay();
+                } else {
+                    // No images available
+                    android.widget.Toast.makeText(ItemDetailActivity.this, 
+                        "No images available", 
+                        android.widget.Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+    
+    private void updateImageDisplay() {
+        if (itemImages != null && currentImageIndex < itemImages.size()) {
+            // Update image (in a real app, you'd load the image from the path)
+            // For now, we'll just update the indicators
+            updateImageIndicators();
+        } else if (itemImages != null && currentImageIndex >= itemImages.size()) {
+            // Reset currentImageIndex if it's out of bounds
+            currentImageIndex = 0;
+            updateImageIndicators();
+        }
+    }
+    
+    private void updateImageIndicators() {
+        if (imageIndicators == null || imageIndicators.isEmpty()) {
+            return;
+        }
         
-        // Third bid (15 minutes ago)
-        cal.setTime(now);
-        cal.add(java.util.Calendar.MINUTE, -15);
-        Bid bid3 = new Bid("item1", "user3", "Emma Wilson", 650.0);
-        bid3.setPlacedAt(cal.getTime());
-        
-        bidHistory.add(bid1);
-        bidHistory.add(bid2);
-        bidHistory.add(bid3);
-        
-        bidHistoryAdapter = new BidHistoryAdapter(bidHistory, bid -> {
-            // Handle bid item click
-            android.widget.Toast.makeText(ItemDetailActivity.this, 
-                "Bid by " + bid.getBidderAlias() + " for " + currencyFormat.format(bid.getAmount()), 
-                android.widget.Toast.LENGTH_SHORT).show();
-        });
-        rvBidHistory.setLayoutManager(new LinearLayoutManager(this));
-        rvBidHistory.setAdapter(bidHistoryAdapter);
+        for (int i = 0; i < imageIndicators.size(); i++) {
+            if (i < imageIndicators.size()) {
+                View indicator = imageIndicators.get(i);
+                if (indicator != null) {
+                    if (i == currentImageIndex) {
+                        indicator.setBackgroundResource(R.drawable.indicator_active);
+                    } else {
+                        indicator.setBackgroundResource(R.drawable.indicator_inactive);
+                    }
+                }
+            }
+        }
     }
 
+    private void loadItemData(String itemId) {
+        if (itemId != null) {
+            // TODO: Load item data from database when ItemManager is properly accessible
+            // For now, use sample data
+            populateItemData();
+            itemImages = new ArrayList<>();
+            // Add multiple sample images for carousel testing
+            itemImages.add("sample_watch_1");
+            itemImages.add("sample_watch_2");
+            itemImages.add("sample_watch_3");
+            itemImages.add("sample_watch_4");
+            // Ensure currentImageIndex is within bounds
+            currentImageIndex = 0;
+            updateImageDisplay();
+        } else {
+            // Use sample data if no item ID provided
+            populateItemData();
+            itemImages = new ArrayList<>();
+            // Add multiple sample images for carousel testing
+            itemImages.add("sample_watch_1");
+            itemImages.add("sample_watch_2");
+            itemImages.add("sample_watch_3");
+            itemImages.add("sample_watch_4");
+            // Ensure currentImageIndex is within bounds
+            currentImageIndex = 0;
+            updateImageDisplay();
+        }
+    }
+    
     private void showBidConfirmationDialog() {
         String bidAmountText = etBidAmount.getText().toString().trim();
         if (bidAmountText.isEmpty()) {
@@ -237,7 +457,7 @@ public class ItemDetailActivity extends AppCompatActivity {
         bidConfirmationDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
 
         // Get dialog views
-        TextView tvDialogItemTitle = bidConfirmationDialog.findViewById(R.id.tv_dialog_item_title);
+        TextView tvDialogItemName = bidConfirmationDialog.findViewById(R.id.tv_dialog_item_name);
         TextView tvDialogBidAmount = bidConfirmationDialog.findViewById(R.id.tv_dialog_bid_amount);
         TextView tvDialogCreditCost = bidConfirmationDialog.findViewById(R.id.tv_dialog_credit_cost);
         TextView tvDialogRemainingBalance = bidConfirmationDialog.findViewById(R.id.tv_dialog_remaining_balance);
@@ -245,7 +465,7 @@ public class ItemDetailActivity extends AppCompatActivity {
         Button btnConfirm = bidConfirmationDialog.findViewById(R.id.btn_dialog_confirm);
 
         // Set dialog data
-        tvDialogItemTitle.setText(tvItemTitle.getText());
+        tvDialogItemName.setText(tvItemTitle.getText());
         tvDialogBidAmount.setText(currencyFormat.format(bidAmount));
         
         // Calculate credit cost (assuming 1 credit = $1 for simplicity)
@@ -285,5 +505,42 @@ public class ItemDetailActivity extends AppCompatActivity {
         
         // Clear bid input
         etBidAmount.setText("");
+    }
+    
+    private void shareItem() {
+        try {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            
+            String itemTitle = tvItemTitle.getText().toString();
+            String itemDescription = tvDescription.getText().toString();
+            String currentBid = tvCurrentBid.getText().toString();
+            
+            String shareText = "Check out this item on BidHub:\n\n" +
+                    itemTitle + "\n" +
+                    itemDescription + "\n" +
+                    "Current Bid: " + currentBid + "\n\n" +
+                    "Download BidHub to place your bid!";
+            
+            shareIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "BidHub Item: " + itemTitle);
+            
+            startActivity(Intent.createChooser(shareIntent, "Share Item"));
+        } catch (Exception e) {
+            android.widget.Toast.makeText(this, "Error sharing item", android.widget.Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    private void toggleFavorite() {
+        try {
+            // TODO: Implement actual favorite functionality with database
+            // For now, just show a toast message
+            android.widget.Toast.makeText(this, "Added to favorites!", android.widget.Toast.LENGTH_SHORT).show();
+            
+            // Update favorite button icon (in a real app, you'd check the database)
+            btnFavorite.setImageResource(R.drawable.ic_favorite);
+        } catch (Exception e) {
+            android.widget.Toast.makeText(this, "Error updating favorites", android.widget.Toast.LENGTH_SHORT).show();
+        }
     }
 }

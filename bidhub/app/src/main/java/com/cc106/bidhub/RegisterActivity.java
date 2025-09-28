@@ -104,6 +104,20 @@ public class RegisterActivity extends AppCompatActivity {
      * Set up real-time validation listeners
      */
     private void setupValidationListeners() {
+        // Create a common TextWatcher for button updates
+        TextWatcher buttonUpdateWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                updateRegisterButton();
+            }
+            
+            @Override
+            public void afterTextChanged(Editable s) {}
+        };
+        
         // Username validation
         editTextUsername.addTextChangedListener(new TextWatcher() {
             @Override
@@ -112,6 +126,7 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 validateUsername();
+                updateRegisterButton();
             }
             
             @Override
@@ -126,6 +141,7 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 validateEmail();
+                updateRegisterButton();
             }
             
             @Override
@@ -140,11 +156,21 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 validatePassword();
+                updateRegisterButton();
             }
             
             @Override
             public void afterTextChanged(Editable s) {}
         });
+        
+        // Add button update listeners to all fields
+        editTextFirstName.addTextChangedListener(buttonUpdateWatcher);
+        editTextLastName.addTextChangedListener(buttonUpdateWatcher);
+        editTextPhone.addTextChangedListener(buttonUpdateWatcher);
+        
+        // Add checkbox listeners
+        checkboxTerms.setOnCheckedChangeListener((buttonView, isChecked) -> updateRegisterButton());
+        checkboxPrivacy.setOnCheckedChangeListener((buttonView, isChecked) -> updateRegisterButton());
     }
     
     /**
@@ -303,7 +329,15 @@ public class RegisterActivity extends AppCompatActivity {
      * Update register button state based on validation
      */
     private void updateRegisterButton() {
-        boolean canRegister = isEmailValid && isUsernameValid && isPasswordValid && 
+        // Check if all required fields have content (not just validation)
+        boolean hasRequiredContent = !TextUtils.isEmpty(editTextFirstName.getText()) &&
+                                   !TextUtils.isEmpty(editTextLastName.getText()) &&
+                                   !TextUtils.isEmpty(editTextUsername.getText()) &&
+                                   !TextUtils.isEmpty(editTextEmail.getText()) &&
+                                   !TextUtils.isEmpty(editTextPhone.getText()) &&
+                                   !TextUtils.isEmpty(editTextPassword.getText());
+        
+        boolean canRegister = hasRequiredContent && isEmailValid && isUsernameValid && isPasswordValid && 
                             isEmailAvailable && isUsernameAvailable &&
                             checkboxTerms.isChecked() && checkboxPrivacy.isChecked();
         
