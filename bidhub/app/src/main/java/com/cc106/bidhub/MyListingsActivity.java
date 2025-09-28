@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,7 +26,9 @@ import java.util.List;
 public class MyListingsActivity extends AppCompatActivity implements MyListingsAdapter.OnListingActionListener {
 
     private ImageButton btnBack, btnAdd;
-    private TextView tvTitle, tvEmptyState;
+    private TextView tvTitle;
+    private LinearLayout tvEmptyState;
+    private TextView tvEmptyTitle, tvEmptyMessage;
     private EditText etSearch;
     private Button btnFilterActive, btnFilterPending, btnFilterSold, btnFilterDrafts;
     private RecyclerView rvMyListings;
@@ -58,7 +61,21 @@ public class MyListingsActivity extends AppCompatActivity implements MyListingsA
         } catch (Exception e) {
             ToastHelper.showError(this, "Error initializing My Listings: " + e.getMessage());
             e.printStackTrace();
-            finish();
+            // Try to show a basic error state instead of finishing
+            try {
+                if (tvEmptyState != null) {
+                    tvEmptyState.setVisibility(View.VISIBLE);
+                }
+                if (tvEmptyTitle != null) {
+                    tvEmptyTitle.setText("Initialization Error");
+                }
+                if (tvEmptyMessage != null) {
+                    tvEmptyMessage.setText("There was an error initializing the My Listings screen.\n\nPlease restart the app and try again.");
+                }
+            } catch (Exception ex) {
+                // If even the error state fails, finish the activity
+                finish();
+            }
         }
     }
     
@@ -73,6 +90,8 @@ public class MyListingsActivity extends AppCompatActivity implements MyListingsA
             btnFilterSold = findViewById(R.id.btn_filter_sold);
             btnFilterDrafts = findViewById(R.id.btn_filter_drafts);
             tvEmptyState = findViewById(R.id.tv_empty_state);
+            tvEmptyTitle = findViewById(R.id.tv_empty_title);
+            tvEmptyMessage = findViewById(R.id.tv_empty_message);
             rvMyListings = findViewById(R.id.rv_my_listings);
             progressBar = findViewById(R.id.progress_bar);
             
@@ -101,9 +120,13 @@ public class MyListingsActivity extends AppCompatActivity implements MyListingsA
             // Initialize ItemManager
             try {
                 itemManager = ItemManager.getInstance(this);
+                if (itemManager == null) {
+                    ToastHelper.showError(this, "ItemManager instance is null");
+                }
             } catch (Exception e) {
                 ToastHelper.showError(this, "Error initializing item manager: " + e.getMessage());
                 e.printStackTrace();
+                itemManager = null;
             }
         } catch (Exception e) {
             ToastHelper.showError(this, "Error initializing views: " + e.getMessage());
@@ -163,7 +186,20 @@ public class MyListingsActivity extends AppCompatActivity implements MyListingsA
     
     private void loadMyListings() {
         if (itemManager == null) {
-            ToastHelper.showError(this, "Item manager not available");
+            ToastHelper.showError(this, "Item manager not available. Please restart the app.");
+            // Show empty state with helpful message
+            if (tvEmptyState != null) {
+                tvEmptyState.setVisibility(View.VISIBLE);
+            }
+            if (rvMyListings != null) {
+                rvMyListings.setVisibility(View.GONE);
+            }
+            if (tvEmptyTitle != null) {
+                tvEmptyTitle.setText("Unable to Load Listings");
+            }
+            if (tvEmptyMessage != null) {
+                tvEmptyMessage.setText("There was an error initializing the item manager.\n\nPlease restart the app and try again.");
+            }
             return;
         }
         
@@ -187,7 +223,12 @@ public class MyListingsActivity extends AppCompatActivity implements MyListingsA
                         listingsAdapter.notifyDataSetChanged();
                         tvEmptyState.setVisibility(View.VISIBLE);
                         rvMyListings.setVisibility(View.GONE);
-                        tvEmptyState.setText("You haven't posted any items yet.\n\nStart by posting your first item!");
+                        if (tvEmptyTitle != null) {
+                            tvEmptyTitle.setText("No Listings Yet");
+                        }
+                        if (tvEmptyMessage != null) {
+                            tvEmptyMessage.setText("You haven't posted any items yet.\n\nStart by posting your first item!");
+                        }
                     }
                 });
             } catch (Exception e) {
@@ -274,9 +315,19 @@ public class MyListingsActivity extends AppCompatActivity implements MyListingsA
             tvEmptyState.setVisibility(View.VISIBLE);
             rvMyListings.setVisibility(View.GONE);
             if (searchQuery.isEmpty()) {
-                tvEmptyState.setText("No " + currentFilter.toLowerCase() + " listings found.\n\nTry a different filter or create a new listing!");
+                if (tvEmptyTitle != null) {
+                    tvEmptyTitle.setText("No " + currentFilter.toLowerCase() + " listings found");
+                }
+                if (tvEmptyMessage != null) {
+                    tvEmptyMessage.setText("Try a different filter or create a new listing!");
+                }
             } else {
-                tvEmptyState.setText("No listings found matching \"" + searchQuery + "\".\n\nTry a different search term.");
+                if (tvEmptyTitle != null) {
+                    tvEmptyTitle.setText("No listings found");
+                }
+                if (tvEmptyMessage != null) {
+                    tvEmptyMessage.setText("No listings found matching \"" + searchQuery + "\".\n\nTry a different search term.");
+                }
             }
         } else {
             tvEmptyState.setVisibility(View.GONE);
