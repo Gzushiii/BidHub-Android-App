@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<title>BidHub My Listings</title>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#0663ef",
+              "background-light": "#f5f7f8",
+              "background-dark": "#0f1723",
+            },
+            fontFamily: {
+              display: ["Inter"],
+            },
+            borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+          },
+        },
+      };
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark justify-between group/design-root overflow-x-hidden">
+<div class="flex flex-col">
+<header class="flex items-center bg-background-light dark:bg-background-dark p-4 justify-between sticky top-0 z-10 border-b border-white/10 dark:border-white/10">
+<button class="text-white bg-primary/20 dark:bg-primary/30 rounded-full p-2">
+<span class="material-symbols-outlined text-primary dark:text-white"> arrow_back </span>
+</button>
+<h1 class="text-lg font-bold text-[#0d131c] dark:text-white flex-1 text-center">My Listings</h1>
+<button class="text-white bg-primary/20 dark:bg-primary/30 rounded-full p-2">
+<span class="material-symbols-outlined text-primary dark:text-white"> add </span>
+</button>
+</header>
+<main class="flex-grow p-4">
+<div class="relative mb-4">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#476a9e] dark:text-white/60"> search </span>
+<input class="w-full rounded-full border-none bg-primary/10 dark:bg-primary/20 py-3 pl-10 pr-4 text-[#0d131c] dark:text-white placeholder:text-[#476a9e] dark:placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Search listings" type="text"/>
+</div>
+<div class="flex gap-2 pb-4 overflow-x-auto">
+<button class="flex items-center gap-x-2 rounded-full bg-primary px-4 py-2 text-sm font-medium text-white">
+<span>Active</span>
+</button>
+<button class="flex items-center gap-x-2 rounded-full bg-primary/10 dark:bg-primary/20 px-4 py-2 text-sm font-medium text-[#0d131c] dark:text-white">
+<span>Pending</span>
+</button>
+<button class="flex items-center gap-x-2 rounded-full bg-primary/10 dark:bg-primary/20 px-4 py-2 text-sm font-medium text-[#0d131c] dark:text-white">
+<span>Sold</span>
+</button>
+<button class="flex items-center gap-x-2 rounded-full bg-primary/10 dark:bg-primary/20 px-4 py-2 text-sm font-medium text-[#0d131c] dark:text-white">
+<span>Drafts</span>
+</button>
+</div>
+<div class="space-y-4">
+<div class="rounded-xl bg-primary/5 dark:bg-primary/10 p-4">
+<div class="flex items-start gap-4">
+<div class="w-24 h-24 rounded-lg bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAUMC8j1MlIdthufotAHCJjmOGiUPggpfFGHH7MO7X5FvhNlwIGMC9BYsPHZ_b2fVq5s8V_95HnTKMBGVZZ1kIfDtAbBl6WGZelM7NeVa9FU4ipO43qBLnnZDPUGbP-0-gO54AWZXYybfUwSUgHN0mlYtcUvqIgVhNeMm2Xr3fd9f3Jtr03ZgmbvIM8OFvmyc8XmjI5s-fF_UQDXbq3pi86bZ4eCRNUUu2PIc2ZKYQcn2j9gO7nS6qebkpKgiKlucDKXDUHnd3w8jg");'></div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-sm font-medium text-primary">Active</p>
+<h3 class="font-bold text-[#0d131c] dark:text-white mt-1">Vintage Leather Jacket</h3>
+<p class="text-sm text-[#476a9e] dark:text-white/60 mt-1">Current Bid: $120</p>
+</div>
+<p class="text-sm font-medium text-red-500">12h 45m left</p>
+</div>
+<div class="mt-3 flex gap-2">
+<button class="flex-1 rounded-full bg-primary px-4 py-2 text-sm font-medium text-white">View Bids</button>
+<button class="flex-1 rounded-full bg-primary/10 dark:bg-primary/20 px-4 py-2 text-sm font-medium text-[#0d131c] dark:text-white">Edit</button>
+</div>
+</div>
+</div>
+</div>
+<div class="rounded-xl bg-primary/5 dark:bg-primary/10 p-4">
+<div class="flex items-start gap-4">
+<div class="w-24 h-24 rounded-lg bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDyOHojOf3WYHyk7pWAUNOf2WO1c5h0l0d9Md5-vfJzr-yTpVN4ebdMTfn2WAKNyQdj-rFYVzefh2r4ZR3VhgzuyCOBJ_Lftuv4LiqbuD-D8NBc-s2vER6VIETf107KlsID0oLCRmQtFnOxj_XzXAciplEBK16DMsK1iEJz5bklmHLsU76lNdF6BVgofULdJ7P6SNorERyWArBGN-WpF3RpakCPM7eJI2lqImsPCTsRyheZhfCDGSKDuxZ5QtQkTEEg3qFN0xRJeIU");'></div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-sm font-medium text-yellow-600">Pending</p>
+<h3 class="font-bold text-[#0d131c] dark:text-white mt-1">Antique Pocket Watch</h3>
+<p class="text-sm text-[#476a9e] dark:text-white/60 mt-1">Final Price: $85</p>
+</div>
+</div>
+<div class="mt-3 flex gap-2">
+<button class="flex-1 rounded-full bg-green-500/20 px-4 py-2 text-sm font-medium text-green-600 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-base"> check_circle </span>
+                      Mark as Sold
+                    </button>
+</div>
+</div>
+</div>
+</div>
+<div class="rounded-xl bg-primary/5 dark:bg-primary/10 p-4">
+<div class="flex items-start gap-4">
+<div class="w-24 h-24 rounded-lg bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBsAF2LZHHsW-S2esgdHt7l7RPfARsfziKnNkfhFhZdYNQVRe5GkpNg8FQ2tIpQg0F1RmUq7XCaT_Ef6oh2XJmCOccasGDAmZXcsRHJQ3tC8SvckN_uyuGPspMP-aqwOzThjAIhzjITkc3SYED4sJv4am0ZrFZRLG7YDp-WxGOJGpqjNfoZ45GzN6m-6jEs8UH8oTVFOFAIm-yj4bUj09wwIyOYz0emTZTp1Nr8JbQrVERiufsvLVAA5YW1_PWG9muOPR31DY_0g5U");'></div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-sm font-medium text-green-600">Sold</p>
+<h3 class="font-bold text-[#0d131c] dark:text-white mt-1">Signed Baseball</h3>
+<p class="text-sm text-[#476a9e] dark:text-white/60 mt-1">Sold for: $250</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="rounded-xl bg-primary/5 dark:bg-primary/10 p-4">
+<div class="flex items-start gap-4">
+<div class="w-24 h-24 rounded-lg bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAAvzWwoAiTwU4P_DU8XdYzr84NzlqEWfohW9XmJfxjstP73Otihaa_raIqUdilI4Tb3owmWGVC0_tf1fdVJCdf2oDWl8Wt_ReYg-3_-xpkgmmYRupPYtOIXItulLPImUVPTDfhfIYc-iEcvlbwQvXudw4SeKtrzrmpqviDw3cgtBEbuKA2_YXiExXEWtpoAnAiStftZwdbSVzeP9-zPASgt4dWeExajz5CktfqJQfoW8jy_wqdmy-6HHGCVb4B2zqhOZMwlqU9m6I");'></div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-sm font-medium text-gray-500">Draft</p>
+<h3 class="font-bold text-[#0d131c] dark:text-white mt-1">Rare Coin Collection</h3>
+<p class="text-sm text-[#476a9e] dark:text-white/60 mt-1">Last edited: 2 days ago</p>
+</div>
+</div>
+<div class="mt-3 flex gap-2">
+<button class="flex-1 rounded-full bg-primary/10 dark:bg-primary/20 px-4 py-2 text-sm font-medium text-[#0d131c] dark:text-white flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-base"> edit </span>
+                      Edit Listing
+                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<footer class="sticky bottom-0 bg-background-light dark:bg-background-dark border-t border-primary/10 dark:border-primary/20">
+<nav class="flex justify-around py-2">
+<a class="flex flex-col items-center justify-end gap-1 text-[#476a9e] dark:text-white/60" href="#">
+<span class="material-symbols-outlined"> home </span>
+<p class="text-xs font-medium">Home</p>
+</a>
+<a class="flex flex-col items-center justify-end gap-1 text-[#476a9e] dark:text-white/60" href="#">
+<span class="material-symbols-outlined"> search </span>
+<p class="text-xs font-medium">Browse</p>
+</a>
+<a class="flex flex-col items-center justify-end gap-1 text-[#476a9e] dark:text-white/60" href="#">
+<span class="material-symbols-outlined"> add_circle </span>
+<p class="text-xs font-medium">Post</p>
+</a>
+<a class="flex flex-col items-center justify-end gap-1 text-primary dark:text-white" href="#">
+<span class="material-symbols-outlined"> inventory_2 </span>
+<p class="text-xs font-medium">Listings</p>
+</a>
+<a class="flex flex-col items-center justify-end gap-1 text-[#476a9e] dark:text-white/60" href="#">
+<span class="material-symbols-outlined"> person </span>
+<p class="text-xs font-medium">Profile</p>
+</a>
+</nav>
+</footer>
+</div>
+
+</body></html>

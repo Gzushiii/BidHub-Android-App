@@ -83,8 +83,15 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             holder.timeRemainingText.setText("No end date");
         }
         
-        // Set item image (placeholder for now)
-        holder.itemImage.setImageResource(R.drawable.ic_image_placeholder);
+        // Set item image - use placeholder if no images uploaded
+        if (item.getImagePaths() != null && !item.getImagePaths().isEmpty()) {
+            // TODO: Load actual image from path when image loading is implemented
+            // For now, use placeholder even if images exist
+            holder.itemImage.setImageResource(R.drawable.placeholder);
+        } else {
+            // No images uploaded, use placeholder
+            holder.itemImage.setImageResource(R.drawable.placeholder);
+        }
         
         // Set featured/trending indicators
         if (item.isFeatured()) {

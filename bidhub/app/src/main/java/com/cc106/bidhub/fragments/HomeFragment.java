@@ -23,6 +23,7 @@ import com.cc106.bidhub.CreditsActivity;
 import com.cc106.bidhub.DatabaseHelper;
 import com.cc106.bidhub.HelpSupportActivity;
 import com.cc106.bidhub.MainActivity;
+import com.cc106.bidhub.MyListingsActivity;
 import com.cc106.bidhub.PostActivity;
 import com.cc106.bidhub.ProfileActivity;
 import com.cc106.bidhub.R;
@@ -38,7 +39,7 @@ public class HomeFragment extends Fragment {
     private View searchBar;
     
     // Quick action buttons
-    private View cardBrowse, cardSell, cardCredits;
+    private View cardBrowse, cardSell, cardCredits, cardMyListings;
     
     // Featured auctions
     private TextView textFeaturedAuctions;
@@ -112,6 +113,7 @@ public class HomeFragment extends Fragment {
         cardBrowse = view.findViewById(R.id.cardBrowse);
         cardSell = view.findViewById(R.id.cardSell);
         cardCredits = view.findViewById(R.id.cardCredits);
+        cardMyListings = view.findViewById(R.id.cardMyListings);
         
         // Featured auctions
         textFeaturedAuctions = view.findViewById(R.id.textFeaturedAuctions);
@@ -208,6 +210,21 @@ public class HomeFragment extends Fragment {
                 } catch (Exception e) {
                     if (getContext() != null) {
                         ToastHelper.showError(getContext(), "Error opening credits: " + e.getMessage());
+                    }
+                    e.printStackTrace();
+                }
+            });
+        }
+        
+        if (cardMyListings != null) {
+            cardMyListings.setOnClickListener(v -> {
+                try {
+                    Intent intent = new Intent(getContext(), MyListingsActivity.class);
+                    intent.putExtra("USER_EMAIL", loggedInUserEmail);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    if (getContext() != null) {
+                        ToastHelper.showError(getContext(), "Error opening my listings: " + e.getMessage());
                     }
                     e.printStackTrace();
                 }

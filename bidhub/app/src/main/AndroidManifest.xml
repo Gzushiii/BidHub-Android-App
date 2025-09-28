@@ -77,7 +77,11 @@
         <activity
             android:name=".ItemDetailActivity"
             android:exported="false" />
-        
+
+        <activity
+            android:name=".MyListingsActivity"
+            android:exported="false" />
+
         <!-- Profile Management Activities -->
         <activity
             android:name=".ProfileEditActivity"

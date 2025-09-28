@@ -361,9 +361,9 @@ public class ItemDetailActivity extends AppCompatActivity {
                     currentImageIndex = 0;
                     updateImageDisplay();
                 } else {
-                    // No images available
+                    // No images available - show placeholder
                     android.widget.Toast.makeText(ItemDetailActivity.this, 
-                        "No images available", 
+                        "No images uploaded for this item", 
                         android.widget.Toast.LENGTH_SHORT).show();
                 }
             });
@@ -371,14 +371,23 @@ public class ItemDetailActivity extends AppCompatActivity {
     }
     
     private void updateImageDisplay() {
-        if (itemImages != null && currentImageIndex < itemImages.size()) {
+        if (itemImages != null && !itemImages.isEmpty() && currentImageIndex < itemImages.size()) {
             // Update image (in a real app, you'd load the image from the path)
             // For now, we'll just update the indicators
             updateImageIndicators();
-        } else if (itemImages != null && currentImageIndex >= itemImages.size()) {
+        } else if (itemImages != null && !itemImages.isEmpty() && currentImageIndex >= itemImages.size()) {
             // Reset currentImageIndex if it's out of bounds
             currentImageIndex = 0;
             updateImageIndicators();
+        } else {
+            // No images available, use placeholder
+            if (ivItemImage != null) {
+                ivItemImage.setImageResource(R.drawable.placeholder);
+            }
+            // Hide image indicators when no images
+            if (layoutImageIndicators != null) {
+                layoutImageIndicators.setVisibility(View.GONE);
+            }
         }
     }
     
@@ -407,11 +416,21 @@ public class ItemDetailActivity extends AppCompatActivity {
             // For now, use sample data
             populateItemData();
             itemImages = new ArrayList<>();
-            // Add multiple sample images for carousel testing
-            itemImages.add("sample_watch_1");
-            itemImages.add("sample_watch_2");
-            itemImages.add("sample_watch_3");
-            itemImages.add("sample_watch_4");
+            
+            // TODO: Load actual images from item.getImagePaths() when available
+            // For now, simulate different scenarios:
+            // - Some items have images, others don't
+            if (itemId.contains("no_image") || itemId.contains("empty")) {
+                // Simulate item with no images - use placeholder
+                itemImages.clear();
+            } else {
+                // Simulate item with images for carousel testing
+                itemImages.add("sample_watch_1");
+                itemImages.add("sample_watch_2");
+                itemImages.add("sample_watch_3");
+                itemImages.add("sample_watch_4");
+            }
+            
             // Ensure currentImageIndex is within bounds
             currentImageIndex = 0;
             updateImageDisplay();
