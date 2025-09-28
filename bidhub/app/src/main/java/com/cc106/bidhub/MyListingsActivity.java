@@ -40,83 +40,125 @@ public class MyListingsActivity extends AppCompatActivity implements MyListingsA
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_my_listings);
         
-        // Get user email from intent
-        loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
-        if (loggedInUserEmail == null) {
-            ToastHelper.showError(this, "User session expired. Please login again.");
+        try {
+            setContentView(R.layout.activity_my_listings);
+            
+            // Get user email from intent
+            loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
+            if (loggedInUserEmail == null) {
+                ToastHelper.showError(this, "User session expired. Please login again.");
+                finish();
+                return;
+            }
+            
+            initializeViews();
+            setupClickListeners();
+            loadMyListings();
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error initializing My Listings: " + e.getMessage());
+            e.printStackTrace();
             finish();
-            return;
         }
-        
-        initializeViews();
-        setupClickListeners();
-        loadMyListings();
     }
     
     private void initializeViews() {
-        btnBack = findViewById(R.id.btn_back);
-        btnAdd = findViewById(R.id.btn_add);
-        tvTitle = findViewById(R.id.tv_title);
-        etSearch = findViewById(R.id.et_search);
-        btnFilterActive = findViewById(R.id.btn_filter_active);
-        btnFilterPending = findViewById(R.id.btn_filter_pending);
-        btnFilterSold = findViewById(R.id.btn_filter_sold);
-        btnFilterDrafts = findViewById(R.id.btn_filter_drafts);
-        tvEmptyState = findViewById(R.id.tv_empty_state);
-        rvMyListings = findViewById(R.id.rv_my_listings);
-        progressBar = findViewById(R.id.progress_bar);
-        
-        // Set title
-        tvTitle.setText("My Listings");
-        
-        // Initialize RecyclerView
-        rvMyListings.setLayoutManager(new LinearLayoutManager(this));
-        myListings = new ArrayList<>();
-        filteredListings = new ArrayList<>();
-        listingsAdapter = new MyListingsAdapter(filteredListings, this);
-        listingsAdapter.setOnListingActionListener(this);
-        rvMyListings.setAdapter(listingsAdapter);
-        
-        // Initialize ItemManager
         try {
-            itemManager = ItemManager.getInstance(this);
+            btnBack = findViewById(R.id.btn_back);
+            btnAdd = findViewById(R.id.btn_add);
+            tvTitle = findViewById(R.id.tv_title);
+            etSearch = findViewById(R.id.et_search);
+            btnFilterActive = findViewById(R.id.btn_filter_active);
+            btnFilterPending = findViewById(R.id.btn_filter_pending);
+            btnFilterSold = findViewById(R.id.btn_filter_sold);
+            btnFilterDrafts = findViewById(R.id.btn_filter_drafts);
+            tvEmptyState = findViewById(R.id.tv_empty_state);
+            rvMyListings = findViewById(R.id.rv_my_listings);
+            progressBar = findViewById(R.id.progress_bar);
+            
+            // Set title
+            if (tvTitle != null) {
+                tvTitle.setText("My Listings");
+            }
+            
+            // Initialize RecyclerView
+            if (rvMyListings != null) {
+                try {
+                    rvMyListings.setLayoutManager(new LinearLayoutManager(this));
+                    myListings = new ArrayList<>();
+                    filteredListings = new ArrayList<>();
+                    listingsAdapter = new MyListingsAdapter(filteredListings, this);
+                    listingsAdapter.setOnListingActionListener(this);
+                    rvMyListings.setAdapter(listingsAdapter);
+                } catch (Exception e) {
+                    ToastHelper.showError(this, "Error setting up RecyclerView: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            } else {
+                ToastHelper.showError(this, "RecyclerView not found in layout");
+            }
+            
+            // Initialize ItemManager
+            try {
+                itemManager = ItemManager.getInstance(this);
+            } catch (Exception e) {
+                ToastHelper.showError(this, "Error initializing item manager: " + e.getMessage());
+                e.printStackTrace();
+            }
         } catch (Exception e) {
-            ToastHelper.showError(this, "Error initializing item manager: " + e.getMessage());
+            ToastHelper.showError(this, "Error initializing views: " + e.getMessage());
             e.printStackTrace();
         }
     }
     
     private void setupClickListeners() {
-        btnBack.setOnClickListener(v -> finish());
-        
-        btnAdd.setOnClickListener(v -> {
-            // Navigate to post item screen
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra("TAB_INDEX", 2); // Post tab
-            startActivity(intent);
-        });
-        
-        // Filter button listeners
-        btnFilterActive.setOnClickListener(v -> setActiveFilter("Active"));
-        btnFilterPending.setOnClickListener(v -> setActiveFilter("Pending"));
-        btnFilterSold.setOnClickListener(v -> setActiveFilter("Sold"));
-        btnFilterDrafts.setOnClickListener(v -> setActiveFilter("Draft"));
-        
-        // Search functionality
-        etSearch.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                filterListings();
+        try {
+            if (btnBack != null) {
+                btnBack.setOnClickListener(v -> finish());
             }
             
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
+            if (btnAdd != null) {
+                btnAdd.setOnClickListener(v -> {
+                    // Navigate to post item screen
+                    Intent intent = new Intent(this, PostActivity.class);
+                    intent.putExtra("USER_EMAIL", loggedInUserEmail);
+                    startActivity(intent);
+                });
+            }
+            
+            // Filter button listeners
+            if (btnFilterActive != null) {
+                btnFilterActive.setOnClickListener(v -> setActiveFilter("Active"));
+            }
+            if (btnFilterPending != null) {
+                btnFilterPending.setOnClickListener(v -> setActiveFilter("Pending"));
+            }
+            if (btnFilterSold != null) {
+                btnFilterSold.setOnClickListener(v -> setActiveFilter("Sold"));
+            }
+            if (btnFilterDrafts != null) {
+                btnFilterDrafts.setOnClickListener(v -> setActiveFilter("Draft"));
+            }
+            
+            // Search functionality
+            if (etSearch != null) {
+                etSearch.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                    
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        filterListings();
+                    }
+                    
+                    @Override
+                    public void afterTextChanged(Editable s) {}
+                });
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error setting up click listeners: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     private void loadMyListings() {
