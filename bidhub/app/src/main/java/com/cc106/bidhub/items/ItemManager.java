@@ -904,6 +904,56 @@ public class ItemManager {
         laptop.setEndDate(new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)); // 7 days from now
         items.put(laptop.getItemId(), laptop);
         
+        // Sample items for My Listings testing
+        Item vintageJacket = new Item("Vintage Leather Jacket", "Classic vintage leather jacket in excellent condition", 120.0, "seller1");
+        vintageJacket.setCategoryId("clothing");
+        vintageJacket.setCategoryName("Clothing");
+        vintageJacket.setCondition("Good");
+        vintageJacket.setLocation("Manila");
+        vintageJacket.setSellerName("TechGuru_Manila");
+        vintageJacket.setStatus(ItemStatus.ACTIVE);
+        vintageJacket.setCurrentPrice(120.0);
+        vintageJacket.setBidCount(3);
+        vintageJacket.setViewCount(45);
+        vintageJacket.setEndDate(new Date(System.currentTimeMillis() + 12 * 60 * 60 * 1000)); // 12 hours from now
+        items.put(vintageJacket.getItemId(), vintageJacket);
+        
+        Item antiqueWatch = new Item("Antique Pocket Watch", "Beautiful antique pocket watch from the 1800s", 85.0, "seller1");
+        antiqueWatch.setCategoryId("collectibles");
+        antiqueWatch.setCategoryName("Collectibles");
+        antiqueWatch.setCondition("Fair");
+        antiqueWatch.setLocation("Manila");
+        antiqueWatch.setSellerName("TechGuru_Manila");
+        antiqueWatch.setStatus(ItemStatus.PAUSED);
+        antiqueWatch.setCurrentPrice(85.0);
+        antiqueWatch.setBidCount(1);
+        antiqueWatch.setViewCount(23);
+        items.put(antiqueWatch.getItemId(), antiqueWatch);
+        
+        Item signedBaseball = new Item("Signed Baseball", "Baseball signed by famous player", 250.0, "seller1");
+        signedBaseball.setCategoryId("sports");
+        signedBaseball.setCategoryName("Sports");
+        signedBaseball.setCondition("Good");
+        signedBaseball.setLocation("Manila");
+        signedBaseball.setSellerName("TechGuru_Manila");
+        signedBaseball.setStatus(ItemStatus.SOLD);
+        signedBaseball.setCurrentPrice(250.0);
+        signedBaseball.setBidCount(7);
+        signedBaseball.setViewCount(89);
+        items.put(signedBaseball.getItemId(), signedBaseball);
+        
+        Item rareCoins = new Item("Rare Coin Collection", "Collection of rare coins from different countries", 500.0, "seller1");
+        rareCoins.setCategoryId("collectibles");
+        rareCoins.setCategoryName("Collectibles");
+        rareCoins.setCondition("Excellent");
+        rareCoins.setLocation("Manila");
+        rareCoins.setSellerName("TechGuru_Manila");
+        rareCoins.setStatus(ItemStatus.DRAFT);
+        rareCoins.setCurrentPrice(500.0);
+        rareCoins.setBidCount(0);
+        rareCoins.setViewCount(0);
+        items.put(rareCoins.getItemId(), rareCoins);
+        
         Item phone = new Item("iPhone 14 Pro", "Brand new iPhone 14 Pro 128GB", 45000.0, "seller2");
         phone.setCategoryId("electronics");
         phone.setCategoryName("Electronics");
