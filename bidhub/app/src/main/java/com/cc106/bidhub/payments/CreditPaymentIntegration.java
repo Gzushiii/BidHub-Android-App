@@ -154,8 +154,8 @@ public class CreditPaymentIntegration {
      */
     public String[] getAvailablePaymentMethods() {
         return new String[]{
-            PaymentManager.PAYMENT_METHOD_GCASH,
-            PaymentManager.PAYMENT_METHOD_MAYA,
+            PaymentManager.PAYMENT_METHOD_STRIPE,
+            PaymentManager.PAYMENT_METHOD_CARD,
             PaymentManager.PAYMENT_METHOD_TEST
         };
     }

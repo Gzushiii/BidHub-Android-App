@@ -1,5 +1,7 @@
 package com.cc106.bidhub.adapters;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -7,6 +9,7 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.cc106.bidhub.R;
+import java.io.File;
 import java.util.List;
 
 /**
@@ -80,8 +83,8 @@ public class ItemImageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
             ImageViewHolder imageHolder = (ImageViewHolder) holder;
             String imagePath = imagePaths.get(position);
             
-            // Set image (in a real app, you'd use Glide or Picasso)
-            imageHolder.imageView.setImageResource(R.drawable.ic_image_placeholder);
+            // Load actual image from file path
+            loadImageFromPath(imageHolder.imageView, imagePath);
             
             // Set click listeners
             imageHolder.imageView.setOnClickListener(v -> {
@@ -153,6 +156,37 @@ public class ItemImageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
         
         AddPhotoViewHolder(@NonNull View itemView) {
             super(itemView);
+        }
+    }
+    
+    /**
+     * Load image from file path into ImageView
+     */
+    private void loadImageFromPath(ImageView imageView, String imagePath) {
+        try {
+            if (imagePath != null && !imagePath.isEmpty()) {
+                File imageFile = new File(imagePath);
+                if (imageFile.exists()) {
+                    // Load image from file
+                    Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+                    if (bitmap != null) {
+                        imageView.setImageBitmap(bitmap);
+                    } else {
+                        // Fallback to placeholder if bitmap is null
+                        imageView.setImageResource(R.drawable.placeholder);
+                    }
+                } else {
+                    // File doesn't exist, use placeholder
+                    imageView.setImageResource(R.drawable.placeholder);
+                }
+            } else {
+                // No path provided, use placeholder
+                imageView.setImageResource(R.drawable.placeholder);
+            }
+        } catch (Exception e) {
+            // Error loading image, use placeholder
+            imageView.setImageResource(R.drawable.placeholder);
+            e.printStackTrace();
         }
     }
 }

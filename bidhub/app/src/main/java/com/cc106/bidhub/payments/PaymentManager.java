@@ -24,8 +24,8 @@ public class PaymentManager {
     private static PaymentManager instance;
     
     // Payment method constants
-    public static final String PAYMENT_METHOD_GCASH = "gcash";
-    public static final String PAYMENT_METHOD_MAYA = "maya";
+    public static final String PAYMENT_METHOD_STRIPE = "stripe";
+    public static final String PAYMENT_METHOD_CARD = "card";
     public static final String PAYMENT_METHOD_TEST = "test";
     
     // Configuration constants
@@ -75,11 +75,9 @@ public class PaymentManager {
      * Initialize payment gateways
      */
     private void initializePaymentGateways() {
-        // Initialize GCash gateway
-        paymentGateways.put(PAYMENT_METHOD_GCASH, new GcashPaymentGateway());
-        
-        // Initialize Maya gateway
-        paymentGateways.put(PAYMENT_METHOD_MAYA, new MayaPaymentGateway());
+        // Initialize Supabase + Stripe gateway
+        paymentGateways.put(PAYMENT_METHOD_STRIPE, new SupabaseStripePaymentGateway(context));
+        paymentGateways.put(PAYMENT_METHOD_CARD, new SupabaseStripePaymentGateway(context));
         
         // Initialize test gateway
         paymentGateways.put(PAYMENT_METHOD_TEST, new TestPaymentGateway());
@@ -228,11 +226,9 @@ public class PaymentManager {
             boolean refundSuccess = false;
             
             switch (paymentMethod) {
-                case PAYMENT_METHOD_GCASH:
-                    refundSuccess = processGCashRefund(originalPayment.getReferenceId(), amount);
-                    break;
-                case PAYMENT_METHOD_MAYA:
-                    refundSuccess = processMayaRefund(originalPayment.getReferenceId(), amount);
+                case PAYMENT_METHOD_STRIPE:
+                case PAYMENT_METHOD_CARD:
+                    refundSuccess = processStripeRefund(originalPayment.getReferenceId(), amount);
                     break;
                 default:
                     Log.w(TAG, "Refund not supported for payment method: " + paymentMethod);
@@ -254,33 +250,33 @@ public class PaymentManager {
         }
     }
     
-    // ==================== GCASH INTEGRATION ====================
+    // ==================== STRIPE INTEGRATION ====================
     
     /**
-     * Initiate GCash payment
+     * Initiate Stripe payment
      */
-    public GCashResponse initiateGCashPayment(double amount, String userInfo) {
-        Log.i(TAG, "Initiating GCash payment: " + amount);
+    public StripeResponse initiateStripePayment(double amount, String userInfo) {
+        Log.i(TAG, "Initiating Stripe payment: " + amount);
         
         try {
             validatePaymentAmount(amount);
             
-            String referenceId = generateReferenceId("GCASH");
-            GCashResponse response = GCashResponse.pending(referenceId, "https://gcash.payment.url");
+            String referenceId = generateReferenceId("STRIPE");
+            StripeResponse response = StripeResponse.pending(referenceId, "https://stripe.payment.url");
             
-            // Simulate GCash payment initiation
+            // Simulate Stripe payment initiation
             executorService.submit(() -> {
                 try {
                     Thread.sleep(2000); // Simulate network delay
                     
                     // Simulate successful initiation
                     response.setSuccess(true);
-                    response.setStatus(PaymentStatus.PENDING);
+                    response.setStatus("pending");
                     response.setAmount(amount);
                     response.setCurrency("PHP");
-                    response.setQrCode("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
+                    response.setClientSecret("pi_" + referenceId + "_secret");
                     
-                    Log.i(TAG, "GCash payment initiated: " + referenceId);
+                    Log.i(TAG, "Stripe payment initiated: " + referenceId);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     response.setSuccess(false);
@@ -292,194 +288,79 @@ public class PaymentManager {
             return response;
             
         } catch (PaymentException e) {
-            Log.e(TAG, "GCash payment initiation failed", e);
-            return GCashResponse.failure(generateReferenceId("GCASH"), e.getPaymentError().getErrorCode(), e.getPaymentError().getErrorMessage());
+            Log.e(TAG, "Stripe payment initiation failed", e);
+            return StripeResponse.failure(generateReferenceId("STRIPE"), e.getPaymentError().getErrorCode(), e.getPaymentError().getErrorMessage());
         }
     }
     
     /**
-     * Verify GCash payment
+     * Verify Stripe payment
      */
-    public boolean verifyGCashPayment(String referenceId) {
-        Log.i(TAG, "Verifying GCash payment: " + referenceId);
+    public boolean verifyStripePayment(String referenceId) {
+        Log.i(TAG, "Verifying Stripe payment: " + referenceId);
         
         try {
-            // Simulate GCash payment verification
+            // Simulate Stripe payment verification
             Thread.sleep(1000);
             
-            // Simulate verification success (90% success rate)
-            boolean verified = Math.random() > 0.1;
+            // Simulate verification success (95% success rate)
+            boolean verified = Math.random() > 0.05;
             
             if (verified) {
-                Log.i(TAG, "GCash payment verified: " + referenceId);
+                Log.i(TAG, "Stripe payment verified: " + referenceId);
             } else {
-                Log.w(TAG, "GCash payment verification failed: " + referenceId);
+                Log.w(TAG, "Stripe payment verification failed: " + referenceId);
             }
             
             return verified;
             
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            Log.e(TAG, "GCash verification interrupted", e);
+            Log.e(TAG, "Stripe verification interrupted", e);
             return false;
         }
     }
     
     /**
-     * Get GCash payment status
+     * Get Stripe payment status
      */
-    public GCashResponse getGCashPaymentStatus(String referenceId) {
-        Log.i(TAG, "Getting GCash payment status: " + referenceId);
+    public StripeResponse getStripePaymentStatus(String referenceId) {
+        Log.i(TAG, "Getting Stripe payment status: " + referenceId);
         
         // Simulate status check
-        boolean success = Math.random() > 0.1;
+        boolean success = Math.random() > 0.05;
         
         if (success) {
-            return GCashResponse.success(referenceId, "TXN_" + referenceId, 100.0, "PHP");
+            return StripeResponse.success(referenceId, "pi_" + referenceId, 100.0, "PHP");
         } else {
-            return GCashResponse.failure(referenceId, "VERIFICATION_FAILED", "Payment verification failed");
+            return StripeResponse.failure(referenceId, "VERIFICATION_FAILED", "Payment verification failed");
         }
     }
     
     /**
-     * Process GCash refund
+     * Process Stripe refund
      */
-    public boolean processGCashRefund(String referenceId, double amount) {
-        Log.i(TAG, "Processing GCash refund: " + referenceId + " amount: " + amount);
+    public boolean processStripeRefund(String referenceId, double amount) {
+        Log.i(TAG, "Processing Stripe refund: " + referenceId + " amount: " + amount);
         
         try {
-            // Simulate GCash refund processing
+            // Simulate Stripe refund processing
             Thread.sleep(2000);
             
-            // Simulate refund success (95% success rate)
-            boolean success = Math.random() > 0.05;
+            // Simulate refund success (98% success rate)
+            boolean success = Math.random() > 0.02;
             
             if (success) {
-                Log.i(TAG, "GCash refund successful: " + referenceId);
+                Log.i(TAG, "Stripe refund successful: " + referenceId);
             } else {
-                Log.w(TAG, "GCash refund failed: " + referenceId);
+                Log.w(TAG, "Stripe refund failed: " + referenceId);
             }
             
             return success;
             
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            Log.e(TAG, "GCash refund interrupted", e);
-            return false;
-        }
-    }
-    
-    // ==================== MAYA INTEGRATION ====================
-    
-    /**
-     * Initiate Maya payment
-     */
-    public MayaResponse initiateMayaPayment(double amount, String userInfo) {
-        Log.i(TAG, "Initiating Maya payment: " + amount);
-        
-        try {
-            validatePaymentAmount(amount);
-            
-            String referenceId = generateReferenceId("MAYA");
-            MayaResponse response = MayaResponse.pending(referenceId, "https://maya.payment.url");
-            
-            // Simulate Maya payment initiation
-            executorService.submit(() -> {
-                try {
-                    Thread.sleep(2000); // Simulate network delay
-                    
-                    // Simulate successful initiation
-                    response.setSuccess(true);
-                    response.setStatus(PaymentStatus.PENDING);
-                    response.setAmount(amount);
-                    response.setCurrency("PHP");
-                    response.setQrCode("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
-                    
-                    Log.i(TAG, "Maya payment initiated: " + referenceId);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    response.setSuccess(false);
-                    response.setErrorCode("INTERRUPTED");
-                    response.setErrorMessage("Payment initiation interrupted");
-                }
-            });
-            
-            return response;
-            
-        } catch (PaymentException e) {
-            Log.e(TAG, "Maya payment initiation failed", e);
-            return MayaResponse.failure(generateReferenceId("MAYA"), e.getPaymentError().getErrorCode(), e.getPaymentError().getErrorMessage());
-        }
-    }
-    
-    /**
-     * Verify Maya payment
-     */
-    public boolean verifyMayaPayment(String referenceId) {
-        Log.i(TAG, "Verifying Maya payment: " + referenceId);
-        
-        try {
-            // Simulate Maya payment verification
-            Thread.sleep(1000);
-            
-            // Simulate verification success (90% success rate)
-            boolean verified = Math.random() > 0.1;
-            
-            if (verified) {
-                Log.i(TAG, "Maya payment verified: " + referenceId);
-            } else {
-                Log.w(TAG, "Maya payment verification failed: " + referenceId);
-            }
-            
-            return verified;
-            
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            Log.e(TAG, "Maya verification interrupted", e);
-            return false;
-        }
-    }
-    
-    /**
-     * Get Maya payment status
-     */
-    public MayaResponse getMayaPaymentStatus(String referenceId) {
-        Log.i(TAG, "Getting Maya payment status: " + referenceId);
-        
-        // Simulate status check
-        boolean success = Math.random() > 0.1;
-        
-        if (success) {
-            return MayaResponse.success(referenceId, "TXN_" + referenceId, 100.0, "PHP");
-        } else {
-            return MayaResponse.failure(referenceId, "VERIFICATION_FAILED", "Payment verification failed");
-        }
-    }
-    
-    /**
-     * Process Maya refund
-     */
-    public boolean processMayaRefund(String referenceId, double amount) {
-        Log.i(TAG, "Processing Maya refund: " + referenceId + " amount: " + amount);
-        
-        try {
-            // Simulate Maya refund processing
-            Thread.sleep(2000);
-            
-            // Simulate refund success (95% success rate)
-            boolean success = Math.random() > 0.05;
-            
-            if (success) {
-                Log.i(TAG, "Maya refund successful: " + referenceId);
-            } else {
-                Log.w(TAG, "Maya refund failed: " + referenceId);
-            }
-            
-            return success;
-            
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            Log.e(TAG, "Maya refund interrupted", e);
+            Log.e(TAG, "Stripe refund interrupted", e);
             return false;
         }
     }
@@ -708,10 +589,10 @@ public class PaymentManager {
     private String getPaymentMethodFromTransaction(String transactionId) {
         // In a real implementation, this would query the database
         // For now, we'll simulate based on transaction ID prefix
-        if (transactionId.startsWith("GCASH_")) {
-            return PAYMENT_METHOD_GCASH;
-        } else if (transactionId.startsWith("MAYA_")) {
-            return PAYMENT_METHOD_MAYA;
+        if (transactionId.startsWith("stripe_")) {
+            return PAYMENT_METHOD_STRIPE;
+        } else if (transactionId.startsWith("pi_")) {
+            return PAYMENT_METHOD_CARD;
         } else if (transactionId.startsWith("TXN_")) {
             return PAYMENT_METHOD_TEST;
         }

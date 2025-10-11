@@ -2,6 +2,8 @@ package com.cc106.bidhub;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +22,7 @@ import com.cc106.bidhub.items.ItemManager;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
@@ -45,6 +48,11 @@ public class ItemDetailActivity extends AppCompatActivity {
     private String loggedInUserEmail;
     private int currentImageIndex = 0;
     private List<String> itemImages;
+    
+    // Real-time features
+    private android.os.Handler countdownHandler;
+    private java.lang.Runnable countdownRunnable;
+    private static final int COUNTDOWN_UPDATE_INTERVAL = 1000; // 1 second
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -201,9 +209,12 @@ public class ItemDetailActivity extends AppCompatActivity {
 
     private void initializeComponents() {
         creditManager = new CreditManager(this);
-        // ItemManager will be initialized when needed
+        itemManager = ItemManager.getInstance(this);
         currencyFormat = NumberFormat.getCurrencyInstance(Locale.getDefault());
-        currencyFormat.setCurrency(Currency.getInstance("USD"));
+        currencyFormat.setCurrency(Currency.getInstance("PHP"));
+        
+        // Initialize countdown handler
+        countdownHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     }
 
     private void setupClickListeners() {
@@ -246,6 +257,44 @@ public class ItemDetailActivity extends AppCompatActivity {
         });
     }
 
+    private void populateItemDataFromDatabase() {
+        if (currentItem == null) {
+            populateItemData(); // Fallback to sample data
+            return;
+        }
+        
+        try {
+            // Set basic item information
+            tvItemTitle.setText(currentItem.getTitle());
+            tvItemCategory.setText(getCategoryDisplayName(currentItem.getCategoryId()) + " · " + currentItem.getCondition());
+            tvStartingBid.setText(currencyFormat.format(currentItem.getStartingPrice()));
+            tvCurrentBid.setText(currencyFormat.format(currentItem.getCurrentPrice()));
+            tvDescription.setText(currentItem.getDescription());
+            
+            // Calculate and display time left
+            String timeLeft = calculateTimeLeft(currentItem.getEndDate());
+            tvTimeLeft.setText(timeLeft);
+            
+            // Set progress based on time remaining
+            int progress = calculateAuctionProgress(currentItem.getEndDate());
+            progressTimeLeft.setProgress(progress);
+            
+            // Load seller information
+            loadSellerInformation(currentItem.getSellerId());
+            
+            // Update bid input with minimum bid amount
+            double minBid = currentItem.getCurrentPrice() + 1.0; // Minimum increment
+            etBidAmount.setHint("Min: " + currencyFormat.format(minBid));
+            
+            // Start countdown timer
+            startCountdownTimer();
+            
+        } catch (Exception e) {
+            android.util.Log.e("ItemDetailActivity", "Error populating item data: " + e.getMessage(), e);
+            populateItemData(); // Fallback to sample data
+        }
+    }
+    
     private void populateItemData() {
         // Get data from intent
         Intent intent = getIntent();
@@ -253,8 +302,7 @@ public class ItemDetailActivity extends AppCompatActivity {
         String userEmail = intent.getStringExtra("USER_EMAIL");
         
         if (itemId != null) {
-            // TODO: Load actual item data from database using itemId
-            // For now, use sample data but with proper item identification
+            // Use sample data but with proper item identification
             tvItemTitle.setText("Luxury Watch (ID: " + itemId + ")");
             tvItemCategory.setText("Watches · New");
             tvStartingBid.setText("$500");
@@ -287,6 +335,97 @@ public class ItemDetailActivity extends AppCompatActivity {
         // Clear any existing views
         layoutBidHistory.removeAllViews();
         
+        try {
+            if (currentItem != null) {
+                // Load real bid history from BiddingEngine
+                com.cc106.bidhub.bidding.BiddingEngine biddingEngine = com.cc106.bidhub.bidding.BiddingEngine.getInstance(this);
+                List<com.cc106.bidhub.bidding.Bid> bids = biddingEngine.getItemBids(currentItem.getItemId());
+                
+                if (bids != null && !bids.isEmpty()) {
+                    // Sort bids by amount (highest first)
+                    Collections.sort(bids, (b1, b2) -> Double.compare(b2.getAmount(), b1.getAmount()));
+                    
+                    for (com.cc106.bidhub.bidding.Bid bid : bids) {
+                        createBidHistoryItem(bid);
+                    }
+                } else {
+                    // No bids yet - show empty state
+                    createEmptyBidHistory();
+                }
+            } else {
+                // Fallback to sample data
+                createSampleBidHistory();
+            }
+        } catch (Exception e) {
+            android.util.Log.e("ItemDetailActivity", "Error loading bid history: " + e.getMessage(), e);
+            createSampleBidHistory();
+        }
+    }
+    
+    private void createBidHistoryItem(com.cc106.bidhub.bidding.Bid bid) {
+        // Create bid item layout
+        LinearLayout bidItemLayout = new LinearLayout(this);
+        bidItemLayout.setOrientation(LinearLayout.HORIZONTAL);
+        bidItemLayout.setLayoutParams(new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+        bidItemLayout.setPadding(0, 16, 0, 16);
+        
+        // Left side - bidder info
+        LinearLayout leftLayout = new LinearLayout(this);
+        leftLayout.setOrientation(LinearLayout.VERTICAL);
+        leftLayout.setLayoutParams(new LinearLayout.LayoutParams(
+            0,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            1.0f
+        ));
+        
+        TextView bidderName = new TextView(this);
+        bidderName.setText(bid.getBidderAlias());
+        bidderName.setTextSize(16);
+        bidderName.setTextColor(getResources().getColor(R.color.text_primary));
+        bidderName.setTypeface(null, android.graphics.Typeface.BOLD);
+        
+        TextView bidTime = new TextView(this);
+        bidTime.setText(formatBidTime(bid.getPlacedAt()));
+        bidTime.setTextSize(14);
+        bidTime.setTextColor(getResources().getColor(R.color.text_secondary));
+        
+        leftLayout.addView(bidderName);
+        leftLayout.addView(bidTime);
+        
+        // Right side - bid amount
+        TextView bidAmount = new TextView(this);
+        bidAmount.setText(currencyFormat.format(bid.getAmount()));
+        bidAmount.setTextSize(16);
+        bidAmount.setTextColor(getResources().getColor(R.color.primary));
+        bidAmount.setTypeface(null, android.graphics.Typeface.BOLD);
+        
+        // Add status indicator if winning
+        if (bid.isWinning()) {
+            bidAmount.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+            bidAmount.setText(bidAmount.getText() + " (Winning)");
+        }
+        
+        bidItemLayout.addView(leftLayout);
+        bidItemLayout.addView(bidAmount);
+        
+        layoutBidHistory.addView(bidItemLayout);
+    }
+    
+    private void createEmptyBidHistory() {
+        TextView emptyText = new TextView(this);
+        emptyText.setText("No bids yet. Be the first to bid!");
+        emptyText.setTextSize(16);
+        emptyText.setTextColor(getResources().getColor(R.color.text_secondary));
+        emptyText.setGravity(android.view.Gravity.CENTER);
+        emptyText.setPadding(0, 32, 0, 32);
+        
+        layoutBidHistory.addView(emptyText);
+    }
+    
+    private void createSampleBidHistory() {
         // Create sample bid history data
         String[] bidderNames = {"Sophia Bennett", "Liam Harper", "Emma Wilson"};
         double[] bidAmounts = {750.0, 700.0, 650.0};
@@ -337,6 +476,15 @@ public class ItemDetailActivity extends AppCompatActivity {
             
             layoutBidHistory.addView(bidItemLayout);
         }
+    }
+    
+    private String formatBidTime(java.util.Date createdAt) {
+        if (createdAt == null) {
+            return "Unknown time";
+        }
+        
+        java.text.SimpleDateFormat timeFormat = new java.text.SimpleDateFormat("MMM dd, HH:mm", java.util.Locale.getDefault());
+        return timeFormat.format(createdAt);
     }
     
     private void setupImageIndicators() {
@@ -412,40 +560,128 @@ public class ItemDetailActivity extends AppCompatActivity {
 
     private void loadItemData(String itemId) {
         if (itemId != null) {
-            // TODO: Load item data from database when ItemManager is properly accessible
-            // For now, use sample data
-            populateItemData();
-            itemImages = new ArrayList<>();
-            
-            // TODO: Load actual images from item.getImagePaths() when available
-            // For now, simulate different scenarios:
-            // - Some items have images, others don't
-            if (itemId.contains("no_image") || itemId.contains("empty")) {
-                // Simulate item with no images - use placeholder
-                itemImages.clear();
-            } else {
-                // Simulate item with images for carousel testing
-                itemImages.add("sample_watch_1");
-                itemImages.add("sample_watch_2");
-                itemImages.add("sample_watch_3");
-                itemImages.add("sample_watch_4");
+            try {
+                // Load real item data from database
+                currentItem = itemManager.getItemById(itemId);
+                if (currentItem != null) {
+                    populateItemDataFromDatabase();
+                    loadItemImages();
+                } else {
+                    // Item not found, show error and fallback to sample data
+                    android.widget.Toast.makeText(this, "Item not found. Showing sample data.", android.widget.Toast.LENGTH_SHORT).show();
+                    populateItemData();
+                    loadSampleImages();
+                }
+            } catch (Exception e) {
+                android.util.Log.e("ItemDetailActivity", "Error loading item data: " + e.getMessage(), e);
+                android.widget.Toast.makeText(this, "Error loading item. Showing sample data.", android.widget.Toast.LENGTH_SHORT).show();
+                populateItemData();
+                loadSampleImages();
             }
-            
-            // Ensure currentImageIndex is within bounds
-            currentImageIndex = 0;
-            updateImageDisplay();
         } else {
             // Use sample data if no item ID provided
+            android.widget.Toast.makeText(this, "No item ID provided. Showing sample data.", android.widget.Toast.LENGTH_SHORT).show();
             populateItemData();
+            loadSampleImages();
+        }
+    }
+    
+    private void loadItemImages() {
+        if (currentItem != null && currentItem.getImagePaths() != null) {
+            itemImages = new ArrayList<>(currentItem.getImagePaths());
+        } else {
             itemImages = new ArrayList<>();
-            // Add multiple sample images for carousel testing
-            itemImages.add("sample_watch_1");
-            itemImages.add("sample_watch_2");
-            itemImages.add("sample_watch_3");
-            itemImages.add("sample_watch_4");
-            // Ensure currentImageIndex is within bounds
-            currentImageIndex = 0;
-            updateImageDisplay();
+        }
+        currentImageIndex = 0;
+        updateImageDisplay();
+    }
+    
+    private void loadSampleImages() {
+        itemImages = new ArrayList<>();
+        // Add multiple sample images for carousel testing
+        itemImages.add("sample_watch_1");
+        itemImages.add("sample_watch_2");
+        itemImages.add("sample_watch_3");
+        itemImages.add("sample_watch_4");
+        currentImageIndex = 0;
+        updateImageDisplay();
+    }
+    
+    private String getCategoryDisplayName(String categoryId) {
+        try {
+            if (itemManager != null) {
+                com.cc106.bidhub.items.Category category = itemManager.getCategoryById(categoryId);
+                if (category != null) {
+                    return category.getName();
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.e("ItemDetailActivity", "Error getting category name: " + e.getMessage(), e);
+        }
+        return "General"; // Default fallback
+    }
+    
+    private String calculateTimeLeft(java.util.Date deadline) {
+        if (deadline == null) {
+            return "No deadline set";
+        }
+        
+        long now = System.currentTimeMillis();
+        long deadlineTime = deadline.getTime();
+        long diff = deadlineTime - now;
+        
+        if (diff <= 0) {
+            return "Auction ended";
+        }
+        
+        long days = diff / (24 * 60 * 60 * 1000);
+        long hours = (diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000);
+        long minutes = (diff % (60 * 60 * 1000)) / (60 * 1000);
+        
+        if (days > 0) {
+            return days + "d " + hours + "h " + minutes + "m";
+        } else if (hours > 0) {
+            return hours + "h " + minutes + "m";
+        } else {
+            return minutes + "m";
+        }
+    }
+    
+    private int calculateAuctionProgress(java.util.Date deadline) {
+        if (deadline == null) {
+            return 0;
+        }
+        
+        long now = System.currentTimeMillis();
+        long deadlineTime = deadline.getTime();
+        long diff = deadlineTime - now;
+        
+        if (diff <= 0) {
+            return 100; // Auction ended
+        }
+        
+        // Assuming 7-day auction duration for progress calculation
+        long totalDuration = 7 * 24 * 60 * 60 * 1000L; // 7 days in milliseconds
+        long elapsed = totalDuration - diff;
+        
+        if (elapsed <= 0) {
+            return 0;
+        }
+        
+        int progress = (int) ((elapsed * 100) / totalDuration);
+        return Math.min(progress, 100);
+    }
+    
+    private void loadSellerInformation(String sellerId) {
+        try {
+            // TODO: Load seller information from database
+            // For now, use placeholder data
+            tvSellerName.setText("Seller " + sellerId.substring(0, Math.min(8, sellerId.length())));
+            tvSellerRating.setText("4.5 (50 reviews)");
+        } catch (Exception e) {
+            android.util.Log.e("ItemDetailActivity", "Error loading seller info: " + e.getMessage(), e);
+            tvSellerName.setText("Unknown Seller");
+            tvSellerRating.setText("No rating");
         }
     }
     
@@ -487,13 +723,25 @@ public class ItemDetailActivity extends AppCompatActivity {
         tvDialogItemName.setText(tvItemTitle.getText());
         tvDialogBidAmount.setText(currencyFormat.format(bidAmount));
         
+        // Get actual user balance
+        String userId = getCurrentUserId();
+        double currentBalance = userId != null ? creditManager.getCreditBalance(userId) : 0.0;
+        
         // Calculate credit cost (assuming 1 credit = $1 for simplicity)
         int creditCost = (int) bidAmount;
         tvDialogCreditCost.setText(creditCost + " Credits");
         
-        // Calculate remaining balance (assuming user has 100 credits)
-        int remainingBalance = 100 - creditCost;
+        // Calculate remaining balance
+        int remainingBalance = (int) (currentBalance - creditCost);
         tvDialogRemainingBalance.setText(remainingBalance + " Credits");
+        
+        // Show warning if insufficient balance
+        if (remainingBalance < 0) {
+            tvDialogRemainingBalance.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+            tvDialogRemainingBalance.setText("Insufficient Credits! (" + remainingBalance + ")");
+        } else {
+            tvDialogRemainingBalance.setTextColor(getResources().getColor(R.color.text_primary));
+        }
 
         // Set click listeners
         btnCancel.setOnClickListener(new View.OnClickListener() {
@@ -516,14 +764,126 @@ public class ItemDetailActivity extends AppCompatActivity {
     }
 
     private void processBid(double bidAmount) {
-        // TODO: Implement actual bid processing logic
-        android.widget.Toast.makeText(this, "Bid of " + currencyFormat.format(bidAmount) + " placed successfully!", android.widget.Toast.LENGTH_LONG).show();
+        // Get current user ID (assuming we have a logged-in user)
+        String userId = getCurrentUserId();
+        if (userId == null) {
+            android.widget.Toast.makeText(this, "Please log in to place a bid", android.widget.Toast.LENGTH_LONG).show();
+            return;
+        }
         
-        // Update current bid display
-        tvCurrentBid.setText(currencyFormat.format(bidAmount));
+        // Check if user has sufficient credit balance
+        double currentBalance = creditManager.getCreditBalance(userId);
+        if (currentBalance < bidAmount) {
+            // Insufficient balance - redirect to credits screen
+            android.widget.Toast.makeText(this, "Insufficient credits. Redirecting to top-up screen...", android.widget.Toast.LENGTH_LONG).show();
+            
+            // Navigate to CreditsActivity
+            android.content.Intent intent = new android.content.Intent(this, com.cc106.bidhub.CreditsActivity.class);
+            intent.putExtra("USER_EMAIL", getCurrentUserEmail());
+            startActivity(intent);
+            return;
+        }
         
-        // Clear bid input
-        etBidAmount.setText("");
+        // Sufficient balance - proceed with bid
+        try {
+            // Use BiddingEngine to place the bid
+            com.cc106.bidhub.bidding.BiddingEngine biddingEngine = com.cc106.bidhub.bidding.BiddingEngine.getInstance(this);
+            com.cc106.bidhub.bidding.BidResult result = biddingEngine.placeBid(
+                currentItem.getItemId(),
+                userId,
+                getCurrentUserAlias(),
+                bidAmount
+            );
+            
+            if (result.isSuccess()) {
+                android.widget.Toast.makeText(this, "Bid of " + currencyFormat.format(bidAmount) + " placed successfully!", android.widget.Toast.LENGTH_LONG).show();
+                
+                // Update current bid display
+                tvCurrentBid.setText(currencyFormat.format(bidAmount));
+                
+                // Clear bid input
+                etBidAmount.setText("");
+                
+                // Refresh bid history
+                setupBidHistory();
+            } else {
+                android.widget.Toast.makeText(this, "Failed to place bid: " + result.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            }
+        } catch (Exception e) {
+            android.widget.Toast.makeText(this, "Error placing bid: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
+    }
+    
+    private String getCurrentUserId() {
+        try {
+            if (loggedInUserEmail != null && !loggedInUserEmail.isEmpty()) {
+                // Get user ID from database using email
+                DatabaseHelper dbHelper = new DatabaseHelper(this);
+                SQLiteDatabase db = dbHelper.getReadableDatabase();
+                
+                String[] columns = {DatabaseHelper.COLUMN_USER_ID};
+                String selection = DatabaseHelper.COLUMN_USER_EMAIL + " = ?";
+                String[] selectionArgs = {loggedInUserEmail};
+                
+                Cursor cursor = db.query(DatabaseHelper.TABLE_USERS, columns, selection, selectionArgs, null, null, null);
+                
+                if (cursor != null && cursor.moveToFirst()) {
+                    String userId = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_ID));
+                    cursor.close();
+                    return userId;
+                }
+                
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.e("ItemDetailActivity", "Error getting user ID: " + e.getMessage(), e);
+        }
+        
+        // Fallback to test user ID
+        return "test_user_123";
+    }
+    
+    private String getCurrentUserEmail() {
+        if (loggedInUserEmail != null && !loggedInUserEmail.isEmpty()) {
+            return loggedInUserEmail;
+        }
+        
+        // Fallback to test email
+        return "test@example.com";
+    }
+    
+    private String getCurrentUserAlias() {
+        try {
+            if (loggedInUserEmail != null && !loggedInUserEmail.isEmpty()) {
+                // Get user alias from database using email
+                DatabaseHelper dbHelper = new DatabaseHelper(this);
+                SQLiteDatabase db = dbHelper.getReadableDatabase();
+                
+                String[] columns = {DatabaseHelper.COLUMN_USER_ALIAS};
+                String selection = DatabaseHelper.COLUMN_USER_EMAIL + " = ?";
+                String[] selectionArgs = {loggedInUserEmail};
+                
+                Cursor cursor = db.query(DatabaseHelper.TABLE_USERS, columns, selection, selectionArgs, null, null, null);
+                
+                if (cursor != null && cursor.moveToFirst()) {
+                    String alias = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_ALIAS));
+                    cursor.close();
+                    return alias;
+                }
+                
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.e("ItemDetailActivity", "Error getting user alias: " + e.getMessage(), e);
+        }
+        
+        // Fallback to test alias
+        return "TestUser";
     }
     
     private void shareItem() {
@@ -560,6 +920,152 @@ public class ItemDetailActivity extends AppCompatActivity {
             btnFavorite.setImageResource(R.drawable.ic_favorite);
         } catch (Exception e) {
             android.widget.Toast.makeText(this, "Error updating favorites", android.widget.Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    // ==================== REAL-TIME FEATURES ====================
+    
+    /**
+     * Start countdown timer for auction
+     */
+    private void startCountdownTimer() {
+        if (currentItem == null || currentItem.getEndDate() == null) {
+            return;
+        }
+        
+        // Stop existing timer if running
+        stopCountdownTimer();
+        
+        countdownRunnable = new java.lang.Runnable() {
+            @Override
+            public void run() {
+                updateCountdownDisplay();
+                countdownHandler.postDelayed(this, COUNTDOWN_UPDATE_INTERVAL);
+            }
+        };
+        
+        countdownHandler.post(countdownRunnable);
+    }
+    
+    /**
+     * Stop countdown timer
+     */
+    private void stopCountdownTimer() {
+        if (countdownRunnable != null) {
+            countdownHandler.removeCallbacks(countdownRunnable);
+            countdownRunnable = null;
+        }
+    }
+    
+    /**
+     * Update countdown display
+     */
+    private void updateCountdownDisplay() {
+        if (currentItem == null || currentItem.getEndDate() == null) {
+            return;
+        }
+        
+        try {
+            long now = System.currentTimeMillis();
+            long deadlineTime = currentItem.getEndDate().getTime();
+            long diff = deadlineTime - now;
+            
+            if (diff <= 0) {
+                // Auction ended
+                tvTimeLeft.setText("Auction Ended");
+                progressTimeLeft.setProgress(100);
+                stopCountdownTimer();
+                
+                // Disable bidding
+                btnPlaceBid.setEnabled(false);
+                btnPlaceBid.setText("Auction Ended");
+                
+                // Send notification if user was bidding
+                sendAuctionEndedNotification();
+                
+            } else {
+                // Update countdown display
+                String timeLeft = calculateTimeLeft(currentItem.getEndDate());
+                tvTimeLeft.setText(timeLeft);
+                
+                // Update progress
+                int progress = calculateAuctionProgress(currentItem.getEndDate());
+                progressTimeLeft.setProgress(progress);
+                
+                // Check if ending soon (less than 5 minutes)
+                long minutesLeft = diff / (60 * 1000);
+                if (minutesLeft <= 5 && minutesLeft > 0) {
+                    // Send ending soon notification
+                    sendAuctionEndingSoonNotification();
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.e("ItemDetailActivity", "Error updating countdown: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Send auction ending soon notification
+     */
+    private void sendAuctionEndingSoonNotification() {
+        try {
+            if (loggedInUserEmail != null) {
+                com.cc106.bidhub.notifications.BidHubNotificationManager notificationManager = 
+                    com.cc106.bidhub.notifications.BidHubNotificationManager.getInstance(this);
+                
+                long now = System.currentTimeMillis();
+                long deadlineTime = currentItem.getEndDate().getTime();
+                long diff = deadlineTime - now;
+                int minutesLeft = (int) (diff / (60 * 1000));
+                
+                notificationManager.sendAuctionEndingNotification(
+                    loggedInUserEmail,
+                    currentItem.getTitle(),
+                    minutesLeft
+                );
+            }
+        } catch (Exception e) {
+            android.util.Log.e("ItemDetailActivity", "Error sending ending soon notification: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Send auction ended notification
+     */
+    private void sendAuctionEndedNotification() {
+        try {
+            if (loggedInUserEmail != null) {
+                com.cc106.bidhub.notifications.BidHubNotificationManager notificationManager = 
+                    com.cc106.bidhub.notifications.BidHubNotificationManager.getInstance(this);
+                
+                notificationManager.sendSystemNotification(
+                    loggedInUserEmail,
+                    "Auction Ended",
+                    currentItem.getTitle() + " auction has ended"
+                );
+            }
+        } catch (Exception e) {
+            android.util.Log.e("ItemDetailActivity", "Error sending ended notification: " + e.getMessage(), e);
+        }
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopCountdownTimer();
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopCountdownTimer();
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (currentItem != null && currentItem.getEndDate() != null) {
+            startCountdownTimer();
         }
     }
 }

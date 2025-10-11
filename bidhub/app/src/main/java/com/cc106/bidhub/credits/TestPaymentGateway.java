@@ -13,8 +13,7 @@ public class TestPaymentGateway implements PaymentGateway {
     private static final String TAG = "TestPaymentGateway";
     
     public static final String PAYMENT_METHOD_TEST = "test";
-    public static final String PAYMENT_METHOD_GCASH = "gcash";
-    public static final String PAYMENT_METHOD_MAYA = "maya";
+    public static final String PAYMENT_METHOD_STRIPE = "stripe";
     
     @Override
     public void processPayment(String userId, double amount, String currency, String description, PaymentCallback callback) {
@@ -47,8 +46,7 @@ public class TestPaymentGateway implements PaymentGateway {
     @Override
     public boolean isPaymentMethodSupported(String paymentMethod) {
         return PAYMENT_METHOD_TEST.equals(paymentMethod) ||
-               PAYMENT_METHOD_GCASH.equals(paymentMethod) ||
-               PAYMENT_METHOD_MAYA.equals(paymentMethod);
+               PAYMENT_METHOD_STRIPE.equals(paymentMethod);
     }
     
     @Override
