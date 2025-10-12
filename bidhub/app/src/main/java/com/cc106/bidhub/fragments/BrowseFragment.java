@@ -81,9 +81,14 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     
     // Filter chips
     private List<String> activeFilters;
+    private List<String> recentSearches;
+    private List<String> savedSearches;
     
     // View state
     private boolean isGridView = true;
+    private boolean isLoadingMore = false;
+    private int currentPage = 0;
+    private static final int ITEMS_PER_PAGE = 20;
 
     @Nullable
     @Override
@@ -153,6 +158,10 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     }
     
     private void setupSearch() {
+        searchHandler = new Handler(Looper.getMainLooper());
+        recentSearches = new ArrayList<>();
+        savedSearches = new ArrayList<>();
+        
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -167,6 +176,13 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                 // Only search if there's actual text or if we're clearing the search
                 String query = s.toString().trim();
                 if (!query.isEmpty() || before > 0) {
+                    // Show search suggestions if query is not empty
+                    if (query.length() > 0) {
+                        showSearchSuggestions(query);
+                    } else {
+                        hideSearchSuggestions();
+                    }
+                    
                     // Schedule new search
                     searchRunnable = () -> performSearch(query);
                     searchHandler.postDelayed(searchRunnable, SEARCH_DELAY);
@@ -176,6 +192,43 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
             @Override
             public void afterTextChanged(Editable s) {}
         });
+        
+        // Add search focus listener
+        etSearch.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus && etSearch.getText().toString().isEmpty()) {
+                showRecentSearches();
+            } else if (!hasFocus) {
+                hideSearchSuggestions();
+            }
+        });
+    }
+    
+    private void showSearchSuggestions(String query) {
+        // TODO: Implement search suggestions dropdown
+        // This would show a dropdown with matching search terms
+        android.util.Log.d("BrowseFragment", "Showing search suggestions for: " + query);
+    }
+    
+    private void hideSearchSuggestions() {
+        // TODO: Hide search suggestions dropdown
+        android.util.Log.d("BrowseFragment", "Hiding search suggestions");
+    }
+    
+    private void showRecentSearches() {
+        // TODO: Show recent searches dropdown
+        android.util.Log.d("BrowseFragment", "Showing recent searches");
+    }
+    
+    private void addToRecentSearches(String query) {
+        if (query != null && !query.trim().isEmpty()) {
+            recentSearches.remove(query); // Remove if already exists
+            recentSearches.add(0, query); // Add to beginning
+            
+            // Keep only last 10 searches
+            if (recentSearches.size() > 10) {
+                recentSearches = recentSearches.subList(0, 10);
+            }
+        }
     }
     
     private void setupFilter() {
@@ -242,6 +295,9 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     }
     
     private void performSearch(String query) {
+        if (!query.isEmpty()) {
+            addToRecentSearches(query);
+        }
         currentFilter.setQuery(query.isEmpty() ? null : query);
         applyFilters();
     }

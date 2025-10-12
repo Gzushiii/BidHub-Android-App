@@ -109,4 +109,26 @@
     <color name="credit_gold">#FFFFD700</color>
     <color name="credit_gold_light">#FFFFF8DC</color>
     <color name="credit_gold_dark">#FFB8860B</color>
+    
+    <!-- Auction-Specific Colors -->
+    <color name="bid_green">#FF00C851</color>
+    <color name="bid_green_light">#FFE8F5E8</color>
+    <color name="outbid_red">#FFFF4444</color>
+    <color name="outbid_red_light">#FFFFEBEE</color>
+    <color name="winning_gold">#FFFFD700</color>
+    <color name="winning_gold_light">#FFFFF8DC</color>
+    <color name="ending_orange">#FFFF9500</color>
+    <color name="ending_orange_light">#FFFFE0B2</color>
+    
+    <!-- Semantic Colors -->
+    <color name="semantic_success">#FF34C759</color>
+    <color name="semantic_warning">#FFFF9500</color>
+    <color name="semantic_error">#FFFF3B30</color>
+    <color name="semantic_info">#FF007AFF</color>
+    
+    <!-- UI State Colors -->
+    <color name="state_active">#FF007AFF</color>
+    <color name="state_inactive">#FF8E8E93</color>
+    <color name="state_disabled">#FFC7C7CC</color>
+    <color name="state_highlight">#FFE3F2FD</color>
 </resources>

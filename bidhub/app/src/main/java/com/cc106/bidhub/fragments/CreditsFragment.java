@@ -40,6 +40,13 @@ public class CreditsFragment extends Fragment {
     private LinearLayout packagesContainer;
     private Button btnRefreshBalance;
     private Button btnTransactionHistory;
+    
+    // Enhanced UI components
+    private TextView tvCreditUsage;
+    private TextView tvLastTransaction;
+    private LinearLayout layoutPromotionalBanner;
+    private RecyclerView rvTransactionHistory;
+    private List<CreditTransaction> transactionHistory;
 
     @Nullable
     @Override
@@ -71,6 +78,12 @@ public class CreditsFragment extends Fragment {
         
         // Load and display credit information
         loadCreditInformation();
+        
+        // Load credit usage analytics
+        loadCreditUsageAnalytics();
+        
+        // Load recent transactions
+        loadRecentTransactions();
         
         return view;
     }
@@ -251,27 +264,6 @@ public class CreditsFragment extends Fragment {
             });
     }
     
-    private void showTransactionHistory() {
-        List<CreditTransaction> transactions = creditManager.getTransactionHistory(userId);
-        if (transactions.isEmpty()) {
-            ToastHelper.showInfo(getContext(), "No transactions found");
-        } else {
-            StringBuilder history = new StringBuilder("Recent Transactions:\n");
-            int count = Math.min(transactions.size(), 5); // Show last 5 transactions
-            
-            for (int i = 0; i < count; i++) {
-                CreditTransaction transaction = transactions.get(i);
-                String amount = creditManager.formatCurrency(Math.abs(transaction.getAmount()));
-                String sign = transaction.getAmount() > 0 ? "+" : "-";
-                
-                history.append("• ").append(transaction.getType())
-                      .append(": ").append(sign).append(amount)
-                      .append(" (").append(transaction.getStatus()).append(")\n");
-            }
-            
-            ToastHelper.showInfo(getContext(), history.toString());
-        }
-    }
     
     private void addTestButton() {
         if (packagesContainer != null) {
@@ -300,5 +292,122 @@ public class CreditsFragment extends Fragment {
     
     public void updateUserEmail(String email) {
         this.loggedInUserEmail = email;
+    }
+    
+    /**
+     * Load credit usage analytics
+     */
+    private void loadCreditUsageAnalytics() {
+        if (creditManager == null || userId == null) {
+            return;
+        }
+        
+        try {
+            // Get transaction history for analytics
+            List<CreditTransaction> transactions = creditManager.getTransactionHistory(userId);
+            
+            // Calculate usage statistics
+            double totalPurchased = 0;
+            double totalUsed = 0;
+            int purchaseCount = 0;
+            int usageCount = 0;
+            
+            for (CreditTransaction transaction : transactions) {
+                if (transaction.getType().equals(SimpleCreditManager.TRANSACTION_PURCHASE)) {
+                    totalPurchased += Math.abs(transaction.getAmount());
+                    purchaseCount++;
+                } else if (transaction.getType().equals(SimpleCreditManager.TRANSACTION_BID)) {
+                    totalUsed += Math.abs(transaction.getAmount());
+                    usageCount++;
+                }
+            }
+            
+            // Update UI with analytics
+            if (tvCreditUsage != null) {
+                String usageText = String.format("Used %s of %s credits (%d transactions)", 
+                    creditManager.formatCurrency(totalUsed),
+                    creditManager.formatCurrency(totalPurchased),
+                    usageCount);
+                tvCreditUsage.setText(usageText);
+            }
+            
+        } catch (Exception e) {
+            android.util.Log.e("CreditsFragment", "Error loading credit analytics: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Load recent transactions
+     */
+    private void loadRecentTransactions() {
+        if (creditManager == null || userId == null) {
+            return;
+        }
+        
+        try {
+            transactionHistory = creditManager.getTransactionHistory(userId);
+            
+            // Show last transaction info
+            if (!transactionHistory.isEmpty() && tvLastTransaction != null) {
+                CreditTransaction lastTransaction = transactionHistory.get(0);
+                String lastTransactionText = String.format("Last: %s %s on %s",
+                    lastTransaction.getType(),
+                    creditManager.formatCurrency(Math.abs(lastTransaction.getAmount())),
+                    new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(lastTransaction.getCreatedAt())
+                );
+                tvLastTransaction.setText(lastTransactionText);
+            }
+            
+        } catch (Exception e) {
+            android.util.Log.e("CreditsFragment", "Error loading recent transactions: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Show enhanced transaction history dialog
+     */
+    private void showTransactionHistory() {
+        if (transactionHistory == null || transactionHistory.isEmpty()) {
+            ToastHelper.showInfo(getContext(), "No transaction history available");
+            return;
+        }
+        
+        // Create a custom dialog with RecyclerView for transaction history
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getContext());
+        builder.setTitle("Transaction History");
+        
+        // Create RecyclerView for transactions
+        RecyclerView recyclerView = new RecyclerView(getContext());
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        
+        // TODO: Create TransactionAdapter for better display
+        // For now, show simple list
+        StringBuilder historyText = new StringBuilder();
+        for (CreditTransaction transaction : transactionHistory) {
+            historyText.append(String.format("%s: %s %s\n",
+                new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(transaction.getCreatedAt()),
+                transaction.getType(),
+                creditManager.formatCurrency(transaction.getAmount())
+            ));
+        }
+        
+        TextView textView = new TextView(getContext());
+        textView.setText(historyText.toString());
+        textView.setPadding(32, 32, 32, 32);
+        textView.setTextSize(14);
+        
+        builder.setView(textView);
+        builder.setPositiveButton("Close", null);
+        builder.show();
+    }
+    
+    /**
+     * Show promotional banner for credit packages
+     */
+    private void showPromotionalBanner() {
+        if (layoutPromotionalBanner != null) {
+            // TODO: Implement promotional banner with special offers
+            android.util.Log.d("CreditsFragment", "Showing promotional banner");
+        }
     }
 }

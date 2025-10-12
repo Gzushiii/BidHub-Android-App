@@ -47,6 +47,14 @@ public class HomeFragment extends Fragment {
     // Active bids
     private TextView textActiveBids;
     
+    // Quick stats cards
+    private View cardActiveBids, cardWatching, cardWonItems, cardSoldItems;
+    private TextView tvActiveBidsCount, tvWatchingCount, tvWonItemsCount, tvSoldItemsCount;
+    
+    // Recent activity
+    private TextView textRecentActivity;
+    private View layoutRecentActivity;
+    
     // Logout button
     private Button buttonLogout;
     
@@ -79,6 +87,12 @@ public class HomeFragment extends Fragment {
             
             // Load user data and display it
             loadUserData();
+            
+            // Load quick stats
+            loadQuickStats();
+            
+            // Load recent activity
+            loadRecentActivity();
             
             // Set up click listeners
             setupClickListeners();
@@ -395,5 +409,139 @@ public class HomeFragment extends Fragment {
     public void updateUserEmail(String email) {
         this.loggedInUserEmail = email;
         loadUserData();
+    }
+    
+    /**
+     * Load quick stats for dashboard cards
+     */
+    private void loadQuickStats() {
+        if (dbHelper == null || loggedInUserEmail == null) {
+            return;
+        }
+        
+        try {
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
+            
+            // Get user ID
+            String userId = getCurrentUserId();
+            if (userId == null) {
+                return;
+            }
+            
+            // Count active bids
+            int activeBids = 0;
+            Cursor bidsCursor = db.rawQuery(
+                "SELECT COUNT(*) FROM bids WHERE bidder_id = ? AND status = 'ACTIVE'",
+                new String[]{userId}
+            );
+            if (bidsCursor.moveToFirst()) {
+                activeBids = bidsCursor.getInt(0);
+            }
+            bidsCursor.close();
+            
+            // Count watching items (placeholder - would need watchlist table)
+            int watchingItems = 0;
+            
+            // Count won items
+            int wonItems = 0;
+            Cursor wonCursor = db.rawQuery(
+                "SELECT COUNT(*) FROM bids WHERE bidder_id = ? AND status = 'WINNING'",
+                new String[]{userId}
+            );
+            if (wonCursor.moveToFirst()) {
+                wonItems = wonCursor.getInt(0);
+            }
+            wonCursor.close();
+            
+            // Count sold items
+            int soldItems = 0;
+            Cursor soldCursor = db.rawQuery(
+                "SELECT COUNT(*) FROM items WHERE seller_id = ? AND status = 'ENDED'",
+                new String[]{userId}
+            );
+            if (soldCursor.moveToFirst()) {
+                soldItems = soldCursor.getInt(0);
+            }
+            soldCursor.close();
+            
+            // Update UI if views exist
+            if (tvActiveBidsCount != null) {
+                tvActiveBidsCount.setText(String.valueOf(activeBids));
+            }
+            if (tvWatchingCount != null) {
+                tvWatchingCount.setText(String.valueOf(watchingItems));
+            }
+            if (tvWonItemsCount != null) {
+                tvWonItemsCount.setText(String.valueOf(wonItems));
+            }
+            if (tvSoldItemsCount != null) {
+                tvSoldItemsCount.setText(String.valueOf(soldItems));
+            }
+            
+        } catch (Exception e) {
+            android.util.Log.e("HomeFragment", "Error loading quick stats: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Load recent activity for dashboard
+     */
+    private void loadRecentActivity() {
+        if (dbHelper == null || loggedInUserEmail == null) {
+            return;
+        }
+        
+        try {
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
+            String userId = getCurrentUserId();
+            if (userId == null) {
+                return;
+            }
+            
+            // Get recent bids
+            Cursor recentBidsCursor = db.rawQuery(
+                "SELECT b.amount, i.title, b.placed_at FROM bids b " +
+                "JOIN items i ON b.item_id = i.id " +
+                "WHERE b.bidder_id = ? " +
+                "ORDER BY b.placed_at DESC LIMIT 5",
+                new String[]{userId}
+            );
+            
+            // TODO: Display recent activity in layoutRecentActivity
+            // This would show recent bids, won items, etc.
+            
+            recentBidsCursor.close();
+            
+        } catch (Exception e) {
+            android.util.Log.e("HomeFragment", "Error loading recent activity: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Get current user ID from email
+     */
+    private String getCurrentUserId() {
+        if (dbHelper == null || loggedInUserEmail == null) {
+            return null;
+        }
+        
+        try {
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
+            Cursor cursor = db.rawQuery(
+                "SELECT id FROM users WHERE email = ?",
+                new String[]{loggedInUserEmail}
+            );
+            
+            String userId = null;
+            if (cursor.moveToFirst()) {
+                userId = cursor.getString(0);
+            }
+            cursor.close();
+            return userId;
+            
+        } catch (Exception e) {
+            android.util.Log.e("HomeFragment", "Error getting user ID: " + e.getMessage(), e);
+            return null;
+        }
     }
 }

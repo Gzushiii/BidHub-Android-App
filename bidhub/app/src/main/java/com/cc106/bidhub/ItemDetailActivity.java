@@ -53,6 +53,15 @@ public class ItemDetailActivity extends AppCompatActivity {
     private android.os.Handler countdownHandler;
     private java.lang.Runnable countdownRunnable;
     private static final int COUNTDOWN_UPDATE_INTERVAL = 1000; // 1 second
+    private boolean isAuctionEndingSoon = false;
+    private boolean isAuctionEnded = false;
+    
+    // UI Enhancement features
+    private LinearLayout layoutBidIncrements;
+    private Button btnIncrement10, btnIncrement50, btnIncrement100;
+    private TextView tvWinningStatus;
+    private LinearLayout layoutSellerInfo;
+    private TextView tvSellerReviews;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -940,7 +949,9 @@ public class ItemDetailActivity extends AppCompatActivity {
             @Override
             public void run() {
                 updateCountdownDisplay();
-                countdownHandler.postDelayed(this, COUNTDOWN_UPDATE_INTERVAL);
+                if (!isAuctionEnded) {
+                    countdownHandler.postDelayed(this, COUNTDOWN_UPDATE_INTERVAL);
+                }
             }
         };
         
@@ -972,13 +983,16 @@ public class ItemDetailActivity extends AppCompatActivity {
             
             if (diff <= 0) {
                 // Auction ended
+                isAuctionEnded = true;
                 tvTimeLeft.setText("Auction Ended");
+                tvTimeLeft.setTextColor(getResources().getColor(R.color.semantic_error));
                 progressTimeLeft.setProgress(100);
                 stopCountdownTimer();
                 
                 // Disable bidding
                 btnPlaceBid.setEnabled(false);
                 btnPlaceBid.setText("Auction Ended");
+                btnPlaceBid.setBackgroundColor(getResources().getColor(R.color.state_disabled));
                 
                 // Send notification if user was bidding
                 sendAuctionEndedNotification();
@@ -994,9 +1008,20 @@ public class ItemDetailActivity extends AppCompatActivity {
                 
                 // Check if ending soon (less than 5 minutes)
                 long minutesLeft = diff / (60 * 1000);
-                if (minutesLeft <= 5 && minutesLeft > 0) {
+                if (minutesLeft <= 5 && minutesLeft > 0 && !isAuctionEndingSoon) {
+                    isAuctionEndingSoon = true;
+                    // Visual indicator for ending soon
+                    tvTimeLeft.setTextColor(getResources().getColor(R.color.ending_orange));
+                    tvTimeLeft.setText("⚠️ " + timeLeft + " (Ending Soon!)");
+                    progressTimeLeft.setProgressTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.ending_orange)));
+                    
                     // Send ending soon notification
                     sendAuctionEndingSoonNotification();
+                } else if (minutesLeft > 5) {
+                    // Reset to normal state
+                    isAuctionEndingSoon = false;
+                    tvTimeLeft.setTextColor(getResources().getColor(R.color.text_primary));
+                    progressTimeLeft.setProgressTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.primary)));
                 }
             }
         } catch (Exception e) {
