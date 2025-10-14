@@ -21,7 +21,7 @@ services:
       - key: DB_PASSWORD
         value: ${DB_PASSWORD}
       - key: DB_NAME
-        value: bidhub_db
+        value: defaultdb
       - key: DB_SSL
         value: "true"
       - key: JWT_SECRET
