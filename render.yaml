@@ -26,6 +26,10 @@ services:
         value: "true"
       - key: JWT_SECRET
         value: ${JWT_SECRET}
+      - key: NO_PROXY
+        value: bidhub-bidhub.b.aivencloud.com
+      - key: no_proxy
+        value: bidhub-bidhub.b.aivencloud.com
     healthCheckPath: /api/health
     autoDeploy: true
     branch: listmng
