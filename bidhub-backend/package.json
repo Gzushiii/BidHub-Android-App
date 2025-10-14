@@ -2,7 +2,7 @@
   "name": "bidhub-backend",
   "version": "1.0.0",
   "description": "BidHub Backend API - Node.js + Express + MySQL",
-  "main": "api/index.js",
+  "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
