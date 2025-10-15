@@ -39,6 +39,7 @@ import com.cc106.bidhub.items.ItemData;
 import com.cc106.bidhub.items.ItemManager;
 import com.cc106.bidhub.items.ItemStatus;
 import com.cc106.bidhub.toast.ToastHelper;
+import com.cc106.bidhub.MainActivity;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
@@ -861,6 +862,8 @@ public class PostFragment extends Fragment implements
                 if (success) {
                     ToastHelper.showSuccess(getContext(), "Item posted successfully!");
                     clearForm();
+                    // Navigate to Browse tab
+                    navigateToBrowseTab();
                 } else {
                     ToastHelper.showError(getContext(), "Failed to post item. Please check all required fields and try again.");
                 }
@@ -1345,6 +1348,20 @@ public class PostFragment extends Fragment implements
             }
         } catch (Exception e) {
             // Ignore cleanup errors
+        }
+    }
+    
+    /**
+     * Navigate to Browse tab after successful item posting
+     */
+    private void navigateToBrowseTab() {
+        try {
+            if (getActivity() instanceof MainActivity) {
+                MainActivity mainActivity = (MainActivity) getActivity();
+                mainActivity.switchToBrowseTab();
+            }
+        } catch (Exception e) {
+            android.util.Log.e("PostFragment", "Error navigating to browse tab", e);
         }
     }
 }

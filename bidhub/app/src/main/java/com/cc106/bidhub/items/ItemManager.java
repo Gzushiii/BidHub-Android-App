@@ -123,6 +123,12 @@ public class ItemManager {
                         item.setTags(new ArrayList<>(itemData.getTags()));
                     }
                     
+                    // Add image paths
+                    if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
+                        item.setImagePaths(new ArrayList<>(itemData.getImagePaths()));
+                        itemImages.put(item.getItemId(), new ArrayList<>(itemData.getImagePaths()));
+                    }
+                    
                     // Store item locally
                     items.put(item.getItemId(), item);
                     
@@ -174,6 +180,12 @@ public class ItemManager {
             // Add tags
             if (itemData.getTags() != null) {
                 item.setTags(new ArrayList<>(itemData.getTags()));
+            }
+            
+            // Add image paths
+            if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
+                item.setImagePaths(new ArrayList<>(itemData.getImagePaths()));
+                itemImages.put(item.getItemId(), new ArrayList<>(itemData.getImagePaths()));
             }
             
             // Store item
@@ -808,6 +820,17 @@ public class ItemManager {
     public List<Item> getAllActiveItems() {
         return items.values().stream()
                 .filter(item -> item.getStatus() == ItemStatus.ACTIVE)
+                .sorted(Comparator.comparing(Item::getCreatedAt).reversed())
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get all browsable items (both ACTIVE and DRAFT)
+     */
+    public List<Item> getAllBrowsableItems() {
+        return items.values().stream()
+                .filter(item -> item.getStatus() == ItemStatus.ACTIVE || 
+                               item.getStatus() == ItemStatus.DRAFT)
                 .sorted(Comparator.comparing(Item::getCreatedAt).reversed())
                 .collect(Collectors.toList());
     }

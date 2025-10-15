@@ -331,7 +331,7 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         
         // Load items on background thread
         new Thread(() -> {
-            List<Item> items = itemManager.getAllActiveItems();
+            List<Item> items = itemManager.getAllBrowsableItems();
             
             // Update UI on main thread - check if fragment is still attached
             if (getActivity() != null) {

@@ -108,6 +108,14 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             holder.trendingBadge.setVisibility(View.GONE);
         }
         
+        // Set DRAFT status indicator
+        if (item.getStatus() != null && item.getStatus().toString().equals("DRAFT")) {
+            holder.draftBadge.setVisibility(View.VISIBLE);
+            holder.draftBadge.setText("PENDING UPLOAD");
+        } else {
+            holder.draftBadge.setVisibility(View.GONE);
+        }
+        
             // Set click listener with error handling
             holder.itemView.setOnClickListener(v -> {
                 try {
@@ -158,6 +166,7 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
         TextView timeRemainingText;
         TextView featuredBadge;
         TextView trendingBadge;
+        TextView draftBadge;
         
         ItemViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -169,6 +178,7 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             timeRemainingText = itemView.findViewById(R.id.tv_time_remaining);
             featuredBadge = itemView.findViewById(R.id.tv_featured_badge);
             trendingBadge = itemView.findViewById(R.id.tv_trending_badge);
+            draftBadge = itemView.findViewById(R.id.tv_draft_badge);
         }
     }
 }

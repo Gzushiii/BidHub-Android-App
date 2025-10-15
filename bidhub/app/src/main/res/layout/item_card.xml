@@ -67,6 +67,20 @@
                     android:paddingVertical="4dp"
                     android:visibility="gone" />
 
+                <TextView
+                    android:id="@+id/tv_draft_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PENDING UPLOAD"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:background="@drawable/badge_background"
+                    android:backgroundTint="@color/warning_yellow"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:visibility="gone" />
+
             </LinearLayout>
 
             <!-- Time Remaining -->
