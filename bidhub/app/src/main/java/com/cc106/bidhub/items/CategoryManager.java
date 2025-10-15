@@ -45,6 +45,7 @@ public class CategoryManager {
         createMainCategory("jobs", "Jobs", "Employment opportunities");
         createMainCategory("commercial_industrial", "Commercial & Industrial", "Business equipment and supplies");
         createMainCategory("free_items", "Free Items", "Items given away for free");
+        createMainCategory("others", "Others", "Items that don't fit into specific categories");
         
         // Fashion Subcategories
         addSubCategory("fashion", "womens_apparel", "Women's Apparel");

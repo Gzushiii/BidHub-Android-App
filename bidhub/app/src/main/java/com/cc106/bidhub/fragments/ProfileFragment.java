@@ -30,7 +30,7 @@ import java.util.Locale;
 public class ProfileFragment extends Fragment {
 
     private TextView textViewWelcome, textViewCredits, textViewAlias, textViewEmail, textViewUsername;
-    private Button buttonLogout, buttonRegenerateAlias, buttonViewBids, buttonTransactionHistory, buttonEditProfile, buttonSettings;
+    private Button buttonLogout, buttonRegenerateAlias, buttonViewBids, buttonTransactionHistory, buttonEditProfile, buttonSettings, buttonFAQ;
     private ImageView imageViewProfilePicture;
     private DatabaseHelper dbHelper;
     private String loggedInUserEmail;
@@ -60,6 +60,7 @@ public class ProfileFragment extends Fragment {
         buttonTransactionHistory = view.findViewById(R.id.buttonTransactionHistory);
         buttonEditProfile = view.findViewById(R.id.buttonEditProfile);
         buttonSettings = view.findViewById(R.id.buttonSettings);
+        buttonFAQ = view.findViewById(R.id.buttonFAQ);
         imageViewProfilePicture = view.findViewById(R.id.imageViewProfilePicture);
         
         // Load user data and display it
@@ -113,6 +114,13 @@ public class ProfileFragment extends Fragment {
             buttonSettings.setOnClickListener(v -> {
                 Intent intent = new Intent(getActivity(), ProfileSettingsActivity.class);
                 intent.putExtra("USER_EMAIL", loggedInUserEmail);
+                startActivity(intent);
+            });
+        }
+        
+        if (buttonFAQ != null) {
+            buttonFAQ.setOnClickListener(v -> {
+                Intent intent = new Intent(getActivity(), FAQActivity.class);
                 startActivity(intent);
             });
         }

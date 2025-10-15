@@ -72,6 +72,8 @@ public class PostFragment extends Fragment implements
     private AutoCompleteTextView actvAuctionDuration;
     private TextInputEditText etLocation;
     private TextInputEditText etShippingInfo;
+    private TextInputEditText etDonationReason;
+    private TextInputLayout layoutDonationReason;
     // Tags functionality removed from new layout
     // private TextInputEditText etTags;
     private AutoCompleteTextView actvSize;
@@ -92,8 +94,6 @@ public class PostFragment extends Fragment implements
     // Checkboxes
     private CheckBox cbQuantity;
     private CheckBox cbContact;
-    private CheckBox cbMeetup;
-    private CheckBox cbDelivery;
     
     // Layouts
     private LinearLayout layoutOptionalDetails;
@@ -178,6 +178,8 @@ public class PostFragment extends Fragment implements
         actvAuctionDuration = view.findViewById(R.id.actv_auction_duration);
         etLocation = view.findViewById(R.id.et_location);
         etShippingInfo = view.findViewById(R.id.et_shipping_info);
+        etDonationReason = view.findViewById(R.id.et_donation_reason);
+        layoutDonationReason = view.findViewById(R.id.layout_donation_reason);
         actvSize = view.findViewById(R.id.actv_size);
         actvFeatures = view.findViewById(R.id.actv_features);
         actvOrigin = view.findViewById(R.id.actv_origin);
@@ -198,8 +200,6 @@ public class PostFragment extends Fragment implements
         // Checkboxes
         cbQuantity = view.findViewById(R.id.cb_quantity);
         cbContact = view.findViewById(R.id.cb_contact);
-        cbMeetup = view.findViewById(R.id.cb_meetup);
-        cbDelivery = view.findViewById(R.id.cb_delivery);
         
         // Layouts
         layoutOptionalDetails = view.findViewById(R.id.layout_optional_details);
@@ -451,15 +451,20 @@ public class PostFragment extends Fragment implements
                     hideSizeDropdown();
                 }
                 
-                // Get subcategories for the selected main category
-                subcategories = categoryManager.getSubCategories(selectedMainCategoryId);
-                
-                if (subcategories != null && !subcategories.isEmpty()) {
-                    // Show subcategory dropdown with subcategories
-                    showSubcategoryDropdown(subcategories);
-                } else {
-                    // No subcategories available, hide the dropdown
+                // Handle "Others" category - no subcategories
+                if (selectedCategoryName.equals("Others")) {
                     hideSubcategoryDropdown();
+                } else {
+                    // Get subcategories for the selected main category
+                    subcategories = categoryManager.getSubCategories(selectedMainCategoryId);
+                    
+                    if (subcategories != null && !subcategories.isEmpty()) {
+                        // Show subcategory dropdown with subcategories
+                        showSubcategoryDropdown(subcategories);
+                    } else {
+                        // No subcategories available, hide the dropdown
+                        hideSubcategoryDropdown();
+                    }
                 }
             }
         } catch (Exception e) {
@@ -581,11 +586,19 @@ public class PostFragment extends Fragment implements
             btnForSale.setTextColor(getResources().getColor(R.color.white));
             btnForFree.setBackgroundResource(R.drawable.button_secondary);
             btnForFree.setTextColor(getResources().getColor(R.color.text_primary));
+            // Hide donation reason field for sale items
+            if (layoutDonationReason != null) {
+                layoutDonationReason.setVisibility(View.GONE);
+            }
         } else {
             btnForSale.setBackgroundResource(R.drawable.button_secondary);
             btnForSale.setTextColor(getResources().getColor(R.color.text_primary));
             btnForFree.setBackgroundResource(R.drawable.button_primary);
             btnForFree.setTextColor(getResources().getColor(R.color.white));
+            // Show donation reason field for donation items
+            if (layoutDonationReason != null) {
+                layoutDonationReason.setVisibility(View.VISIBLE);
+            }
         }
     }
     
@@ -909,7 +922,18 @@ public class PostFragment extends Fragment implements
                 return null;
             }
         } else {
-            itemData.setStartingPrice(0.0); // Free item
+            itemData.setStartingPrice(0.0); // Donation item
+            // Store donation reason in metadata
+            String donationReason = etDonationReason.getText().toString().trim();
+            if (!TextUtils.isEmpty(donationReason)) {
+                String metadata = itemData.getMetadata();
+                if (TextUtils.isEmpty(metadata)) {
+                    metadata = "Donation Reason: " + donationReason;
+                } else {
+                    metadata += ", Donation Reason: " + donationReason;
+                }
+                itemData.setMetadata(metadata);
+            }
         }
         
         // Additional fields
@@ -946,27 +970,6 @@ public class PostFragment extends Fragment implements
         itemData.setImagePaths(new ArrayList<>(selectedImages));
         itemData.setTags(new ArrayList<>(selectedTags));
         
-        // Delivery options
-        StringBuilder deliveryOptions = new StringBuilder();
-        if (cbMeetup != null && cbMeetup.isChecked()) {
-            deliveryOptions.append("Meet-up");
-        }
-        if (cbDelivery != null && cbDelivery.isChecked()) {
-            if (deliveryOptions.length() > 0) {
-                deliveryOptions.append(", ");
-            }
-            deliveryOptions.append("Mailing & Delivery");
-        }
-        
-        if (deliveryOptions.length() > 0) {
-            String metadata = itemData.getMetadata();
-            if (TextUtils.isEmpty(metadata)) {
-                metadata = "Delivery: " + deliveryOptions.toString();
-            } else {
-                metadata += ", Delivery: " + deliveryOptions.toString();
-            }
-            itemData.setMetadata(metadata);
-        }
         
         // Set default auction duration (7 days)
         setAuctionDuration(itemData);
@@ -999,6 +1002,21 @@ public class PostFragment extends Fragment implements
             ToastHelper.showError(getContext(), "Category is required");
             actvCategory.requestFocus();
             return false;
+        }
+        
+        // Validate donation reason for donation items
+        if (!isForSale) {
+            String donationReason = etDonationReason.getText().toString().trim();
+            if (TextUtils.isEmpty(donationReason)) {
+                ToastHelper.showError(getContext(), "Donation reason is required");
+                etDonationReason.requestFocus();
+                return false;
+            }
+            if (donationReason.length() < 10) {
+                ToastHelper.showError(getContext(), "Please provide a more detailed donation reason (at least 10 characters)");
+                etDonationReason.requestFocus();
+                return false;
+            }
         }
         
         // Validate price for sale items
@@ -1097,12 +1115,11 @@ public class PostFragment extends Fragment implements
             return false;
         }
         
-        // Validate delivery options
-        if (cbMeetup != null && cbDelivery != null) {
-            if (!cbMeetup.isChecked() && !cbDelivery.isChecked()) {
-                ToastHelper.showError(getContext(), "Please select at least one delivery option");
-                return false;
-            }
+        
+        // Validate minimum 1 image
+        if (selectedImages == null || selectedImages.isEmpty()) {
+            ToastHelper.showError(getContext(), "At least 1 image is required");
+            return false;
         }
         
         // Origin field is optional - no validation needed
@@ -1181,6 +1198,7 @@ public class PostFragment extends Fragment implements
         actvAuctionDuration.setText("7 Days");
         etLocation.setText("");
         etShippingInfo.setText("");
+        etDonationReason.setText("");
         actvSize.setText("Choose");
         actvFeatures.setText("Choose");
         actvOrigin.setText("Choose");

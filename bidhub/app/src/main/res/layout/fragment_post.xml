@@ -267,7 +267,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="For Free"
+                        android:text="Donation"
                 android:textSize="14sp"
                         android:background="@drawable/button_secondary"
                         android:textColor="@color/text_primary" />
@@ -306,6 +306,28 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="numberDecimal" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Donation Reason Input (initially hidden) -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_donation_reason"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Donation Reason (Required)"
+                    app:boxStrokeColor="@color/border_light"
+                    app:hintTextColor="@color/text_secondary"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_donation_reason"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textCapSentences|textMultiLine"
+                        android:maxLength="200"
+                        android:minLines="2"
+                        android:maxLines="3" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -782,68 +804,6 @@
 
                     </LinearLayout>
 
-                    <!-- Delivery Options -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginBottom="16dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Delivery Options"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_primary"
-                            android:layout_marginBottom="8dp" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginBottom="8dp">
-
-                            <CheckBox
-                                android:id="@+id/cb_meetup"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="12dp" />
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Meet-up"
-                                android:textSize="14sp"
-                                android:textColor="@color/text_primary" />
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <CheckBox
-                                android:id="@+id/cb_delivery"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="12dp" />
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Mailing &amp; Delivery"
-                                android:textSize="14sp"
-                                android:textColor="@color/text_primary" />
-
-                        </LinearLayout>
-
-                    </LinearLayout>
 
                 </LinearLayout>
 

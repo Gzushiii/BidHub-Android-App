@@ -88,7 +88,68 @@ public class ItemManager {
                 return false;
             }
             
-            // Create item
+            // Try to create item via backend API first
+            try {
+                com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(context);
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.createItem(itemData, sellerId);
+                
+                if (response.isSuccess()) {
+                    Log.i(TAG, "Item created successfully via backend API");
+                    
+                    // Also store locally for offline access
+                    Item item = new Item();
+                    item.setItemId(UUID.randomUUID().toString());
+                    item.setTitle(itemData.getTitle());
+                    item.setDescription(itemData.getDescription());
+                    item.setStartingPrice(itemData.getStartingPrice());
+                    item.setCurrentPrice(itemData.getStartingPrice());
+                    item.setBuyNowPrice(itemData.getBuyNowPrice());
+                    item.setCurrency(itemData.getCurrency());
+                    item.setSellerId(sellerId);
+                    item.setCategoryId(itemData.getCategoryId());
+                    item.setCondition(itemData.getCondition());
+                    item.setLocation(itemData.getLocation());
+                    item.setShippingInfo(itemData.getShippingInfo());
+                    item.setStartDate(itemData.getStartDate());
+                    item.setEndDate(itemData.getEndDate());
+                    item.setNotes(itemData.getNotes());
+                    item.setMetadata(itemData.getMetadata());
+                    item.setStatus(ItemStatus.ACTIVE); // Mark as active since it was posted to backend
+                    item.setCreatedAt(new Date());
+                    item.setUpdatedAt(new Date());
+                    
+                    // Add tags
+                    if (itemData.getTags() != null) {
+                        item.setTags(new ArrayList<>(itemData.getTags()));
+                    }
+                    
+                    // Store item locally
+                    items.put(item.getItemId(), item);
+                    
+                    // Update user items
+                    userItems.computeIfAbsent(sellerId, k -> new ArrayList<>()).add(item.getItemId());
+                    
+                    // Update category items
+                    if (itemData.getCategoryId() != null) {
+                        categoryItems.computeIfAbsent(itemData.getCategoryId(), k -> new ArrayList<>()).add(item.getItemId());
+                    }
+                    
+                    // Initialize counters
+                    itemViewCounts.put(item.getItemId(), 0);
+                    itemBidCounts.put(item.getItemId(), 0);
+                    
+                    Log.i(TAG, "Item created successfully: " + item.getItemId());
+                    return true;
+                } else {
+                    Log.e(TAG, "Backend API error: " + response.getMessage());
+                    // Fall back to local storage only
+                    Log.w(TAG, "Falling back to local storage only");
+                }
+            } catch (Exception apiException) {
+                Log.e(TAG, "Backend API call failed, falling back to local storage", apiException);
+            }
+            
+            // Fallback: Create item locally only
             Item item = new Item();
             item.setItemId(UUID.randomUUID().toString());
             item.setTitle(itemData.getTitle());
@@ -106,7 +167,7 @@ public class ItemManager {
             item.setEndDate(itemData.getEndDate());
             item.setNotes(itemData.getNotes());
             item.setMetadata(itemData.getMetadata());
-            item.setStatus(ItemStatus.DRAFT);
+            item.setStatus(ItemStatus.DRAFT); // Mark as draft since backend failed
             item.setCreatedAt(new Date());
             item.setUpdatedAt(new Date());
             
@@ -130,7 +191,7 @@ public class ItemManager {
             itemViewCounts.put(item.getItemId(), 0);
             itemBidCounts.put(item.getItemId(), 0);
             
-            Log.i(TAG, "Item created successfully: " + item.getItemId());
+            Log.i(TAG, "Item created locally: " + item.getItemId());
             return true;
             
         } catch (Exception e) {

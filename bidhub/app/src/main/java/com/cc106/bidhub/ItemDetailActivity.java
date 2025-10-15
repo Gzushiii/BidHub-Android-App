@@ -259,9 +259,33 @@ public class ItemDetailActivity extends AppCompatActivity {
         btnBuyNow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Navigate to buy now flow
-                Intent intent = new Intent(ItemDetailActivity.this, PaymentConfirmationActivity.class);
-                startActivity(intent);
+                // Check if item has buy now price
+                if (currentItem == null || currentItem.getBuyNowPrice() == null || currentItem.getBuyNowPrice() <= 0) {
+                    ToastHelper.showError(ItemDetailActivity.this, "Buy Now option not available for this item");
+                    return;
+                }
+                
+                // Check if user is logged in
+                String userId = getCurrentUserId();
+                if (userId == null) {
+                    ToastHelper.showError(ItemDetailActivity.this, "Please log in to purchase this item");
+                    return;
+                }
+                
+                // Check if user is trying to buy their own item
+                if (userId.equals(currentItem.getSellerId())) {
+                    ToastHelper.showError(ItemDetailActivity.this, "You cannot buy your own item");
+                    return;
+                }
+                
+                // Check if item is still available
+                if (!currentItem.isAvailableForBidding()) {
+                    ToastHelper.showError(ItemDetailActivity.this, "This item is no longer available for purchase");
+                    return;
+                }
+                
+                // Show buy now confirmation dialog
+                showBuyNowConfirmationDialog();
             }
         });
     }
@@ -1091,6 +1115,113 @@ public class ItemDetailActivity extends AppCompatActivity {
         super.onResume();
         if (currentItem != null && currentItem.getEndDate() != null) {
             startCountdownTimer();
+        }
+    }
+    
+    private void showBuyNowConfirmationDialog() {
+        if (currentItem == null) {
+            ToastHelper.showError(this, "Item information not available");
+            return;
+        }
+        
+        // Check user's credit balance
+        String userId = getCurrentUserId();
+        double userBalance = creditManager.getCreditBalance(userId);
+        double buyNowPrice = currentItem.getBuyNowPrice();
+        
+        if (userBalance < buyNowPrice) {
+            // Insufficient balance - redirect to credits screen
+            ToastHelper.showError(this, "Insufficient credits. Redirecting to top-up screen...");
+            
+            Intent intent = new Intent(this, com.cc106.bidhub.CreditsActivity.class);
+            intent.putExtra("USER_EMAIL", getCurrentUserEmail());
+            startActivity(intent);
+            return;
+        }
+        
+        // Create and show buy now confirmation dialog
+        Dialog buyNowDialog = new Dialog(this);
+        buyNowDialog.setContentView(R.layout.dialog_buy_now_confirmation);
+        buyNowDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        
+        // Get dialog views
+        TextView tvItemName = buyNowDialog.findViewById(R.id.tv_item_name);
+        TextView tvBuyNowPrice = buyNowDialog.findViewById(R.id.tv_buy_now_price);
+        TextView tvCreditCost = buyNowDialog.findViewById(R.id.tv_credit_cost);
+        TextView tvRemainingBalance = buyNowDialog.findViewById(R.id.tv_remaining_balance);
+        Button btnConfirmPurchase = buyNowDialog.findViewById(R.id.btn_confirm_purchase);
+        Button btnCancelPurchase = buyNowDialog.findViewById(R.id.btn_cancel_purchase);
+        
+        // Set dialog content
+        tvItemName.setText(currentItem.getTitle());
+        tvBuyNowPrice.setText(currencyFormat.format(buyNowPrice));
+        tvCreditCost.setText(currencyFormat.format(buyNowPrice));
+        tvRemainingBalance.setText(currencyFormat.format(userBalance - buyNowPrice));
+        
+        // Set click listeners
+        btnConfirmPurchase.setOnClickListener(v -> {
+            buyNowDialog.dismiss();
+            processBuyNow();
+        });
+        
+        btnCancelPurchase.setOnClickListener(v -> buyNowDialog.dismiss());
+        
+        buyNowDialog.show();
+    }
+    
+    private void processBuyNow() {
+        if (currentItem == null) {
+            ToastHelper.showError(this, "Item information not available");
+            return;
+        }
+        
+        String userId = getCurrentUserId();
+        double buyNowPrice = currentItem.getBuyNowPrice();
+        
+        try {
+            // Deduct credits
+            boolean success = creditManager.deductCredits(userId, buyNowPrice, "Buy Now: " + currentItem.getTitle());
+            
+            if (success) {
+                // Update item status to sold
+                currentItem.setStatus(com.cc106.bidhub.items.ItemStatus.SOLD);
+                currentItem.setCurrentPrice(buyNowPrice);
+                currentItem.setUpdatedAt(new java.util.Date());
+                
+                // Update UI
+                updateItemStatusDisplay();
+                
+                // Show success message
+                ToastHelper.showSuccess(this, "Purchase successful! You have bought this item.");
+                
+                // Navigate to payment confirmation
+                Intent intent = new Intent(this, com.cc106.bidhub.PaymentConfirmationActivity.class);
+                intent.putExtra("ITEM_TITLE", currentItem.getTitle());
+                intent.putExtra("PURCHASE_PRICE", buyNowPrice);
+                intent.putExtra("USER_EMAIL", getCurrentUserEmail());
+                startActivity(intent);
+                
+            } else {
+                ToastHelper.showError(this, "Failed to process purchase. Please try again.");
+            }
+            
+        } catch (Exception e) {
+            android.util.Log.e("ItemDetailActivity", "Error processing buy now: " + e.getMessage(), e);
+            ToastHelper.showError(this, "Error processing purchase: " + e.getMessage());
+        }
+    }
+    
+    private void updateItemStatusDisplay() {
+        // Update button states
+        btnPlaceBid.setEnabled(false);
+        btnPlaceBid.setText("Item Sold");
+        btnBuyNow.setEnabled(false);
+        btnBuyNow.setText("Item Sold");
+        
+        // Update status text if available
+        if (tvItemStatus != null) {
+            tvItemStatus.setText("SOLD");
+            tvItemStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
         }
     }
 }
