@@ -18,11 +18,12 @@ public class FAQAdapter extends RecyclerView.Adapter<FAQAdapter.FAQViewHolder> {
         this.faqItems = faqItems;
     }
     
+    
     @NonNull
     @Override
     public FAQViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_faq, parent, false);
-        return new FAQViewHolder(view);
+        return new FAQViewHolder(view, this);
     }
     
     @Override
@@ -36,13 +37,15 @@ public class FAQAdapter extends RecyclerView.Adapter<FAQAdapter.FAQViewHolder> {
         return faqItems.size();
     }
     
-    public static class FAQViewHolder extends RecyclerView.ViewHolder {
+    public class FAQViewHolder extends RecyclerView.ViewHolder {
         private TextView tvQuestion;
         private TextView tvAnswer;
         private TextView tvExpandIcon;
+        private FAQAdapter adapter;
         
-        public FAQViewHolder(@NonNull View itemView) {
+        public FAQViewHolder(@NonNull View itemView, FAQAdapter adapter) {
             super(itemView);
+            this.adapter = adapter;
             tvQuestion = itemView.findViewById(R.id.tv_question);
             tvAnswer = itemView.findViewById(R.id.tv_answer);
             tvExpandIcon = itemView.findViewById(R.id.tv_expand_icon);
@@ -64,7 +67,7 @@ public class FAQAdapter extends RecyclerView.Adapter<FAQAdapter.FAQViewHolder> {
             // Set click listener to toggle expansion
             itemView.setOnClickListener(v -> {
                 faqItem.toggleExpanded();
-                notifyItemChanged(getAdapterPosition());
+                adapter.notifyItemChanged(getAdapterPosition());
             });
         }
     }

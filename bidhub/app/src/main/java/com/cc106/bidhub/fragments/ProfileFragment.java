@@ -24,6 +24,7 @@ import com.cc106.bidhub.LoginActivity;
 import com.cc106.bidhub.ProfileEditActivity;
 import com.cc106.bidhub.ProfileSettingsActivity;
 import com.cc106.bidhub.R;
+import com.cc106.bidhub.FAQActivity;
 
 import java.util.Locale;
 

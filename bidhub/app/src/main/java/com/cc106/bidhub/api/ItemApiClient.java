@@ -81,7 +81,7 @@ public class ItemApiClient {
             }
             
             // Add buy now price if available
-            if (itemData.getBuyNowPrice() != null && itemData.getBuyNowPrice() > 0) {
+            if (itemData.getBuyNowPrice() > 0) {
                 requestData.put("buy_now_price", itemData.getBuyNowPrice());
             }
             

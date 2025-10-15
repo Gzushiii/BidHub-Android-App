@@ -21,6 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.google.android.material.textfield.TextInputLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -1212,8 +1213,6 @@ public class PostFragment extends Fragment implements
         // Reset checkboxes
         if (cbQuantity != null) cbQuantity.setChecked(false);
         if (cbContact != null) cbContact.setChecked(true);
-        if (cbMeetup != null) cbMeetup.setChecked(false);
-        if (cbDelivery != null) cbDelivery.setChecked(false);
         
         // Reset price mode
         togglePriceMode(true);

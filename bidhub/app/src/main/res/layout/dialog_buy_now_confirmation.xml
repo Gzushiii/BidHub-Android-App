@@ -99,7 +99,7 @@
         android:layout_height="wrap_content"
         android:text="⚠️ This purchase is final and cannot be undone."
         android:textSize="12sp"
-        android:textColor="@color/warning_orange"
+        android:textColor="@android:color/holo_orange_dark"
         android:layout_gravity="center"
         android:layout_marginBottom="20dp" />
 

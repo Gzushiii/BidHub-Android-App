@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.cc106.bidhub.credits.CreditManager;
 import com.cc106.bidhub.items.Item;
 import com.cc106.bidhub.items.ItemManager;
+import com.cc106.bidhub.toast.ToastHelper;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -170,6 +171,7 @@ public class ItemDetailActivity extends AppCompatActivity {
             tvSellerRating = findViewById(R.id.tv_seller_rating);
             android.util.Log.d("ItemDetailActivity", "tvSellerRating initialized");
             
+            
             etBidAmount = findViewById(R.id.et_bid_amount);
             android.util.Log.d("ItemDetailActivity", "etBidAmount initialized");
             
@@ -260,7 +262,7 @@ public class ItemDetailActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Check if item has buy now price
-                if (currentItem == null || currentItem.getBuyNowPrice() == null || currentItem.getBuyNowPrice() <= 0) {
+                if (currentItem == null || currentItem.getBuyNowPrice() <= 0) {
                     ToastHelper.showError(ItemDetailActivity.this, "Buy Now option not available for this item");
                     return;
                 }
@@ -1188,8 +1190,9 @@ public class ItemDetailActivity extends AppCompatActivity {
                 currentItem.setCurrentPrice(buyNowPrice);
                 currentItem.setUpdatedAt(new java.util.Date());
                 
-                // Update UI
-                updateItemStatusDisplay();
+                // Update UI - disable buttons
+                btnPlaceBid.setEnabled(false);
+                btnBuyNow.setEnabled(false);
                 
                 // Show success message
                 ToastHelper.showSuccess(this, "Purchase successful! You have bought this item.");
@@ -1211,17 +1214,4 @@ public class ItemDetailActivity extends AppCompatActivity {
         }
     }
     
-    private void updateItemStatusDisplay() {
-        // Update button states
-        btnPlaceBid.setEnabled(false);
-        btnPlaceBid.setText("Item Sold");
-        btnBuyNow.setEnabled(false);
-        btnBuyNow.setText("Item Sold");
-        
-        // Update status text if available
-        if (tvItemStatus != null) {
-            tvItemStatus.setText("SOLD");
-            tvItemStatus.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-        }
-    }
 }
