@@ -305,9 +305,15 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     private void applyFilters() {
         showLoading(true);
         
+        // Debug: Log before filtering
+        android.util.Log.d("BrowseFragment", "Applying filters to " + allItems.size() + " items");
+        
         // Perform filtering on background thread
         new Thread(() -> {
             List<Item> results = itemManager.filterItems(currentFilter);
+            
+            // Debug: Log filter results
+            android.util.Log.d("BrowseFragment", "Filter results: " + results.size() + " items");
             
             // Update UI on main thread - check if fragment is still attached
             if (getActivity() != null) {
@@ -316,6 +322,9 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                         filteredItems.clear();
                         filteredItems.addAll(results);
                         itemAdapter.notifyDataSetChanged();
+                        
+                        // Debug: Log after updating adapter
+                        android.util.Log.d("BrowseFragment", "Adapter updated with " + filteredItems.size() + " filtered items");
                         
                         showLoading(false);
                         updateEmptyState();
@@ -326,12 +335,21 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         }).start();
     }
     
-    private void loadItems() {
+    public void loadItems() {
         showLoading(true);
+        
+        // Debug: Log before loading
+        android.util.Log.d("BrowseFragment", "Loading items...");
         
         // Load items on background thread
         new Thread(() -> {
             List<Item> items = itemManager.getAllBrowsableItems();
+            
+            // Debug: Log item count
+            android.util.Log.d("BrowseFragment", "Loaded " + items.size() + " browsable items");
+            for (Item item : items) {
+                android.util.Log.d("BrowseFragment", "Item: " + item.getTitle() + " Status: " + item.getStatus());
+            }
             
             // Update UI on main thread - check if fragment is still attached
             if (getActivity() != null) {
@@ -339,6 +357,9 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                     if (isAdded()) { // Check if fragment is still added to activity
                         allItems.clear();
                         allItems.addAll(items);
+                        
+                        // Debug: Log after updating allItems
+                        android.util.Log.d("BrowseFragment", "Updated allItems with " + allItems.size() + " items");
                         
                         // Apply current filters
                         applyFilters();

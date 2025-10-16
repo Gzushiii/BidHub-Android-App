@@ -716,7 +716,7 @@ public class ItemManager {
         }
         
         List<Item> filteredItems = items.values().stream()
-                .filter(item -> item.getStatus() == ItemStatus.ACTIVE)
+                .filter(item -> item.getStatus() == ItemStatus.ACTIVE || item.getStatus() == ItemStatus.DRAFT)
                 .collect(Collectors.toList());
         
         // Apply filters

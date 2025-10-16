@@ -75,9 +75,9 @@ public class PaymentManager {
      * Initialize payment gateways
      */
     private void initializePaymentGateways() {
-        // Initialize Supabase + Stripe gateway
-        paymentGateways.put(PAYMENT_METHOD_STRIPE, new SupabaseStripePaymentGateway(context));
-        paymentGateways.put(PAYMENT_METHOD_CARD, new SupabaseStripePaymentGateway(context));
+        // Initialize mock payment gateways
+        paymentGateways.put(PAYMENT_METHOD_STRIPE, new MockPaymentGateway(context));
+        paymentGateways.put(PAYMENT_METHOD_CARD, new MockPaymentGateway(context));
         
         // Initialize test gateway
         paymentGateways.put(PAYMENT_METHOD_TEST, new TestPaymentGateway());

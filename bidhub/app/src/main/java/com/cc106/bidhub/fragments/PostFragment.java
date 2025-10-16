@@ -862,8 +862,11 @@ public class PostFragment extends Fragment implements
                 if (success) {
                     ToastHelper.showSuccess(getContext(), "Item posted successfully!");
                     clearForm();
-                    // Navigate to Browse tab
-                    navigateToBrowseTab();
+                    
+                    // Debug: Log item count after creation
+                    android.util.Log.d("PostFragment", "Item created successfully. Total items in manager: " + itemManager.getAllBrowsableItems().size());
+                    
+                    // User stays on Post tab to create more listings
                 } else {
                     ToastHelper.showError(getContext(), "Failed to post item. Please check all required fields and try again.");
                 }

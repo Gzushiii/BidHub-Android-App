@@ -95,8 +95,8 @@ public class BiddingEngine {
                 return new BidResult(false, "Auction has ended or is not available for bidding", null);
             }
             
-            // Reserve credits for the bid
-            if (!creditManager.reserveCredits(bidderId, amount)) {
+            // Deduct credits immediately when placing bid
+            if (!creditManager.deductCredits(bidderId, amount, "bid")) {
                 return new BidResult(false, "Insufficient credits to place bid", null);
             }
             
@@ -106,8 +106,8 @@ public class BiddingEngine {
             
             // Process bid in database
             if (!saveBidToDatabase(bid)) {
-                // Release reserved credits on failure
-                creditManager.releaseCredits(bidderId, amount);
+                // Refund credits on failure
+                creditManager.addCredits(bidderId, amount, "bid_refund");
                 return new BidResult(false, "Failed to save bid to database", null);
             }
             
@@ -401,13 +401,11 @@ public class BiddingEngine {
                     bid.setStatus(BidStatus.OUTBID);
                     updateBidInDatabase(bid);
                     
-                    // Release reserved credits for outbid users
-                    creditManager.releaseCredits(bid.getBidderId(), bid.getAmount());
+                    // Credits already deducted when bid was placed, no action needed
                 }
             }
             
-            // Deduct credits from winner
-            creditManager.deductCredits(highestBid.getBidderId(), highestBid.getAmount(), "bid");
+            // Credits already deducted when bid was placed
             
             // Update item status
             item.setStatus(ItemStatus.ENDED);

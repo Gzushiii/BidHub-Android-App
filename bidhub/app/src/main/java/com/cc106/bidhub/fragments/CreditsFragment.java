@@ -13,7 +13,7 @@ import com.cc106.bidhub.credits.CreditPackage;
 import com.cc106.bidhub.credits.CreditTransaction;
 import com.cc106.bidhub.credits.CreditUIHelper;
 import com.cc106.bidhub.payments.PaymentGateway;
-import com.cc106.bidhub.payments.SupabaseStripePaymentGateway;
+import com.cc106.bidhub.payments.MockPaymentGateway;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -60,7 +60,7 @@ public class CreditsFragment extends Fragment {
         
         // Initialize credit manager and payment gateway
         creditManager = new SimpleCreditManager(getContext());
-        paymentGateway = new SupabaseStripePaymentGateway(getContext());
+        paymentGateway = new MockPaymentGateway();
         
         // Get user ID from email
         userId = creditManager.getUserIdFromEmail(loggedInUserEmail);
@@ -228,7 +228,7 @@ public class CreditsFragment extends Fragment {
         ToastHelper.showInfo(getContext(), "Purchase: " + pkg.getName() + " for " + creditManager.formatCurrency(pkg.getPrice()));
         
         // Process payment
-        processPayment(pkg, SupabaseStripePaymentGateway.PAYMENT_METHOD_STRIPE);
+        processPayment(pkg, "MOCK_PAYMENT");
     }
     
     private void processPayment(CreditPackage pkg, String paymentMethod) {

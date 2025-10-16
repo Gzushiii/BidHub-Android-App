@@ -408,9 +408,38 @@ public class MainActivity extends BaseActivity {
         try {
             if (bottomNavigationView != null) {
                 bottomNavigationView.setSelectedItemId(R.id.nav_browse);
+                
+                // Force refresh the browse fragment after navigation
+                android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+                handler.postDelayed(() -> {
+                    try {
+                        // Get the current fragment and refresh it
+                        androidx.fragment.app.Fragment currentFragment = getSupportFragmentManager()
+                                .findFragmentById(R.id.content_frame);
+                        if (currentFragment instanceof com.cc106.bidhub.fragments.BrowseFragment) {
+                            ((com.cc106.bidhub.fragments.BrowseFragment) currentFragment).loadItems();
+                        }
+                    } catch (Exception e) {
+                        android.util.Log.e("MainActivity", "Error refreshing browse fragment", e);
+                    }
+                }, 500); // Small delay to ensure navigation is complete
             }
         } catch (Exception e) {
             ToastHelper.showError(this, "Error switching to browse tab: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Switch to profile tab programmatically
+     */
+    public void switchToProfileTab() {
+        try {
+            if (bottomNavigationView != null) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_profile);
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error switching to profile tab: " + e.getMessage());
             e.printStackTrace();
         }
     }

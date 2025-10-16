@@ -171,10 +171,10 @@ public class HomeFragment extends Fragment {
                 if (imgProfile != null) {
                     imgProfile.setOnClickListener(v -> {
                         try {
-                            // Navigate to profile
-                            Intent intent = new Intent(getContext(), ProfileActivity.class);
-                            intent.putExtra("USER_EMAIL", loggedInUserEmail);
-                            startActivity(intent);
+                            // Navigate to profile fragment using bottom nav
+                            if (getActivity() instanceof MainActivity) {
+                                ((MainActivity) getActivity()).switchToProfileTab();
+                            }
                         } catch (Exception e) {
                             if (getContext() != null) {
                                 ToastHelper.showError(getContext(), "Error opening profile: " + e.getMessage());
