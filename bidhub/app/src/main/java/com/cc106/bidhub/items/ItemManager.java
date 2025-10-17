@@ -78,8 +78,8 @@ public class ItemManager {
     /**
      * Create new item
      */
-    public boolean createItem(ItemData itemData, String sellerId) {
-        Log.i(TAG, "Creating item for seller: " + sellerId);
+    public boolean createItem(ItemData itemData, String sellerEmail) {
+        Log.i(TAG, "Creating item for seller: " + sellerEmail);
         
         try {
             // Validate item data
@@ -91,7 +91,7 @@ public class ItemManager {
             // Try to create item via backend API first
             try {
                 com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(context);
-                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.createItem(itemData, sellerId);
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.createItem(itemData, sellerEmail);
                 
                 if (response.isSuccess()) {
                     Log.i(TAG, "Item created successfully via backend API");
@@ -105,7 +105,7 @@ public class ItemManager {
                     item.setCurrentPrice(itemData.getStartingPrice());
                     item.setBuyNowPrice(itemData.getBuyNowPrice());
                     item.setCurrency(itemData.getCurrency());
-                    item.setSellerId(sellerId);
+                    item.setSellerId(sellerEmail); // Store email as seller ID for now
                     item.setCategoryId(itemData.getCategoryId());
                     item.setCondition(itemData.getCondition());
                     item.setLocation(itemData.getLocation());
@@ -133,7 +133,7 @@ public class ItemManager {
                     items.put(item.getItemId(), item);
                     
                     // Update user items
-                    userItems.computeIfAbsent(sellerId, k -> new ArrayList<>()).add(item.getItemId());
+                    userItems.computeIfAbsent(sellerEmail, k -> new ArrayList<>()).add(item.getItemId());
                     
                     // Update category items
                     if (itemData.getCategoryId() != null) {
@@ -164,7 +164,7 @@ public class ItemManager {
             item.setCurrentPrice(itemData.getStartingPrice());
             item.setBuyNowPrice(itemData.getBuyNowPrice());
             item.setCurrency(itemData.getCurrency());
-            item.setSellerId(sellerId);
+            item.setSellerId(sellerEmail);
             item.setCategoryId(itemData.getCategoryId());
             item.setCondition(itemData.getCondition());
             item.setLocation(itemData.getLocation());
@@ -192,7 +192,7 @@ public class ItemManager {
             items.put(item.getItemId(), item);
             
             // Update user items
-            userItems.computeIfAbsent(sellerId, k -> new ArrayList<>()).add(item.getItemId());
+            userItems.computeIfAbsent(sellerEmail, k -> new ArrayList<>()).add(item.getItemId());
             
             // Update category items
             if (itemData.getCategoryId() != null) {

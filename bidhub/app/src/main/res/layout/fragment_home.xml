@@ -127,7 +127,7 @@
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_inventory_2"
+                        android:src="@drawable/ic_search"
                         android:tint="@color/primary"
                         android:layout_marginBottom="8dp" />
 
@@ -151,7 +151,7 @@
                     android:gravity="center"
                     android:padding="12dp"
                     android:background="@drawable/quick_action_background"
-                    android:layout_marginHorizontal="4dp">
+                    android:layout_marginEnd="4dp">
 
                     <ImageView
                         android:layout_width="24dp"
@@ -170,34 +170,6 @@
 
                 </LinearLayout>
 
-                <!-- Buy Credits -->
-                <LinearLayout
-                    android:id="@+id/cardCredits"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:padding="12dp"
-                    android:background="@drawable/quick_action_background"
-                    android:layout_marginStart="4dp">
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_toll"
-                        android:tint="@color/primary"
-                        android:layout_marginBottom="8dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Buy Credits"
-                        android:textColor="@color/primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
 
             </LinearLayout>
 

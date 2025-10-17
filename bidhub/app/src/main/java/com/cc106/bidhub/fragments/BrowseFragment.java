@@ -22,6 +22,7 @@ import com.cc106.bidhub.toast.ToastHelper;
 import com.cc106.bidhub.adapters.ItemCardAdapter;
 import com.cc106.bidhub.items.Item;
 import com.cc106.bidhub.items.ItemManager;
+import com.cc106.bidhub.items.ItemStatus;
 import com.cc106.bidhub.items.FilterCriteria;
 import com.cc106.bidhub.items.Category;
 import com.cc106.bidhub.ItemDetailActivity;
@@ -341,12 +342,49 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         // Debug: Log before loading
         android.util.Log.d("BrowseFragment", "Loading items...");
         
+        // Try to load from database first, fallback to local
+        loadItemsFromDatabase();
+    }
+    
+    private void loadItemsFromDatabase() {
+        // Try to fetch from backend API first
+        new Thread(() -> {
+            try {
+                com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(getContext());
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItems(null, null, null, null, 100, 0);
+                
+                if (response.isSuccess() && response.getData() != null) {
+                    // Parse and display items from database
+                    List<Item> dbItems = parseItemsFromResponse(response.getData());
+                    android.util.Log.d("BrowseFragment", "Loaded " + dbItems.size() + " items from database");
+                    
+                    getActivity().runOnUiThread(() -> {
+                        if (isAdded()) {
+                            allItems.clear();
+                            allItems.addAll(dbItems);
+                            applyFilters();
+                        }
+                    });
+                } else {
+                    // Fallback to local items
+                    android.util.Log.d("BrowseFragment", "Database fetch failed, using local items");
+                    loadLocalItems();
+                }
+            } catch (Exception e) {
+                // Fallback to local items
+                android.util.Log.e("BrowseFragment", "Error fetching from database", e);
+                getActivity().runOnUiThread(() -> loadLocalItems());
+            }
+        }).start();
+    }
+    
+    private void loadLocalItems() {
         // Load items on background thread
         new Thread(() -> {
             List<Item> items = itemManager.getAllBrowsableItems();
             
             // Debug: Log item count
-            android.util.Log.d("BrowseFragment", "Loaded " + items.size() + " browsable items");
+            android.util.Log.d("BrowseFragment", "Loaded " + items.size() + " local items");
             for (Item item : items) {
                 android.util.Log.d("BrowseFragment", "Item: " + item.getTitle() + " Status: " + item.getStatus());
             }
@@ -367,6 +405,45 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                 });
             }
         }).start();
+    }
+    
+    private List<Item> parseItemsFromResponse(String responseData) {
+        List<Item> items = new ArrayList<>();
+        try {
+            org.json.JSONObject jsonResponse = new org.json.JSONObject(responseData);
+            org.json.JSONArray itemsArray = jsonResponse.getJSONArray("items");
+            
+            for (int i = 0; i < itemsArray.length(); i++) {
+                org.json.JSONObject itemJson = itemsArray.getJSONObject(i);
+                Item item = new Item();
+                
+                item.setItemId(itemJson.getString("id"));
+                item.setTitle(itemJson.getString("title"));
+                item.setDescription(itemJson.getString("description"));
+                item.setStartingPrice(itemJson.getDouble("starting_bid"));
+                item.setCurrentPrice(itemJson.getDouble("current_bid"));
+                item.setCategoryId(itemJson.getString("category_id"));
+                item.setSellerId(itemJson.getString("seller_email"));
+                item.setLocation(itemJson.optString("location", ""));
+                item.setCondition(itemJson.optString("condition", "good"));
+                item.setStatus(ItemStatus.ACTIVE);
+                
+                // Parse images if available
+                if (itemJson.has("images")) {
+                    org.json.JSONArray imagesArray = itemJson.getJSONArray("images");
+                    List<String> imagePaths = new ArrayList<>();
+                    for (int j = 0; j < imagesArray.length(); j++) {
+                        imagePaths.add(imagesArray.getString(j));
+                    }
+                    item.setImagePaths(imagePaths);
+                }
+                
+                items.add(item);
+            }
+        } catch (Exception e) {
+            android.util.Log.e("BrowseFragment", "Error parsing items from response", e);
+        }
+        return items;
     }
     
     private void showLoading(boolean show) {

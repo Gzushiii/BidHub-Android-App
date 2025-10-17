@@ -185,25 +185,54 @@ public class MyListingsActivity extends AppCompatActivity implements MyListingsA
     }
     
     private void loadMyListings() {
+        progressBar.setVisibility(View.VISIBLE);
+        
+        // Try to load from database first, fallback to local
+        loadMyListingsFromDatabase();
+    }
+    
+    private void loadMyListingsFromDatabase() {
+        // Try to fetch user's listings from backend API first
+        new Thread(() -> {
+            try {
+                com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(this);
+                // Use seller_email parameter to get user's listings
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItems(null, null, null, null, 100, 0);
+                
+                if (response.isSuccess() && response.getData() != null) {
+                    // Parse user's listings from database
+                    List<Item> dbListings = parseUserListingsFromResponse(response.getData());
+                    android.util.Log.d("MyListingsActivity", "Loaded " + dbListings.size() + " listings from database");
+                    
+                    runOnUiThread(() -> {
+                        progressBar.setVisibility(View.GONE);
+                        if (dbListings != null && !dbListings.isEmpty()) {
+                            myListings.clear();
+                            myListings.addAll(dbListings);
+                            filterListings();
+                        } else {
+                            showEmptyState();
+                        }
+                    });
+                } else {
+                    // Fallback to local items
+                    android.util.Log.d("MyListingsActivity", "Database fetch failed, using local items");
+                    loadLocalListings();
+                }
+            } catch (Exception e) {
+                // Fallback to local items
+                android.util.Log.e("MyListingsActivity", "Error fetching from database", e);
+                runOnUiThread(() -> loadLocalListings());
+            }
+        }).start();
+    }
+    
+    private void loadLocalListings() {
         if (itemManager == null) {
             ToastHelper.showError(this, "Item manager not available. Please restart the app.");
-            // Show empty state with helpful message
-            if (tvEmptyState != null) {
-                tvEmptyState.setVisibility(View.VISIBLE);
-            }
-            if (rvMyListings != null) {
-                rvMyListings.setVisibility(View.GONE);
-            }
-            if (tvEmptyTitle != null) {
-                tvEmptyTitle.setText("Unable to Load Listings");
-            }
-            if (tvEmptyMessage != null) {
-                tvEmptyMessage.setText("There was an error initializing the item manager.\n\nPlease restart the app and try again.");
-            }
+            showEmptyState();
             return;
         }
-        
-        progressBar.setVisibility(View.VISIBLE);
         
         // Load user's listings in a background thread
         new Thread(() -> {
@@ -218,17 +247,7 @@ public class MyListingsActivity extends AppCompatActivity implements MyListingsA
                         myListings.addAll(userListings);
                         filterListings(); // Apply current filter and search
                     } else {
-                        // No listings found
-                        filteredListings.clear();
-                        listingsAdapter.notifyDataSetChanged();
-                        tvEmptyState.setVisibility(View.VISIBLE);
-                        rvMyListings.setVisibility(View.GONE);
-                        if (tvEmptyTitle != null) {
-                            tvEmptyTitle.setText("No Listings Yet");
-                        }
-                        if (tvEmptyMessage != null) {
-                            tvEmptyMessage.setText("You haven't posted any items yet.\n\nStart by posting your first item!");
-                        }
+                        showEmptyState();
                     }
                 });
             } catch (Exception e) {
@@ -239,6 +258,80 @@ public class MyListingsActivity extends AppCompatActivity implements MyListingsA
                 });
             }
         }).start();
+    }
+    
+    private List<Item> parseUserListingsFromResponse(String responseData) {
+        List<Item> listings = new ArrayList<>();
+        try {
+            org.json.JSONObject jsonResponse = new org.json.JSONObject(responseData);
+            org.json.JSONArray itemsArray = jsonResponse.getJSONArray("items");
+            
+            for (int i = 0; i < itemsArray.length(); i++) {
+                org.json.JSONObject itemJson = itemsArray.getJSONObject(i);
+                
+                // Only include items from the current user
+                if (loggedInUserEmail.equals(itemJson.optString("seller_email", ""))) {
+                    Item item = new Item();
+                    
+                    item.setItemId(itemJson.getString("id"));
+                    item.setTitle(itemJson.getString("title"));
+                    item.setDescription(itemJson.getString("description"));
+                    item.setStartingPrice(itemJson.getDouble("starting_bid"));
+                    item.setCurrentPrice(itemJson.getDouble("current_bid"));
+                    item.setCategoryId(itemJson.getString("category_id"));
+                    item.setSellerId(itemJson.getString("seller_email"));
+                    item.setLocation(itemJson.optString("location", ""));
+                    item.setCondition(itemJson.optString("condition", "good"));
+                    
+                    // Set status based on database status
+                    String status = itemJson.optString("status", "draft");
+                    switch (status) {
+                        case "active":
+                            item.setStatus(ItemStatus.ACTIVE);
+                            break;
+                        case "ended":
+                        case "sold":
+                            item.setStatus(ItemStatus.ENDED);
+                            break;
+                        case "cancelled":
+                            item.setStatus(ItemStatus.CANCELLED);
+                            break;
+                        default:
+                            item.setStatus(ItemStatus.DRAFT);
+                            break;
+                    }
+                    
+                    // Parse images if available
+                    if (itemJson.has("images")) {
+                        org.json.JSONArray imagesArray = itemJson.getJSONArray("images");
+                        List<String> imagePaths = new ArrayList<>();
+                        for (int j = 0; j < imagesArray.length(); j++) {
+                            imagePaths.add(imagesArray.getString(j));
+                        }
+                        item.setImagePaths(imagePaths);
+                    }
+                    
+                    listings.add(item);
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.e("MyListingsActivity", "Error parsing user listings from response", e);
+        }
+        return listings;
+    }
+    
+    private void showEmptyState() {
+        // No listings found
+        filteredListings.clear();
+        listingsAdapter.notifyDataSetChanged();
+        tvEmptyState.setVisibility(View.VISIBLE);
+        rvMyListings.setVisibility(View.GONE);
+        if (tvEmptyTitle != null) {
+            tvEmptyTitle.setText("No Listings Yet");
+        }
+        if (tvEmptyMessage != null) {
+            tvEmptyMessage.setText("You haven't posted any items yet.\n\nStart by posting your first item!");
+        }
     }
     
     private void setActiveFilter(String filter) {

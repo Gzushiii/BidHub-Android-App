@@ -32,7 +32,7 @@ public class ItemApiClient {
     /**
      * Create a new item via backend API
      */
-    public ApiResponse createItem(ItemData itemData, String sellerId) {
+    public ApiResponse createItem(ItemData itemData, String sellerEmail) {
         Log.i(TAG, "Creating item via API: " + itemData.getTitle());
         
         try {
@@ -50,6 +50,7 @@ public class ItemApiClient {
             requestData.put("starting_price", itemData.getStartingPrice());
             requestData.put("reserve_price", itemData.getStartingPrice()); // Use starting price as reserve
             requestData.put("duration_days", 7); // Default 7 days
+            requestData.put("seller_email", sellerEmail); // Add seller email for database
             
             // Add images if available
             if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
@@ -117,10 +118,12 @@ public class ItemApiClient {
             
             if (responseCode >= 200 && responseCode < 300) {
                 Log.i(TAG, "Item created successfully via API");
+                Log.d(TAG, "API Response: " + response.toString());
                 return new ApiResponse(true, "Item created successfully", response.toString());
             } else {
                 Log.e(TAG, "API error: " + responseCode + " - " + response.toString());
-                return new ApiResponse(false, "API error: " + responseCode, response.toString());
+                Log.e(TAG, "Request data was: " + requestData.toString());
+                return new ApiResponse(false, "API error: " + responseCode + " - " + response.toString(), response.toString());
             }
             
         } catch (Exception e) {

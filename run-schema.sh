@@ -26,7 +26,7 @@ fi
 echo "Running BidHub database schema..."
 
 # Run the schema file
-mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" --ssl "$DB_NAME" < bidhub_database_schema.sql
+mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" --ssl "$DB_NAME" < bidhub_complete_schema_defaultdb.sql
 
 if [ $? -eq 0 ]; then
     echo "✅ Database schema created successfully!"

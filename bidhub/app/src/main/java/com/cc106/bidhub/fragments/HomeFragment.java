@@ -39,7 +39,7 @@ public class HomeFragment extends Fragment {
     private View searchBar;
     
     // Quick action buttons
-    private View cardBrowse, cardSell, cardCredits, cardMyListings;
+    private View cardBrowse, cardSell, cardMyListings;
     
     // Featured auctions
     private TextView textFeaturedAuctions;
@@ -126,7 +126,6 @@ public class HomeFragment extends Fragment {
         // Quick action buttons
         cardBrowse = view.findViewById(R.id.cardBrowse);
         cardSell = view.findViewById(R.id.cardSell);
-        cardCredits = view.findViewById(R.id.cardCredits);
         cardMyListings = view.findViewById(R.id.cardMyListings);
         
         // Featured auctions
@@ -188,9 +187,9 @@ public class HomeFragment extends Fragment {
         if (cardBrowse != null) {
             cardBrowse.setOnClickListener(v -> {
                 try {
-                    Intent intent = new Intent(getContext(), BrowseActivity.class);
-                    intent.putExtra("USER_EMAIL", loggedInUserEmail);
-                    startActivity(intent);
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).switchToBrowseTab();
+                    }
                 } catch (Exception e) {
                     if (getContext() != null) {
                         ToastHelper.showError(getContext(), "Error opening browse: " + e.getMessage());
@@ -215,20 +214,6 @@ public class HomeFragment extends Fragment {
             });
         }
         
-        if (cardCredits != null) {
-            cardCredits.setOnClickListener(v -> {
-                try {
-                    Intent intent = new Intent(getContext(), CreditsActivity.class);
-                    intent.putExtra("USER_EMAIL", loggedInUserEmail);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    if (getContext() != null) {
-                        ToastHelper.showError(getContext(), "Error opening credits: " + e.getMessage());
-                    }
-                    e.printStackTrace();
-                }
-            });
-        }
         
         if (cardMyListings != null) {
             cardMyListings.setOnClickListener(v -> {
