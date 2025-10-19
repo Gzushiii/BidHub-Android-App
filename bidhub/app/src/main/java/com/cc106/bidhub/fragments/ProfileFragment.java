@@ -12,8 +12,11 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import com.cc106.bidhub.api.AuthApiClient;
+import com.cc106.bidhub.api.ApiResponse;
 import com.cc106.bidhub.toast.ToastHelper;
 import com.cc106.bidhub.utils.ProfilePictureManager;
+import com.cc106.bidhub.utils.SharedPreferencesHelper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,6 +39,7 @@ public class ProfileFragment extends Fragment {
     private ImageButton buttonEditProfile, buttonSettings;
     private ImageView imageViewProfilePicture;
     private DatabaseHelper dbHelper;
+    private SharedPreferencesHelper prefsHelper;
     private String loggedInUserEmail;
     private String userId;
 
@@ -51,6 +55,7 @@ public class ProfileFragment extends Fragment {
         
         
         dbHelper = new DatabaseHelper(getContext());
+        prefsHelper = new SharedPreferencesHelper(getContext());
         
         // Initialize Views
         textViewWelcome = view.findViewById(R.id.textViewWelcome);
@@ -133,48 +138,25 @@ public class ProfileFragment extends Fragment {
     }
 
     private void loadUserData() {
-        if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
-            ToastHelper.showError(getContext(), "Error: User not identified.");
-            return;
-        }
-        
-
         try {
-            SQLiteDatabase db = dbHelper.getReadableDatabase();
-            Cursor cursor = db.query(
-                    DatabaseHelper.TABLE_USERS,
-                    new String[]{
-                        DatabaseHelper.COLUMN_USER_ID,
-                        DatabaseHelper.COLUMN_USER_USERNAME,
-                        DatabaseHelper.COLUMN_USER_ALIAS, 
-                        DatabaseHelper.COLUMN_USER_CREDITS,
-                        DatabaseHelper.COLUMN_USER_EMAIL
-                    },
-                    DatabaseHelper.COLUMN_USER_EMAIL + " = ?",
-                    new String[]{loggedInUserEmail},
-                    null, null, null
-            );
-
-            if (cursor != null && cursor.moveToFirst()) {
-                userId = String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_ID)));
-                String username = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_USERNAME));
-                String alias = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_ALIAS));
-                double credits = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_CREDITS));
-                String email = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_EMAIL));
-
-
-                // Update the UI with null checks
-                if (textViewWelcome != null) textViewWelcome.setText("Profile");
-                if (textViewUsername != null) textViewUsername.setText(username);
-                if (textViewAlias != null) textViewAlias.setText(alias);
-                if (textViewEmail != null) textViewEmail.setText(email);
-                if (textViewCredits != null) textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", credits));
-
-                cursor.close();
-            } else {
+            // Get user data from SharedPreferences (stored during login)
+            String email = prefsHelper.getUserEmail();
+            String username = prefsHelper.getUsername();
+            String alias = prefsHelper.getAlias();
+            double credits = prefsHelper.getCredits();
+            
+            if (email == null || email.isEmpty()) {
                 ToastHelper.showError(getContext(), "No user data found. Please log in again.");
+                return;
             }
-            db.close();
+
+            // Update the UI with user data
+            if (textViewWelcome != null) textViewWelcome.setText("Profile");
+            if (textViewUsername != null) textViewUsername.setText(username != null ? username : "Unknown");
+            if (textViewAlias != null) textViewAlias.setText(alias != null ? alias : "No alias");
+            if (textViewEmail != null) textViewEmail.setText(email);
+            if (textViewCredits != null) textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", credits));
+            
         } catch (Exception e) {
             ToastHelper.showError(getContext(), "Error loading user data: " + e.getMessage());
             e.printStackTrace();

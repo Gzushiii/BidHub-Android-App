@@ -14,6 +14,8 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import com.cc106.bidhub.api.AuthApiClient;
+import com.cc106.bidhub.api.ApiResponse;
 import com.cc106.bidhub.toast.ToastHelper;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputLayout;
@@ -26,6 +28,7 @@ public class RegisterActivity extends AppCompatActivity {
     private com.google.android.material.button.MaterialButton buttonRegister;
     private TextView textViewLoginLink;
     private DatabaseHelper dbHelper;
+    private AuthApiClient authApiClient;
     
     // TextInputLayouts for validation feedback
     private TextInputLayout usernameInputLayout, emailInputLayout, passwordInputLayout;
@@ -52,6 +55,7 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         dbHelper = new DatabaseHelper(this);
+        authApiClient = new AuthApiClient(this);
 
         // Initialize all the UI components
         editTextFirstName = findViewById(R.id.editTextFirstName);
@@ -391,42 +395,30 @@ public class RegisterActivity extends AppCompatActivity {
             // Show loading state
             showLoading(true);
 
-            // --- Database Insertion ---
+            // Use backend API for registration
             new Thread(() -> {
                 try {
-                    SQLiteDatabase db = dbHelper.getWritableDatabase();
-                    ContentValues values = new ContentValues();
-
-                    // Hash the password
-                    Map<String, byte[]> hashingResult = PasswordHasher.hashPassword(password);
-                    byte[] hashedPassword = hashingResult.get("hash");
-                    byte[] salt = hashingResult.get("salt");
-
-                    // Generate unique alias for anonymous bidding
-                    String alias = AliasGenerator.generateAlias();
-
-                    // Put all user data into the ContentValues object
-                    values.put(DatabaseHelper.COLUMN_USER_FIRST_NAME, firstName);
-                    values.put(DatabaseHelper.COLUMN_USER_LAST_NAME, lastName);
-                    values.put(DatabaseHelper.COLUMN_USER_USERNAME, username.toLowerCase());
-                    values.put(DatabaseHelper.COLUMN_USER_ALIAS, alias);
-                    values.put(DatabaseHelper.COLUMN_USER_EMAIL, email.toLowerCase());
-                    values.put(DatabaseHelper.COLUMN_USER_PHONE, phone);
-                    values.put(DatabaseHelper.COLUMN_USER_PASSWORD, hashedPassword);
-                    values.put(DatabaseHelper.COLUMN_USER_SALT, salt);
-
-                    long newRowId = db.insert(DatabaseHelper.TABLE_USERS, null, values);
-                    db.close();
-
+                    ApiResponse response = authApiClient.register(
+                        username.toLowerCase(),
+                        email.toLowerCase(),
+                        password,
+                        phone,
+                        firstName,
+                        lastName,
+                        AliasGenerator.generateAlias() // Generate alias for anonymous bidding
+                    );
+                    
+                    // Run UI updates on main thread
                     runOnUiThread(() -> {
-                        if (newRowId != -1) {
-                            ToastHelper.showSuccess(this, "Registration successful! Your alias: " + alias);
+                        if (response.isSuccess()) {
+                            ToastHelper.showSuccess(this, "Registration successful!");
                             finish(); // Go back to the login screen
                         } else {
-                            ToastHelper.showError(this, "Registration failed. Please try again.");
+                            ToastHelper.showError(this, response.getMessage());
                             showLoading(false);
                         }
                     });
+                    
                 } catch (Exception e) {
                     runOnUiThread(() -> {
                         ToastHelper.showError(this, "Registration failed: " + e.getMessage());

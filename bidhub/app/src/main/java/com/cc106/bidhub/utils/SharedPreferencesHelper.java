@@ -11,6 +11,9 @@ public class SharedPreferencesHelper {
     private static final String KEY_AUTH_TOKEN = "auth_token";
     private static final String KEY_USER_EMAIL = "user_email";
     private static final String KEY_USER_ID = "user_id";
+    private static final String KEY_USERNAME = "username";
+    private static final String KEY_ALIAS = "alias";
+    private static final String KEY_CREDITS = "credits";
     
     private SharedPreferences prefs;
     
@@ -40,6 +43,43 @@ public class SharedPreferencesHelper {
     
     public String getUserId() {
         return prefs.getString(KEY_USER_ID, null);
+    }
+    
+    public void setUsername(String username) {
+        prefs.edit().putString(KEY_USERNAME, username).apply();
+    }
+    
+    public String getUsername() {
+        return prefs.getString(KEY_USERNAME, null);
+    }
+    
+    public void setAlias(String alias) {
+        prefs.edit().putString(KEY_ALIAS, alias).apply();
+    }
+    
+    public String getAlias() {
+        return prefs.getString(KEY_ALIAS, null);
+    }
+    
+    public void setCredits(double credits) {
+        prefs.edit().putFloat(KEY_CREDITS, (float) credits).apply();
+    }
+    
+    public double getCredits() {
+        return prefs.getFloat(KEY_CREDITS, 0.0f);
+    }
+    
+    // Alias methods for compatibility with AuthApiClient
+    public void saveAuthToken(String token) {
+        setAuthToken(token);
+    }
+    
+    public void saveUserEmail(String email) {
+        setUserEmail(email);
+    }
+    
+    public void saveUsername(String username) {
+        setUsername(username);
     }
     
     public void clearAll() {

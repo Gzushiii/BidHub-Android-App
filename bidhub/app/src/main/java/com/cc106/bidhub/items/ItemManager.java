@@ -84,7 +84,11 @@ public class ItemManager {
         try {
             // Validate item data
             if (!validateItemData(itemData)) {
-                Log.e(TAG, "Invalid item data");
+                Log.e(TAG, "Invalid item data - validation failed");
+                Log.e(TAG, "Title: " + (itemData.getTitle() != null ? itemData.getTitle() : "null"));
+                Log.e(TAG, "Description: " + (itemData.getDescription() != null ? itemData.getDescription() : "null"));
+                Log.e(TAG, "StartingPrice: " + itemData.getStartingPrice());
+                Log.e(TAG, "CategoryId: " + (itemData.getCategoryId() != null ? itemData.getCategoryId() : "null"));
                 return false;
             }
             
@@ -108,7 +112,6 @@ public class ItemManager {
                     item.setSellerId(sellerEmail); // Store email as seller ID for now
                     item.setCategoryId(itemData.getCategoryId());
                     item.setCondition(itemData.getCondition());
-                    item.setShippingInfo(itemData.getShippingInfo());
                     item.setStartDate(itemData.getStartDate());
                     item.setEndDate(itemData.getEndDate());
                     item.setNotes(itemData.getNotes());

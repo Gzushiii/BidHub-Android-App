@@ -18,7 +18,7 @@ import java.util.List;
  */
 public class ItemApiClient {
     private static final String TAG = "ItemApiClient";
-    private static final String BASE_URL = "https://bidhub-backend.onrender.com/api";
+    private static final String BASE_URL = "http://192.168.18.136:3000/api";
     private static final String ITEMS_ENDPOINT = BASE_URL + "/items";
     
     private Context context;
@@ -64,12 +64,6 @@ public class ItemApiClient {
             // Add metadata if available
             if (itemData.getMetadata() != null && !itemData.getMetadata().isEmpty()) {
                 requestData.put("metadata", itemData.getMetadata());
-            }
-            
-            
-            // Add shipping info if available
-            if (itemData.getShippingInfo() != null && !itemData.getShippingInfo().isEmpty()) {
-                requestData.put("shipping_info", itemData.getShippingInfo());
             }
             
             // Add condition if available

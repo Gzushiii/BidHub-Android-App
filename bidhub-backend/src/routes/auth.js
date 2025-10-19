@@ -9,20 +9,24 @@ const router = express.Router();
 // Register endpoint
 router.post('/register', async (req, res) => {
   try {
+    console.log('Registration attempt:', req.body);
     const { error } = registerValidator.validate(req.body);
     if (error) {
+      console.log('Validation error:', error.details[0].message);
       return res.status(400).json({ error: error.details[0].message });
     }
 
     const { username, email, phone_number, password, first_name, last_name, alias } = req.body;
 
     // Check if user exists
+    console.log('Checking if user exists...');
     const [existing] = await db.query(
       'SELECT id FROM users WHERE email = ? OR username = ? OR alias = ?',
       [email, username, alias]
     );
 
     if (existing.length > 0) {
+      console.log('User already exists');
       return res.status(409).json({ error: 'User already exists' });
     }
 
@@ -31,12 +35,14 @@ router.post('/register', async (req, res) => {
     const password_hash = await bcrypt.hash(password, salt);
 
     // Insert user
+    console.log('Inserting user into database...');
     const [result] = await db.query(
       `INSERT INTO users (username, email, phone_number, password_hash, salt, 
        first_name, last_name, alias, credits) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 100.00)`,
       [username, email, phone_number, password_hash, salt, first_name, last_name, alias]
     );
+    console.log('User inserted successfully, ID:', result.insertId);
 
     // Generate JWT token
     const token = jwt.sign(
@@ -65,7 +71,9 @@ router.post('/register', async (req, res) => {
     });
   } catch (err) {
     console.error('Registration error:', err);
-    res.status(500).json({ error: 'Registration failed' });
+    console.error('Error details:', err.message);
+    console.error('Error stack:', err.stack);
+    res.status(500).json({ error: 'Registration failed', details: err.message });
   }
 });
 

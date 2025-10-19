@@ -862,6 +862,15 @@ public class PostFragment extends Fragment implements
             
             ItemData itemData = createItemData();
             if (itemData != null) {
+                // Debug: Log item data before posting
+                android.util.Log.d("PostFragment", "ItemData created successfully:");
+                android.util.Log.d("PostFragment", "Title: " + itemData.getTitle());
+                android.util.Log.d("PostFragment", "Description: " + itemData.getDescription());
+                android.util.Log.d("PostFragment", "CategoryId: " + itemData.getCategoryId());
+                android.util.Log.d("PostFragment", "StartingPrice: " + itemData.getStartingPrice());
+                android.util.Log.d("PostFragment", "Condition: " + itemData.getCondition());
+                android.util.Log.d("PostFragment", "Images count: " + (itemData.getImagePaths() != null ? itemData.getImagePaths().size() : 0));
+                
                 // Show loading state
                 btnPostItem.setEnabled(false);
                 btnPostItem.setText("Posting...");
@@ -879,9 +888,11 @@ public class PostFragment extends Fragment implements
                     
                     // User stays on Post tab to create more listings
                 } else {
+                    android.util.Log.e("PostFragment", "ItemManager.createItem returned false");
                     ErrorHandler.showDetailedError(getContext(), "Failed to post item. Please check all required fields and try again.");
                 }
             } else {
+                android.util.Log.e("PostFragment", "createItemData returned null - validation failed");
                 ErrorHandler.showDetailedError(getContext(), "Please fill in all required fields correctly.");
             }
         } catch (Exception e) {
@@ -1083,7 +1094,7 @@ public class PostFragment extends Fragment implements
         }
         
         // Validate images
-        if (selectedImages.isEmpty()) {
+        if (selectedImages == null || selectedImages.isEmpty()) {
             ToastHelper.showError(getContext(), "At least one photo is required");
             return false;
         }
@@ -1100,19 +1111,11 @@ public class PostFragment extends Fragment implements
             return false;
         }
         
-        
         // Validate auction duration
         String duration = actvAuctionDuration.getText().toString().trim();
         if (TextUtils.isEmpty(duration) || duration.equals("Choose")) {
             ToastHelper.showError(getContext(), "Auction duration is required");
             actvAuctionDuration.requestFocus();
-            return false;
-        }
-        
-        
-        // Validate minimum 1 image
-        if (selectedImages == null || selectedImages.isEmpty()) {
-            ToastHelper.showError(getContext(), "At least 1 image is required");
             return false;
         }
         

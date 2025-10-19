@@ -11,6 +11,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import com.cc106.bidhub.api.AuthApiClient;
+import com.cc106.bidhub.api.ApiResponse;
 import com.cc106.bidhub.toast.ToastHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputLayout;
@@ -26,6 +28,7 @@ public class LoginActivity extends AppCompatActivity {
     private TextInputLayout emailInputLayout, passwordInputLayout;
     private ProgressBar progressBar;
     private DatabaseHelper dbHelper;
+    private AuthApiClient authApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +47,9 @@ public class LoginActivity extends AppCompatActivity {
         emailInputLayout = findViewById(R.id.emailInputLayout);
         passwordInputLayout = findViewById(R.id.passwordInputLayout);
         progressBar = findViewById(R.id.progressBar);
+        
+        // Initialize API client
+        authApiClient = new AuthApiClient(this);
 
         // Set up input validation
         setupInputValidation();
@@ -158,52 +164,35 @@ public class LoginActivity extends AppCompatActivity {
         // Show loading state
         showLoading(true);
 
-        // Simulate network delay for better UX
-        new android.os.Handler().postDelayed(() -> {
+        // Use backend API for authentication
+        new Thread(() -> {
             try {
-                SQLiteDatabase db = dbHelper.getReadableDatabase();
-                // We need to retrieve the stored password (hash) and the salt
-                String[] columns = {DatabaseHelper.COLUMN_USER_PASSWORD, DatabaseHelper.COLUMN_USER_SALT};
-                String selection = DatabaseHelper.COLUMN_USER_EMAIL + " = ?";
-                String[] selectionArgs = {email};
-
-                Cursor cursor = db.query(DatabaseHelper.TABLE_USERS, columns, selection, selectionArgs, null, null, null);
-
-                if (cursor != null && cursor.moveToFirst()) {
-                    // Get the hash and salt from the database for this user
-                    byte[] storedHash = cursor.getBlob(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_PASSWORD));
-                    byte[] salt = cursor.getBlob(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_SALT));
-                    cursor.close();
-
-                    // Use our hasher to verify the password
-                    if (PasswordHasher.verifyPassword(password, storedHash, salt)) {
+                ApiResponse response = authApiClient.login(email, password);
+                
+                // Run UI updates on main thread
+                runOnUiThread(() -> {
+                    if (response.isSuccess()) {
                         ToastHelper.showSuccess(this, "Login Successful!");
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                         intent.putExtra("USER_EMAIL", email);
                         startActivity(intent);
                         finish();
                     } else {
-                        // Password was incorrect
-                        passwordInputLayout.setError("Invalid password");
-                        ToastHelper.showError(this, "Invalid email or password");
+                        // Login failed
+                        emailInputLayout.setError("Invalid credentials");
+                        passwordInputLayout.setError("Invalid credentials");
+                        ToastHelper.showError(this, response.getMessage());
                     }
-                } else {
-                    // User with that email was not found
-                    if(cursor != null) {
-                        cursor.close();
-                    }
-                    emailInputLayout.setError("Email not found");
-                    ToastHelper.showError(this, "Invalid email or password");
-                }
+                    showLoading(false);
+                });
                 
-                // Always close the database connection
-                db.close();
             } catch (Exception e) {
-                ToastHelper.showError(this, "Login failed. Please try again.");
-            } finally {
-                showLoading(false);
+                runOnUiThread(() -> {
+                    ToastHelper.showError(this, "Login failed. Please try again.");
+                    showLoading(false);
+                });
             }
-        }, 1000); // 1 second delay for better UX
+        }).start();
     }
 }
 
