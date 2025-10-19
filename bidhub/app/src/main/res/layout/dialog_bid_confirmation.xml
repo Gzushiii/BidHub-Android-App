@@ -162,7 +162,7 @@
             android:text="Confirm Bid"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@color/white"
+            android:textColor="@color/background"
             android:background="@drawable/btn_primary"
             android:paddingStart="24dp"
             android:paddingEnd="24dp"

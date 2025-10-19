@@ -6,14 +6,14 @@
     android:layout_margin="4dp"
     android:elevation="2dp"
     app:cardCornerRadius="8dp"
-    app:cardBackgroundColor="@color/white">
+    app:cardBackgroundColor="@color/background">
 
     <ImageView
         android:id="@+id/iv_gallery_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:background="@color/background_light"
+        android:background="@color/background"
         android:src="@drawable/ic_image_placeholder"
         android:contentDescription="Item image" />
 

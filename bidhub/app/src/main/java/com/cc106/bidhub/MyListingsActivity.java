@@ -197,7 +197,7 @@ public class MyListingsActivity extends AppCompatActivity implements MyListingsA
             try {
                 com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(this);
                 // Use seller_email parameter to get user's listings
-                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItems(null, null, null, null, 100, 0);
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItems(null, null, null, null, loggedInUserEmail, 100, 0);
                 
                 if (response.isSuccess() && response.getData() != null) {
                     // Parse user's listings from database

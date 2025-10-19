@@ -69,17 +69,33 @@ public class BrowseItemAdapter extends RecyclerView.Adapter<BrowseItemAdapter.Br
             itemBid.setText(item.getCurrentBid());
             itemTimeLeft.setText(item.getTimeLeft());
 
-            // Set image based on item type (for now using sample images)
-            if (item.getTitle().toLowerCase().contains("camera")) {
-                itemImage.setImageResource(R.drawable.sample_camera);
-            } else if (item.getTitle().toLowerCase().contains("handbag")) {
-                itemImage.setImageResource(R.drawable.sample_handbag);
-            } else if (item.getTitle().toLowerCase().contains("sofa")) {
-                itemImage.setImageResource(R.drawable.sample_sofa);
-            } else if (item.getTitle().toLowerCase().contains("coin")) {
-                itemImage.setImageResource(R.drawable.sample_coin);
+            // Load image - use user image if available, otherwise fallback to sample images
+            if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
+                // Load user-uploaded image using Glide
+                com.cc106.bidhub.utils.ImageLoader.loadImageWithErrorCallback(
+                    itemImage.getContext(),
+                    item.getImageUrl(),
+                    itemImage,
+                    new com.cc106.bidhub.utils.ImageLoader.ImageLoadErrorCallback() {
+                        @Override
+                        public void onError(String errorMessage) {
+                            com.cc106.bidhub.utils.ErrorHandler.handleImageError(
+                                itemImage.getContext(),
+                                item.getImageUrl(),
+                                null,
+                                "BrowseItemAdapter image load"
+                            );
+                        }
+                    }
+                );
             } else {
-                itemImage.setImageResource(R.drawable.sample_auction_1);
+                // Fallback to sample images based on item type
+                int sampleImageRes = getSampleImageForTitle(item.getTitle());
+                com.cc106.bidhub.utils.ImageLoader.loadSampleImage(
+                    itemImage.getContext(),
+                    sampleImageRes,
+                    itemImage
+                );
             }
 
             // Set time left color based on urgency
@@ -92,10 +108,50 @@ public class BrowseItemAdapter extends RecyclerView.Adapter<BrowseItemAdapter.Br
             }
 
             itemView.setOnClickListener(v -> {
-                if (clickListener != null) {
-                    clickListener.onItemClick(item);
+                try {
+                    if (clickListener != null) {
+                        clickListener.onItemClick(item);
+                    } else {
+                        com.cc106.bidhub.utils.ErrorHandler.logWarning(
+                            "BrowseItemAdapter", 
+                            "Click listener is null",
+                            String.format("ItemID: %s, Title: %s", 
+                                item.getItemId(), item.getTitle())
+                        );
+                    }
+                } catch (Exception e) {
+                    com.cc106.bidhub.utils.ErrorHandler.handleAdapterError(
+                        itemView.getContext(),
+                        "BrowseItemAdapter",
+                        "item click",
+                        e,
+                        String.format("ItemID: %s, Title: %s", 
+                            item.getItemId(), item.getTitle())
+                    );
                 }
             });
+        }
+        
+        /**
+         * Get sample image resource based on item title
+         */
+        private int getSampleImageForTitle(String title) {
+            if (title == null) {
+                return R.drawable.sample_auction_1;
+            }
+            
+            String lowerTitle = title.toLowerCase();
+            if (lowerTitle.contains("camera")) {
+                return R.drawable.sample_camera;
+            } else if (lowerTitle.contains("handbag")) {
+                return R.drawable.sample_handbag;
+            } else if (lowerTitle.contains("sofa")) {
+                return R.drawable.sample_sofa;
+            } else if (lowerTitle.contains("coin")) {
+                return R.drawable.sample_coin;
+            } else {
+                return R.drawable.sample_auction_1;
+            }
         }
     }
 }

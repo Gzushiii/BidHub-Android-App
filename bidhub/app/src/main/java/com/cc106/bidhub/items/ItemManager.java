@@ -148,14 +148,36 @@ public class ItemManager {
                     return true;
                 } else {
                     Log.e(TAG, "Backend API error: " + response.getMessage());
-                    // Fall back to local storage only
-                    Log.w(TAG, "Falling back to local storage only");
+                    // Don't fallback to local storage - return false to show error
+                    return false;
                 }
             } catch (Exception apiException) {
-                Log.e(TAG, "Backend API call failed, falling back to local storage", apiException);
+                Log.e(TAG, "Backend API call failed", apiException);
+                // Don't fallback to local storage - return false to show error
+                return false;
             }
             
-            // Fallback: Create item locally only
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error creating item", e);
+            return false;
+        }
+    }
+    
+    /**
+     * Save item as draft (local only, not posted to backend)
+     */
+    public boolean saveDraftItem(ItemData itemData, String sellerEmail) {
+        Log.i(TAG, "Saving item as draft for seller: " + sellerEmail);
+        
+        try {
+            // Validate item data
+            if (!validateItemData(itemData)) {
+                Log.e(TAG, "Invalid item data");
+                return false;
+            }
+            
+            // Create item locally only with DRAFT status
             Item item = new Item();
             item.setItemId(UUID.randomUUID().toString());
             item.setTitle(itemData.getTitle());
@@ -173,7 +195,7 @@ public class ItemManager {
             item.setEndDate(itemData.getEndDate());
             item.setNotes(itemData.getNotes());
             item.setMetadata(itemData.getMetadata());
-            item.setStatus(ItemStatus.DRAFT); // Mark as draft since backend failed
+            item.setStatus(ItemStatus.DRAFT); // Explicitly set as DRAFT
             item.setCreatedAt(new Date());
             item.setUpdatedAt(new Date());
             
@@ -203,11 +225,11 @@ public class ItemManager {
             itemViewCounts.put(item.getItemId(), 0);
             itemBidCounts.put(item.getItemId(), 0);
             
-            Log.i(TAG, "Item created locally: " + item.getItemId());
+            Log.i(TAG, "Item saved as draft successfully: " + item.getItemId());
             return true;
             
         } catch (Exception e) {
-            Log.e(TAG, "Error creating item", e);
+            Log.e(TAG, "Error saving draft item", e);
             return false;
         }
     }

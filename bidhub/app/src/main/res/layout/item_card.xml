@@ -6,7 +6,7 @@
     android:layout_margin="8dp"
     android:elevation="4dp"
     app:cardCornerRadius="12dp"
-    app:cardBackgroundColor="@color/white">
+    app:cardBackgroundColor="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -25,7 +25,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:background="@color/background_light"
+                android:background="@color/background"
                 android:src="@drawable/ic_image_placeholder"
                 android:contentDescription="Item Image" />
 
@@ -45,9 +45,9 @@
                     android:text="FEATURED"
                     android:textSize="10sp"
                     android:textStyle="bold"
-                    android:textColor="@color/white"
+                    android:textColor="@color/background"
                     android:background="@drawable/badge_background"
-                    android:backgroundTint="@color/primary_blue"
+                    android:backgroundTint="@color/primary"
                     android:paddingHorizontal="8dp"
                     android:paddingVertical="4dp"
                     android:layout_marginBottom="4dp"
@@ -60,9 +60,9 @@
                     android:text="TRENDING"
                     android:textSize="10sp"
                     android:textStyle="bold"
-                    android:textColor="@color/white"
+                    android:textColor="@color/background"
                     android:background="@drawable/badge_background"
-                    android:backgroundTint="@color/accent_orange"
+                    android:backgroundTint="@color/accent"
                     android:paddingHorizontal="8dp"
                     android:paddingVertical="4dp"
                     android:visibility="gone" />
@@ -74,7 +74,7 @@
                     android:text="PENDING UPLOAD"
                     android:textSize="10sp"
                     android:textStyle="bold"
-                    android:textColor="@color/white"
+                    android:textColor="@color/background"
                     android:background="@drawable/badge_background"
                     android:backgroundTint="@color/warning_yellow"
                     android:paddingHorizontal="8dp"
@@ -93,7 +93,7 @@
                 android:text="2d 5h left"
                 android:textSize="10sp"
                 android:textStyle="bold"
-                android:textColor="@color/white"
+                android:textColor="@color/background"
                 android:background="@drawable/badge_background"
                 android:backgroundTint="@color/text_secondary"
                 android:paddingHorizontal="8dp"
@@ -129,7 +129,7 @@
                 android:text="₱ 1,500.00"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="@color/primary_blue"
+                android:textColor="@color/primary"
                 android:layout_marginBottom="4dp" />
 
             <!-- Seller and Bid Info -->

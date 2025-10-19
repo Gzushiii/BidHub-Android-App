@@ -59,7 +59,7 @@
             android:layout_marginBottom="24dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -80,10 +80,10 @@
                     app:boxCornerRadiusTopStart="12dp"
                     app:boxStrokeColor="@color/border_light"
                     app:errorEnabled="true"
-                    app:errorTextColor="@color/error_red"
+                    app:errorTextColor="@color/error"
                     app:hintTextColor="@color/text_hint"
                     app:startIconDrawable="@drawable/ic_person_outline"
-                    app:startIconTint="@color/primary_blue">
+                    app:startIconTint="@color/primary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextFirstName"
@@ -109,10 +109,10 @@
                     app:boxCornerRadiusTopStart="12dp"
                     app:boxStrokeColor="@color/border_light"
                     app:errorEnabled="true"
-                    app:errorTextColor="@color/error_red"
+                    app:errorTextColor="@color/error"
                     app:hintTextColor="@color/text_hint"
                     app:startIconDrawable="@drawable/ic_person_outline"
-                    app:startIconTint="@color/primary_blue">
+                    app:startIconTint="@color/primary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextLastName"
@@ -139,10 +139,10 @@
                     app:boxCornerRadiusTopStart="12dp"
                     app:boxStrokeColor="@color/border_light"
                     app:errorEnabled="true"
-                    app:errorTextColor="@color/error_red"
+                    app:errorTextColor="@color/error"
                     app:hintTextColor="@color/text_hint"
                     app:startIconDrawable="@drawable/ic_username_outline"
-                    app:startIconTint="@color/primary_blue">
+                    app:startIconTint="@color/primary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextUsername"
@@ -163,7 +163,7 @@
                     android:gravity="center_vertical"
                     android:layout_marginBottom="12dp"
                     android:padding="8dp"
-                    android:background="@color/primary_blue_light">
+                    android:background="@color/primary_light">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -177,7 +177,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Your bidding alias will be automatically generated for privacy"
-                        android:textColor="@color/primary_blue_dark"
+                        android:textColor="@color/primary_dark"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
@@ -197,10 +197,10 @@
                     app:boxCornerRadiusTopStart="12dp"
                     app:boxStrokeColor="@color/border_light"
                     app:errorEnabled="true"
-                    app:errorTextColor="@color/error_red"
+                    app:errorTextColor="@color/error"
                     app:hintTextColor="@color/text_hint"
                     app:startIconDrawable="@drawable/ic_email_outline"
-                    app:startIconTint="@color/primary_blue">
+                    app:startIconTint="@color/primary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextEmail"
@@ -226,10 +226,10 @@
                     app:boxCornerRadiusTopStart="12dp"
                     app:boxStrokeColor="@color/border_light"
                     app:errorEnabled="true"
-                    app:errorTextColor="@color/error_red"
+                    app:errorTextColor="@color/error"
                     app:hintTextColor="@color/text_hint"
                     app:startIconDrawable="@drawable/ic_phone_outline"
-                    app:startIconTint="@color/primary_blue">
+                    app:startIconTint="@color/primary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextPhone"
@@ -256,12 +256,12 @@
                     app:boxCornerRadiusTopStart="12dp"
                     app:boxStrokeColor="@color/border_light"
                     app:endIconMode="password_toggle"
-                    app:endIconTint="@color/primary_blue"
+                    app:endIconTint="@color/primary"
                     app:errorEnabled="true"
-                    app:errorTextColor="@color/error_red"
+                    app:errorTextColor="@color/error"
                     app:hintTextColor="@color/text_hint"
                     app:startIconDrawable="@drawable/ic_lock_outline"
-                    app:startIconTint="@color/primary_blue">
+                    app:startIconTint="@color/primary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextPassword"
@@ -295,7 +295,7 @@
                         android:text="I accept the Terms &amp; Conditions"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp"
-                        android:buttonTint="@color/primary_blue"
+                        android:buttonTint="@color/primary"
                         android:layout_marginBottom="4dp"
                         android:padding="4dp" />
 
@@ -306,7 +306,7 @@
                         android:text="I accept the Privacy Policy"
                         android:textColor="@color/text_primary"
                         android:textSize="14sp"
-                        android:buttonTint="@color/primary_blue"
+                        android:buttonTint="@color/primary"
                         android:padding="4dp" />
 
                 </LinearLayout>
@@ -316,17 +316,17 @@
                     android:id="@+id/buttonRegister"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
-                    android:backgroundTint="@color/primary_blue"
+                    android:backgroundTint="@color/primary"
                     android:contentDescription="Create your new account"
                     android:stateListAnimator="@null"
                     android:text="Create Account"
-                    android:textColor="@color/white"
+                    android:textColor="@color/background"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:fontFamily="sans-serif-medium"
                     app:cornerRadius="12dp"
                     app:elevation="2dp"
-                    app:rippleColor="@color/primary_blue_light" />
+                    app:rippleColor="@color/primary_light" />
 
             </LinearLayout>
 
@@ -352,7 +352,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Sign In"
-                android:textColor="@color/primary_blue"
+                android:textColor="@color/primary"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:background="@drawable/ripple_effect"
@@ -368,7 +368,7 @@
             android:layout_gravity="center"
             android:layout_marginBottom="16dp"
             android:visibility="gone"
-            android:indeterminateTint="@color/primary_blue" />
+            android:indeterminateTint="@color/primary" />
 
         <!-- Footer -->
         <TextView

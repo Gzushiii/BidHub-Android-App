@@ -40,6 +40,7 @@ import com.cc106.bidhub.items.ItemManager;
 import com.cc106.bidhub.items.ItemStatus;
 import com.cc106.bidhub.toast.ToastHelper;
 import com.cc106.bidhub.MainActivity;
+import com.cc106.bidhub.utils.ErrorHandler;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
@@ -73,13 +74,11 @@ public class PostFragment extends Fragment implements
     private TextInputEditText etBuyNowPrice;
     private AutoCompleteTextView actvAuctionDuration;
     private TextInputEditText etLocation;
-    private TextInputEditText etShippingInfo;
     private TextInputEditText etDonationReason;
     private TextInputLayout layoutDonationReason;
     // Tags functionality removed from new layout
     // private TextInputEditText etTags;
     private AutoCompleteTextView actvSize;
-    private AutoCompleteTextView actvFeatures;
     private AutoCompleteTextView actvOrigin;
     
     private RecyclerView rvItemImages;
@@ -87,6 +86,7 @@ public class PostFragment extends Fragment implements
     private Button btnForSale;
     private Button btnForFree;
     private Button btnToggleOptional;
+    private Button btnSaveDraft;
     private Button btnPostItem;
     private ProgressBar progressBar;
     private LinearLayout layoutImageProgress;
@@ -179,17 +179,16 @@ public class PostFragment extends Fragment implements
         etBuyNowPrice = view.findViewById(R.id.et_buy_now_price);
         actvAuctionDuration = view.findViewById(R.id.actv_auction_duration);
         etLocation = view.findViewById(R.id.et_location);
-        etShippingInfo = view.findViewById(R.id.et_shipping_info);
         etDonationReason = view.findViewById(R.id.et_donation_reason);
         layoutDonationReason = view.findViewById(R.id.layout_donation_reason);
         actvSize = view.findViewById(R.id.actv_size);
-        actvFeatures = view.findViewById(R.id.actv_features);
         actvOrigin = view.findViewById(R.id.actv_origin);
         
         rvItemImages = view.findViewById(R.id.rv_item_images);
         btnForSale = view.findViewById(R.id.btn_for_sale);
         btnForFree = view.findViewById(R.id.btn_for_free);
         btnToggleOptional = view.findViewById(R.id.btn_toggle_optional);
+        btnSaveDraft = view.findViewById(R.id.btn_save_draft);
         btnPostItem = view.findViewById(R.id.btn_post_item);
         progressBar = view.findViewById(R.id.progress_bar);
         layoutImageProgress = view.findViewById(R.id.layout_image_progress);
@@ -281,15 +280,6 @@ public class PostFragment extends Fragment implements
                 setupDropdownClickListener(actvSize);
             }
             
-            // Features dropdown
-            if (actvFeatures != null) {
-                String[] features = {"Brand New", "Used", "Vintage", "Limited Edition", "Rare", "Collectible", "Custom"};
-                ArrayAdapter<String> featuresAdapter = new ArrayAdapter<>(getContext(), 
-                        android.R.layout.simple_dropdown_item_1line, features);
-                actvFeatures.setAdapter(featuresAdapter);
-                actvFeatures.setThreshold(0); // Show dropdown immediately
-                setupDropdownClickListener(actvFeatures);
-            }
             
             // Origin dropdown
             if (actvOrigin != null) {
@@ -566,6 +556,9 @@ public class PostFragment extends Fragment implements
             if (btnToggleOptional != null) {
                 btnToggleOptional.setOnClickListener(v -> toggleOptionalDetails());
             }
+            if (btnSaveDraft != null) {
+                btnSaveDraft.setOnClickListener(v -> saveDraftItem());
+            }
             if (btnPostItem != null) {
                 btnPostItem.setOnClickListener(v -> postItem());
             }
@@ -821,16 +814,36 @@ public class PostFragment extends Fragment implements
         // }
     }
     
-    private void saveAsDraft() {
-        ItemData itemData = createItemData();
-        if (itemData != null) {
-            boolean success = itemManager.createItem(itemData, loggedInUserEmail);
-            if (success) {
-                ToastHelper.showSuccess(getContext(), "Item saved as draft");
-                clearForm();
-            } else {
-                ToastHelper.showError(getContext(), "Failed to save draft");
+    private void saveDraftItem() {
+        try {
+            // Validate user email
+            if (TextUtils.isEmpty(loggedInUserEmail)) {
+                ErrorHandler.showDetailedError(getContext(), "User not logged in. Please log in again.");
+                return;
             }
+            
+            ItemData itemData = createItemData();
+            if (itemData != null) {
+                // Show loading state
+                btnSaveDraft.setEnabled(false);
+                btnSaveDraft.setText("Saving...");
+                
+                boolean success = itemManager.saveDraftItem(itemData, loggedInUserEmail);
+                if (success) {
+                    ErrorHandler.showSuccess(getContext(), "Item saved as draft");
+                    clearForm();
+                } else {
+                    ErrorHandler.showDetailedError(getContext(), "Failed to save draft");
+                }
+            } else {
+                ErrorHandler.showDetailedError(getContext(), "Please fill in all required fields correctly.");
+            }
+        } catch (Exception e) {
+            ErrorHandler.handleInitError(getContext(), "SaveDraft", e, "Saving draft item");
+            e.printStackTrace();
+        } finally {
+            btnSaveDraft.setEnabled(true);
+            btnSaveDraft.setText("Save as Draft");
         }
     }
     
@@ -838,7 +851,7 @@ public class PostFragment extends Fragment implements
         try {
             // Validate user email
             if (TextUtils.isEmpty(loggedInUserEmail)) {
-                ToastHelper.showError(getContext(), "User not logged in. Please log in again.");
+                ErrorHandler.showDetailedError(getContext(), "User not logged in. Please log in again.");
                 return;
             }
             
@@ -860,7 +873,7 @@ public class PostFragment extends Fragment implements
                 
                 boolean success = itemManager.createItem(itemData, loggedInUserEmail);
                 if (success) {
-                    ToastHelper.showSuccess(getContext(), "Item posted successfully!");
+                    ErrorHandler.showSuccess(getContext(), "Item posted successfully!");
                     clearForm();
                     
                     // Debug: Log item count after creation
@@ -868,18 +881,18 @@ public class PostFragment extends Fragment implements
                     
                     // User stays on Post tab to create more listings
                 } else {
-                    ToastHelper.showError(getContext(), "Failed to post item. Please check all required fields and try again.");
+                    ErrorHandler.showDetailedError(getContext(), "Failed to post item. Please check all required fields and try again.");
                 }
             } else {
-                ToastHelper.showError(getContext(), "Please fill in all required fields correctly.");
+                ErrorHandler.showDetailedError(getContext(), "Please fill in all required fields correctly.");
             }
         } catch (Exception e) {
-            ToastHelper.showError(getContext(), "Error posting item: " + e.getMessage());
+            ErrorHandler.handleInitError(getContext(), "PostItem", e, "Posting item");
             e.printStackTrace();
         } finally {
             // Reset button state
             btnPostItem.setEnabled(true);
-            btnPostItem.setText("List it!");
+            btnPostItem.setText("Post Item");
             if (progressBar != null) {
                 progressBar.setVisibility(View.GONE);
             }
@@ -900,7 +913,6 @@ public class PostFragment extends Fragment implements
         itemData.setCategoryId(getSelectedCategoryId());
         itemData.setCondition(actvCondition.getText().toString().trim());
         itemData.setLocation(etLocation.getText().toString().trim());
-        itemData.setShippingInfo(etShippingInfo.getText().toString().trim());
         
         // Pricing
         if (isForSale) {
@@ -949,16 +961,6 @@ public class PostFragment extends Fragment implements
             itemData.setMetadata("Size: " + size);
         }
         
-        String features = actvFeatures.getText().toString().trim();
-        if (!TextUtils.isEmpty(features) && !features.equals("Choose")) {
-            String metadata = itemData.getMetadata();
-            if (TextUtils.isEmpty(metadata)) {
-                metadata = "Features: " + features;
-            } else {
-                metadata += ", Features: " + features;
-            }
-            itemData.setMetadata(metadata);
-        }
         
         // Handle origin field (optional)
         String origin = actvOrigin.getText().toString().trim();
@@ -1204,10 +1206,8 @@ public class PostFragment extends Fragment implements
         etBuyNowPrice.setText("");
         actvAuctionDuration.setText("7 Days");
         etLocation.setText("");
-        etShippingInfo.setText("");
         etDonationReason.setText("");
         actvSize.setText("Choose");
-        actvFeatures.setText("Choose");
         actvOrigin.setText("Choose");
         
         // Reset subcategory dropdown and size dropdown
@@ -1330,7 +1330,7 @@ public class PostFragment extends Fragment implements
                 public void run() {
                     if (hasUnsavedChanges && getActivity() != null) {
                         getActivity().runOnUiThread(() -> {
-                            saveAsDraft();
+                            saveDraftItem();
                             hasUnsavedChanges = false;
                         });
                     }

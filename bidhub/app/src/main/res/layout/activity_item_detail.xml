@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <!-- Header with backdrop blur effect -->
@@ -13,7 +13,7 @@
         android:orientation="horizontal"
         android:padding="16dp"
         android:gravity="center_vertical"
-        android:background="@color/background_light"
+        android:background="@color/background"
         android:elevation="4dp">
 
         <ImageButton
@@ -418,7 +418,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="@color/background_light"
+        android:background="@color/background"
         android:elevation="8dp">
 
         <!-- Bid Amount Input with improved styling -->

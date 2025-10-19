@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light"
+    android:background="@color/background"
     android:fillViewport="true">
 
     <LinearLayout
@@ -17,7 +17,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/white"
+            android:background="@color/background"
             android:elevation="4dp"
             app:title="App Settings"
             app:titleTextColor="@color/text_primary" />
@@ -30,7 +30,7 @@
             android:layout_marginBottom="8dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -67,8 +67,8 @@
                         android:id="@+id/switch_auto_refresh"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:thumbTint="@color/primary_blue"
-                        android:trackTint="@color/primary_blue_light" />
+                        android:thumbTint="@color/primary"
+                        android:trackTint="@color/primary_light" />
 
                 </LinearLayout>
 
@@ -92,8 +92,8 @@
                         android:id="@+id/switch_data_saver"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:thumbTint="@color/primary_blue"
-                        android:trackTint="@color/primary_blue_light" />
+                        android:thumbTint="@color/primary"
+                        android:trackTint="@color/primary_light" />
 
                 </LinearLayout>
 
@@ -108,7 +108,7 @@
             android:layout_marginBottom="8dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -145,8 +145,8 @@
                         android:id="@+id/switch_analytics"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:thumbTint="@color/primary_blue"
-                        android:trackTint="@color/primary_blue_light" />
+                        android:thumbTint="@color/primary"
+                        android:trackTint="@color/primary_light" />
 
                 </LinearLayout>
 
@@ -170,8 +170,8 @@
                         android:id="@+id/switch_crash_reporting"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:thumbTint="@color/primary_blue"
-                        android:trackTint="@color/primary_blue_light" />
+                        android:thumbTint="@color/primary"
+                        android:trackTint="@color/primary_light" />
 
                 </LinearLayout>
 
@@ -186,7 +186,7 @@
             android:layout_marginBottom="8dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -223,8 +223,8 @@
                         android:id="@+id/switch_beta_features"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:thumbTint="@color/primary_blue"
-                        android:trackTint="@color/primary_blue_light" />
+                        android:thumbTint="@color/primary"
+                        android:trackTint="@color/primary_light" />
 
                 </LinearLayout>
 
@@ -239,7 +239,7 @@
             android:layout_marginBottom="8dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -290,7 +290,7 @@
                     android:layout_marginTop="8dp"
                     app:cardCornerRadius="8dp"
                     app:cardElevation="2dp"
-                    app:cardBackgroundColor="@color/primary_blue_light">
+                    app:cardBackgroundColor="@color/primary_light">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -305,7 +305,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="Clear Cache"
-                            android:textColor="@color/primary_blue_dark"
+                            android:textColor="@color/primary_dark"
                             android:textSize="16sp" />
 
                         <ImageView
@@ -313,7 +313,7 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_arrow_forward"
                             android:contentDescription="Arrow"
-                            android:tint="@color/primary_blue_dark" />
+                            android:tint="@color/primary_dark" />
 
                     </LinearLayout>
 

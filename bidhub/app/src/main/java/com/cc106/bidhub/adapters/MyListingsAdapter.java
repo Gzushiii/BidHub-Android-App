@@ -55,8 +55,30 @@ public class MyListingsAdapter extends RecyclerView.Adapter<MyListingsAdapter.Vi
         // Set item details
         holder.tvItemTitle.setText(item.getTitle() != null ? item.getTitle() : "Untitled Item");
         
-        // Set item image (use placeholder for now)
-        holder.ivItemImage.setImageResource(R.drawable.placeholder);
+        // Load item image using Glide - user images or placeholder
+        if (item.getImagePaths() != null && !item.getImagePaths().isEmpty()) {
+            // Load first image from user uploads using Glide
+            String firstImagePath = item.getImagePaths().get(0);
+            com.cc106.bidhub.utils.ImageLoader.loadImageWithErrorCallback(
+                context,
+                firstImagePath,
+                holder.ivItemImage,
+                new com.cc106.bidhub.utils.ImageLoader.ImageLoadErrorCallback() {
+                    @Override
+                    public void onError(String errorMessage) {
+                        com.cc106.bidhub.utils.ErrorHandler.handleImageError(
+                            context,
+                            firstImagePath,
+                            null,
+                            "MyListingsAdapter image load"
+                        );
+                    }
+                }
+            );
+        } else {
+            // No images uploaded, use placeholder
+            com.cc106.bidhub.utils.ImageLoader.loadPlaceholder(context, holder.ivItemImage);
+        }
 
         // Determine item status and set appropriate UI
         String status = getStatusString(item.getStatus());
@@ -157,7 +179,27 @@ public class MyListingsAdapter extends RecyclerView.Adapter<MyListingsAdapter.Vi
                 holder.btnAction1.setBackgroundResource(R.drawable.button_primary);
                 holder.btnAction1.setTextColor(context.getResources().getColor(R.color.white));
                 holder.btnAction1.setOnClickListener(v -> {
-                    if (listener != null) listener.onViewBids(item);
+                    try {
+                        if (listener != null) {
+                            listener.onViewBids(item);
+                        } else {
+                            com.cc106.bidhub.utils.ErrorHandler.logWarning(
+                                "MyListingsAdapter", 
+                                "View bids listener is null",
+                                String.format("ItemID: %s, Title: %s", 
+                                    item.getItemId(), item.getTitle())
+                            );
+                        }
+                    } catch (Exception e) {
+                        com.cc106.bidhub.utils.ErrorHandler.handleAdapterError(
+                            context,
+                            "MyListingsAdapter",
+                            "view bids click",
+                            e,
+                            String.format("ItemID: %s, Title: %s", 
+                                item.getItemId(), item.getTitle())
+                        );
+                    }
                 });
 
                 holder.btnAction2.setVisibility(View.VISIBLE);
@@ -165,7 +207,27 @@ public class MyListingsAdapter extends RecyclerView.Adapter<MyListingsAdapter.Vi
                 holder.btnAction2.setBackgroundResource(R.drawable.button_secondary);
                 holder.btnAction2.setTextColor(context.getResources().getColor(R.color.text_primary));
                 holder.btnAction2.setOnClickListener(v -> {
-                    if (listener != null) listener.onEditListing(item);
+                    try {
+                        if (listener != null) {
+                            listener.onEditListing(item);
+                        } else {
+                            com.cc106.bidhub.utils.ErrorHandler.logWarning(
+                                "MyListingsAdapter", 
+                                "Edit listing listener is null",
+                                String.format("ItemID: %s, Title: %s", 
+                                    item.getItemId(), item.getTitle())
+                            );
+                        }
+                    } catch (Exception e) {
+                        com.cc106.bidhub.utils.ErrorHandler.handleAdapterError(
+                            context,
+                            "MyListingsAdapter",
+                            "edit listing click",
+                            e,
+                            String.format("ItemID: %s, Title: %s", 
+                                item.getItemId(), item.getTitle())
+                        );
+                    }
                 });
                 break;
 
@@ -175,7 +237,27 @@ public class MyListingsAdapter extends RecyclerView.Adapter<MyListingsAdapter.Vi
                 holder.btnAction1.setBackgroundResource(R.drawable.button_success_light);
                 holder.btnAction1.setTextColor(context.getResources().getColor(R.color.success));
                 holder.btnAction1.setOnClickListener(v -> {
-                    if (listener != null) listener.onMarkAsSold(item);
+                    try {
+                        if (listener != null) {
+                            listener.onMarkAsSold(item);
+                        } else {
+                            com.cc106.bidhub.utils.ErrorHandler.logWarning(
+                                "MyListingsAdapter", 
+                                "Mark as sold listener is null",
+                                String.format("ItemID: %s, Title: %s", 
+                                    item.getItemId(), item.getTitle())
+                            );
+                        }
+                    } catch (Exception e) {
+                        com.cc106.bidhub.utils.ErrorHandler.handleAdapterError(
+                            context,
+                            "MyListingsAdapter",
+                            "mark as sold click",
+                            e,
+                            String.format("ItemID: %s, Title: %s", 
+                                item.getItemId(), item.getTitle())
+                        );
+                    }
                 });
                 break;
 
@@ -185,7 +267,27 @@ public class MyListingsAdapter extends RecyclerView.Adapter<MyListingsAdapter.Vi
                 holder.btnAction1.setBackgroundResource(R.drawable.button_secondary);
                 holder.btnAction1.setTextColor(context.getResources().getColor(R.color.text_primary));
                 holder.btnAction1.setOnClickListener(v -> {
-                    if (listener != null) listener.onEditListing(item);
+                    try {
+                        if (listener != null) {
+                            listener.onEditListing(item);
+                        } else {
+                            com.cc106.bidhub.utils.ErrorHandler.logWarning(
+                                "MyListingsAdapter", 
+                                "Edit listing listener is null",
+                                String.format("ItemID: %s, Title: %s", 
+                                    item.getItemId(), item.getTitle())
+                            );
+                        }
+                    } catch (Exception e) {
+                        com.cc106.bidhub.utils.ErrorHandler.handleAdapterError(
+                            context,
+                            "MyListingsAdapter",
+                            "edit listing click",
+                            e,
+                            String.format("ItemID: %s, Title: %s", 
+                                item.getItemId(), item.getTitle())
+                        );
+                    }
                 });
                 break;
 
@@ -215,11 +317,40 @@ public class MyListingsAdapter extends RecyclerView.Adapter<MyListingsAdapter.Vi
             btnAction1 = itemView.findViewById(R.id.btn_action_1);
             btnAction2 = itemView.findViewById(R.id.btn_action_2);
 
-            // Set click listener for the entire card
+            // Set click listener for the entire card with error handling
             itemView.setOnClickListener(v -> {
-                int position = getAdapterPosition();
-                if (position != RecyclerView.NO_POSITION && listener != null) {
-                    listener.onItemClick(listings.get(position));
+                try {
+                    int position = getAdapterPosition();
+                    if (position != RecyclerView.NO_POSITION && position < listings.size()) {
+                        Item item = listings.get(position);
+                        if (listener != null && item != null) {
+                            listener.onItemClick(item);
+                        } else {
+                            com.cc106.bidhub.utils.ErrorHandler.logWarning(
+                                "MyListingsAdapter", 
+                                "Item click listener or item is null",
+                                String.format("Position: %d, Listener: %s, Item: %s", 
+                                    position,
+                                    listener != null ? "not null" : "null",
+                                    item != null ? item.getItemId() : "null")
+                            );
+                        }
+                    } else {
+                        com.cc106.bidhub.utils.ErrorHandler.logWarning(
+                            "MyListingsAdapter", 
+                            "Invalid position for item click",
+                            String.format("Position: %d, ListSize: %d", 
+                                position, listings != null ? listings.size() : 0)
+                        );
+                    }
+                } catch (Exception e) {
+                    com.cc106.bidhub.utils.ErrorHandler.handleAdapterError(
+                        context,
+                        "MyListingsAdapter",
+                        "item click",
+                        e,
+                        String.format("Position: %d", getAdapterPosition())
+                    );
                 }
             });
         }

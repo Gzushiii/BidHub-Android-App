@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light"
+    android:background="@color/background"
     android:fillViewport="true">
 
     <LinearLayout
@@ -23,7 +23,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="About BidHub"
-                android:textColor="@color/white"
+                android:textColor="@color/background"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp" />
@@ -32,7 +32,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Learn more about our app and team"
-                android:textColor="@color/white"
+                android:textColor="@color/background"
                 android:textSize="14sp" />
 
         </LinearLayout>
@@ -44,7 +44,7 @@
             android:layout_margin="16dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="8dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -135,7 +135,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="8dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -174,7 +174,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="8dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -239,7 +239,7 @@
                         android:text="Rate"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -292,7 +292,7 @@
                         android:text="Share"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -345,7 +345,7 @@
                         android:text="Check"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -397,7 +397,7 @@
                         android:text="GitHub"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -415,7 +415,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="8dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -480,7 +480,7 @@
                         android:text="Terms"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -533,7 +533,7 @@
                         android:text="Policy"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -585,7 +585,7 @@
                         android:text="Contact"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>

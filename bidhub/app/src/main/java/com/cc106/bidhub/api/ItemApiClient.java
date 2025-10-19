@@ -78,7 +78,7 @@ public class ItemApiClient {
             
             // Add condition if available
             if (itemData.getCondition() != null && !itemData.getCondition().isEmpty()) {
-                requestData.put("condition", itemData.getCondition());
+                requestData.put("item_condition", itemData.getCondition());
             }
             
             // Add buy now price if available
@@ -135,7 +135,7 @@ public class ItemApiClient {
     /**
      * Get items from backend API
      */
-    public ApiResponse getItems(String categoryId, String search, Double minPrice, Double maxPrice, int limit, int offset) {
+    public ApiResponse getItems(String categoryId, String search, Double minPrice, Double maxPrice, String sellerEmail, int limit, int offset) {
         Log.i(TAG, "Getting items from API");
         
         try {
@@ -154,6 +154,9 @@ public class ItemApiClient {
             }
             if (maxPrice != null) {
                 urlBuilder.append("&max_price=").append(maxPrice);
+            }
+            if (sellerEmail != null && !sellerEmail.isEmpty()) {
+                urlBuilder.append("&seller_email=").append(sellerEmail);
             }
             
             // Get auth token

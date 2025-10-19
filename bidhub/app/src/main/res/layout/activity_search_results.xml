@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background_light">
+    android:background="@color/background">
 
     <!-- Header -->
     <LinearLayout
@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="@color/white"
+        android:background="@color/background"
         android:elevation="4dp">
 
         <!-- Top Bar -->
@@ -30,7 +30,7 @@
                 android:layout_height="48dp"
                 android:src="@drawable/ic_arrow_back"
                 android:background="@drawable/card_background"
-                android:backgroundTint="@color/primary_blue_light"
+                android:backgroundTint="@color/primary_light"
                 android:contentDescription="Back"
                 android:padding="12dp"
                 android:layout_marginEnd="16dp" />
@@ -47,7 +47,7 @@
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusBottomStart="12dp"
                 app:boxCornerRadiusBottomEnd="12dp"
-                app:boxStrokeColor="@color/primary_blue"
+                app:boxStrokeColor="@color/primary"
                 app:hintTextColor="@color/text_secondary">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -85,7 +85,7 @@
                 android:text="&quot;&quot;"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="@color/primary_blue" />
+                android:textColor="@color/primary" />
 
         </LinearLayout>
 
@@ -142,7 +142,7 @@
                     android:layout_height="48dp"
                     android:src="@drawable/ic_filter"
                     android:background="@drawable/card_background"
-                    android:backgroundTint="@color/primary_blue_light"
+                    android:backgroundTint="@color/primary_light"
                     android:contentDescription="Filter Items"
                     android:padding="12dp" />
 
@@ -224,7 +224,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Clear Search"
-                    android:textColor="@color/primary_blue"
+                    android:textColor="@color/primary"
                     android:background="@android:color/transparent"
                     android:paddingHorizontal="16dp"
                     android:paddingVertical="8dp"
@@ -235,7 +235,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Browse All Items"
-                    android:textColor="@color/white"
+                    android:textColor="@color/background"
                     android:background="@drawable/button_primary"
                     android:paddingHorizontal="16dp"
                     android:paddingVertical="8dp" />

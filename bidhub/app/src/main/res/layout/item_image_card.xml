@@ -17,7 +17,7 @@
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_image_placeholder"
-            android:background="@color/background_light" />
+            android:background="@color/background" />
 
         <ImageView
             android:id="@+id/iv_remove_image"

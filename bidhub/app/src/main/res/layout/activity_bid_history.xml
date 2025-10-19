@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background_light">
+    android:background="@color/background">
 
     <!-- Header -->
     <androidx.cardview.widget.CardView
@@ -142,7 +142,7 @@
                     android:text="0"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:textColor="@color/success_green" />
+                    android:textColor="@color/success" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -177,7 +177,7 @@
                     android:text="0"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:textColor="@color/accent_orange" />
+                    android:textColor="@color/accent" />
 
                 <TextView
                     android:layout_width="wrap_content"

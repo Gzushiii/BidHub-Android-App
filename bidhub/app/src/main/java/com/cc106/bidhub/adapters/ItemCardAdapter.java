@@ -83,14 +83,29 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             holder.timeRemainingText.setText("No end date");
         }
         
-        // Set item image - use placeholder if no images uploaded
+        // Set item image - load user images with Glide, fallback to placeholder
         if (item.getImagePaths() != null && !item.getImagePaths().isEmpty()) {
-            // TODO: Load actual image from path when image loading is implemented
-            // For now, use placeholder even if images exist
-            holder.itemImage.setImageResource(R.drawable.placeholder);
+            // Load first image from user uploads using Glide
+            String firstImagePath = item.getImagePaths().get(0);
+            com.cc106.bidhub.utils.ImageLoader.loadImageWithErrorCallback(
+                holder.itemImage.getContext(),
+                firstImagePath,
+                holder.itemImage,
+                new com.cc106.bidhub.utils.ImageLoader.ImageLoadErrorCallback() {
+                    @Override
+                    public void onError(String errorMessage) {
+                        com.cc106.bidhub.utils.ErrorHandler.handleImageError(
+                            holder.itemImage.getContext(),
+                            firstImagePath,
+                            null,
+                            "ItemCardAdapter image load"
+                        );
+                    }
+                }
+            );
         } else {
             // No images uploaded, use placeholder
-            holder.itemImage.setImageResource(R.drawable.placeholder);
+            com.cc106.bidhub.utils.ImageLoader.loadPlaceholder(holder.itemImage.getContext(), holder.itemImage);
         }
         
         // Set featured/trending indicators
@@ -116,22 +131,41 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             holder.draftBadge.setVisibility(View.GONE);
         }
         
-            // Set click listener with error handling
+            // Set click listener with detailed error handling
             holder.itemView.setOnClickListener(v -> {
                 try {
                     if (onItemClickListener != null && item != null) {
                         onItemClickListener.onItemClick(item);
+                    } else {
+                        com.cc106.bidhub.utils.ErrorHandler.logWarning(
+                            "ItemCardAdapter", 
+                            "Item click listener or item is null",
+                            String.format("Listener: %s, Item: %s", 
+                                onItemClickListener != null ? "not null" : "null",
+                                item != null ? item.getItemId() : "null")
+                        );
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    // Log error but don't crash the app
-                    android.util.Log.e("ItemCardAdapter", "Error handling item click", e);
+                    com.cc106.bidhub.utils.ErrorHandler.handleAdapterError(
+                        holder.itemView.getContext(),
+                        "ItemCardAdapter",
+                        "item click",
+                        e,
+                        String.format("ItemID: %s, Title: %s", 
+                            item != null ? item.getItemId() : "null",
+                            item != null ? item.getTitle() : "null")
+                    );
                 }
             });
             
         } catch (Exception e) {
-            e.printStackTrace();
-            android.util.Log.e("ItemCardAdapter", "Error binding view holder", e);
+            com.cc106.bidhub.utils.ErrorHandler.handleAdapterError(
+                holder.itemView.getContext(),
+                "ItemCardAdapter",
+                "bind view holder",
+                e,
+                String.format("Position: %d", position)
+            );
         }
     }
     

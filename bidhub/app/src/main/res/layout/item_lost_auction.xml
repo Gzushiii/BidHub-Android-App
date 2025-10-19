@@ -55,7 +55,7 @@
                 android:text="OUTBID"
                 android:textSize="10sp"
                 android:textStyle="bold"
-                android:textColor="@color/error_red"
+                android:textColor="@color/on_error_light"
                 android:background="@drawable/status_badge_outbid"
                 android:padding="8dp"
                 android:gravity="center" />
@@ -113,7 +113,7 @@
                     android:text="₱0.00"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="@color/error_red" />
+                    android:textColor="@color/error" />
 
             </LinearLayout>
 
@@ -137,7 +137,7 @@
                     android:text="₱0.00"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:textColor="@color/error_red" />
+                    android:textColor="@color/error" />
 
             </LinearLayout>
 

@@ -104,7 +104,7 @@
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:background="@drawable/button_primary"
-                    android:textColor="@color/white" />
+                    android:textColor="@color/background" />
 
                 <Button
                     android:id="@+id/btn_action_2"

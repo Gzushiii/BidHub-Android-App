@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light"
+    android:background="@color/background"
     android:fillViewport="true">
 
     <LinearLayout
@@ -23,7 +23,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Help &amp; Support"
-                android:textColor="@color/white"
+                android:textColor="@color/background"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp" />
@@ -32,7 +32,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Get help and contact our support team"
-                android:textColor="@color/white"
+                android:textColor="@color/background"
                 android:textSize="14sp" />
 
         </LinearLayout>
@@ -44,7 +44,7 @@
             android:layout_margin="16dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="8dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -109,7 +109,7 @@
                         android:text="Chat"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -162,7 +162,7 @@
                         android:text="Email"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -215,7 +215,7 @@
                         android:text="Report"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -267,7 +267,7 @@
                         android:text="Request"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -285,7 +285,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="8dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -350,7 +350,7 @@
                         android:text="Show FAQ"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -403,7 +403,7 @@
                         android:text="Guide"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -456,7 +456,7 @@
                         android:text="Terms"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -508,7 +508,7 @@
                         android:text="Policy"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -526,7 +526,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="8dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"

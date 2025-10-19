@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light"
+    android:background="@color/background"
     android:fillViewport="true">
 
     <LinearLayout
@@ -17,7 +17,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/white"
+            android:background="@color/background"
             android:elevation="4dp"
             app:title="Settings"
             app:titleTextColor="@color/text_primary" />
@@ -31,7 +31,7 @@
             android:layout_marginBottom="8dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -94,7 +94,7 @@
             android:layout_marginBottom="8dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -148,7 +148,7 @@
             android:layout_marginBottom="8dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -185,8 +185,8 @@
                         android:id="@+id/switch_notifications"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:thumbTint="@color/primary_blue"
-                        android:trackTint="@color/primary_blue_light" />
+                        android:thumbTint="@color/primary"
+                        android:trackTint="@color/primary_light" />
 
                 </LinearLayout>
 
@@ -210,8 +210,8 @@
                         android:id="@+id/switch_biometric"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:thumbTint="@color/primary_blue"
-                        android:trackTint="@color/primary_blue_light" />
+                        android:thumbTint="@color/primary"
+                        android:trackTint="@color/primary_light" />
 
                 </LinearLayout>
 
@@ -227,7 +227,7 @@
             android:layout_marginBottom="8dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -264,8 +264,8 @@
                         android:id="@+id/switch_dark_mode"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:thumbTint="@color/primary_blue"
-                        android:trackTint="@color/primary_blue_light" />
+                        android:thumbTint="@color/primary"
+                        android:trackTint="@color/primary_light" />
 
                 </LinearLayout>
 
@@ -289,8 +289,8 @@
                         android:id="@+id/switch_auto_bid"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:thumbTint="@color/primary_blue"
-                        android:trackTint="@color/primary_blue_light" />
+                        android:thumbTint="@color/primary"
+                        android:trackTint="@color/primary_light" />
 
                 </LinearLayout>
 
@@ -314,8 +314,8 @@
                         android:id="@+id/switch_sound_effects"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:thumbTint="@color/primary_blue"
-                        android:trackTint="@color/primary_blue_light" />
+                        android:thumbTint="@color/primary"
+                        android:trackTint="@color/primary_light" />
 
                 </LinearLayout>
 
@@ -331,7 +331,7 @@
             android:layout_marginBottom="8dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -394,7 +394,7 @@
             android:layout_marginBottom="8dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -463,7 +463,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Sign Out"
-                    android:textColor="@color/error_red"
+                    android:textColor="@color/error"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -472,7 +472,7 @@
                     android:layout_height="24dp"
                     android:src="@drawable/ic_logout"
                     android:contentDescription="Logout"
-                    android:tint="@color/error_red" />
+                    android:tint="@color/error" />
 
             </LinearLayout>
 

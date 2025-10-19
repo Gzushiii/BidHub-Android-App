@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background_light">
+    android:background="@color/background">
 
 
     <!-- Content Area -->
@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:visibility="gone"
-            android:indeterminateTint="@color/primary_blue" />
+            android:indeterminateTint="@color/primary" />
             
     </FrameLayout>
 
@@ -35,15 +35,15 @@
         android:id="@+id/bottomNavigationView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
+        android:background="@color/background"
         android:elevation="8dp"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
         app:menu="@menu/bottom_navigation_menu"
-        app:itemIconTint="@drawable/bottom_nav_item_color"
-        app:itemTextColor="@drawable/bottom_nav_item_color"
+        app:itemIconTint="@color/bottom_nav_color_state"
+        app:itemTextColor="@color/bottom_nav_color_state"
         app:labelVisibilityMode="labeled"
-        app:itemRippleColor="@color/primary_blue_light"
+        app:itemRippleColor="@color/primary_light"
         app:itemActiveIndicatorStyle="@style/ActiveIndicator" />
 
 </LinearLayout>

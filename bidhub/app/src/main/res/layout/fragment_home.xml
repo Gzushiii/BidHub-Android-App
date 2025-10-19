@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light"
+    android:background="@color/background"
     android:orientation="vertical">
 
     <!-- Header -->
@@ -13,7 +13,7 @@
         android:orientation="horizontal"
         android:padding="16dp"
         android:gravity="center_vertical"
-        android:background="@color/background_light">
+        android:background="@color/background">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -105,12 +105,12 @@
 
             </LinearLayout>
 
-            <!-- Quick Actions Row 1 -->
+            <!-- Quick Actions - All in One Row -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginBottom="12dp">
+                android:layout_marginBottom="24dp">
 
                 <!-- Browse -->
                 <LinearLayout
@@ -151,7 +151,7 @@
                     android:gravity="center"
                     android:padding="12dp"
                     android:background="@drawable/quick_action_background"
-                    android:layout_marginEnd="4dp">
+                    android:layout_marginHorizontal="4dp">
 
                     <ImageView
                         android:layout_width="24dp"
@@ -170,16 +170,6 @@
 
                 </LinearLayout>
 
-
-            </LinearLayout>
-
-            <!-- Quick Actions Row 2 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginBottom="24dp">
-
                 <!-- My Listings -->
                 <LinearLayout
                     android:id="@+id/cardMyListings"
@@ -190,7 +180,7 @@
                     android:gravity="center"
                     android:padding="12dp"
                     android:background="@drawable/quick_action_background"
-                    android:layout_marginEnd="4dp">
+                    android:layout_marginStart="4dp">
 
                     <ImageView
                         android:layout_width="24dp"
@@ -203,64 +193,6 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="My Listings"
-                        android:textColor="@color/primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <!-- Placeholder for future actions -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:padding="12dp"
-                    android:background="@drawable/quick_action_background"
-                    android:layout_marginHorizontal="4dp"
-                    android:visibility="invisible">
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_toll"
-                        android:tint="@color/primary"
-                        android:layout_marginBottom="8dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Future"
-                        android:textColor="@color/primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <!-- Placeholder for future actions -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:padding="12dp"
-                    android:background="@drawable/quick_action_background"
-                    android:layout_marginStart="4dp"
-                    android:visibility="invisible">
-
-                    <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_toll"
-                        android:tint="@color/primary"
-                        android:layout_marginBottom="8dp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Future"
                         android:textColor="@color/primary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
@@ -461,7 +393,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Ending in 2h 30m"
-                            android:textColor="@color/success_green"
+                            android:textColor="@color/success"
                             android:textSize="14sp" />
 
                     </LinearLayout>

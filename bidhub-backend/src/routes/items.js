@@ -15,6 +15,7 @@ router.get('/', async (req, res) => {
       search,
       min_price,
       max_price,
+      seller_email,
       limit = 20, 
       offset = 0 
     } = req.query;
@@ -40,6 +41,11 @@ router.get('/', async (req, res) => {
     if (max_price) {
       query += ' AND current_price <= ?';
       params.push(parseFloat(max_price));
+    }
+
+    if (seller_email) {
+      query += ' AND seller_email = ?';
+      params.push(seller_email);
     }
 
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
@@ -69,6 +75,11 @@ router.get('/', async (req, res) => {
     if (max_price) {
       countQuery += ' AND current_price <= ?';
       countParams.push(parseFloat(max_price));
+    }
+    
+    if (seller_email) {
+      countQuery += ' AND seller_email = ?';
+      countParams.push(seller_email);
     }
 
     const [countResult] = await db.query(countQuery, countParams);

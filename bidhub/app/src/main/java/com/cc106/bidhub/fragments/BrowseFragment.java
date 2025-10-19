@@ -38,6 +38,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.cc106.bidhub.R;
 
@@ -50,6 +51,7 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     private ItemManager itemManager;
     
     // UI Components
+    private SwipeRefreshLayout swipeRefreshLayout;
     private TextInputEditText etSearch;
     private ImageButton btnFilter;
     private ImageButton btnSort;
@@ -111,6 +113,7 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     }
     
     private void initializeViews(View view) {
+        swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
         etSearch = view.findViewById(R.id.et_search);
         btnFilter = view.findViewById(R.id.btn_filter);
         btnSort = view.findViewById(R.id.btn_sort);
@@ -136,6 +139,22 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         currentFilter = new FilterCriteria();
         activeFilters = new ArrayList<>();
         searchHandler = new Handler(Looper.getMainLooper());
+        
+        // Setup SwipeRefreshLayout
+        setupSwipeRefresh();
+    }
+    
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setColorSchemeResources(
+            R.color.primary_blue,
+            R.color.accent_orange,
+            R.color.success_green
+        );
+        
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            // Refresh items when user pulls down
+            loadItems();
+        });
     }
     
     private void setupRecyclerView() {
@@ -351,17 +370,21 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         new Thread(() -> {
             try {
                 com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(getContext());
-                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItems(null, null, null, null, 100, 0);
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItems(null, null, null, null, null, 100, 0);
                 
                 if (response.isSuccess() && response.getData() != null) {
                     // Parse and display items from database
                     List<Item> dbItems = parseItemsFromResponse(response.getData());
-                    android.util.Log.d("BrowseFragment", "Loaded " + dbItems.size() + " items from database");
+                    // Filter to only show ACTIVE items
+                    List<Item> activeItems = dbItems.stream()
+                        .filter(item -> item.getStatus() == com.cc106.bidhub.items.ItemStatus.ACTIVE)
+                        .collect(java.util.stream.Collectors.toList());
+                    android.util.Log.d("BrowseFragment", "Loaded " + activeItems.size() + " active items from database (filtered from " + dbItems.size() + " total)");
                     
                     getActivity().runOnUiThread(() -> {
                         if (isAdded()) {
                             allItems.clear();
-                            allItems.addAll(dbItems);
+                            allItems.addAll(activeItems);
                             applyFilters();
                         }
                     });
@@ -382,10 +405,14 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         // Load items on background thread
         new Thread(() -> {
             List<Item> items = itemManager.getAllBrowsableItems();
+            // Filter to only show ACTIVE items
+            List<Item> activeItems = items.stream()
+                .filter(item -> item.getStatus() == com.cc106.bidhub.items.ItemStatus.ACTIVE)
+                .collect(java.util.stream.Collectors.toList());
             
             // Debug: Log item count
-            android.util.Log.d("BrowseFragment", "Loaded " + items.size() + " local items");
-            for (Item item : items) {
+            android.util.Log.d("BrowseFragment", "Loaded " + activeItems.size() + " active local items (filtered from " + items.size() + " total)");
+            for (Item item : activeItems) {
                 android.util.Log.d("BrowseFragment", "Item: " + item.getTitle() + " Status: " + item.getStatus());
             }
             
@@ -394,10 +421,10 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                 getActivity().runOnUiThread(() -> {
                     if (isAdded()) { // Check if fragment is still added to activity
                         allItems.clear();
-                        allItems.addAll(items);
+                        allItems.addAll(activeItems);
                         
                         // Debug: Log after updating allItems
-                        android.util.Log.d("BrowseFragment", "Updated allItems with " + allItems.size() + " items");
+                        android.util.Log.d("BrowseFragment", "Updated allItems with " + allItems.size() + " active items");
                         
                         // Apply current filters
                         applyFilters();
@@ -425,17 +452,38 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                 item.setCategoryId(itemJson.getString("category_id"));
                 item.setSellerId(itemJson.getString("seller_email"));
                 item.setLocation(itemJson.optString("location", ""));
-                item.setCondition(itemJson.optString("condition", "good"));
+                item.setCondition(itemJson.optString("item_condition", itemJson.optString("condition", "good")));
                 item.setStatus(ItemStatus.ACTIVE);
                 
-                // Parse images if available
+                // Parse images if available - handle both JSON array and JSON string
                 if (itemJson.has("images")) {
-                    org.json.JSONArray imagesArray = itemJson.getJSONArray("images");
-                    List<String> imagePaths = new ArrayList<>();
-                    for (int j = 0; j < imagesArray.length(); j++) {
-                        imagePaths.add(imagesArray.getString(j));
+                    try {
+                        Object imagesObj = itemJson.get("images");
+                        List<String> imagePaths = new ArrayList<>();
+                        
+                        if (imagesObj instanceof org.json.JSONArray) {
+                            // Images is already a JSON array
+                            org.json.JSONArray imagesArray = (org.json.JSONArray) imagesObj;
+                            for (int j = 0; j < imagesArray.length(); j++) {
+                                imagePaths.add(imagesArray.getString(j));
+                            }
+                        } else if (imagesObj instanceof String) {
+                            // Images is a JSON string, parse it
+                            String imagesString = (String) imagesObj;
+                            if (!imagesString.isEmpty() && !imagesString.equals("null")) {
+                                org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
+                                for (int j = 0; j < imagesArray.length(); j++) {
+                                    imagePaths.add(imagesArray.getString(j));
+                                }
+                            }
+                        }
+                        
+                        item.setImagePaths(imagePaths);
+                    } catch (Exception e) {
+                        android.util.Log.w("BrowseFragment", "Error parsing images for item: " + item.getTitle(), e);
+                        // Set empty list as fallback
+                        item.setImagePaths(new ArrayList<>());
                     }
-                    item.setImagePaths(imagePaths);
                 }
                 
                 items.add(item);
@@ -448,12 +496,19 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     
     private void showLoading(boolean show) {
         if (show) {
-            progressBar.setVisibility(View.VISIBLE);
+            // Don't show progress bar if SwipeRefreshLayout is already showing
+            if (!swipeRefreshLayout.isRefreshing()) {
+                progressBar.setVisibility(View.VISIBLE);
+            }
             rvItems.setVisibility(View.GONE);
             layoutEmptyState.setVisibility(View.GONE);
         } else {
             progressBar.setVisibility(View.GONE);
             rvItems.setVisibility(View.VISIBLE);
+            // Stop SwipeRefreshLayout if it's refreshing
+            if (swipeRefreshLayout.isRefreshing()) {
+                swipeRefreshLayout.setRefreshing(false);
+            }
         }
     }
     

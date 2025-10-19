@@ -57,7 +57,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            app:cardBackgroundColor="@color/white"
+            app:cardBackgroundColor="@color/background"
             app:cardCornerRadius="16dp"
             app:cardElevation="4dp">
 
@@ -81,10 +81,10 @@
                     app:boxCornerRadiusTopStart="12dp"
                     app:boxStrokeColor="@color/border_light"
                     app:errorEnabled="true"
-                    app:errorTextColor="@color/error_red"
+                    app:errorTextColor="@color/error"
                     app:hintTextColor="@color/text_hint"
                     app:startIconDrawable="@drawable/ic_email_outline"
-                    app:startIconTint="@color/primary_blue">
+                    app:startIconTint="@color/primary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextEmail"
@@ -116,12 +116,12 @@
                     app:boxCornerRadiusTopStart="12dp"
                     app:boxStrokeColor="@color/border_light"
                     app:endIconMode="password_toggle"
-                    app:endIconTint="@color/primary_blue"
+                    app:endIconTint="@color/primary"
                     app:errorEnabled="true"
-                    app:errorTextColor="@color/error_red"
+                    app:errorTextColor="@color/error"
                     app:hintTextColor="@color/text_hint"
                     app:startIconDrawable="@drawable/ic_lock_outline"
-                    app:startIconTint="@color/primary_blue">
+                    app:startIconTint="@color/primary">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editTextPassword"
@@ -144,7 +144,7 @@
                     android:drawablePadding="4dp"
                     android:padding="6dp"
                     android:text="Forgot Password?"
-                    android:textColor="@color/primary_blue"
+                    android:textColor="@color/primary"
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
@@ -152,19 +152,19 @@
                     android:id="@+id/buttonLogin"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:backgroundTint="@color/primary_blue"
+                    android:backgroundTint="@color/primary"
                     android:contentDescription="Sign in to your account"
                     android:rotationY="0"
                     android:stateListAnimator="@null"
                     android:text="Sign In"
-                    android:textColor="@color/white"
+                    android:textColor="@color/on_primary"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:fontFamily="sans-serif-medium"
                     app:cornerRadius="12dp"
                     app:elevation="2dp"
                     app:iconPadding="8dp"
-                    app:rippleColor="@color/primary_blue_light" />
+                    app:rippleColor="@color/primary_light" />
 
             </LinearLayout>
 
@@ -190,7 +190,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Sign Up"
-                android:textColor="@color/primary_blue"
+                android:textColor="@color/primary"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:background="@drawable/ripple_effect"
@@ -206,7 +206,7 @@
             android:layout_gravity="center"
             android:layout_marginBottom="16dp"
             android:visibility="gone"
-            android:indeterminateTint="@color/primary_blue" />
+            android:indeterminateTint="@color/primary" />
 
         <!-- Test Button (for development only) -->
         <Button
@@ -216,7 +216,7 @@
             android:layout_gravity="center"
             android:text="Test Password Recovery"
             android:textSize="12sp"
-            android:textColor="@color/primary_blue"
+            android:textColor="@color/primary"
             android:background="@drawable/ripple_effect"
             android:padding="8dp"
             android:layout_marginBottom="16dp" />

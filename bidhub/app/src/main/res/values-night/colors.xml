@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- DARK MODE COLOR PALETTE - HIGH CONTRAST, SOLID COLORS ONLY -->
+    <!-- Optimized for dark backgrounds with excellent text visibility -->
+    
+    <!-- PRIMARY BRAND COLORS -->
+    <color name="primary">#4DB6AC</color>
+    <color name="primary_light">#80CBC4</color>
+    <color name="primary_dark">#26A69A</color>
+    <color name="primary_container">#004D40</color>
+    <color name="on_primary">#000000</color>
+    <color name="on_primary_container">#4DB6AC</color>
+    
+    <!-- SECONDARY COLORS -->
+    <color name="secondary">#80CBC4</color>
+    <color name="secondary_light">#B2DFDB</color>
+    <color name="secondary_dark">#4DB6AC</color>
+    <color name="secondary_container">#004D40</color>
+    <color name="on_secondary">#000000</color>
+    <color name="on_secondary_container">#4DB6AC</color>
+    
+    <!-- ACCENT COLORS -->
+    <color name="accent">#FFB74D</color>
+    <color name="accent_light">#FFCC80</color>
+    <color name="accent_dark">#FF8F00</color>
+    
+    <!-- NEUTRAL COLORS -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="charcoal">#121212</color>
+    <color name="dark_gray">#1E1E1E</color>
+    <color name="medium_gray">#424242</color>
+    <color name="light_gray">#757575</color>
+    <color name="very_light_gray">#2C2C2C</color>
+    
+    <!-- SEMANTIC COLORS WITH HIGH CONTRAST -->
+    <color name="success">#81C784</color>
+    <color name="success_light">#A5D6A7</color>
+    <color name="success_dark">#4CAF50</color>
+    <color name="on_success">#000000</color>
+    
+    <color name="warning">#FFB74D</color>
+    <color name="warning_light">#FFCC80</color>
+    <color name="warning_dark">#FF8F00</color>
+    <color name="on_warning">#000000</color>
+    
+    <color name="error">#E57373</color>
+    <color name="error_light">#FFAB91</color>
+    <color name="error_dark">#E53935</color>
+    <color name="on_error">#000000</color>
+    
+    <color name="info">#64B5F6</color>
+    <color name="info_light">#90CAF9</color>
+    <color name="info_dark">#2196F3</color>
+    <color name="on_info">#000000</color>
+    
+    <!-- TEXT COLORS - HIGH CONTRAST FOR DARK MODE -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_primary_dark">#FFFFFF</color>
+    <color name="text_secondary">#E0E0E0</color>
+    <color name="text_secondary_dark">#E0E0E0</color>
+    <color name="text_hint">#BDBDBD</color>
+    <color name="text_hint_dark">#BDBDBD</color>
+    <color name="text_disabled">#757575</color>
+    <color name="text_disabled_dark">#757575</color>
+    <color name="text_white">#FFFFFF</color>
+    <color name="text_black">#000000</color>
+    
+    <!-- BACKGROUND COLORS -->
+    <color name="background">#000000</color>
+    <color name="background_light">#000000</color>
+    <color name="background_secondary">#1E1E1E</color>
+    <color name="background_tertiary">#2C2C2C</color>
+    <color name="surface">#1E1E1E</color>
+    <color name="surface_variant">#2C2C2C</color>
+    <color name="surface_container">#424242</color>
+    
+    <!-- BORDER AND OUTLINE COLORS -->
+    <color name="outline">#424242</color>
+    <color name="outline_variant">#2C2C2C</color>
+    <color name="outline_focus">#4DB6AC</color>
+    <color name="border_light">#2C2C2C</color>
+    <color name="border_medium">#424242</color>
+    <color name="border_dark">#757575</color>
+    
+    <!-- STATE COLORS -->
+    <color name="state_hover">#2C2C2C</color>
+    <color name="state_pressed">#424242</color>
+    <color name="state_focused">#004D40</color>
+    <color name="state_disabled">#1E1E1E</color>
+    <color name="state_selected">#004D40</color>
+    
+    <!-- FUNCTIONAL COLORS -->
+    <!-- Credit system -->
+    <color name="credit_gold">#FFB74D</color>
+    <color name="credit_gold_light">#FFCC80</color>
+    <color name="credit_gold_dark">#FF8F00</color>
+    
+    <!-- Auction-specific -->
+    <color name="bid_green">#81C784</color>
+    <color name="bid_green_light">#A5D6A7</color>
+    <color name="outbid_red">#E57373</color>
+    <color name="outbid_red_light">#FFAB91</color>
+    <color name="winning_gold">#FFB74D</color>
+    <color name="winning_gold_light">#FFCC80</color>
+    <color name="ending_orange">#FFB74D</color>
+    <color name="ending_orange_light">#FFCC80</color>
+    
+    <!-- Payment gateways -->
+    <color name="gcash_color">#00D4AA</color>
+    <color name="maya_color">#00A8E8</color>
+    
+    <!-- Password strength -->
+    <color name="password_weak">#E57373</color>
+    <color name="password_fair">#FFB74D</color>
+    <color name="password_good">#64B5F6</color>
+    <color name="password_strong">#81C784</color>
+    
+    <!-- LEGACY COMPATIBILITY COLORS -->
+    <color name="primary_blue">#4DB6AC</color>
+    <color name="primary_blue_dark">#26A69A</color>
+    <color name="primary_blue_light">#80CBC4</color>
+    <color name="accent_orange">#FFB74D</color>
+    <color name="accent_orange_dark">#FF8F00</color>
+    <color name="accent_orange_light">#FFCC80</color>
+    <color name="success_green">#81C784</color>
+    <color name="success_green_light">#A5D6A7</color>
+    <color name="success_green_dark">#4CAF50</color>
+    <color name="error_red">#E57373</color>
+    <color name="error_red_light">#FFAB91</color>
+    <color name="error_red_dark">#E53935</color>
+    <color name="surface_light">#1E1E1E</color>
+    
+    <!-- ADDITIONAL UI COLORS -->
+    <color name="primary_color">#4DB6AC</color>
+    <color name="success_color">#81C784</color>
+    <color name="error_color">#E57373</color>
+    <color name="warning_yellow">#FFB74D</color>
+    <color name="info_blue">#64B5F6</color>
+    <color name="info_background">#0D47A1</color>
+    
+    <!-- MISSING COLORS FOR COMPATIBILITY -->
+    <color name="accent_red">#E57373</color>
+    <color name="accent_green_light">#A5D6A7</color>
+    
+    <!-- ON COLORS FOR BADGE TEXT ON LIGHT BACKGROUNDS -->
+    <color name="on_success_light">#4CAF50</color>
+    <color name="on_error_light">#F44336</color>
+    <color name="on_warning_light">#FF9800</color>
+    <color name="on_info_light">#2196F3</color>
+    
+    <!-- SEMANTIC COLORS -->
+    <color name="semantic_success">#81C784</color>
+    <color name="semantic_warning">#FFB74D</color>
+    <color name="semantic_error">#E57373</color>
+    <color name="semantic_info">#64B5F6</color>
+    
+    <!-- UI STATE COLORS -->
+    <color name="state_active">#4DB6AC</color>
+    <color name="state_inactive">#757575</color>
+    <color name="state_highlight">#004D40</color>
+    
+    <!-- GRAY SCALE -->
+    <color name="gray_50">#2C2C2C</color>
+    <color name="gray_100">#1E1E1E</color>
+    <color name="gray_200">#424242</color>
+    <color name="gray_300">#616161</color>
+    <color name="gray_400">#757575</color>
+    <color name="gray_500">#9E9E9E</color>
+    <color name="gray_600">#BDBDBD</color>
+    <color name="gray_700">#E0E0E0</color>
+    <color name="gray_800">#F5F5F5</color>
+    <color name="gray_900">#FFFFFF</color>
+    
+    <!-- MATERIAL DESIGN 3 COLOR ROLES -->
+    <color name="tertiary">#81C784</color>
+    <color name="on_tertiary">#000000</color>
+    <color name="tertiary_container">#1B5E20</color>
+    <color name="on_tertiary_container">#A5D6A7</color>
+    <color name="error_container">#400E0E</color>
+    <color name="on_error_container">#FFAB91</color>
+    <color name="on_surface_variant">#BDBDBD</color>
+    <color name="surface_tint">#4DB6AC</color>
+</resources>

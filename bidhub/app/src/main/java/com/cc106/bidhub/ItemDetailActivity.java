@@ -79,8 +79,14 @@ public class ItemDetailActivity extends AppCompatActivity {
             try {
                 initializeViews();
             } catch (Exception e) {
-                android.widget.Toast.makeText(this, "Error initializing views: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
-                e.printStackTrace();
+                com.cc106.bidhub.utils.ErrorHandler.handleInitError(
+                    this,
+                    "initialize views",
+                    e,
+                    String.format("ItemID: %s, UserEmail: %s", 
+                        getIntent().getStringExtra("ITEM_ID"),
+                        getIntent().getStringExtra("USER_EMAIL"))
+                );
                 finish();
                 return;
             }
@@ -88,8 +94,14 @@ public class ItemDetailActivity extends AppCompatActivity {
             try {
                 initializeComponents();
             } catch (Exception e) {
-                android.widget.Toast.makeText(this, "Error initializing components: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
-                e.printStackTrace();
+                com.cc106.bidhub.utils.ErrorHandler.handleInitError(
+                    this,
+                    "initialize components",
+                    e,
+                    String.format("ItemID: %s, UserEmail: %s", 
+                        getIntent().getStringExtra("ITEM_ID"),
+                        getIntent().getStringExtra("USER_EMAIL"))
+                );
                 finish();
                 return;
             }
@@ -97,8 +109,14 @@ public class ItemDetailActivity extends AppCompatActivity {
             try {
                 setupClickListeners();
             } catch (Exception e) {
-                android.widget.Toast.makeText(this, "Error setting up click listeners: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
-                e.printStackTrace();
+                com.cc106.bidhub.utils.ErrorHandler.handleInitError(
+                    this,
+                    "setup click listeners",
+                    e,
+                    String.format("ItemID: %s, UserEmail: %s", 
+                        getIntent().getStringExtra("ITEM_ID"),
+                        getIntent().getStringExtra("USER_EMAIL"))
+                );
                 finish();
                 return;
             }
@@ -106,8 +124,12 @@ public class ItemDetailActivity extends AppCompatActivity {
             try {
                 loadItemData(itemId);
             } catch (Exception e) {
-                android.widget.Toast.makeText(this, "Error loading item data: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
-                e.printStackTrace();
+                com.cc106.bidhub.utils.ErrorHandler.handleInitError(
+                    this,
+                    "load item data",
+                    e,
+                    String.format("ItemID: %s, UserEmail: %s", itemId, loggedInUserEmail)
+                );
                 finish();
                 return;
             }
@@ -115,8 +137,12 @@ public class ItemDetailActivity extends AppCompatActivity {
             try {
                 setupBidHistory();
             } catch (Exception e) {
-                android.widget.Toast.makeText(this, "Error setting up bid history: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
-                e.printStackTrace();
+                com.cc106.bidhub.utils.ErrorHandler.handleInitError(
+                    this,
+                    "setup bid history",
+                    e,
+                    String.format("ItemID: %s, UserEmail: %s", itemId, loggedInUserEmail)
+                );
                 finish();
                 return;
             }
@@ -124,8 +150,12 @@ public class ItemDetailActivity extends AppCompatActivity {
             try {
                 setupImageIndicators();
             } catch (Exception e) {
-                android.widget.Toast.makeText(this, "Error setting up image indicators: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
-                e.printStackTrace();
+                com.cc106.bidhub.utils.ErrorHandler.handleInitError(
+                    this,
+                    "setup image indicators",
+                    e,
+                    String.format("ItemID: %s, UserEmail: %s", itemId, loggedInUserEmail)
+                );
                 finish();
                 return;
             }
@@ -317,6 +347,9 @@ public class ItemDetailActivity extends AppCompatActivity {
             // Load seller information
             loadSellerInformation(currentItem.getSellerId());
             
+            // Check if user is the seller and hide bid button
+            updateBidButton();
+            
             // Update bid input with minimum bid amount
             double minBid = currentItem.getCurrentPrice() + 1.0; // Minimum increment
             etBidAmount.setHint("Min: " + currencyFormat.format(minBid));
@@ -327,6 +360,29 @@ public class ItemDetailActivity extends AppCompatActivity {
         } catch (Exception e) {
             android.util.Log.e("ItemDetailActivity", "Error populating item data: " + e.getMessage(), e);
             populateItemData(); // Fallback to sample data
+        }
+    }
+    
+    private void updateBidButton() {
+        if (btnPlaceBid == null) return;
+        
+        // Check if user is the seller
+        if (currentItem != null && loggedInUserEmail != null && loggedInUserEmail.equals(currentItem.getSellerId())) {
+            btnPlaceBid.setVisibility(View.GONE);
+            // Show "Your Item" indicator instead
+            if (tvSellerName != null) {
+                tvSellerName.setText("Your Listing");
+                tvSellerName.setTextColor(getResources().getColor(R.color.primary_color));
+            }
+            return;
+        }
+        
+        // Check if auction is active
+        if (currentItem != null && currentItem.isAvailableForBidding()) {
+            btnPlaceBid.setVisibility(View.VISIBLE);
+            btnPlaceBid.setEnabled(true);
+        } else {
+            btnPlaceBid.setVisibility(View.GONE);
         }
     }
     
@@ -555,18 +611,32 @@ public class ItemDetailActivity extends AppCompatActivity {
     
     private void updateImageDisplay() {
         if (itemImages != null && !itemImages.isEmpty() && currentImageIndex < itemImages.size()) {
-            // Update image (in a real app, you'd load the image from the path)
-            // For now, we'll just update the indicators
+            // Load actual image from file path using Glide
+            String imagePath = itemImages.get(currentImageIndex);
+            com.cc106.bidhub.utils.ImageLoader.loadImageWithErrorCallback(
+                this,
+                imagePath,
+                ivItemImage,
+                new com.cc106.bidhub.utils.ImageLoader.ImageLoadErrorCallback() {
+                    @Override
+                    public void onError(String errorMessage) {
+                        com.cc106.bidhub.utils.ErrorHandler.handleImageError(
+                            ItemDetailActivity.this,
+                            imagePath,
+                            null,
+                            "ItemDetailActivity image display"
+                        );
+                    }
+                }
+            );
             updateImageIndicators();
         } else if (itemImages != null && !itemImages.isEmpty() && currentImageIndex >= itemImages.size()) {
             // Reset currentImageIndex if it's out of bounds
             currentImageIndex = 0;
-            updateImageIndicators();
+            updateImageDisplay(); // Recursive call to load first image
         } else {
             // No images available, use placeholder
-            if (ivItemImage != null) {
-                ivItemImage.setImageResource(R.drawable.placeholder);
-            }
+            com.cc106.bidhub.utils.ImageLoader.loadPlaceholder(this, ivItemImage);
             // Hide image indicators when no images
             if (layoutImageIndicators != null) {
                 layoutImageIndicators.setVisibility(View.GONE);
@@ -601,20 +671,40 @@ public class ItemDetailActivity extends AppCompatActivity {
                 if (currentItem != null) {
                     populateItemDataFromDatabase();
                     loadItemImages();
+                    com.cc106.bidhub.utils.ErrorHandler.logInfo(
+                        "ItemDetailActivity", 
+                        "Successfully loaded item data from database",
+                        String.format("ItemID: %s, Title: %s", itemId, currentItem.getTitle())
+                    );
                 } else {
                     // Item not found, show error and fallback to sample data
+                    com.cc106.bidhub.utils.ErrorHandler.logWarning(
+                        "ItemDetailActivity", 
+                        "Item not found in database, showing sample data",
+                        String.format("ItemID: %s", itemId)
+                    );
                     android.widget.Toast.makeText(this, "Item not found. Showing sample data.", android.widget.Toast.LENGTH_SHORT).show();
                     populateItemData();
                     loadSampleImages();
                 }
             } catch (Exception e) {
-                android.util.Log.e("ItemDetailActivity", "Error loading item data: " + e.getMessage(), e);
+                com.cc106.bidhub.utils.ErrorHandler.handleDatabaseError(
+                    this,
+                    "load item data",
+                    e,
+                    String.format("ItemID: %s, UserEmail: %s", itemId, loggedInUserEmail)
+                );
                 android.widget.Toast.makeText(this, "Error loading item. Showing sample data.", android.widget.Toast.LENGTH_SHORT).show();
                 populateItemData();
                 loadSampleImages();
             }
         } else {
             // Use sample data if no item ID provided
+            com.cc106.bidhub.utils.ErrorHandler.logWarning(
+                "ItemDetailActivity", 
+                "No item ID provided, showing sample data",
+                "No context data available"
+            );
             android.widget.Toast.makeText(this, "No item ID provided. Showing sample data.", android.widget.Toast.LENGTH_SHORT).show();
             populateItemData();
             loadSampleImages();
@@ -622,13 +712,39 @@ public class ItemDetailActivity extends AppCompatActivity {
     }
     
     private void loadItemImages() {
-        if (currentItem != null && currentItem.getImagePaths() != null) {
-            itemImages = new ArrayList<>(currentItem.getImagePaths());
-        } else {
+        try {
+            if (currentItem != null && currentItem.getImagePaths() != null) {
+                itemImages = new ArrayList<>(currentItem.getImagePaths());
+                com.cc106.bidhub.utils.ErrorHandler.logInfo(
+                    "ItemDetailActivity", 
+                    "Loaded item images from database",
+                    String.format("ItemID: %s, ImageCount: %d", 
+                        currentItem.getItemId(), 
+                        itemImages.size())
+                );
+            } else {
+                itemImages = new ArrayList<>();
+                com.cc106.bidhub.utils.ErrorHandler.logWarning(
+                    "ItemDetailActivity", 
+                    "No images found for item",
+                    String.format("ItemID: %s, CurrentItem: %s", 
+                        currentItem != null ? currentItem.getItemId() : "null",
+                        currentItem != null ? "not null" : "null")
+                );
+            }
+            currentImageIndex = 0;
+            updateImageDisplay();
+        } catch (Exception e) {
+            com.cc106.bidhub.utils.ErrorHandler.handleImageError(
+                this,
+                currentItem != null ? currentItem.getItemId() : "unknown",
+                e,
+                "load item images"
+            );
             itemImages = new ArrayList<>();
+            currentImageIndex = 0;
+            updateImageDisplay();
         }
-        currentImageIndex = 0;
-        updateImageDisplay();
     }
     
     private void loadSampleImages() {
@@ -709,14 +825,82 @@ public class ItemDetailActivity extends AppCompatActivity {
     
     private void loadSellerInformation(String sellerId) {
         try {
-            // TODO: Load seller information from database
-            // For now, use placeholder data
-            tvSellerName.setText("Seller " + sellerId.substring(0, Math.min(8, sellerId.length())));
-            tvSellerRating.setText("4.5 (50 reviews)");
+            // Try to load seller information from database
+            String username = getUsernameFromDatabase(sellerId);
+            if (username != null && !username.isEmpty()) {
+                // Display just the username without "Seller" prefix
+                tvSellerName.setText(username);
+                tvSellerRating.setText("4.5 (50 reviews)");
+                com.cc106.bidhub.utils.ErrorHandler.logInfo(
+                    "ItemDetailActivity", 
+                    "Successfully loaded seller username",
+                    String.format("SellerID: %s, Username: %s", sellerId, username)
+                );
+            } else {
+                // Fallback: extract username from email
+                String extractedUsername = extractUsernameFromEmail(sellerId);
+                tvSellerName.setText(extractedUsername);
+                tvSellerRating.setText("4.5 (50 reviews)");
+                com.cc106.bidhub.utils.ErrorHandler.logWarning(
+                    "ItemDetailActivity", 
+                    "Could not find username in database, using email extraction",
+                    String.format("SellerID: %s, Extracted: %s", sellerId, extractedUsername)
+                );
+            }
         } catch (Exception e) {
-            android.util.Log.e("ItemDetailActivity", "Error loading seller info: " + e.getMessage(), e);
+            com.cc106.bidhub.utils.ErrorHandler.handleDatabaseError(
+                this,
+                "load seller information",
+                e,
+                String.format("SellerID: %s", sellerId)
+            );
             tvSellerName.setText("Unknown Seller");
             tvSellerRating.setText("No rating");
+        }
+    }
+    
+    /**
+     * Get username from database by seller ID (email)
+     */
+    private String getUsernameFromDatabase(String sellerId) {
+        try {
+            // TODO: Implement actual database query
+            // For now, return null to trigger fallback
+            return null;
+        } catch (Exception e) {
+            com.cc106.bidhub.utils.ErrorHandler.logError(
+                "ItemDetailActivity", 
+                "Error querying database for username",
+                e,
+                String.format("SellerID: %s", sellerId)
+            );
+            return null;
+        }
+    }
+    
+    /**
+     * Extract username from email address
+     */
+    private String extractUsernameFromEmail(String email) {
+        if (email == null || email.isEmpty()) {
+            return "Unknown Seller";
+        }
+        
+        try {
+            int atIndex = email.indexOf('@');
+            if (atIndex > 0) {
+                return email.substring(0, atIndex);
+            } else {
+                return email.length() > 8 ? email.substring(0, 8) : email;
+            }
+        } catch (Exception e) {
+            com.cc106.bidhub.utils.ErrorHandler.logError(
+                "ItemDetailActivity", 
+                "Error extracting username from email",
+                e,
+                String.format("Email: %s", email)
+            );
+            return "Unknown Seller";
         }
     }
     
