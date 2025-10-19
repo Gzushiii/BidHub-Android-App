@@ -14,8 +14,8 @@ import com.cc106.bidhub.toast.ToastHelper;
 public class ProfileSettingsActivity extends BaseActivity {
 
     private Switch switchEmailNotifications, switchPushNotifications, switchBidAlerts, switchMarketingEmails;
-    private Button buttonChangePassword, buttonPrivacySettings, buttonAccountSecurity;
-    private TextView textViewAccountInfo, textViewNotificationSettings, textViewPrivacySettings;
+    private Button buttonChangePassword, buttonAccountSecurity;
+    private TextView textViewAccountInfo, textViewNotificationSettings;
     private DatabaseHelper dbHelper;
     private String loggedInUserEmail;
 
@@ -53,13 +53,11 @@ public class ProfileSettingsActivity extends BaseActivity {
         
         // Action buttons
         buttonChangePassword = findViewById(R.id.buttonChangePassword);
-        buttonPrivacySettings = findViewById(R.id.buttonPrivacySettings);
         buttonAccountSecurity = findViewById(R.id.buttonAccountSecurity);
         
         // Section headers
         textViewAccountInfo = findViewById(R.id.textViewAccountInfo);
         textViewNotificationSettings = findViewById(R.id.textViewNotificationSettings);
-        textViewPrivacySettings = findViewById(R.id.textViewPrivacySettings);
     }
 
     private void loadUserSettings() {
@@ -92,12 +90,6 @@ public class ProfileSettingsActivity extends BaseActivity {
         // Action buttons
         buttonChangePassword.setOnClickListener(v -> {
             Intent intent = new Intent(this, ChangePasswordActivity.class);
-            intent.putExtra("USER_EMAIL", loggedInUserEmail);
-            startActivity(intent);
-        });
-        
-        buttonPrivacySettings.setOnClickListener(v -> {
-            Intent intent = new Intent(this, PrivacySettingsActivity.class);
             intent.putExtra("USER_EMAIL", loggedInUserEmail);
             startActivity(intent);
         });

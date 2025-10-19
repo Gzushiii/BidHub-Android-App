@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.cc106.bidhub.toast.ToastHelper;
@@ -31,7 +32,8 @@ import java.util.Locale;
 public class ProfileFragment extends Fragment {
 
     private TextView textViewWelcome, textViewCredits, textViewAlias, textViewEmail, textViewUsername;
-    private Button buttonLogout, buttonRegenerateAlias, buttonViewBids, buttonTransactionHistory, buttonEditProfile, buttonSettings, buttonFAQ;
+    private Button buttonLogout, buttonRegenerateAlias, buttonViewBids, buttonTransactionHistory, buttonFAQ;
+    private ImageButton buttonEditProfile, buttonSettings;
     private ImageView imageViewProfilePicture;
     private DatabaseHelper dbHelper;
     private String loggedInUserEmail;
@@ -46,6 +48,7 @@ public class ProfileFragment extends Fragment {
         if (getArguments() != null) {
             loggedInUserEmail = getArguments().getString("USER_EMAIL");
         }
+        
         
         dbHelper = new DatabaseHelper(getContext());
         
@@ -64,6 +67,7 @@ public class ProfileFragment extends Fragment {
         buttonFAQ = view.findViewById(R.id.buttonFAQ);
         imageViewProfilePicture = view.findViewById(R.id.imageViewProfilePicture);
         
+        
         // Load user data and display it
         loadUserData();
         
@@ -72,6 +76,7 @@ public class ProfileFragment extends Fragment {
         
         // Set up click listeners
         setupClickListeners();
+        
         
         return view;
     }
@@ -132,6 +137,7 @@ public class ProfileFragment extends Fragment {
             ToastHelper.showError(getContext(), "Error: User not identified.");
             return;
         }
+        
 
         try {
             SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -156,6 +162,7 @@ public class ProfileFragment extends Fragment {
                 double credits = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_CREDITS));
                 String email = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_EMAIL));
 
+
                 // Update the UI with null checks
                 if (textViewWelcome != null) textViewWelcome.setText("Profile");
                 if (textViewUsername != null) textViewUsername.setText(username);
@@ -164,6 +171,8 @@ public class ProfileFragment extends Fragment {
                 if (textViewCredits != null) textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", credits));
 
                 cursor.close();
+            } else {
+                ToastHelper.showError(getContext(), "No user data found. Please log in again.");
             }
             db.close();
         } catch (Exception e) {

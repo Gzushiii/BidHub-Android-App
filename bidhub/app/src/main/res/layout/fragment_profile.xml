@@ -56,7 +56,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Profile"
-                            android:textColor="@color/text_primary"
+                            android:textColor="@color/on_primary"
                             android:textSize="24sp"
                             android:textStyle="bold" />
 
@@ -64,7 +64,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Manage your account and settings"
-                            android:textColor="@color/text_primary"
+                            android:textColor="@color/on_primary"
                             android:textSize="14sp" />
 
                     </LinearLayout>
@@ -89,16 +89,15 @@
                         android:stateListAnimator="@null"
                         android:layout_marginEnd="8dp" />
 
-                    <Button
+                    <ImageButton
                         android:id="@+id/buttonSettings"
-                        android:layout_width="wrap_content"
+                        android:layout_width="36dp"
                         android:layout_height="36dp"
-                        android:text="Settings"
-                        android:textSize="12sp"
-                        android:background="@drawable/button_secondary_background"
-                        android:textColor="@color/background"
-                        android:paddingStart="12dp"
-                        android:paddingEnd="12dp"
+                        android:src="@drawable/ic_settings"
+                        android:background="@drawable/circle_background"
+                        android:backgroundTint="@color/surface_variant"
+                        android:contentDescription="Settings"
+                        android:padding="8dp"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -292,12 +291,6 @@
                     android:focusable="true"
                     android:layout_marginBottom="8dp">
 
-                    <View
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:background="@drawable/button_primary_background"
-                        android:layout_marginEnd="16dp" />
-
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -343,12 +336,6 @@
                     android:background="?android:attr/selectableItemBackground"
                     android:clickable="true"
                     android:focusable="true">
-
-                    <View
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:background="@drawable/button_primary_background"
-                        android:layout_marginEnd="16dp" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -396,12 +383,6 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:layout_marginTop="8dp">
-
-                    <View
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        android:background="@drawable/button_primary_background"
-                        android:layout_marginEnd="16dp" />
 
                     <LinearLayout
                         android:layout_width="0dp"
