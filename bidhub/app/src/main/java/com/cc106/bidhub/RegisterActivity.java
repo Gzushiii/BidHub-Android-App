@@ -12,7 +12,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import com.cc106.bidhub.api.AuthApiClient;
+import com.cc106.bidhub.api.ApiResponse;
 import com.cc106.bidhub.toast.ToastHelper;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputLayout;
@@ -22,13 +25,15 @@ public class RegisterActivity extends AppCompatActivity {
 
     private EditText editTextFirstName, editTextLastName, editTextUsername, editTextEmail, editTextPhone, editTextPassword;
     private CheckBox checkboxTerms, checkboxPrivacy;
-    private Button buttonRegister;
+    private com.google.android.material.button.MaterialButton buttonRegister;
     private TextView textViewLoginLink;
     private DatabaseHelper dbHelper;
+    private AuthApiClient authApiClient;
     
     // TextInputLayouts for validation feedback
     private TextInputLayout usernameInputLayout, emailInputLayout, passwordInputLayout;
     private PasswordStrengthIndicator passwordStrengthIndicator;
+    private ProgressBar progressBar;
     
     // Validation state
     private boolean isEmailValid = false;
@@ -50,6 +55,7 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         dbHelper = new DatabaseHelper(this);
+        authApiClient = new AuthApiClient(this);
 
         // Initialize all the UI components
         editTextFirstName = findViewById(R.id.editTextFirstName);
@@ -68,6 +74,7 @@ public class RegisterActivity extends AppCompatActivity {
         emailInputLayout = findViewById(R.id.emailInputLayout);
         passwordInputLayout = findViewById(R.id.passwordInputLayout);
         passwordStrengthIndicator = findViewById(R.id.passwordStrengthIndicator);
+        progressBar = findViewById(R.id.progressBar);
 
         // Set up real-time validation
         setupValidationListeners();
@@ -89,9 +96,32 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     /**
+     * Show loading state
+     */
+    private void showLoading(boolean show) {
+        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        buttonRegister.setEnabled(!show);
+        buttonRegister.setText(show ? "Creating Account..." : "Create Account");
+    }
+
+    /**
      * Set up real-time validation listeners
      */
     private void setupValidationListeners() {
+        // Create a common TextWatcher for button updates
+        TextWatcher buttonUpdateWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                updateRegisterButton();
+            }
+            
+            @Override
+            public void afterTextChanged(Editable s) {}
+        };
+        
         // Username validation
         editTextUsername.addTextChangedListener(new TextWatcher() {
             @Override
@@ -100,6 +130,7 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 validateUsername();
+                updateRegisterButton();
             }
             
             @Override
@@ -114,6 +145,7 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 validateEmail();
+                updateRegisterButton();
             }
             
             @Override
@@ -128,11 +160,21 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 validatePassword();
+                updateRegisterButton();
             }
             
             @Override
             public void afterTextChanged(Editable s) {}
         });
+        
+        // Add button update listeners to all fields
+        editTextFirstName.addTextChangedListener(buttonUpdateWatcher);
+        editTextLastName.addTextChangedListener(buttonUpdateWatcher);
+        editTextPhone.addTextChangedListener(buttonUpdateWatcher);
+        
+        // Add checkbox listeners
+        checkboxTerms.setOnCheckedChangeListener((buttonView, isChecked) -> updateRegisterButton());
+        checkboxPrivacy.setOnCheckedChangeListener((buttonView, isChecked) -> updateRegisterButton());
     }
     
     /**
@@ -291,7 +333,15 @@ public class RegisterActivity extends AppCompatActivity {
      * Update register button state based on validation
      */
     private void updateRegisterButton() {
-        boolean canRegister = isEmailValid && isUsernameValid && isPasswordValid && 
+        // Check if all required fields have content (not just validation)
+        boolean hasRequiredContent = !TextUtils.isEmpty(editTextFirstName.getText()) &&
+                                   !TextUtils.isEmpty(editTextLastName.getText()) &&
+                                   !TextUtils.isEmpty(editTextUsername.getText()) &&
+                                   !TextUtils.isEmpty(editTextEmail.getText()) &&
+                                   !TextUtils.isEmpty(editTextPhone.getText()) &&
+                                   !TextUtils.isEmpty(editTextPassword.getText());
+        
+        boolean canRegister = hasRequiredContent && isEmailValid && isUsernameValid && isPasswordValid && 
                             isEmailAvailable && isUsernameAvailable &&
                             checkboxTerms.isChecked() && checkboxPrivacy.isChecked();
         
@@ -342,60 +392,44 @@ public class RegisterActivity extends AppCompatActivity {
                 return;
             }
 
-            // Disable register button to prevent double submission
-            buttonRegister.setEnabled(false);
-            buttonRegister.setText("Creating Account...");
+            // Show loading state
+            showLoading(true);
 
-            // --- Database Insertion ---
+            // Use backend API for registration
             new Thread(() -> {
                 try {
-                    SQLiteDatabase db = dbHelper.getWritableDatabase();
-                    ContentValues values = new ContentValues();
-
-                    // Hash the password
-                    Map<String, byte[]> hashingResult = PasswordHasher.hashPassword(password);
-                    byte[] hashedPassword = hashingResult.get("hash");
-                    byte[] salt = hashingResult.get("salt");
-
-                    // Generate unique alias for anonymous bidding
-                    String alias = AliasGenerator.generateAlias();
-
-                    // Put all user data into the ContentValues object
-                    values.put(DatabaseHelper.COLUMN_USER_FIRST_NAME, firstName);
-                    values.put(DatabaseHelper.COLUMN_USER_LAST_NAME, lastName);
-                    values.put(DatabaseHelper.COLUMN_USER_USERNAME, username.toLowerCase());
-                    values.put(DatabaseHelper.COLUMN_USER_ALIAS, alias);
-                    values.put(DatabaseHelper.COLUMN_USER_EMAIL, email.toLowerCase());
-                    values.put(DatabaseHelper.COLUMN_USER_PHONE, phone);
-                    values.put(DatabaseHelper.COLUMN_USER_PASSWORD, hashedPassword);
-                    values.put(DatabaseHelper.COLUMN_USER_SALT, salt);
-
-                    long newRowId = db.insert(DatabaseHelper.TABLE_USERS, null, values);
-                    db.close();
-
+                    ApiResponse response = authApiClient.register(
+                        username.toLowerCase(),
+                        email.toLowerCase(),
+                        password,
+                        phone,
+                        firstName,
+                        lastName,
+                        AliasGenerator.generateAlias() // Generate alias for anonymous bidding
+                    );
+                    
+                    // Run UI updates on main thread
                     runOnUiThread(() -> {
-                        if (newRowId != -1) {
-                            ToastHelper.showSuccess(this, "Registration successful! Your alias: " + alias);
+                        if (response.isSuccess()) {
+                            ToastHelper.showSuccess(this, "Registration successful!");
                             finish(); // Go back to the login screen
                         } else {
-                            ToastHelper.showError(this, "Registration failed. Please try again.");
-                            buttonRegister.setEnabled(true);
-                            buttonRegister.setText("Create Account");
+                            ToastHelper.showError(this, response.getMessage());
+                            showLoading(false);
                         }
                     });
+                    
                 } catch (Exception e) {
                     runOnUiThread(() -> {
                         ToastHelper.showError(this, "Registration failed: " + e.getMessage());
-                        buttonRegister.setEnabled(true);
-                        buttonRegister.setText("Create Account");
+                        showLoading(false);
                     });
                 }
             }).start();
 
         } catch (Exception e) {
             ToastHelper.showError(this, "Registration failed: " + e.getMessage());
-            buttonRegister.setEnabled(true);
-            buttonRegister.setText("Create Account");
+            showLoading(false);
         }
     }
 }

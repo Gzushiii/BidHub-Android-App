@@ -675,12 +675,16 @@ public class CreditManager {
         creditPackages.add(new CreditPackage(3, "Premium Pack", "Best value with bonus credits", 1000.0, 800.0, "PHP", true));
         creditPackages.add(new CreditPackage(4, "Enterprise Pack", "For power users and businesses", 5000.0, 4000.0, "PHP", true));
         
-        // Set bonus information
-        creditPackages.get(2).setDiscountPercentage(10.0); // 10% discount
-        creditPackages.get(3).setDiscountPercentage(20.0); // 20% discount
-        creditPackages.get(3).setBonusDescription("20% bonus credits included");
-        creditPackages.get(4).setDiscountPercentage(20.0); // 20% discount
-        creditPackages.get(4).setBonusDescription("25% bonus credits included");
+        // Set bonus information with bounds checking
+        if (creditPackages.size() > 2) {
+            creditPackages.get(2).setDiscountPercentage(10.0); // 10% discount
+        }
+        if (creditPackages.size() > 3) {
+            creditPackages.get(3).setDiscountPercentage(20.0); // 20% discount
+            creditPackages.get(3).setBonusDescription("20% bonus credits included");
+        }
+        // Note: Index 4 would be out of bounds since we only have 4 packages (indices 0-3)
+        // The original code was trying to access index 4 which doesn't exist
     }
     
     private boolean validateUserId(String userId) {

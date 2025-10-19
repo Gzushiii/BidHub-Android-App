@@ -327,15 +327,20 @@ public class PostActivity extends BaseActivity implements
                     hideSizeDropdown();
                 }
                 
-                // Get subcategories for the selected main category
-                subcategories = categoryManager.getSubCategories(selectedMainCategoryId);
-                
-                if (subcategories != null && !subcategories.isEmpty()) {
-                    // Show subcategory dropdown with subcategories
-                    showSubcategoryDropdown(subcategories);
-                } else {
-                    // No subcategories available, hide the dropdown
+                // Handle "Others" category - no subcategories
+                if (selectedCategoryName.equals("Others")) {
                     hideSubcategoryDropdown();
+                } else {
+                    // Get subcategories for the selected main category
+                    subcategories = categoryManager.getSubCategories(selectedMainCategoryId);
+                    
+                    if (subcategories != null && !subcategories.isEmpty()) {
+                        // Show subcategory dropdown with subcategories
+                        showSubcategoryDropdown(subcategories);
+                    } else {
+                        // No subcategories available, hide the dropdown
+                        hideSubcategoryDropdown();
+                    }
                 }
             }
         } catch (Exception e) {

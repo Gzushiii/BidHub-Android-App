@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light"
+    android:background="@color/background"
     android:fillViewport="true">
 
     <LinearLayout
@@ -17,7 +17,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
             android:padding="16dp"
-        android:background="@color/white"
+        android:background="@color/background"
             android:elevation="2dp"
         android:gravity="center_vertical">
 
@@ -35,9 +35,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Add details"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
+                android:textAppearance="@style/TextAppearance.Title.Small"
                 android:gravity="center" />
 
             <View
@@ -64,9 +62,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Photos"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
+                    android:textAppearance="@style/TextAppearance.Subtitle.Bold"
                     android:layout_marginBottom="12dp" />
 
                 <!-- Photo Grid -->
@@ -75,6 +71,33 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:nestedScrollingEnabled="false" />
+
+                <!-- Image Upload Progress -->
+                <LinearLayout
+                    android:id="@+id/layout_image_progress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="8dp"
+                    android:visibility="gone">
+
+                    <ProgressBar
+                        android:id="@+id/progress_image_upload"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="8dp" />
+
+                    <TextView
+                        android:id="@+id/tv_image_progress"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Processing images..."
+                        android:textSize="12sp"
+                        android:textColor="@color/text_secondary" />
+
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -103,65 +126,45 @@
                     android:layout_marginBottom="8dp" />
 
                 <!-- Main Category Dropdown -->
-                <LinearLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:background="@drawable/card_background"
-                    android:padding="16dp"
-                    android:gravity="center_vertical"
+                    android:hint="Choose Category"
+                    app:boxStrokeColor="@color/border_light"
+                    app:hintTextColor="@color/text_secondary"
+                    app:endIconMode="dropdown_menu"
                     android:layout_marginBottom="8dp">
 
-                    <AutoCompleteTextView
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
                         android:id="@+id/actv_category"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Choose"
-                        android:textColor="@color/text_secondary"
                         android:inputType="none"
                         android:focusable="true"
-                        android:clickable="true"
-                        android:background="@android:color/transparent" />
+                        android:clickable="true" />
 
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_dropdown_arrow"
-                        android:contentDescription="Dropdown" />
-
-                </LinearLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Subcategory Dropdown (initially hidden) -->
-                <LinearLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/layout_subcategory"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:background="@drawable/card_background"
-                    android:padding="16dp"
-                    android:gravity="center_vertical"
+                    android:hint="Choose Subcategory"
+                    app:boxStrokeColor="@color/border_light"
+                    app:hintTextColor="@color/text_secondary"
+                    app:endIconMode="dropdown_menu"
                     android:visibility="gone">
 
-                    <AutoCompleteTextView
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
                         android:id="@+id/actv_subcategory"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Choose Subcategory"
-                        android:textColor="@color/text_secondary"
                         android:inputType="none"
                         android:focusable="true"
-                        android:clickable="true"
-                        android:background="@android:color/transparent" />
+                        android:clickable="true" />
 
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_dropdown_arrow"
-                        android:contentDescription="Subcategory Dropdown" />
-
-                </LinearLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
             </LinearLayout>
 
@@ -232,7 +235,7 @@
                         android:text="For Sale"
                         android:textSize="14sp"
                         android:background="@drawable/button_primary"
-                        android:textColor="@color/white"
+                        android:textColor="@color/background"
                         android:layout_marginEnd="8dp" />
 
                     <Button
@@ -240,7 +243,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="For Free"
+                        android:text="Donation"
                 android:textSize="14sp"
                         android:background="@drawable/button_secondary"
                         android:textColor="@color/text_primary" />
@@ -251,7 +254,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="PHP Price of your listing"
+                    android:hint="Starting Price (PHP)"
                     app:boxStrokeColor="@color/border_light"
                     app:hintTextColor="@color/text_secondary"
                     app:prefixText="₱">
@@ -264,7 +267,83 @@
 
                 </com.google.android.material.textfield.TextInputLayout>
 
-    </LinearLayout>
+                <!-- Buy Now Price Input -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Buy Now Price (Optional)"
+                    app:boxStrokeColor="@color/border_light"
+                    app:hintTextColor="@color/text_secondary"
+                    app:prefixText="₱"
+                    android:layout_marginTop="8dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_buy_now_price"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Donation Reason Input (initially hidden) -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layout_donation_reason"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Donation Reason (Required)"
+                    app:boxStrokeColor="@color/border_light"
+                    app:hintTextColor="@color/text_secondary"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_donation_reason"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textCapSentences|textMultiLine"
+                        android:maxLength="200"
+                        android:minLines="2"
+                        android:maxLines="3" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+            <!-- Auction Duration Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Auction Duration"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Choose Duration"
+                    app:boxStrokeColor="@color/border_light"
+                    app:hintTextColor="@color/text_secondary"
+                    app:endIconMode="dropdown_menu">
+
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                        android:id="@+id/actv_auction_duration"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="none"
+                        android:focusable="true"
+                        android:clickable="true" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
 
             <!-- Condition Section -->
             <LinearLayout
@@ -282,33 +361,23 @@
                     android:textColor="@color/text_primary"
                     android:layout_marginBottom="8dp" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:background="@drawable/card_background"
-                    android:padding="16dp"
-                    android:gravity="center_vertical">
+                    android:hint="Choose Condition"
+                    app:boxStrokeColor="@color/border_light"
+                    app:hintTextColor="@color/text_secondary"
+                    app:endIconMode="dropdown_menu">
 
-                    <AutoCompleteTextView
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
                         android:id="@+id/actv_condition"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-        android:layout_weight="1"
-                        android:text="Choose"
-                        android:textColor="@color/text_secondary"
                         android:inputType="none"
                         android:focusable="true"
-                        android:clickable="true"
-                        android:background="@android:color/transparent" />
+                        android:clickable="true" />
 
-        <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_dropdown_arrow"
-                        android:contentDescription="Dropdown" />
-
-                </LinearLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
             </LinearLayout>
 
@@ -350,6 +419,8 @@
 
             </LinearLayout>
 
+
+
             <!-- Size Section (initially hidden, only shown for Fashion category) -->
             <LinearLayout
                 android:id="@+id/layout_size"
@@ -368,81 +439,26 @@
                     android:textColor="@color/text_primary"
                     android:layout_marginBottom="8dp" />
 
-                <LinearLayout
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:background="@drawable/card_background"
-                    android:padding="16dp"
-                    android:gravity="center_vertical">
+                    android:hint="Choose Size"
+                    app:boxStrokeColor="@color/border_light"
+                    app:hintTextColor="@color/text_secondary"
+                    app:endIconMode="dropdown_menu">
 
-                    <AutoCompleteTextView
+                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
                         android:id="@+id/actv_size"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Choose"
-                        android:textColor="@color/text_secondary"
                         android:inputType="none"
                         android:focusable="true"
-                        android:clickable="true"
-                        android:background="@android:color/transparent" />
+                        android:clickable="true" />
 
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_dropdown_arrow"
-                        android:contentDescription="Dropdown" />
-
-                </LinearLayout>
+                </com.google.android.material.textfield.TextInputLayout>
 
             </LinearLayout>
 
-            <!-- Features Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-                    android:text="Features"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="8dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:background="@drawable/card_background"
-                    android:padding="16dp"
-                    android:gravity="center_vertical">
-
-                    <AutoCompleteTextView
-                        android:id="@+id/actv_features"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Choose"
-                        android:textColor="@color/text_secondary"
-                        android:inputType="none"
-                        android:focusable="true"
-                        android:clickable="true"
-                        android:background="@android:color/transparent" />
-
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_dropdown_arrow"
-                        android:contentDescription="Dropdown" />
-
-                </LinearLayout>
-
-            </LinearLayout>
 
             <!-- Optional Details Section -->
             <LinearLayout
@@ -501,32 +517,23 @@
                             android:textColor="@color/text_primary"
                             android:layout_marginBottom="8dp" />
 
-                        <LinearLayout
+                        <com.google.android.material.textfield.TextInputLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:background="@drawable/card_background"
-                            android:padding="16dp"
-                            android:gravity="center_vertical">
+                            android:hint="Choose Origin"
+                            app:boxStrokeColor="@color/border_light"
+                            app:hintTextColor="@color/text_secondary"
+                            app:endIconMode="dropdown_menu">
 
-                            <AutoCompleteTextView
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
                                 android:id="@+id/actv_origin"
-                                android:layout_width="0dp"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Choose"
-                                android:textColor="@color/text_secondary"
                                 android:inputType="none"
-                                android:focusable="false"
-                                android:background="@android:color/transparent" />
+                                android:focusable="true"
+                                android:clickable="true" />
 
-                            <ImageView
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                        android:src="@drawable/ic_dropdown_arrow"
-                                android:contentDescription="Dropdown" />
-
-                        </LinearLayout>
+                        </com.google.android.material.textfield.TextInputLayout>
 
                     </LinearLayout>
 
@@ -620,85 +627,43 @@
 
                     </LinearLayout>
 
-                    <!-- Delivery Options -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginBottom="16dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Delivery Options"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_primary"
-                            android:layout_marginBottom="8dp" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginBottom="8dp">
-
-                            <CheckBox
-                                android:id="@+id/cb_meetup"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="12dp" />
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Meet-up"
-                                android:textSize="14sp"
-                                android:textColor="@color/text_primary" />
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <CheckBox
-                                android:id="@+id/cb_delivery"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="12dp" />
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Mailing &amp; Delivery"
-                                android:textSize="14sp"
-                                android:textColor="@color/text_primary" />
-
-                        </LinearLayout>
-
-                    </LinearLayout>
 
                 </LinearLayout>
 
             </LinearLayout>
 
-            <!-- Action Button -->
-            <Button
-                android:id="@+id/btn_post_item"
+            <!-- Action Buttons -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="List it!"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:background="@drawable/button_primary"
-                android:textColor="@color/white"
+                android:orientation="horizontal"
                 android:layout_marginTop="16dp"
-                android:layout_marginBottom="24dp" />
+                android:layout_marginBottom="24dp"
+                android:weightSum="2">
+
+                <Button
+                    android:id="@+id/btn_save_draft"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Save as Draft"
+                    android:textAppearance="@style/TextAppearance.Button.Secondary"
+                    android:textColor="@color/primary"
+                    android:background="@drawable/button_secondary"
+                    android:layout_marginEnd="8dp" />
+
+                <Button
+                    android:id="@+id/btn_post_item"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Post Item"
+                    android:textAppearance="@style/TextAppearance.Button"
+                    android:textColor="@color/on_primary"
+                    android:background="@drawable/button_primary"
+                    android:layout_marginStart="8dp" />
+
+            </LinearLayout>
                 
             <!-- Progress Bar (initially hidden) -->
             <ProgressBar

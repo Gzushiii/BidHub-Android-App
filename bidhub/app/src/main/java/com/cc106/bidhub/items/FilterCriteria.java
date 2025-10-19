@@ -1,5 +1,6 @@
 package com.cc106.bidhub.items;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
@@ -8,14 +9,13 @@ import java.util.Date;
  * Filter Criteria Model
  * Contains criteria for filtering items
  */
-public class FilterCriteria {
+public class FilterCriteria implements Serializable {
     private String query;
     private String categoryId;
     private List<String> tags;
     private Double minPrice;
     private Double maxPrice;
     private String condition;
-    private String location;
     private ItemStatus status;
     private String sellerId;
     private Boolean isFeatured;
@@ -93,13 +93,6 @@ public class FilterCriteria {
         this.condition = condition;
     }
     
-    public String getLocation() {
-        return location;
-    }
-    
-    public void setLocation(String location) {
-        this.location = location;
-    }
     
     public ItemStatus getStatus() {
         return status;
@@ -227,7 +220,6 @@ public class FilterCriteria {
                 ", minPrice=" + minPrice +
                 ", maxPrice=" + maxPrice +
                 ", condition='" + condition + '\'' +
-                ", location='" + location + '\'' +
                 ", status=" + status +
                 ", sortBy='" + sortBy + '\'' +
                 ", sortOrder='" + sortOrder + '\'' +

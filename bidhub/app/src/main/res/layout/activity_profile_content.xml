@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light"
+    android:background="@color/background"
     android:fillViewport="true">
 
     <LinearLayout
@@ -19,22 +19,92 @@
             android:padding="24dp"
             android:background="@drawable/gradient_background">
 
-            <TextView
-                android:id="@+id/textViewWelcome"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Profile"
-                android:textColor="@color/white"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="16dp" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Manage your account and settings"
-                android:textColor="@color/white"
-                android:textSize="14sp" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <!-- Profile Picture -->
+                    <ImageView
+                        android:id="@+id/imageViewProfilePicture"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@drawable/circle_background"
+                        android:backgroundTint="@color/background"
+                        android:src="@drawable/ic_profile"
+                        android:padding="8dp"
+                        android:contentDescription="Profile Picture"
+                        android:layout_marginEnd="16dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/textViewWelcome"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Profile"
+                            android:textColor="@color/background"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Manage your account and settings"
+                            android:textColor="@color/background"
+                            android:textSize="14sp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Action Buttons -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/buttonEditProfile"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:text="Edit"
+                        android:textSize="12sp"
+                        android:background="@drawable/button_secondary_background"
+                        android:textColor="@color/background"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:stateListAnimator="@null"
+                        android:layout_marginEnd="8dp" />
+
+                    <Button
+                        android:id="@+id/buttonSettings"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:text="Settings"
+                        android:textSize="12sp"
+                        android:background="@drawable/button_secondary_background"
+                        android:textColor="@color/background"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:stateListAnimator="@null" />
+
+                </LinearLayout>
+
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -45,7 +115,7 @@
             android:layout_margin="16dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="8dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -130,7 +200,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="₱ 0.00"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:textSize="20sp"
                         android:textStyle="bold" />
 
@@ -172,7 +242,7 @@
                             android:text="Regenerate"
                             android:textSize="12sp"
                             android:background="@drawable/button_press_selector"
-                            android:textColor="@color/white"
+                            android:textColor="@color/background"
                             android:paddingStart="12dp"
                             android:paddingEnd="12dp"
                             android:stateListAnimator="@null" />
@@ -194,7 +264,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="8dp"
-            app:cardBackgroundColor="@color/white">
+            app:cardBackgroundColor="@color/background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -259,7 +329,7 @@
                         android:text="View"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -311,7 +381,7 @@
                         android:text="View"
                         android:textSize="12sp"
                         android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary_blue"
+                        android:textColor="@color/primary"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>
@@ -329,7 +399,7 @@
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/primary_blue_light">
+            app:cardBackgroundColor="@color/primary_light">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -355,7 +425,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Anonymous Bidding"
-                        android:textColor="@color/primary_blue_dark"
+                        android:textColor="@color/primary_dark"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -363,7 +433,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Your real identity is protected during auctions"
-                        android:textColor="@color/primary_blue_dark"
+                        android:textColor="@color/primary_dark"
                         android:textSize="12sp" />
 
                 </LinearLayout>
@@ -386,7 +456,7 @@
                 android:text="Sign Out"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                android:textColor="@color/error_red"
+                android:textColor="@color/error"
                 android:background="@drawable/ripple_effect"
                 android:stateListAnimator="@null" />
 

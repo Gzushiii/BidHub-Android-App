@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "bidhub.db";
-    private static final int DATABASE_VERSION = 2; // Updated version for new schema
+    private static final int DATABASE_VERSION = 4; // Updated version for email columns in bids and items
 
     // ==================== TABLE NAMES ====================
     public static final String TABLE_USERS = "users";
@@ -16,6 +16,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TABLE_CREDIT_TRANSACTIONS = "credit_transactions";
     public static final String TABLE_REDEMPTION_CODES = "redemption_codes";
     public static final String TABLE_CATEGORIES = "categories";
+    public static final String TABLE_PASSWORD_RECOVERY = "password_recovery";
 
     // ==================== USERS TABLE COLUMNS ====================
     public static final String COLUMN_USER_ID = "id";
@@ -29,6 +30,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_USER_ALIAS = "alias";
     public static final String COLUMN_USER_CREDITS = "credits";
     public static final String COLUMN_USER_IS_VERIFIED = "is_verified";
+    public static final String COLUMN_USER_VERIFIED = "is_verified"; // Alias for compatibility
+    public static final String COLUMN_USER_PROFILE_PICTURE = "profile_picture";
     public static final String COLUMN_USER_CREATED_AT = "created_at";
     public static final String COLUMN_USER_LAST_LOGIN = "last_login";
     public static final String COLUMN_USER_IS_ACTIVE = "is_active";
@@ -39,6 +42,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_ITEM_DESCRIPTION = "description";
     public static final String COLUMN_ITEM_CATEGORY_ID = "category_id";
     public static final String COLUMN_ITEM_SELLER_ID = "seller_id";
+    public static final String COLUMN_ITEM_SELLER_EMAIL = "seller_email"; // For compatibility
     public static final String COLUMN_ITEM_STARTING_BID = "starting_bid";
     public static final String COLUMN_ITEM_CURRENT_BID = "current_bid";
     public static final String COLUMN_ITEM_CURRENT_BIDDER_ID = "current_bidder_id";
@@ -54,10 +58,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_BID_ID = "id";
     public static final String COLUMN_BID_ITEM_ID = "item_id";
     public static final String COLUMN_BID_BIDDER_ID = "bidder_id";
+    public static final String COLUMN_BID_BIDDER_EMAIL = "bidder_email"; // For compatibility
     public static final String COLUMN_BID_AMOUNT = "amount";
     public static final String COLUMN_BID_ALIAS = "bidder_alias";
     public static final String COLUMN_BID_CREATED_AT = "created_at";
     public static final String COLUMN_BID_IS_WINNING = "is_winning";
+    public static final String COLUMN_BID_STATUS = "status"; // ACTIVE, OUTBID, WON, etc.
 
     // ==================== CREDIT TRANSACTIONS TABLE COLUMNS ====================
     public static final String COLUMN_TRANSACTION_ID = "id";
@@ -87,6 +93,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_CATEGORY_PARENT_ID = "parent_id";
     public static final String COLUMN_CATEGORY_IS_ACTIVE = "is_active";
 
+    // ==================== PASSWORD RECOVERY TABLE COLUMNS ====================
+    public static final String COLUMN_RECOVERY_ID = "id";
+    public static final String COLUMN_RECOVERY_EMAIL = "email";
+    public static final String COLUMN_RECOVERY_PHONE = "phone";
+    public static final String COLUMN_RECOVERY_CODE = "verification_code";
+    public static final String COLUMN_RECOVERY_EXPIRES_AT = "expires_at";
+    public static final String COLUMN_RECOVERY_IS_EMAIL = "is_email";
+    public static final String COLUMN_RECOVERY_CREATED_AT = "created_at";
+
     // ==================== CREATE TABLE STATEMENTS ====================
     
     // Users table with enhanced fields
@@ -102,6 +117,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_USER_ALIAS + " TEXT NOT NULL UNIQUE,"
             + COLUMN_USER_CREDITS + " REAL DEFAULT 0.0,"
             + COLUMN_USER_IS_VERIFIED + " INTEGER DEFAULT 0,"
+            + COLUMN_USER_PROFILE_PICTURE + " TEXT,"
             + COLUMN_USER_CREATED_AT + " DATETIME DEFAULT CURRENT_TIMESTAMP,"
             + COLUMN_USER_LAST_LOGIN + " DATETIME,"
             + COLUMN_USER_IS_ACTIVE + " INTEGER DEFAULT 1"
@@ -124,6 +140,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_ITEM_DESCRIPTION + " TEXT NOT NULL,"
             + COLUMN_ITEM_CATEGORY_ID + " INTEGER,"
             + COLUMN_ITEM_SELLER_ID + " INTEGER NOT NULL,"
+            + COLUMN_ITEM_SELLER_EMAIL + " TEXT,"
             + COLUMN_ITEM_STARTING_BID + " REAL NOT NULL,"
             + COLUMN_ITEM_CURRENT_BID + " REAL DEFAULT 0.0,"
             + COLUMN_ITEM_CURRENT_BIDDER_ID + " INTEGER,"
@@ -144,10 +161,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + COLUMN_BID_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
             + COLUMN_BID_ITEM_ID + " INTEGER NOT NULL,"
             + COLUMN_BID_BIDDER_ID + " INTEGER NOT NULL,"
+            + COLUMN_BID_BIDDER_EMAIL + " TEXT,"
             + COLUMN_BID_AMOUNT + " REAL NOT NULL,"
             + COLUMN_BID_ALIAS + " TEXT NOT NULL,"
             + COLUMN_BID_CREATED_AT + " DATETIME DEFAULT CURRENT_TIMESTAMP,"
             + COLUMN_BID_IS_WINNING + " INTEGER DEFAULT 0,"
+            + COLUMN_BID_STATUS + " TEXT DEFAULT 'ACTIVE',"
             + "FOREIGN KEY(" + COLUMN_BID_ITEM_ID + ") REFERENCES " + TABLE_ITEMS + "(" + COLUMN_ITEM_ID + "),"
             + "FOREIGN KEY(" + COLUMN_BID_BIDDER_ID + ") REFERENCES " + TABLE_USERS + "(" + COLUMN_USER_ID + ")"
             + ")";
@@ -179,6 +198,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + "FOREIGN KEY(" + COLUMN_CODE_USER_ID + ") REFERENCES " + TABLE_USERS + "(" + COLUMN_USER_ID + ")"
             + ")";
 
+    // Password recovery table for password reset verification
+    private static final String CREATE_TABLE_PASSWORD_RECOVERY = "CREATE TABLE " + TABLE_PASSWORD_RECOVERY + "("
+            + COLUMN_RECOVERY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + COLUMN_RECOVERY_EMAIL + " TEXT,"
+            + COLUMN_RECOVERY_PHONE + " TEXT,"
+            + COLUMN_RECOVERY_CODE + " TEXT NOT NULL,"
+            + COLUMN_RECOVERY_EXPIRES_AT + " INTEGER NOT NULL,"
+            + COLUMN_RECOVERY_IS_EMAIL + " INTEGER NOT NULL,"
+            + COLUMN_RECOVERY_CREATED_AT + " DATETIME DEFAULT CURRENT_TIMESTAMP"
+            + ")";
+
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -192,6 +222,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_BIDS);
         db.execSQL(CREATE_TABLE_CREDIT_TRANSACTIONS);
         db.execSQL(CREATE_TABLE_REDEMPTION_CODES);
+        db.execSQL(CREATE_TABLE_PASSWORD_RECOVERY);
         
         // Insert default categories
         insertDefaultCategories(db);
@@ -208,6 +239,60 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_CATEGORIES);
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
             onCreate(db);
+        }
+        
+        // Add password recovery table for version 3
+        if (oldVersion < 3) {
+            db.execSQL(CREATE_TABLE_PASSWORD_RECOVERY);
+        }
+        
+        // Add email columns and status column for version 4
+        if (oldVersion < 4) {
+            try {
+                // Add profile_picture column to users table
+                db.execSQL("ALTER TABLE " + TABLE_USERS + " ADD COLUMN " + COLUMN_USER_PROFILE_PICTURE + " TEXT");
+                
+                // Add seller_email column to items table
+                db.execSQL("ALTER TABLE " + TABLE_ITEMS + " ADD COLUMN " + COLUMN_ITEM_SELLER_EMAIL + " TEXT");
+                
+                // Add bidder_email and status columns to bids table
+                db.execSQL("ALTER TABLE " + TABLE_BIDS + " ADD COLUMN " + COLUMN_BID_BIDDER_EMAIL + " TEXT");
+                db.execSQL("ALTER TABLE " + TABLE_BIDS + " ADD COLUMN " + COLUMN_BID_STATUS + " TEXT DEFAULT 'ACTIVE'");
+                
+                // Update existing data to populate email columns
+                updateEmailColumns(db);
+                
+            } catch (Exception e) {
+                // If migration fails, recreate tables
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_REDEMPTION_CODES);
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_CREDIT_TRANSACTIONS);
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_BIDS);
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_ITEMS);
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_CATEGORIES);
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
+                db.execSQL("DROP TABLE IF EXISTS " + TABLE_PASSWORD_RECOVERY);
+                onCreate(db);
+            }
+        }
+    }
+
+    /**
+     * Update email columns with existing data from foreign key relationships
+     */
+    private void updateEmailColumns(SQLiteDatabase db) {
+        try {
+            // Update seller_email in items table
+            db.execSQL("UPDATE " + TABLE_ITEMS + " SET " + COLUMN_ITEM_SELLER_EMAIL + " = " +
+                    "(SELECT " + COLUMN_USER_EMAIL + " FROM " + TABLE_USERS + 
+                    " WHERE " + TABLE_USERS + "." + COLUMN_USER_ID + " = " + TABLE_ITEMS + "." + COLUMN_ITEM_SELLER_ID + ")");
+            
+            // Update bidder_email in bids table
+            db.execSQL("UPDATE " + TABLE_BIDS + " SET " + COLUMN_BID_BIDDER_EMAIL + " = " +
+                    "(SELECT " + COLUMN_USER_EMAIL + " FROM " + TABLE_USERS + 
+                    " WHERE " + TABLE_USERS + "." + COLUMN_USER_ID + " = " + TABLE_BIDS + "." + COLUMN_BID_BIDDER_ID + ")");
+        } catch (Exception e) {
+            // Log error but don't fail the migration
+            e.printStackTrace();
         }
     }
 

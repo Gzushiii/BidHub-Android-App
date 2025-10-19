@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Internet permission for API calls -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -11,6 +14,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BidHub"
+        android:networkSecurityConfig="@xml/network_security_config"
         tools:targetApi="31">
 
         <!--
@@ -39,6 +43,24 @@
             android:name=".RegisterActivity"
             android:exported="false" />
 
+        <!-- Password Recovery Activities -->
+        <activity
+            android:name=".PasswordRecoveryRequestActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".PasswordRecoveryVerificationActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".PasswordResetActivity"
+            android:exported="false" />
+        
+        <!-- Test Activity (can be removed in production) -->
+        <activity
+            android:name=".PasswordRecoveryTestActivity"
+            android:exported="false" />
+
         <!-- Bottom Navigation Activities -->
         <activity
             android:name=".BrowseActivity"
@@ -54,6 +76,60 @@
         
         <activity
             android:name=".ProfileActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".ItemDetailActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".MyListingsActivity"
+            android:exported="false" />
+
+        <!-- Profile Management Activities -->
+        <activity
+            android:name=".ProfileEditActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".ProfileSettingsActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".ChangePasswordActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".PrivacySettingsActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".AccountSecurityActivity"
+            android:exported="false" />
+        
+        <!-- Bidding System Activities -->
+        <activity
+            android:name=".BidConfirmationActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".BidHistoryActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".ActiveBidsActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".WonAuctionsActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".LostAuctionsActivity"
+            android:exported="false" />
+        
+        <activity
+            android:name=".AuctionCountdownActivity"
             android:exported="false" />
 
     </application>

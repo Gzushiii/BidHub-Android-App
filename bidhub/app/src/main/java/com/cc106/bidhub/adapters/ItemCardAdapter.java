@@ -48,13 +48,21 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
     
     @Override
     public void onBindViewHolder(@NonNull ItemViewHolder holder, int position) {
-        Item item = items.get(position);
-        
-        // Set item data
-        holder.titleText.setText(item.getTitle());
-        holder.priceText.setText(currencyFormat.format(item.getCurrentPrice()));
-        holder.sellerText.setText("by " + (item.getSellerName() != null ? item.getSellerName() : "Unknown"));
-        holder.bidCountText.setText(item.getBidCount() + " bids");
+        try {
+            if (position < 0 || position >= items.size()) {
+                return;
+            }
+            
+            Item item = items.get(position);
+            if (item == null) {
+                return;
+            }
+            
+            // Set item data with null safety
+            holder.titleText.setText(item.getTitle() != null ? item.getTitle() : "Untitled Item");
+            holder.priceText.setText(currencyFormat.format(item.getCurrentPrice()));
+            holder.sellerText.setText("by " + (item.getSellerName() != null ? item.getSellerName() : "Unknown"));
+            holder.bidCountText.setText(item.getBidCount() + " bids");
         
         // Set time remaining
         if (item.getEndDate() != null) {
@@ -75,30 +83,68 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             holder.timeRemainingText.setText("No end date");
         }
         
-        // Set item image (placeholder for now)
-        holder.itemImage.setImageResource(R.drawable.ic_image_placeholder);
-        
-        // Set featured/trending indicators
-        if (item.isFeatured()) {
-            holder.featuredBadge.setVisibility(View.VISIBLE);
-            holder.featuredBadge.setText("FEATURED");
+        // Set item image - load user images with Glide, fallback to placeholder
+        if (item.getImagePaths() != null && !item.getImagePaths().isEmpty()) {
+            // Load first image from user uploads using Glide
+            String firstImagePath = item.getImagePaths().get(0);
+            com.cc106.bidhub.utils.ImageLoader.loadImageWithErrorCallback(
+                holder.itemImage.getContext(),
+                firstImagePath,
+                holder.itemImage,
+                new com.cc106.bidhub.utils.ImageLoader.ImageLoadErrorCallback() {
+                    @Override
+                    public void onError(String errorMessage) {
+                        com.cc106.bidhub.utils.ErrorHandler.handleImageError(
+                            holder.itemImage.getContext(),
+                            firstImagePath,
+                            null,
+                            "ItemCardAdapter image load"
+                        );
+                    }
+                }
+            );
         } else {
-            holder.featuredBadge.setVisibility(View.GONE);
+            // No images uploaded, use placeholder
+            com.cc106.bidhub.utils.ImageLoader.loadPlaceholder(holder.itemImage.getContext(), holder.itemImage);
         }
         
-        if (item.isTrending()) {
-            holder.trendingBadge.setVisibility(View.VISIBLE);
-            holder.trendingBadge.setText("TRENDING");
-        } else {
-            holder.trendingBadge.setVisibility(View.GONE);
-        }
         
-        // Set click listener
-        holder.itemView.setOnClickListener(v -> {
-            if (onItemClickListener != null) {
-                onItemClickListener.onItemClick(item);
-            }
-        });
+            // Set click listener with detailed error handling
+            holder.itemView.setOnClickListener(v -> {
+                try {
+                    if (onItemClickListener != null && item != null) {
+                        onItemClickListener.onItemClick(item);
+                    } else {
+                        com.cc106.bidhub.utils.ErrorHandler.logWarning(
+                            "ItemCardAdapter", 
+                            "Item click listener or item is null",
+                            String.format("Listener: %s, Item: %s", 
+                                onItemClickListener != null ? "not null" : "null",
+                                item != null ? item.getItemId() : "null")
+                        );
+                    }
+                } catch (Exception e) {
+                    com.cc106.bidhub.utils.ErrorHandler.handleAdapterError(
+                        holder.itemView.getContext(),
+                        "ItemCardAdapter",
+                        "item click",
+                        e,
+                        String.format("ItemID: %s, Title: %s", 
+                            item != null ? item.getItemId() : "null",
+                            item != null ? item.getTitle() : "null")
+                    );
+                }
+            });
+            
+        } catch (Exception e) {
+            com.cc106.bidhub.utils.ErrorHandler.handleAdapterError(
+                holder.itemView.getContext(),
+                "ItemCardAdapter",
+                "bind view holder",
+                e,
+                String.format("Position: %d", position)
+            );
+        }
     }
     
     @Override
@@ -130,8 +176,6 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
         TextView sellerText;
         TextView bidCountText;
         TextView timeRemainingText;
-        TextView featuredBadge;
-        TextView trendingBadge;
         
         ItemViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -141,8 +185,6 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             sellerText = itemView.findViewById(R.id.tv_seller_name);
             bidCountText = itemView.findViewById(R.id.tv_bid_count);
             timeRemainingText = itemView.findViewById(R.id.tv_time_remaining);
-            featuredBadge = itemView.findViewById(R.id.tv_featured_badge);
-            trendingBadge = itemView.findViewById(R.id.tv_trending_badge);
         }
     }
 }

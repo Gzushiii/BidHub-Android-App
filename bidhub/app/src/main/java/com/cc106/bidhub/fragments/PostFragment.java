@@ -2,6 +2,10 @@ package com.cc106.bidhub.fragments;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -15,7 +19,9 @@ import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
+import com.google.android.material.textfield.TextInputLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,6 +39,8 @@ import com.cc106.bidhub.items.ItemData;
 import com.cc106.bidhub.items.ItemManager;
 import com.cc106.bidhub.items.ItemStatus;
 import com.cc106.bidhub.toast.ToastHelper;
+import com.cc106.bidhub.MainActivity;
+import com.cc106.bidhub.utils.ErrorHandler;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
@@ -40,6 +48,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class PostFragment extends Fragment implements 
         ItemImageAdapter.OnImageClickListener, 
@@ -63,12 +73,11 @@ public class PostFragment extends Fragment implements
     private TextInputEditText etStartingPrice;
     private TextInputEditText etBuyNowPrice;
     private AutoCompleteTextView actvAuctionDuration;
-    private TextInputEditText etLocation;
-    private TextInputEditText etShippingInfo;
+    private TextInputEditText etDonationReason;
+    private TextInputLayout layoutDonationReason;
     // Tags functionality removed from new layout
     // private TextInputEditText etTags;
     private AutoCompleteTextView actvSize;
-    private AutoCompleteTextView actvFeatures;
     private AutoCompleteTextView actvOrigin;
     
     private RecyclerView rvItemImages;
@@ -76,14 +85,16 @@ public class PostFragment extends Fragment implements
     private Button btnForSale;
     private Button btnForFree;
     private Button btnToggleOptional;
+    private Button btnSaveDraft;
     private Button btnPostItem;
     private ProgressBar progressBar;
+    private LinearLayout layoutImageProgress;
+    private ProgressBar progressImageUpload;
+    private TextView tvImageProgress;
     
     // Checkboxes
     private CheckBox cbQuantity;
     private CheckBox cbContact;
-    private CheckBox cbMeetup;
-    private CheckBox cbDelivery;
     
     // Layouts
     private LinearLayout layoutOptionalDetails;
@@ -102,6 +113,11 @@ public class PostFragment extends Fragment implements
     private String selectedMainCategoryId;
     private boolean isForSale = true;
     private boolean isOptionalDetailsVisible = true;
+    
+    // Auto-save functionality
+    private Timer autoSaveTimer;
+    private static final long AUTO_SAVE_INTERVAL = 30000; // 30 seconds
+    private boolean hasUnsavedChanges = false;
 
     @Nullable
     @Override
@@ -143,6 +159,7 @@ public class PostFragment extends Fragment implements
             setupAdapters();
             setupDropdowns();
             setupClickListeners(view);
+            setupAutoSave();
         } catch (Exception e) {
             ToastHelper.showError(getContext(), "Error initializing UI: " + e.getMessage());
             e.printStackTrace();
@@ -158,16 +175,23 @@ public class PostFragment extends Fragment implements
         actvSubcategory = view.findViewById(R.id.actv_subcategory);
         actvCondition = view.findViewById(R.id.actv_condition);
         etStartingPrice = view.findViewById(R.id.et_starting_price);
+        etBuyNowPrice = view.findViewById(R.id.et_buy_now_price);
+        actvAuctionDuration = view.findViewById(R.id.actv_auction_duration);
+        etDonationReason = view.findViewById(R.id.et_donation_reason);
+        layoutDonationReason = view.findViewById(R.id.layout_donation_reason);
         actvSize = view.findViewById(R.id.actv_size);
-        actvFeatures = view.findViewById(R.id.actv_features);
         actvOrigin = view.findViewById(R.id.actv_origin);
         
         rvItemImages = view.findViewById(R.id.rv_item_images);
         btnForSale = view.findViewById(R.id.btn_for_sale);
         btnForFree = view.findViewById(R.id.btn_for_free);
         btnToggleOptional = view.findViewById(R.id.btn_toggle_optional);
+        btnSaveDraft = view.findViewById(R.id.btn_save_draft);
         btnPostItem = view.findViewById(R.id.btn_post_item);
         progressBar = view.findViewById(R.id.progress_bar);
+        layoutImageProgress = view.findViewById(R.id.layout_image_progress);
+        progressImageUpload = view.findViewById(R.id.progress_image_upload);
+        tvImageProgress = view.findViewById(R.id.tv_image_progress);
         
         // Back button
         ImageView btnBack = view.findViewById(R.id.btn_back);
@@ -175,8 +199,6 @@ public class PostFragment extends Fragment implements
         // Checkboxes
         cbQuantity = view.findViewById(R.id.cb_quantity);
         cbContact = view.findViewById(R.id.cb_contact);
-        cbMeetup = view.findViewById(R.id.cb_meetup);
-        cbDelivery = view.findViewById(R.id.cb_delivery);
         
         // Layouts
         layoutOptionalDetails = view.findViewById(R.id.layout_optional_details);
@@ -256,15 +278,6 @@ public class PostFragment extends Fragment implements
                 setupDropdownClickListener(actvSize);
             }
             
-            // Features dropdown
-            if (actvFeatures != null) {
-                String[] features = {"Brand New", "Used", "Vintage", "Limited Edition", "Rare", "Collectible", "Custom"};
-                ArrayAdapter<String> featuresAdapter = new ArrayAdapter<>(getContext(), 
-                        android.R.layout.simple_dropdown_item_1line, features);
-                actvFeatures.setAdapter(featuresAdapter);
-                actvFeatures.setThreshold(0); // Show dropdown immediately
-                setupDropdownClickListener(actvFeatures);
-            }
             
             // Origin dropdown
             if (actvOrigin != null) {
@@ -274,6 +287,16 @@ public class PostFragment extends Fragment implements
                 actvOrigin.setAdapter(originAdapter);
                 actvOrigin.setThreshold(0); // Show dropdown immediately
                 setupDropdownClickListener(actvOrigin);
+            }
+            
+            // Auction duration dropdown
+            if (actvAuctionDuration != null) {
+                String[] durations = {"1 Day", "3 Days", "5 Days", "7 Days", "10 Days", "14 Days"};
+                ArrayAdapter<String> durationAdapter = new ArrayAdapter<>(getContext(), 
+                        android.R.layout.simple_dropdown_item_1line, durations);
+                actvAuctionDuration.setAdapter(durationAdapter);
+                actvAuctionDuration.setThreshold(0); // Show dropdown immediately
+                setupDropdownClickListener(actvAuctionDuration);
             }
         } catch (Exception e) {
             ToastHelper.showError(getContext(), "Error setting up dropdowns: " + e.getMessage());
@@ -315,15 +338,21 @@ public class PostFragment extends Fragment implements
             // Prevent text editing
             autoCompleteTextView.setKeyListener(null);
             
-            // Show dropdown on click
+            // Show dropdown on click - ensure it works even after image uploads
             autoCompleteTextView.setOnClickListener(v -> {
-                autoCompleteTextView.showDropDown();
+                // Force refresh the dropdown to ensure it's visible
+                autoCompleteTextView.post(() -> {
+                    autoCompleteTextView.showDropDown();
+                });
             });
             
             // Show dropdown on focus
             autoCompleteTextView.setOnFocusChangeListener((v, hasFocus) -> {
                 if (hasFocus) {
-                    autoCompleteTextView.showDropDown();
+                    // Use post to ensure UI is ready
+                    autoCompleteTextView.post(() -> {
+                        autoCompleteTextView.showDropDown();
+                    });
                 }
             });
             
@@ -335,6 +364,16 @@ public class PostFragment extends Fragment implements
                 
                 // Handle main category selection
                 handleMainCategorySelection(selectedItem);
+            });
+            
+            // Additional touch listener to ensure dropdown works
+            autoCompleteTextView.setOnTouchListener((v, event) -> {
+                if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
+                    autoCompleteTextView.post(() -> {
+                        autoCompleteTextView.showDropDown();
+                    });
+                }
+                return false; // Allow other touch events to continue
             });
         } catch (Exception e) {
             ToastHelper.showError(getContext(), "Error setting up main category dropdown listener: " + e.getMessage());
@@ -402,15 +441,20 @@ public class PostFragment extends Fragment implements
                     hideSizeDropdown();
                 }
                 
-                // Get subcategories for the selected main category
-                subcategories = categoryManager.getSubCategories(selectedMainCategoryId);
-                
-                if (subcategories != null && !subcategories.isEmpty()) {
-                    // Show subcategory dropdown with subcategories
-                    showSubcategoryDropdown(subcategories);
-                } else {
-                    // No subcategories available, hide the dropdown
+                // Handle "Others" category - no subcategories
+                if (selectedCategoryName.equals("Others")) {
                     hideSubcategoryDropdown();
+                } else {
+                    // Get subcategories for the selected main category
+                    subcategories = categoryManager.getSubCategories(selectedMainCategoryId);
+                    
+                    if (subcategories != null && !subcategories.isEmpty()) {
+                        // Show subcategory dropdown with subcategories
+                        showSubcategoryDropdown(subcategories);
+                    } else {
+                        // No subcategories available, hide the dropdown
+                        hideSubcategoryDropdown();
+                    }
                 }
             }
         } catch (Exception e) {
@@ -510,6 +554,9 @@ public class PostFragment extends Fragment implements
             if (btnToggleOptional != null) {
                 btnToggleOptional.setOnClickListener(v -> toggleOptionalDetails());
             }
+            if (btnSaveDraft != null) {
+                btnSaveDraft.setOnClickListener(v -> saveDraftItem());
+            }
             if (btnPostItem != null) {
                 btnPostItem.setOnClickListener(v -> postItem());
             }
@@ -532,11 +579,19 @@ public class PostFragment extends Fragment implements
             btnForSale.setTextColor(getResources().getColor(R.color.white));
             btnForFree.setBackgroundResource(R.drawable.button_secondary);
             btnForFree.setTextColor(getResources().getColor(R.color.text_primary));
+            // Hide donation reason field for sale items
+            if (layoutDonationReason != null) {
+                layoutDonationReason.setVisibility(View.GONE);
+            }
         } else {
             btnForSale.setBackgroundResource(R.drawable.button_secondary);
             btnForSale.setTextColor(getResources().getColor(R.color.text_primary));
             btnForFree.setBackgroundResource(R.drawable.button_primary);
             btnForFree.setTextColor(getResources().getColor(R.color.white));
+            // Show donation reason field for donation items
+            if (layoutDonationReason != null) {
+                layoutDonationReason.setVisibility(View.VISIBLE);
+            }
         }
     }
     
@@ -582,22 +637,162 @@ public class PostFragment extends Fragment implements
         
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK) {
             if (data != null) {
-                if (data.getClipData() != null) {
-                    // Multiple images selected
-                    int count = data.getClipData().getItemCount();
-                    for (int i = 0; i < count && selectedImages.size() < MAX_IMAGES; i++) {
-                        Uri imageUri = data.getClipData().getItemAt(i).getUri();
-                        selectedImages.add(imageUri.toString());
+                try {
+                    // Show progress indicator
+                    showImageProgress(true);
+                    
+                    if (data.getClipData() != null) {
+                        // Multiple images selected
+                        int count = data.getClipData().getItemCount();
+                        int processedCount = 0;
+                        
+                        for (int i = 0; i < count && selectedImages.size() < MAX_IMAGES; i++) {
+                            Uri imageUri = data.getClipData().getItemAt(i).getUri();
+                            updateImageProgress("Processing image " + (i + 1) + " of " + count);
+                            
+                            String compressedImagePath = compressImage(imageUri);
+                            if (compressedImagePath != null) {
+                                selectedImages.add(compressedImagePath);
+                                processedCount++;
+                            }
+                        }
+                        
+                        ToastHelper.showSuccess(getContext(), "Images added: " + processedCount);
+                    } else if (data.getData() != null) {
+                        // Single image selected
+                        Uri imageUri = data.getData();
+                        updateImageProgress("Processing image...");
+                        
+                        String compressedImagePath = compressImage(imageUri);
+                        if (compressedImagePath != null) {
+                            selectedImages.add(compressedImagePath);
+                            ToastHelper.showSuccess(getContext(), "Image added successfully");
+                        }
                     }
-                } else if (data.getData() != null) {
-                    // Single image selected
-                    Uri imageUri = data.getData();
-                    selectedImages.add(imageUri.toString());
+                    
+                    imageAdapter.notifyDataSetChanged();
+                } catch (Exception e) {
+                    ToastHelper.showError(getContext(), "Error processing images: " + e.getMessage());
+                } finally {
+                    // Hide progress indicator
+                    showImageProgress(false);
                 }
-                
-                imageAdapter.notifyDataSetChanged();
-                ToastHelper.showSuccess(getContext(), "Images added: " + selectedImages.size());
             }
+        }
+    }
+    
+    private void showImageProgress(boolean show) {
+        if (layoutImageProgress != null) {
+            layoutImageProgress.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
+    }
+    
+    private void updateImageProgress(String message) {
+        if (tvImageProgress != null) {
+            tvImageProgress.setText(message);
+        }
+    }
+    
+    private String compressImage(Uri imageUri) {
+        try {
+            // Get input stream from URI
+            android.content.ContentResolver contentResolver = getContext().getContentResolver();
+            java.io.InputStream inputStream = contentResolver.openInputStream(imageUri);
+            
+            // Decode image with options to reduce memory usage
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(inputStream, null, options);
+            inputStream.close();
+            
+            // Calculate sample size for compression
+            int maxWidth = 1920;
+            int maxHeight = 1080;
+            int sampleSize = calculateInSampleSize(options, maxWidth, maxHeight);
+            
+            // Decode image with calculated sample size
+            options.inJustDecodeBounds = false;
+            options.inSampleSize = sampleSize;
+            options.inPreferredConfig = Bitmap.Config.RGB_565; // Reduce memory usage
+            
+            inputStream = contentResolver.openInputStream(imageUri);
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream, null, options);
+            inputStream.close();
+            
+            if (bitmap == null) {
+                return null;
+            }
+            
+            // Rotate image if needed
+            bitmap = rotateImageIfRequired(bitmap, imageUri);
+            
+            // Compress and save
+            String fileName = "compressed_" + System.currentTimeMillis() + ".jpg";
+            java.io.File outputDir = new java.io.File(getContext().getCacheDir(), "compressed_images");
+            if (!outputDir.exists()) {
+                outputDir.mkdirs();
+            }
+            
+            java.io.File outputFile = new java.io.File(outputDir, fileName);
+            java.io.FileOutputStream outputStream = new java.io.FileOutputStream(outputFile);
+            
+            // Compress with quality 85%
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream);
+            outputStream.close();
+            bitmap.recycle();
+            
+            return outputFile.getAbsolutePath();
+            
+        } catch (Exception e) {
+            ToastHelper.showError(getContext(), "Error compressing image: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+        
+        if (height > reqHeight || width > reqWidth) {
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+            
+            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+        
+        return inSampleSize;
+    }
+    
+    private Bitmap rotateImageIfRequired(Bitmap bitmap, Uri imageUri) {
+        try {
+            android.content.ContentResolver contentResolver = getContext().getContentResolver();
+            java.io.InputStream inputStream = contentResolver.openInputStream(imageUri);
+            ExifInterface exifInterface = new ExifInterface(inputStream);
+            inputStream.close();
+            
+            int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+            
+            Matrix matrix = new Matrix();
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    matrix.postRotate(90);
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    matrix.postRotate(180);
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    matrix.postRotate(270);
+                    break;
+                default:
+                    return bitmap;
+            }
+            
+            return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        } catch (Exception e) {
+            return bitmap;
         }
     }
     
@@ -617,16 +812,36 @@ public class PostFragment extends Fragment implements
         // }
     }
     
-    private void saveAsDraft() {
-        ItemData itemData = createItemData();
-        if (itemData != null) {
-            boolean success = itemManager.createItem(itemData, loggedInUserEmail);
-            if (success) {
-                ToastHelper.showSuccess(getContext(), "Item saved as draft");
-                clearForm();
-            } else {
-                ToastHelper.showError(getContext(), "Failed to save draft");
+    private void saveDraftItem() {
+        try {
+            // Validate user email
+            if (TextUtils.isEmpty(loggedInUserEmail)) {
+                ErrorHandler.showDetailedError(getContext(), "User not logged in. Please log in again.");
+                return;
             }
+            
+            ItemData itemData = createItemData();
+            if (itemData != null) {
+                // Show loading state
+                btnSaveDraft.setEnabled(false);
+                btnSaveDraft.setText("Saving...");
+                
+                boolean success = itemManager.saveDraftItem(itemData, loggedInUserEmail);
+                if (success) {
+                    ErrorHandler.showSuccess(getContext(), "Item saved as draft");
+                    clearForm();
+                } else {
+                    ErrorHandler.showDetailedError(getContext(), "Failed to save draft");
+                }
+            } else {
+                ErrorHandler.showDetailedError(getContext(), "Please fill in all required fields correctly.");
+            }
+        } catch (Exception e) {
+            ErrorHandler.handleInitError(getContext(), "SaveDraft", e, "Saving draft item");
+            e.printStackTrace();
+        } finally {
+            btnSaveDraft.setEnabled(true);
+            btnSaveDraft.setText("Save as Draft");
         }
     }
     
@@ -634,12 +849,28 @@ public class PostFragment extends Fragment implements
         try {
             // Validate user email
             if (TextUtils.isEmpty(loggedInUserEmail)) {
-                ToastHelper.showError(getContext(), "User not logged in. Please log in again.");
+                ErrorHandler.showDetailedError(getContext(), "User not logged in. Please log in again.");
                 return;
             }
             
+            // Debug: Log form data before validation
+            android.util.Log.d("PostFragment", "Form data before validation:");
+            android.util.Log.d("PostFragment", "Title: " + etItemTitle.getText().toString().trim());
+            android.util.Log.d("PostFragment", "Category: " + actvCategory.getText().toString().trim());
+            android.util.Log.d("PostFragment", "Origin: " + actvOrigin.getText().toString().trim());
+            android.util.Log.d("PostFragment", "Images count: " + selectedImages.size());
+            
             ItemData itemData = createItemData();
             if (itemData != null) {
+                // Debug: Log item data before posting
+                android.util.Log.d("PostFragment", "ItemData created successfully:");
+                android.util.Log.d("PostFragment", "Title: " + itemData.getTitle());
+                android.util.Log.d("PostFragment", "Description: " + itemData.getDescription());
+                android.util.Log.d("PostFragment", "CategoryId: " + itemData.getCategoryId());
+                android.util.Log.d("PostFragment", "StartingPrice: " + itemData.getStartingPrice());
+                android.util.Log.d("PostFragment", "Condition: " + itemData.getCondition());
+                android.util.Log.d("PostFragment", "Images count: " + (itemData.getImagePaths() != null ? itemData.getImagePaths().size() : 0));
+                
                 // Show loading state
                 btnPostItem.setEnabled(false);
                 btnPostItem.setText("Posting...");
@@ -649,19 +880,28 @@ public class PostFragment extends Fragment implements
                 
                 boolean success = itemManager.createItem(itemData, loggedInUserEmail);
                 if (success) {
-                    ToastHelper.showSuccess(getContext(), "Item posted successfully!");
+                    ErrorHandler.showSuccess(getContext(), "Item posted successfully!");
                     clearForm();
+                    
+                    // Debug: Log item count after creation
+                    android.util.Log.d("PostFragment", "Item created successfully. Total items in manager: " + itemManager.getAllBrowsableItems().size());
+                    
+                    // User stays on Post tab to create more listings
                 } else {
-                    ToastHelper.showError(getContext(), "Failed to post item. Please try again.");
+                    android.util.Log.e("PostFragment", "ItemManager.createItem returned false");
+                    ErrorHandler.showDetailedError(getContext(), "Failed to post item. Please check all required fields and try again.");
                 }
+            } else {
+                android.util.Log.e("PostFragment", "createItemData returned null - validation failed");
+                ErrorHandler.showDetailedError(getContext(), "Please fill in all required fields correctly.");
             }
         } catch (Exception e) {
-            ToastHelper.showError(getContext(), "Error posting item: " + e.getMessage());
+            ErrorHandler.handleInitError(getContext(), "PostItem", e, "Posting item");
             e.printStackTrace();
         } finally {
             // Reset button state
             btnPostItem.setEnabled(true);
-            btnPostItem.setText("List it!");
+            btnPostItem.setText("Post Item");
             if (progressBar != null) {
                 progressBar.setVisibility(View.GONE);
             }
@@ -687,12 +927,40 @@ public class PostFragment extends Fragment implements
             try {
                 double startingPrice = Double.parseDouble(etStartingPrice.getText().toString().trim());
                 itemData.setStartingPrice(startingPrice);
+                
+                // Handle Buy Now price
+                String buyNowPriceText = etBuyNowPrice.getText().toString().trim();
+                if (!TextUtils.isEmpty(buyNowPriceText)) {
+                    try {
+                        double buyNowPrice = Double.parseDouble(buyNowPriceText);
+                        if (buyNowPrice > startingPrice) {
+                            itemData.setBuyNowPrice(buyNowPrice);
+                        } else {
+                            ToastHelper.showError(getContext(), "Buy Now price must be higher than starting price");
+                            return null;
+                        }
+                    } catch (NumberFormatException e) {
+                        ToastHelper.showError(getContext(), "Invalid Buy Now price format");
+                        return null;
+                    }
+                }
             } catch (NumberFormatException e) {
                 ToastHelper.showError(getContext(), "Invalid price format");
                 return null;
             }
         } else {
-            itemData.setStartingPrice(0.0); // Free item
+            itemData.setStartingPrice(0.0); // Donation item
+            // Store donation reason in metadata
+            String donationReason = etDonationReason.getText().toString().trim();
+            if (!TextUtils.isEmpty(donationReason)) {
+                String metadata = itemData.getMetadata();
+                if (TextUtils.isEmpty(metadata)) {
+                    metadata = "Donation Reason: " + donationReason;
+                } else {
+                    metadata += ", Donation Reason: " + donationReason;
+                }
+                itemData.setMetadata(metadata);
+            }
         }
         
         // Additional fields
@@ -701,17 +969,8 @@ public class PostFragment extends Fragment implements
             itemData.setMetadata("Size: " + size);
         }
         
-        String features = actvFeatures.getText().toString().trim();
-        if (!TextUtils.isEmpty(features) && !features.equals("Choose")) {
-            String metadata = itemData.getMetadata();
-            if (TextUtils.isEmpty(metadata)) {
-                metadata = "Features: " + features;
-            } else {
-                metadata += ", Features: " + features;
-            }
-            itemData.setMetadata(metadata);
-        }
         
+        // Handle origin field (optional)
         String origin = actvOrigin.getText().toString().trim();
         if (!TextUtils.isEmpty(origin) && !origin.equals("Choose")) {
             String metadata = itemData.getMetadata();
@@ -722,32 +981,12 @@ public class PostFragment extends Fragment implements
             }
             itemData.setMetadata(metadata);
         }
+        // Note: Origin field is optional, so no validation is needed if it's empty or "Choose"
         
         // Images and tags
         itemData.setImagePaths(new ArrayList<>(selectedImages));
         itemData.setTags(new ArrayList<>(selectedTags));
         
-        // Delivery options
-        StringBuilder deliveryOptions = new StringBuilder();
-        if (cbMeetup != null && cbMeetup.isChecked()) {
-            deliveryOptions.append("Meet-up");
-        }
-        if (cbDelivery != null && cbDelivery.isChecked()) {
-            if (deliveryOptions.length() > 0) {
-                deliveryOptions.append(", ");
-            }
-            deliveryOptions.append("Mailing & Delivery");
-        }
-        
-        if (deliveryOptions.length() > 0) {
-            String metadata = itemData.getMetadata();
-            if (TextUtils.isEmpty(metadata)) {
-                metadata = "Delivery: " + deliveryOptions.toString();
-            } else {
-                metadata += ", Delivery: " + deliveryOptions.toString();
-            }
-            itemData.setMetadata(metadata);
-        }
         
         // Set default auction duration (7 days)
         setAuctionDuration(itemData);
@@ -782,18 +1021,33 @@ public class PostFragment extends Fragment implements
             return false;
         }
         
+        // Validate donation reason for donation items
+        if (!isForSale) {
+            String donationReason = etDonationReason.getText().toString().trim();
+            if (TextUtils.isEmpty(donationReason)) {
+                ToastHelper.showError(getContext(), "Donation reason is required");
+                etDonationReason.requestFocus();
+                return false;
+            }
+            if (donationReason.length() < 10) {
+                ToastHelper.showError(getContext(), "Please provide a more detailed donation reason (at least 10 characters)");
+                etDonationReason.requestFocus();
+                return false;
+            }
+        }
+        
         // Validate price for sale items
         if (isForSale) {
             String priceText = etStartingPrice.getText().toString().trim();
             if (TextUtils.isEmpty(priceText)) {
-                ToastHelper.showError(getContext(), "Price is required for items for sale");
+                ToastHelper.showError(getContext(), "Starting price is required for items for sale");
                 etStartingPrice.requestFocus();
                 return false;
             }
             try {
                 double price = Double.parseDouble(priceText);
-                if (price < 0) {
-                    ToastHelper.showError(getContext(), "Price cannot be negative");
+                if (price < 1) {
+                    ToastHelper.showError(getContext(), "Starting price must be at least ₱1");
                     etStartingPrice.requestFocus();
                     return false;
                 }
@@ -802,8 +1056,30 @@ public class PostFragment extends Fragment implements
                     etStartingPrice.requestFocus();
                     return false;
                 }
+                
+                // Validate Buy Now price if provided
+                String buyNowPriceText = etBuyNowPrice.getText().toString().trim();
+                if (!TextUtils.isEmpty(buyNowPriceText)) {
+                    try {
+                        double buyNowPrice = Double.parseDouble(buyNowPriceText);
+                        if (buyNowPrice <= price) {
+                            ToastHelper.showError(getContext(), "Buy Now price must be higher than starting price");
+                            etBuyNowPrice.requestFocus();
+                            return false;
+                        }
+                        if (buyNowPrice > 1000000) {
+                            ToastHelper.showError(getContext(), "Buy Now price seems too high. Please verify the amount");
+                            etBuyNowPrice.requestFocus();
+                            return false;
+                        }
+                    } catch (NumberFormatException e) {
+                        ToastHelper.showError(getContext(), "Please enter a valid Buy Now price");
+                        etBuyNowPrice.requestFocus();
+                        return false;
+                    }
+                }
             } catch (NumberFormatException e) {
-                ToastHelper.showError(getContext(), "Please enter a valid price");
+                ToastHelper.showError(getContext(), "Please enter a valid starting price");
                 etStartingPrice.requestFocus();
                 return false;
             }
@@ -818,7 +1094,7 @@ public class PostFragment extends Fragment implements
         }
         
         // Validate images
-        if (selectedImages.isEmpty()) {
+        if (selectedImages == null || selectedImages.isEmpty()) {
             ToastHelper.showError(getContext(), "At least one photo is required");
             return false;
         }
@@ -835,13 +1111,16 @@ public class PostFragment extends Fragment implements
             return false;
         }
         
-        // Validate delivery options
-        if (cbMeetup != null && cbDelivery != null) {
-            if (!cbMeetup.isChecked() && !cbDelivery.isChecked()) {
-                ToastHelper.showError(getContext(), "Please select at least one delivery option");
-                return false;
-            }
+        // Validate auction duration
+        String duration = actvAuctionDuration.getText().toString().trim();
+        if (TextUtils.isEmpty(duration) || duration.equals("Choose")) {
+            ToastHelper.showError(getContext(), "Auction duration is required");
+            actvAuctionDuration.requestFocus();
+            return false;
         }
+        
+        // Origin field is optional - no validation needed
+        // This ensures the field is truly optional and doesn't cause validation failures
         
         return true;
     }
@@ -876,25 +1155,30 @@ public class PostFragment extends Fragment implements
         itemData.setStartDate(calendar.getTime());
         
         int days = 7; // Default
-        switch (duration) {
-            case "1 Day":
-                days = 1;
-                break;
-            case "3 Days":
-                days = 3;
-                break;
-            case "5 Days":
-                days = 5;
-                break;
-            case "7 Days":
-                days = 7;
-                break;
-            case "10 Days":
-                days = 10;
-                break;
-            case "14 Days":
-                days = 14;
-                break;
+        if (!TextUtils.isEmpty(duration)) {
+            switch (duration) {
+                case "1 Day":
+                    days = 1;
+                    break;
+                case "3 Days":
+                    days = 3;
+                    break;
+                case "5 Days":
+                    days = 5;
+                    break;
+                case "7 Days":
+                    days = 7;
+                    break;
+                case "10 Days":
+                    days = 10;
+                    break;
+                case "14 Days":
+                    days = 14;
+                    break;
+                default:
+                    days = 7; // Default fallback
+                    break;
+            }
         }
         
         calendar.add(Calendar.DAY_OF_MONTH, days);
@@ -907,8 +1191,10 @@ public class PostFragment extends Fragment implements
         actvCategory.setText("Choose");
         actvCondition.setText("Choose");
         etStartingPrice.setText("");
+        etBuyNowPrice.setText("");
+        actvAuctionDuration.setText("7 Days");
+        etDonationReason.setText("");
         actvSize.setText("Choose");
-        actvFeatures.setText("Choose");
         actvOrigin.setText("Choose");
         
         // Reset subcategory dropdown and size dropdown
@@ -920,8 +1206,6 @@ public class PostFragment extends Fragment implements
         // Reset checkboxes
         if (cbQuantity != null) cbQuantity.setChecked(false);
         if (cbContact != null) cbContact.setChecked(true);
-        if (cbMeetup != null) cbMeetup.setChecked(false);
-        if (cbDelivery != null) cbDelivery.setChecked(false);
         
         // Reset price mode
         togglePriceMode(true);
@@ -963,5 +1247,111 @@ public class PostFragment extends Fragment implements
     
     public void updateUserEmail(String email) {
         this.loggedInUserEmail = email;
+    }
+    
+    // Auto-save functionality
+    private void setupAutoSave() {
+        try {
+            // Set up text change listeners for auto-save
+            if (etItemTitle != null) {
+                etItemTitle.addTextChangedListener(new android.text.TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                    
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        hasUnsavedChanges = true;
+                        scheduleAutoSave();
+                    }
+                    
+                    @Override
+                    public void afterTextChanged(android.text.Editable s) {}
+                });
+            }
+            
+            if (etItemDescription != null) {
+                etItemDescription.addTextChangedListener(new android.text.TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                    
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        hasUnsavedChanges = true;
+                        scheduleAutoSave();
+                    }
+                    
+                    @Override
+                    public void afterTextChanged(android.text.Editable s) {}
+                });
+            }
+            
+            if (etStartingPrice != null) {
+                etStartingPrice.addTextChangedListener(new android.text.TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                    
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        hasUnsavedChanges = true;
+                        scheduleAutoSave();
+                    }
+                    
+                    @Override
+                    public void afterTextChanged(android.text.Editable s) {}
+                });
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(getContext(), "Error setting up auto-save: " + e.getMessage());
+        }
+    }
+    
+    private void scheduleAutoSave() {
+        try {
+            if (autoSaveTimer != null) {
+                autoSaveTimer.cancel();
+            }
+            
+            autoSaveTimer = new Timer();
+            autoSaveTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (hasUnsavedChanges && getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            saveDraftItem();
+                            hasUnsavedChanges = false;
+                        });
+                    }
+                }
+            }, AUTO_SAVE_INTERVAL);
+        } catch (Exception e) {
+            ToastHelper.showError(getContext(), "Error scheduling auto-save: " + e.getMessage());
+        }
+    }
+    
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        try {
+            if (autoSaveTimer != null) {
+                autoSaveTimer.cancel();
+                autoSaveTimer = null;
+            }
+        } catch (Exception e) {
+            // Ignore cleanup errors
+        }
+    }
+    
+    /**
+     * Navigate to Browse tab after successful item posting
+     */
+    private void navigateToBrowseTab() {
+        try {
+            if (getActivity() instanceof MainActivity) {
+                MainActivity mainActivity = (MainActivity) getActivity();
+                mainActivity.switchToBrowseTab();
+            }
+        } catch (Exception e) {
+            android.util.Log.e("PostFragment", "Error navigating to browse tab", e);
+        }
     }
 }

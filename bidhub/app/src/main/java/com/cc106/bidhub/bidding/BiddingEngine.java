@@ -1,0 +1,627 @@
+package com.cc106.bidhub.bidding;
+
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+
+import com.cc106.bidhub.DatabaseHelper;
+import com.cc106.bidhub.credits.CreditManager;
+import com.cc106.bidhub.items.Item;
+import com.cc106.bidhub.items.ItemManager;
+import com.cc106.bidhub.items.ItemStatus;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+
+/**
+ * Comprehensive Bidding Engine
+ * Handles all bidding operations including bid placement, validation, and management
+ */
+public class BiddingEngine {
+    private static final String TAG = "BiddingEngine";
+    private static BiddingEngine instance;
+    
+    // Configuration constants
+    private static final double MIN_BID_INCREMENT = 1.0;
+    private static final double MAX_BID_AMOUNT = 1000000.0;
+    private static final int MAX_BIDS_PER_ITEM = 1000;
+    private static final int MAX_ACTIVE_BIDS_PER_USER = 50;
+    
+    // Threading
+    private final ExecutorService executorService;
+    
+    // Dependencies
+    private Context context;
+    private DatabaseHelper dbHelper;
+    private CreditManager creditManager;
+    private ItemManager itemManager;
+    
+    // Caches
+    private final Map<String, List<Bid>> itemBidsCache;
+    private final Map<String, List<Bid>> userBidsCache;
+    private final Map<String, Bid> highestBidCache;
+    
+    private BiddingEngine(Context context) {
+        this.context = context.getApplicationContext();
+        this.dbHelper = new DatabaseHelper(context);
+        this.creditManager = new CreditManager(context);
+        this.itemManager = ItemManager.getInstance(context);
+        this.executorService = Executors.newCachedThreadPool();
+        this.itemBidsCache = new ConcurrentHashMap<>();
+        this.userBidsCache = new ConcurrentHashMap<>();
+        this.highestBidCache = new ConcurrentHashMap<>();
+    }
+    
+    public static synchronized BiddingEngine getInstance(Context context) {
+        if (instance == null) {
+            instance = new BiddingEngine(context);
+        }
+        return instance;
+    }
+    
+    // ==================== BID PLACEMENT ====================
+    
+    /**
+     * Place a bid on an item
+     */
+    public BidResult placeBid(String itemId, String bidderId, String bidderAlias, double amount) {
+        Log.i(TAG, "Placing bid: " + amount + " on item: " + itemId + " by user: " + bidderId);
+        
+        try {
+            // Validate bid parameters
+            BidValidationResult validation = validateBid(itemId, bidderId, bidderAlias, amount);
+            if (!validation.isValid()) {
+                Log.e(TAG, "Bid validation failed: " + validation.getErrorMessage());
+                return new BidResult(false, validation.getErrorMessage(), null);
+            }
+            
+            // Get item details
+            Item item = itemManager.getItemById(itemId);
+            if (item == null) {
+                return new BidResult(false, "Item not found", null);
+            }
+            
+            // Check if auction is still active
+            if (!item.isAvailableForBidding()) {
+                return new BidResult(false, "Auction has ended or is not available for bidding", null);
+            }
+            
+            // Deduct credits immediately when placing bid
+            if (!creditManager.deductCredits(bidderId, amount, "bid")) {
+                return new BidResult(false, "Insufficient credits to place bid", null);
+            }
+            
+            // Create bid
+            Bid bid = new Bid(itemId, bidderId, bidderAlias, amount);
+            bid.setStatus(BidStatus.ACTIVE);
+            
+            // Process bid in database
+            if (!saveBidToDatabase(bid)) {
+                // Refund credits on failure
+                creditManager.addCredits(bidderId, amount, "bid_refund");
+                return new BidResult(false, "Failed to save bid to database", null);
+            }
+            
+            // Update item current bid
+            updateItemCurrentBid(itemId, amount, bidderId);
+            
+            // Update caches
+            updateBidCaches(bid);
+            
+            // Process outbid notifications
+            processOutbidNotifications(itemId, bid);
+            
+            Log.i(TAG, "Bid placed successfully: " + bid.getBidId());
+            return new BidResult(true, "Bid placed successfully", bid);
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error placing bid", e);
+            return new BidResult(false, "An error occurred while placing bid: " + e.getMessage(), null);
+        }
+    }
+    
+    /**
+     * Validate bid before placement
+     */
+    public BidValidationResult validateBid(String itemId, String bidderId, String bidderAlias, double amount) {
+        // Validate parameters
+        if (itemId == null || itemId.trim().isEmpty()) {
+            return new BidValidationResult(false, "Item ID is required");
+        }
+        
+        if (bidderId == null || bidderId.trim().isEmpty()) {
+            return new BidValidationResult(false, "Bidder ID is required");
+        }
+        
+        if (bidderAlias == null || bidderAlias.trim().isEmpty()) {
+            return new BidValidationResult(false, "Bidder alias is required");
+        }
+        
+        if (amount < MIN_BID_INCREMENT) {
+            return new BidValidationResult(false, "Bid amount must be at least " + MIN_BID_INCREMENT);
+        }
+        
+        if (amount > MAX_BID_AMOUNT) {
+            return new BidValidationResult(false, "Bid amount exceeds maximum allowed");
+        }
+        
+        // Get item details
+        Item item = itemManager.getItemById(itemId);
+        if (item == null) {
+            return new BidValidationResult(false, "Item not found");
+        }
+        
+        // Check if user is the seller
+        if (bidderId.equals(item.getSellerId())) {
+            return new BidValidationResult(false, "Sellers cannot bid on their own items");
+        }
+        
+        // Check if auction is active
+        if (!item.isAvailableForBidding()) {
+            return new BidValidationResult(false, "Auction is not available for bidding");
+        }
+        
+        // Check minimum bid increment
+        double currentBid = item.getCurrentPrice();
+        if (amount < currentBid + MIN_BID_INCREMENT) {
+            return new BidValidationResult(false, "Bid must be at least " + MIN_BID_INCREMENT + " higher than current bid");
+        }
+        
+        // Check user credit balance
+        if (!creditManager.validateCreditBalance(bidderId, amount)) {
+            return new BidValidationResult(false, "Insufficient credit balance");
+        }
+        
+        // Check user's active bid count
+        List<Bid> userBids = getUserActiveBids(bidderId);
+        if (userBids.size() >= MAX_ACTIVE_BIDS_PER_USER) {
+            return new BidValidationResult(false, "Maximum number of active bids reached");
+        }
+        
+        // Check item bid count
+        List<Bid> itemBids = getItemBids(itemId);
+        if (itemBids.size() >= MAX_BIDS_PER_ITEM) {
+            return new BidValidationResult(false, "Maximum number of bids for this item reached");
+        }
+        
+        return new BidValidationResult(true, "Bid is valid");
+    }
+    
+    // ==================== BID MANAGEMENT ====================
+    
+    /**
+     * Get all bids for an item
+     */
+    public List<Bid> getItemBids(String itemId) {
+        if (itemId == null || itemId.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // Check cache first
+        if (itemBidsCache.containsKey(itemId)) {
+            return new ArrayList<>(itemBidsCache.get(itemId));
+        }
+        
+        // Load from database
+        List<Bid> bids = loadBidsFromDatabase("item_id = ?", new String[]{itemId});
+        
+        // Sort by amount descending (highest first)
+        bids.sort(Comparator.comparing(Bid::getAmount).reversed());
+        
+        // Update cache
+        itemBidsCache.put(itemId, bids);
+        
+        return bids;
+    }
+    
+    /**
+     * Get all bids by a user
+     */
+    public List<Bid> getUserBids(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // Check cache first
+        if (userBidsCache.containsKey(userId)) {
+            return new ArrayList<>(userBidsCache.get(userId));
+        }
+        
+        // Load from database
+        List<Bid> bids = loadBidsFromDatabase("bidder_id = ?", new String[]{userId});
+        
+        // Sort by placed date descending (newest first)
+        bids.sort(Comparator.comparing(Bid::getPlacedAt).reversed());
+        
+        // Update cache
+        userBidsCache.put(userId, bids);
+        
+        return bids;
+    }
+    
+    /**
+     * Get active bids by a user
+     */
+    public List<Bid> getUserActiveBids(String userId) {
+        return getUserBids(userId).stream()
+                .filter(Bid::isActive)
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get highest bid for an item
+     */
+    public Bid getHighestBid(String itemId) {
+        if (itemId == null || itemId.trim().isEmpty()) {
+            return null;
+        }
+        
+        // Check cache first
+        if (highestBidCache.containsKey(itemId)) {
+            return highestBidCache.get(itemId);
+        }
+        
+        // Get all bids for item
+        List<Bid> bids = getItemBids(itemId);
+        
+        if (bids.isEmpty()) {
+            return null;
+        }
+        
+        // Find highest bid
+        Bid highestBid = bids.stream()
+                .filter(bid -> bid.getStatus() == BidStatus.ACTIVE || bid.getStatus() == BidStatus.WINNING)
+                .max(Comparator.comparing(Bid::getAmount))
+                .orElse(null);
+        
+        // Update cache
+        if (highestBid != null) {
+            highestBidCache.put(itemId, highestBid);
+        }
+        
+        return highestBid;
+    }
+    
+    /**
+     * Cancel a bid
+     */
+    public boolean cancelBid(String bidId, String userId) {
+        Log.i(TAG, "Cancelling bid: " + bidId + " by user: " + userId);
+        
+        try {
+            // Get bid
+            Bid bid = getBidById(bidId);
+            if (bid == null) {
+                Log.e(TAG, "Bid not found: " + bidId);
+                return false;
+            }
+            
+            // Check if user owns the bid
+            if (!bid.getBidderId().equals(userId)) {
+                Log.e(TAG, "User does not own bid: " + bidId);
+                return false;
+            }
+            
+            // Check if bid can be cancelled
+            if (!bid.getStatus().canBeEdited()) {
+                Log.e(TAG, "Bid cannot be cancelled: " + bid.getStatus());
+                return false;
+            }
+            
+            // Update bid status
+            bid.setStatus(BidStatus.CANCELLED);
+            
+            // Update in database
+            if (!updateBidInDatabase(bid)) {
+                Log.e(TAG, "Failed to update bid in database");
+                return false;
+            }
+            
+            // Release reserved credits
+            creditManager.releaseCredits(userId, bid.getAmount());
+            
+            // Update caches
+            updateBidCaches(bid);
+            
+            Log.i(TAG, "Bid cancelled successfully: " + bidId);
+            return true;
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error cancelling bid", e);
+            return false;
+        }
+    }
+    
+    /**
+     * Get bid by ID
+     */
+    public Bid getBidById(String bidId) {
+        if (bidId == null || bidId.trim().isEmpty()) {
+            return null;
+        }
+        
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String query = "SELECT * FROM " + DatabaseHelper.TABLE_BIDS + 
+                      " WHERE " + DatabaseHelper.COLUMN_BID_ID + " = ?";
+        
+        Cursor cursor = db.rawQuery(query, new String[]{bidId});
+        Bid bid = null;
+        
+        if (cursor.moveToFirst()) {
+            bid = createBidFromCursor(cursor);
+        }
+        
+        cursor.close();
+        return bid;
+    }
+    
+    // ==================== AUCTION MANAGEMENT ====================
+    
+    /**
+     * Process auction end and determine winner
+     */
+    public AuctionResult processAuctionEnd(String itemId) {
+        Log.i(TAG, "Processing auction end for item: " + itemId);
+        
+        try {
+            // Get item
+            Item item = itemManager.getItemById(itemId);
+            if (item == null) {
+                return new AuctionResult(false, "Item not found", null);
+            }
+            
+            // Get highest bid
+            Bid highestBid = getHighestBid(itemId);
+            if (highestBid == null) {
+                // No bids - mark item as expired
+                item.setStatus(ItemStatus.ENDED);
+                itemManager.updateItem(itemId, item);
+                return new AuctionResult(true, "Auction ended with no bids", null);
+            }
+            
+            // Mark highest bid as winning
+            highestBid.setStatus(BidStatus.WINNING);
+            highestBid.setWinning(true);
+            updateBidInDatabase(highestBid);
+            
+            // Mark other bids as outbid
+            List<Bid> allBids = getItemBids(itemId);
+            for (Bid bid : allBids) {
+                if (!bid.getBidId().equals(highestBid.getBidId()) && 
+                    (bid.getStatus() == BidStatus.ACTIVE || bid.getStatus() == BidStatus.WINNING)) {
+                    bid.setStatus(BidStatus.OUTBID);
+                    updateBidInDatabase(bid);
+                    
+                    // Credits already deducted when bid was placed, no action needed
+                }
+            }
+            
+            // Credits already deducted when bid was placed
+            
+            // Update item status
+            item.setStatus(ItemStatus.ENDED);
+            item.setCurrentBidderId(highestBid.getBidderId());
+            itemManager.updateItem(itemId, item);
+            
+            // Update caches
+            updateBidCaches(highestBid);
+            
+            Log.i(TAG, "Auction processed successfully. Winner: " + highestBid.getBidderId());
+            return new AuctionResult(true, "Auction completed successfully", highestBid);
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error processing auction end", e);
+            return new AuctionResult(false, "Error processing auction: " + e.getMessage(), null);
+        }
+    }
+    
+    /**
+     * Check and process expired auctions
+     */
+    public void processExpiredAuctions() {
+        Log.i(TAG, "Processing expired auctions");
+        
+        try {
+            // Get all active items
+            List<Item> activeItems = itemManager.getAllActiveItems();
+            
+            for (Item item : activeItems) {
+                if (item.hasEnded()) {
+                    processAuctionEnd(item.getItemId());
+                }
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error processing expired auctions", e);
+        }
+    }
+    
+    // ==================== PRIVATE HELPER METHODS ====================
+    
+    private boolean saveBidToDatabase(Bid bid) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        String insertQuery = "INSERT INTO " + DatabaseHelper.TABLE_BIDS + 
+                           " (" + DatabaseHelper.COLUMN_BID_ITEM_ID + ", " +
+                           DatabaseHelper.COLUMN_BID_BIDDER_ID + ", " +
+                           DatabaseHelper.COLUMN_BID_AMOUNT + ", " +
+                           DatabaseHelper.COLUMN_BID_ALIAS + ", " +
+                           DatabaseHelper.COLUMN_BID_CREATED_AT + ", " +
+                           DatabaseHelper.COLUMN_BID_IS_WINNING + ") VALUES (?, ?, ?, ?, ?, ?)";
+        
+        try {
+            db.execSQL(insertQuery, new Object[]{
+                bid.getItemId(),
+                bid.getBidderId(),
+                bid.getAmount(),
+                bid.getBidderAlias(),
+                bid.getPlacedAt().getTime(),
+                bid.isWinning() ? 1 : 0
+            });
+            
+            // Get the generated ID
+            Cursor cursor = db.rawQuery("SELECT last_insert_rowid()", null);
+            if (cursor.moveToFirst()) {
+                bid.setBidId(String.valueOf(cursor.getLong(0)));
+            }
+            cursor.close();
+            
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Error saving bid to database", e);
+            return false;
+        }
+    }
+    
+    private boolean updateBidInDatabase(Bid bid) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        String updateQuery = "UPDATE " + DatabaseHelper.TABLE_BIDS + 
+                           " SET " + DatabaseHelper.COLUMN_BID_IS_WINNING + " = ? " +
+                           " WHERE " + DatabaseHelper.COLUMN_BID_ID + " = ?";
+        
+        try {
+            db.execSQL(updateQuery, new Object[]{bid.isWinning() ? 1 : 0, bid.getBidId()});
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating bid in database", e);
+            return false;
+        }
+    }
+    
+    private List<Bid> loadBidsFromDatabase(String whereClause, String[] whereArgs) {
+        List<Bid> bids = new ArrayList<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        
+        String query = "SELECT * FROM " + DatabaseHelper.TABLE_BIDS + 
+                      " WHERE " + whereClause + 
+                      " ORDER BY " + DatabaseHelper.COLUMN_BID_AMOUNT + " DESC";
+        
+        Cursor cursor = db.rawQuery(query, whereArgs);
+        
+        while (cursor.moveToNext()) {
+            Bid bid = createBidFromCursor(cursor);
+            if (bid != null) {
+                bids.add(bid);
+            }
+        }
+        
+        cursor.close();
+        return bids;
+    }
+    
+    private Bid createBidFromCursor(Cursor cursor) {
+        Bid bid = new Bid();
+        bid.setBidId(cursor.getString(0));
+        bid.setItemId(cursor.getString(1));
+        bid.setBidderId(cursor.getString(2));
+        bid.setAmount(cursor.getDouble(3));
+        bid.setBidderAlias(cursor.getString(4));
+        bid.setPlacedAt(new Date(cursor.getLong(5)));
+        bid.setWinning(cursor.getInt(6) == 1);
+        
+        // Determine status based on winning flag
+        if (bid.isWinning()) {
+            bid.setStatus(BidStatus.WINNING);
+        } else {
+            bid.setStatus(BidStatus.ACTIVE);
+        }
+        
+        return bid;
+    }
+    
+    private void updateItemCurrentBid(String itemId, double amount, String bidderId) {
+        // This would typically update the item in the database
+        // For now, we'll update through the item manager
+        Item item = itemManager.getItemById(itemId);
+        if (item != null) {
+            item.setCurrentPrice(amount);
+            item.setHighestBidderId(bidderId);
+            item.incrementBidCount();
+            // Note: In a real implementation, this would update the database
+        }
+    }
+    
+    private void updateBidCaches(Bid bid) {
+        // Update item bids cache
+        List<Bid> itemBids = itemBidsCache.get(bid.getItemId());
+        if (itemBids != null) {
+            itemBids.removeIf(b -> b.getBidId().equals(bid.getBidId()));
+            itemBids.add(bid);
+            itemBids.sort(Comparator.comparing(Bid::getAmount).reversed());
+        }
+        
+        // Update user bids cache
+        List<Bid> userBids = userBidsCache.get(bid.getBidderId());
+        if (userBids != null) {
+            userBids.removeIf(b -> b.getBidId().equals(bid.getBidId()));
+            userBids.add(bid);
+            userBids.sort(Comparator.comparing(Bid::getPlacedAt).reversed());
+        }
+        
+        // Update highest bid cache
+        if (bid.getStatus() == BidStatus.WINNING || bid.getStatus() == BidStatus.ACTIVE) {
+            Bid currentHighest = highestBidCache.get(bid.getItemId());
+            if (currentHighest == null || bid.getAmount() > currentHighest.getAmount()) {
+                highestBidCache.put(bid.getItemId(), bid);
+            }
+        }
+    }
+    
+    private void processOutbidNotifications(String itemId, Bid newBid) {
+        // This would typically send notifications to outbid users
+        // For now, we'll just log the action
+        Log.i(TAG, "Processing outbid notifications for item: " + itemId);
+        
+        List<Bid> itemBids = getItemBids(itemId);
+        for (Bid bid : itemBids) {
+            if (!bid.getBidId().equals(newBid.getBidId()) && 
+                bid.getAmount() < newBid.getAmount() && 
+                bid.getStatus() == BidStatus.ACTIVE) {
+                
+                // Mark as outbid
+                bid.setStatus(BidStatus.OUTBID);
+                updateBidInDatabase(bid);
+                
+                // Release reserved credits
+                creditManager.releaseCredits(bid.getBidderId(), bid.getAmount());
+                
+                Log.i(TAG, "User " + bid.getBidderId() + " outbid on item " + itemId);
+            }
+        }
+    }
+    
+    /**
+     * Clear caches (call this when needed to free memory)
+     */
+    public void clearCaches() {
+        itemBidsCache.clear();
+        userBidsCache.clear();
+        highestBidCache.clear();
+        Log.i(TAG, "Bidding engine caches cleared");
+    }
+    
+    /**
+     * Cleanup resources
+     */
+    public void cleanup() {
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executorService.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+    }
+}
+
+

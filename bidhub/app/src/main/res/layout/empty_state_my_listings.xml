@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="32dp">
+
+    <!-- Empty state icon -->
+    <ImageView
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:src="@drawable/ic_add"
+        android:alpha="0.3"
+        android:layout_marginBottom="24dp"
+        android:contentDescription="No listings" />
+
+    <!-- Empty state title -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No listings yet"
+        android:textAppearance="@style/TextAppearance.Title"
+        android:layout_marginBottom="8dp"
+        android:gravity="center" />
+
+    <!-- Empty state description -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start selling by posting your first item. It's quick and easy!"
+        android:textAppearance="@style/TextAppearance.Body"
+        android:layout_marginBottom="24dp"
+        android:gravity="center"
+        android:alpha="0.7" />
+
+    <!-- Action button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_post_item"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Post Your First Item"
+        style="@style/Widget.Material3.Button"
+        app:icon="@drawable/ic_add"
+        app:iconGravity="textStart" />
+
+</LinearLayout>

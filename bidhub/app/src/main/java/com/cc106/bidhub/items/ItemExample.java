@@ -39,7 +39,6 @@ public class ItemExample {
         itemData.setBuyNowPrice(800.0);
         itemData.setCategoryId("electronics");
         itemData.setCondition("Excellent");
-        itemData.setLocation("Manila, Philippines");
         itemData.setShippingInfo("Free shipping nationwide");
         itemData.addTag("vintage");
         itemData.addTag("camera");

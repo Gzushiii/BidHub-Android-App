@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BidHub Mobile Bidding Platform</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0663ef",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1723",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1a2431",
+                        "on-surface-light": "#0f1723",
+                        "on-surface-dark": "#e3e5e8",
+                        "on-surface-variant-light": "#64748b",
+                        "on-surface-variant-dark": "#94a3b8",
+                        "outline-light": "#e2e8f0",
+                        "outline-dark": "#334155"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        '2': '0.5rem',
+                        '3': '0.75rem',
+                        '4': '1rem',
+                        '5': '1.25rem',
+                        '6': '1.5rem',
+                        '8': '2rem',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 1,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="max-w-md mx-auto flex flex-col min-h-screen">
+<header class="p-4 flex items-center justify-between sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm z-10">
+<div>
+<h1 class="text-xl font-bold text-on-surface-light dark:text-on-surface-dark">Welcome back, Alex!</h1>
+<p class="text-sm text-on-surface-variant-light dark:text-on-surface-variant-dark">You have 120 credits</p>
+</div>
+<button class="p-2 rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 text-on-surface-variant-light dark:text-on-surface-variant-dark">
+<span class="material-symbols-outlined">
+                    notifications
+                </span>
+</button>
+</header>
+<main class="flex-grow px-4 pb-4 space-y-6">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant-light dark:text-on-surface-variant-dark">search</span>
+<input class="w-full bg-surface-light dark:bg-surface-dark border border-outline-light dark:border-outline-dark rounded-full py-3 pl-10 pr-4 text-on-surface-light dark:text-on-surface-dark placeholder-on-surface-variant-light dark:placeholder-on-surface-variant-dark focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Search for items" type="text"/>
+</div>
+<div class="grid grid-cols-3 gap-3">
+<button class="flex flex-col items-center justify-center gap-2 p-3 bg-primary/10 dark:bg-primary/20 rounded-lg">
+<span class="material-symbols-outlined text-primary">inventory_2</span>
+<span class="text-xs font-medium text-primary">Browse</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 p-3 bg-primary/10 dark:bg-primary/20 rounded-lg">
+<span class="material-symbols-outlined text-primary">add_box</span>
+<span class="text-xs font-medium text-primary">Post Item</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 p-3 bg-primary/10 dark:bg-primary/20 rounded-lg">
+<span class="material-symbols-outlined text-primary">toll</span>
+<span class="text-xs font-medium text-primary">Buy Credits</span>
+</button>
+</div>
+<section>
+<h2 class="text-lg font-bold text-on-surface-light dark:text-on-surface-dark mb-3">Featured Auctions</h2>
+<div class="flex overflow-x-auto gap-4 -mx-4 px-4 pb-4 [-ms-scrollbar-style:none] [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden">
+<div class="w-60 shrink-0">
+<div class="bg-cover bg-center aspect-[4/3] rounded-lg mb-2" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDyu_c4zjPSLYXliJOY3PT7wKVi135DldvE8uoQeCOGxSPq_ci7jzXtWjJaWKfMEtZx-oQhdZRDJ2xqF8PilYa3SRc_5d_axpUjMHXvjeRrAAugfYjKSZUJ1jhXP81v1hfxcUnp2gyvEVl_BRtnlhKsqQYenZ0ygMzOtmiTsu3RLXUsHqXHsSQywsY3EE-p3kdTJTFz7nKsdjmM-8_mPvHxDlOmtSw7DWJh5qEY4vrdmi2W8A0vT0TO3guftVYciO9Km9qHuzGjsTc");'></div>
+<h3 class="font-semibold text-on-surface-light dark:text-on-surface-dark">Abstract Painting</h3>
+<p class="text-sm text-on-surface-variant-light dark:text-on-surface-variant-dark">Starting bid: 50 credits</p>
+</div>
+<div class="w-60 shrink-0">
+<div class="bg-cover bg-center aspect-[4/3] rounded-lg mb-2" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCTvP3s0rY32rMaeaEHsv5HctFxvb0uK38OJAE1FcHiJ4YbTK5ppM6BiIoGFzuDNAUQq6WOsNmQB581ja-C8wqIbYJWL3F1rallo7mO_0ZN6MBMp_DT60QFbxAokZuv3xUD3o83xktWrgHga3bQFlqn1k-PuDqxq_89uclgluCfLDLWUyXiUUbomxfGSk68XinhbelIVWeeuJccQtqWjdJKOo851vcV9uzdlLEQ5wM4opWQMcL6gQ6xDxj27z4osn1Yn4mKh0pVoSU");'></div>
+<h3 class="font-semibold text-on-surface-light dark:text-on-surface-dark">Classic Car Restoration</h3>
+<p class="text-sm text-on-surface-variant-light dark:text-on-surface-variant-dark">Starting bid: 200 credits</p>
+</div>
+<div class="w-60 shrink-0">
+<div class="bg-cover bg-center aspect-[4/3] rounded-lg mb-2" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCeujbNKGrnW1MxyW3MIqJCCbRxSEeUqAyGE1bIsNa8R18gZXMGp_VqzODqnkmAJezr1lPzZK3RFcGXPrwqW6zngGpS9uXlyIdtgPhfXz6GFHOXB25sOJIE2IFDUYBPJ1JXwSre2G_KxmWhFKAt2-jnnFNApSufv-rjGo0B8Dftse8hGkHmSjrAGNPZpH3To9vfsnPSN8k3UuK3gwmVSPZ-xof9E5trFIjXT6PF5xYrf4pPKNWXb1cukcf10LigQpsokUJZhNEsUQY");'></div>
+<h3 class="font-semibold text-on-surface-light dark:text-on-surface-dark">Luxury Timepiece</h3>
+<p class="text-sm text-on-surface-variant-light dark:text-on-surface-variant-dark">Starting bid: 150 credits</p>
+</div>
+</div>
+</section>
+<section>
+<h2 class="text-lg font-bold text-on-surface-light dark:text-on-surface-dark mb-3">Your Active Bids</h2>
+<div class="space-y-4">
+<div class="flex items-center gap-4 bg-surface-light dark:bg-surface-dark p-3 rounded-lg border border-outline-light dark:border-outline-dark">
+<div class="w-20 h-20 bg-cover bg-center rounded" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC6NL8X7MwX41eBZvSzCkYj5ZOyjG0ikysZA0UkTz5NYUpYvJLxdWZaT8W9O3RnsmJpzh9Nd_nzzZeHpp94at8jYA41gdjC1kzvMr4QmTscZ36-VMwAN6ydsxYLn8MNkPvy5xVvxFPXE1N1u71lHsA7KwJbLE_AKLuVYLVd5Gb30qKwzuvDR6MJ-s0UkvtRhDqwSKS8N-_TDLExupECJAnTW0pMP4lVTYjqDRPDx4uk2P0ytz_Za1BwDHdDRMXi-zqsBsW2YGCCgqg");'></div>
+<div class="flex-1">
+<h3 class="font-semibold text-on-surface-light dark:text-on-surface-dark">Vintage Camera</h3>
+<p class="text-sm text-on-surface-variant-light dark:text-on-surface-variant-dark">Current bid: 75 credits</p>
+<p class="text-sm text-green-600 dark:text-green-500">Ending in 2h 30m</p>
+</div>
+<button class="bg-primary text-white px-4 py-2 rounded-full text-sm font-semibold">Bid</button>
+</div>
+<div class="flex items-center gap-4 bg-surface-light dark:bg-surface-dark p-3 rounded-lg border border-outline-light dark:border-outline-dark">
+<div class="w-20 h-20 bg-cover bg-center rounded" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAZ8kvnUi95rNPRYMAqMYUobgGhZimaW3svqJZofyEAbU3J_zm_n0V_5wdZ4QP2q-O3DcSGAZ4noJ73d41TlQxWPB0FUCt2Gy6WepGUbwTiCZ11gk3Z1uEOXMzmWs-Ge_nurNx5JY45J5jgRe3pMrHo0SOZsZB7S11hIhV5KK6eyASFTuUPErG7_ikWnRKKkNdrtvLTS0fr0EluNvE71plJ_aHUyPhXn3zqzYNySgyS2bNATAdNSpNOgLxkGNXuzCA3JYObn8ejdMw");'></div>
+<div class="flex-1">
+<h3 class="font-semibold text-on-surface-light dark:text-on-surface-dark">Signed Baseball</h3>
+<p class="text-sm text-on-surface-variant-light dark:text-on-surface-variant-dark">Current bid: 40 credits</p>
+<p class="text-sm text-on-surface-variant-light dark:text-on-surface-variant-dark">Ending in 1d 12h</p>
+</div>
+<button class="bg-primary text-white px-4 py-2 rounded-full text-sm font-semibold">Bid</button>
+</div>
+</div>
+</section>
+</main>
+<nav class="sticky bottom-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm border-t border-outline-light dark:border-outline-dark">
+<div class="flex justify-around p-2">
+<a class="flex flex-col items-center gap-1 p-2 rounded-lg w-1/5 text-primary" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-xs font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 rounded-lg w-1/5 text-on-surface-variant-light dark:text-on-surface-variant-dark hover:text-primary dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined !font-normal">search</span>
+<span class="text-xs font-medium">Browse</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 rounded-lg w-1/5 text-on-surface-variant-light dark:text-on-surface-variant-dark hover:text-primary dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined !font-normal">add_box</span>
+<span class="text-xs font-medium">Post</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 rounded-lg w-1/5 text-on-surface-variant-light dark:text-on-surface-variant-dark hover:text-primary dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined !font-normal">toll</span>
+<span class="text-xs font-medium">Credits</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 rounded-lg w-1/5 text-on-surface-variant-light dark:text-on-surface-variant-dark hover:text-primary dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined !font-normal">person</span>
+<span class="text-xs font-medium">Profile</span>
+</a>
+</div>
+</nav>
+</div>
+
+</body></html>

@@ -138,7 +138,7 @@
             android:text="Confirm Purchase"
             android:textSize="14sp"
             android:background="@drawable/button_primary"
-            android:textColor="@color/white" />
+            android:textColor="@color/background" />
 
     </LinearLayout>
 

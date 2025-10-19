@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background_light">
+    android:background="@color/background">
 
     <!-- Header -->
     <LinearLayout
@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="@color/white"
+        android:background="@color/background"
         android:elevation="4dp">
 
         <LinearLayout
@@ -32,30 +32,52 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Browse Items"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
+                    android:textAppearance="@style/TextAppearance.Title.Large"
                     android:layout_marginBottom="4dp" />
 
                 <TextView
+                    android:id="@+id/tv_item_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Discover amazing items to bid on"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary" />
+                    android:textAppearance="@style/TextAppearance.Body" />
 
             </LinearLayout>
 
-            <!-- Filter Button -->
-            <ImageButton
-                android:id="@+id/btn_filter"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@drawable/ic_filter"
-                android:background="@drawable/card_background"
-                android:backgroundTint="@color/primary_blue_light"
-                android:contentDescription="Filter Items"
-                android:padding="12dp" />
+            <!-- Action Buttons -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- View Toggle Button -->
+                <ImageButton
+                    android:id="@+id/btn_view_toggle"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_grid_view"
+                    android:background="@drawable/card_background"
+                    android:backgroundTint="@color/surface_variant"
+                    android:tint="@color/text_primary"
+                    android:contentDescription="Toggle View"
+                    android:padding="12dp"
+                    android:layout_marginEnd="8dp" />
+
+                <!-- Sort Button -->
+                <ImageButton
+                    android:id="@+id/btn_sort"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_sort"
+                    android:background="@drawable/card_background"
+                    android:backgroundTint="@color/surface_variant"
+                    android:tint="@color/text_primary"
+                    android:contentDescription="Sort Items"
+                    android:padding="12dp"
+                    android:layout_marginEnd="8dp" />
+
+
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -70,7 +92,7 @@
             app:boxCornerRadiusTopEnd="12dp"
             app:boxCornerRadiusBottomStart="12dp"
             app:boxCornerRadiusBottomEnd="12dp"
-            app:boxStrokeColor="@color/primary_blue"
+            app:boxStrokeColor="@color/primary"
             app:hintTextColor="@color/text_secondary">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -86,87 +108,196 @@
     </LinearLayout>
 
     <!-- Filter Chips Container -->
-    <HorizontalScrollView
-        android:id="@+id/hsv_filter_chips"
+    <LinearLayout
+        android:id="@+id/layout_filter_chips_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
+        android:background="@color/background"
         android:elevation="2dp"
+        android:orientation="horizontal"
         android:paddingVertical="8dp"
         android:visibility="gone">
 
-        <LinearLayout
-            android:id="@+id/layout_filter_chips"
-            android:layout_width="wrap_content"
+        <HorizontalScrollView
+            android:id="@+id/hsv_filter_chips"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:layout_weight="1"
             android:paddingHorizontal="16dp">
 
-            <!-- Filter chips will be added dynamically -->
+            <LinearLayout
+                android:id="@+id/layout_filter_chips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-        </LinearLayout>
+                <!-- Filter chips will be added dynamically -->
 
-    </HorizontalScrollView>
+            </LinearLayout>
 
-    <!-- Content Area -->
-    <FrameLayout
+        </HorizontalScrollView>
+
+        <!-- Clear All Button -->
+        <Button
+            android:id="@+id/btn_clear_all_filters"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:text="Clear All"
+            android:textAppearance="@style/TextAppearance.Label.Small"
+            android:textColor="@color/primary"
+            android:background="@android:color/transparent"
+            android:paddingHorizontal="12dp"
+            android:layout_marginEnd="16dp"
+            android:layout_gravity="center_vertical"
+            android:minWidth="60dp" />
+
+    </LinearLayout>
+
+    <!-- Content Area with SwipeRefreshLayout -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh_layout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <!-- Items RecyclerView -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_items"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="8dp"
-            android:clipToPadding="false" />
+            android:layout_height="match_parent">
 
-        <!-- Loading Indicator -->
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone" />
+            <!-- Items RecyclerView -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_items"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="8dp"
+                android:clipToPadding="false" />
 
-        <!-- Empty State -->
-        <LinearLayout
-            android:id="@+id/layout_empty_state"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:padding="32dp"
-            android:visibility="gone">
+            <!-- Loading Indicator -->
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
 
-            <ImageView
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:src="@drawable/ic_search"
-                android:alpha="0.3"
-                android:layout_marginBottom="16dp"
-                android:contentDescription="No items found" />
+            <!-- Empty State -->
+            <LinearLayout
+                android:id="@+id/layout_empty_state"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="32dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/iv_empty_icon"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:src="@drawable/ic_search"
+                    android:alpha="0.2"
+                    android:layout_marginBottom="24dp"
+                    android:contentDescription="No items found" />
 
             <TextView
+                android:id="@+id/tv_empty_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="No items found"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_secondary"
-                android:layout_marginBottom="8dp" />
+                android:textAppearance="@style/TextAppearance.Title.Large"
+                android:layout_marginBottom="12dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Try adjusting your search or filters"
-                android:textSize="14sp"
-                android:textColor="@color/text_secondary"
-                android:gravity="center" />
+                <TextView
+                    android:id="@+id/tv_empty_subtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="We couldn't find any items matching your search"
+                    android:textAppearance="@style/TextAppearance.Subtitle"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp" />
 
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/tv_empty_suggestions_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Try these suggestions:"
+                    android:textAppearance="@style/TextAppearance.Label"
+                    android:layout_marginBottom="16dp"
+                    android:visibility="gone" />
 
-    </FrameLayout>
+                <LinearLayout
+                    android:id="@+id/layout_empty_suggestions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="• Broaden your search terms"
+                        android:textAppearance="@style/TextAppearance.Body"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="• Remove some filters"
+                        android:textAppearance="@style/TextAppearance.Body"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="• Check your spelling"
+                        android:textAppearance="@style/TextAppearance.Body"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="• Try different keywords"
+                        android:textAppearance="@style/TextAppearance.Body" />
+
+                </LinearLayout>
+
+                <!-- Action Buttons for Empty State -->
+                <LinearLayout
+                    android:id="@+id/layout_empty_actions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="24dp"
+                    android:visibility="gone">
+
+                    <Button
+                        android:id="@+id/btn_clear_search"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Clear Search"
+                        android:textAppearance="@style/TextAppearance.Button.Secondary"
+                        android:background="@android:color/transparent"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="8dp"
+                        android:layout_marginEnd="16dp" />
+
+                    <Button
+                        android:id="@+id/btn_browse_categories"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Browse Categories"
+                        android:textAppearance="@style/TextAppearance.Button"
+                        android:background="@drawable/button_primary"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="8dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </LinearLayout>

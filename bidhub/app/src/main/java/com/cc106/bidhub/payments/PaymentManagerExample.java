@@ -27,7 +27,7 @@ public class PaymentManagerExample {
         // Create payment request
         PaymentRequest request = new PaymentRequest();
         request.setUserId("user123");
-        request.setPaymentMethod(PaymentManager.PAYMENT_METHOD_GCASH);
+        request.setPaymentMethod(PaymentManager.PAYMENT_METHOD_STRIPE);
         request.setAmount(100.0);
         request.setCurrency("PHP");
         request.setDescription("Credit purchase");
@@ -65,21 +65,21 @@ public class PaymentManagerExample {
         String userInfo = "Jane Smith";
         
         // Initiate GCash payment
-        GCashResponse response = paymentManager.initiateGCashPayment(amount, userInfo);
+        StripeResponse response = paymentManager.initiateStripePayment(amount, userInfo);
         
         Log.i(TAG, "GCash Response: " + response);
         
-        if (response.isSuccess() && response.getStatus() == PaymentStatus.PENDING) {
+        if (response.isSuccess() && "pending".equals(response.getStatus())) {
             // Verify payment after user completes it
             new Thread(() -> {
                 try {
                     Thread.sleep(5000); // Simulate user completing payment
                     
-                    boolean verified = paymentManager.verifyGCashPayment(response.getReferenceId());
+                    boolean verified = paymentManager.verifyStripePayment(response.getReferenceId());
                     Log.i(TAG, "GCash payment verified: " + verified);
                     
                     if (verified) {
-                        GCashResponse statusResponse = paymentManager.getGCashPaymentStatus(response.getReferenceId());
+                        StripeResponse statusResponse = paymentManager.getStripePaymentStatus(response.getReferenceId());
                         Log.i(TAG, "GCash status: " + statusResponse);
                     }
                 } catch (InterruptedException e) {
@@ -99,21 +99,21 @@ public class PaymentManagerExample {
         String userInfo = "Bob Johnson";
         
         // Initiate Maya payment
-        MayaResponse response = paymentManager.initiateMayaPayment(amount, userInfo);
+        StripeResponse response = paymentManager.initiateStripePayment(amount, userInfo);
         
         Log.i(TAG, "Maya Response: " + response);
         
-        if (response.isSuccess() && response.getStatus() == PaymentStatus.PENDING) {
+        if (response.isSuccess() && "pending".equals(response.getStatus())) {
             // Verify payment after user completes it
             new Thread(() -> {
                 try {
                     Thread.sleep(5000); // Simulate user completing payment
                     
-                    boolean verified = paymentManager.verifyMayaPayment(response.getReferenceId());
+                    boolean verified = paymentManager.verifyStripePayment(response.getReferenceId());
                     Log.i(TAG, "Maya payment verified: " + verified);
                     
                     if (verified) {
-                        MayaResponse statusResponse = paymentManager.getMayaPaymentStatus(response.getReferenceId());
+                        StripeResponse statusResponse = paymentManager.getStripePaymentStatus(response.getReferenceId());
                         Log.i(TAG, "Maya status: " + statusResponse);
                     }
                 } catch (InterruptedException e) {
@@ -130,8 +130,8 @@ public class PaymentManagerExample {
         Log.i(TAG, "=== Payment Validation Examples ===");
         
         // Validate payment method
-        boolean isGCashSupported = paymentManager.validatePaymentMethod(PaymentManager.PAYMENT_METHOD_GCASH);
-        Log.i(TAG, "GCash supported: " + isGCashSupported);
+        boolean isStripeSupported = paymentManager.validatePaymentMethod(PaymentManager.PAYMENT_METHOD_STRIPE);
+        Log.i(TAG, "Stripe supported: " + isStripeSupported);
         
         boolean isPayPalSupported = paymentManager.validatePaymentMethod("paypal");
         Log.i(TAG, "PayPal supported: " + isPayPalSupported);
@@ -203,7 +203,7 @@ public class PaymentManagerExample {
         // First, process a payment
         PaymentRequest request = new PaymentRequest();
         request.setUserId("user123");
-        request.setPaymentMethod(PaymentManager.PAYMENT_METHOD_GCASH);
+        request.setPaymentMethod(PaymentManager.PAYMENT_METHOD_STRIPE);
         request.setAmount(200.0);
         request.setCurrency("PHP");
         request.setDescription("Payment for refund test");

@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
 import com.cc106.bidhub.toast.ToastHelper;
 
 import androidx.annotation.NonNull;
@@ -28,6 +30,10 @@ public class MainActivity extends BaseActivity {
     private CreditsFragment creditsFragment;
     private ProfileFragment profileFragment;
     
+    // UI Components
+    private ProgressBar loadingIndicator;
+    private View contentFrame;
+    
     // Tab position mapping for directional intelligence
     private static final int TAB_HOME = 0;
     private static final int TAB_BROWSE = 1;
@@ -36,12 +42,16 @@ public class MainActivity extends BaseActivity {
     private static final int TAB_PROFILE = 4;
     
     private int currentTabPosition = TAB_HOME;
+    private boolean isInitialized = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
         try {
+            // Initialize UI components
+            initializeUI();
+            
             // Get the logged-in user's email from the Intent
             loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
 
@@ -51,29 +61,74 @@ public class MainActivity extends BaseActivity {
                 return;
             }
             
-            // Initialize fragments
-            initializeFragments();
+            // Show loading state
+            setLoadingState(true);
             
-            // Check if fragments were initialized successfully before showing
-            if (homeFragment == null) {
-                ToastHelper.showError(this, "Error: HomeFragment is null, cannot proceed");
-                finish();
-                return;
-            }
-            
-            // Ensure arguments are set before showing the fragment
-            setFragmentArguments();
-            
-            // Show home fragment by default
-            showFragment(homeFragment);
-
-            // Set selected navigation item
-            setCurrentTabSelected();
+            // Initialize fragments asynchronously
+            initializeFragmentsAsync();
             
         } catch (Exception e) {
             ToastHelper.showError(this, "Error: " + e.getMessage());
             e.printStackTrace();
+            setLoadingState(false);
         }
+    }
+    
+    /**
+     * Initialize UI components
+     */
+    private void initializeUI() {
+        try {
+            contentFrame = findViewById(R.id.content_frame);
+            loadingIndicator = findViewById(R.id.loading_indicator);
+            
+            if (loadingIndicator != null) {
+                loadingIndicator.setVisibility(View.GONE);
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error initializing UI: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Initialize fragments asynchronously for better performance
+     */
+    private void initializeFragmentsAsync() {
+        new Thread(() -> {
+            try {
+                // Initialize fragments
+                initializeFragments();
+                
+                // Run UI updates on main thread
+                runOnUiThread(() -> {
+                    if (homeFragment == null) {
+                        ToastHelper.showError(this, "Error: HomeFragment is null, cannot proceed");
+                        finish();
+                        return;
+                    }
+                    
+                    // Ensure arguments are set before showing the fragment
+                    setFragmentArguments();
+                    
+                    // Show home fragment by default
+                    showFragment(homeFragment);
+
+                    // Set selected navigation item
+                    setCurrentTabSelected();
+                    
+                    // Hide loading state
+                    setLoadingState(false);
+                    isInitialized = true;
+                });
+                
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    ToastHelper.showError(this, "Error initializing app: " + e.getMessage());
+                    setLoadingState(false);
+                });
+            }
+        }).start();
     }
     
     private void initializeFragments() {
@@ -164,12 +219,14 @@ public class MainActivity extends BaseActivity {
             // Check if fragment is null
             if (fragment == null) {
                 ToastHelper.showError(this, "Error: Fragment is null");
+                setLoadingState(false);
                 return;
             }
             
             // Check if content frame exists
             if (findViewById(R.id.content_frame) == null) {
                 ToastHelper.showError(this, "Error: Content frame not found");
+                setLoadingState(false);
                 return;
             }
             
@@ -201,9 +258,13 @@ public class MainActivity extends BaseActivity {
             // Provide subtle haptic feedback for tab switch
             provideHapticFeedback();
             
+            // Hide loading state after a short delay to ensure smooth transition
+            contentFrame.postDelayed(() -> setLoadingState(false), 200);
+            
         } catch (Exception e) {
             ToastHelper.showError(this, "Error showing fragment: " + e.getMessage());
             e.printStackTrace();
+            setLoadingState(false);
         }
     }
     
@@ -235,6 +296,11 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        // Don't handle navigation if not initialized
+        if (!isInitialized) {
+            return false;
+        }
+        
         int itemId = item.getItemId();
         int newTabPosition = getTabPosition(itemId);
         
@@ -243,30 +309,31 @@ public class MainActivity extends BaseActivity {
             return true;
         }
         
+        // Show loading state for navigation
+        setLoadingState(true);
+        
         // Check if fragments need to be re-initialized
         ensureFragmentsInitialized();
         
         // Show fragment with directional intelligence
+        Fragment targetFragment = null;
         if (itemId == R.id.nav_home) {
-            if (homeFragment != null) {
-                showFragment(homeFragment, newTabPosition);
-            }
+            targetFragment = homeFragment;
         } else if (itemId == R.id.nav_browse) {
-            if (browseFragment != null) {
-                showFragment(browseFragment, newTabPosition);
-            }
+            targetFragment = browseFragment;
         } else if (itemId == R.id.nav_post) {
-            if (postFragment != null) {
-                showFragment(postFragment, newTabPosition);
-            }
+            targetFragment = postFragment;
         } else if (itemId == R.id.nav_credits) {
-            if (creditsFragment != null) {
-                showFragment(creditsFragment, newTabPosition);
-            }
+            targetFragment = creditsFragment;
         } else if (itemId == R.id.nav_profile) {
-            if (profileFragment != null) {
-                showFragment(profileFragment, newTabPosition);
-            }
+            targetFragment = profileFragment;
+        }
+        
+        if (targetFragment != null) {
+            showFragment(targetFragment, newTabPosition);
+        } else {
+            ToastHelper.showError(this, "Navigation error: Fragment not found");
+            setLoadingState(false);
         }
         
         return true;
@@ -312,6 +379,82 @@ public class MainActivity extends BaseActivity {
         } else {
             // Even if fragments exist, ensure they have the correct arguments
             setFragmentArguments();
+        }
+    }
+    
+    /**
+     * Set loading state for UI elements
+     */
+    @Override
+    protected void setLoadingState(boolean isLoading) {
+        if (loadingIndicator != null) {
+            loadingIndicator.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        }
+        
+        if (contentFrame != null) {
+            contentFrame.setAlpha(isLoading ? 0.7f : 1.0f);
+        }
+        
+        // Disable bottom navigation during loading
+        if (bottomNavigationView != null) {
+            bottomNavigationView.setEnabled(!isLoading);
+        }
+    }
+    
+    /**
+     * Switch to browse tab programmatically
+     */
+    public void switchToBrowseTab() {
+        try {
+            if (bottomNavigationView != null) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_browse);
+                
+                // Force refresh the browse fragment after navigation
+                android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+                handler.postDelayed(() -> {
+                    try {
+                        // Get the current fragment and refresh it
+                        androidx.fragment.app.Fragment currentFragment = getSupportFragmentManager()
+                                .findFragmentById(R.id.content_frame);
+                        if (currentFragment instanceof com.cc106.bidhub.fragments.BrowseFragment) {
+                            ((com.cc106.bidhub.fragments.BrowseFragment) currentFragment).loadItems();
+                        }
+                    } catch (Exception e) {
+                        android.util.Log.e("MainActivity", "Error refreshing browse fragment", e);
+                    }
+                }, 500); // Small delay to ensure navigation is complete
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error switching to browse tab: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Switch to profile tab programmatically
+     */
+    public void switchToProfileTab() {
+        try {
+            if (bottomNavigationView != null) {
+                bottomNavigationView.setSelectedItemId(R.id.nav_profile);
+            }
+        } catch (Exception e) {
+            ToastHelper.showError(this, "Error switching to profile tab: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Handle back button press
+     */
+    @Override
+    public void onBackPressed() {
+        // If not on home tab, navigate to home
+        if (currentTabPosition != TAB_HOME) {
+            bottomNavigationView.setSelectedItemId(R.id.nav_home);
+        } else {
+            // If on home tab, show exit confirmation
+            super.onBackPressed();
         }
     }
 }

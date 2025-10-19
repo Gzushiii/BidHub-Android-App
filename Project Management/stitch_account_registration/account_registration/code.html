@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BidHub Mobile Bidding Platform</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0663ef",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#d7e2ff",
+                        "on-primary-container": "#001b3f",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#1a1c1e",
+                        "surface-light": "#fdfcff",
+                        "surface-dark": "#1a1c1e",
+                        "on-surface-light": "#1a1c1e",
+                        "on-surface-dark": "#e3e2e6",
+                        "on-surface-variant-light": "#44474f",
+                        "on-surface-variant-dark": "#c4c6d0",
+                        "outline-light": "#74777f",
+                        "outline-dark": "#8e9099"
+                    },
+                    fontFamily: {
+                        "display": ["Roboto", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "lg": "12px",
+                        "xl": "16px",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .form-input {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        .form-input input {
+            background-color: transparent;
+            border: 1px solid;
+            border-radius: 4px;
+            padding: 1.5rem 1rem 0.5rem;
+            width: 100%;
+            height: 56px;
+            outline: none;
+            transition: border-color 0.2s;
+            font-size: 1rem;
+            line-height: 1.5rem;
+        }
+        .form-input label {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            transition: all 0.2s;
+            font-size: 1rem;
+            line-height: 1.5rem;
+        }
+        .form-input input:focus {
+            border-width: 2px;
+            padding: 1.5rem 0.9375rem 0.5rem;
+        }
+        .form-input input:focus + label,
+        .form-input input:not(:placeholder-shown) + label {
+            top: 0.5rem;
+            transform: translateY(0);
+            font-size: 0.75rem;
+            line-height: 1rem;
+        }
+        .form-input input:focus+label {
+            color: var(--primary-color);
+        }
+        body {
+            min-height: max(884px, 100dvh);
+            font-family: 'Roboto', sans-serif;
+        }
+        .dark .form-input input:focus+label {
+            color: #d7e2ff;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-on-surface-light dark:text-on-surface-dark">
+<div class="min-h-screen flex flex-col">
+<header class="flex items-center justify-between p-4">
+<button class="p-2 rounded-full hover:bg-primary/10">
+<span class="material-symbols-outlined text-on-surface-light dark:text-on-surface-dark">arrow_back</span>
+</button>
+<button class="p-2 rounded-full hover:bg-primary/10">
+<span class="material-symbols-outlined text-on-surface-light dark:text-on-surface-dark">help_outline</span>
+</button>
+</header>
+<main class="flex-grow px-6 pt-2 pb-8">
+<h1 class="text-3xl font-normal mb-8 text-on-surface-light dark:text-on-surface-dark">Create your account</h1>
+<form class="space-y-4">
+<div class="form-input">
+<input class="border-outline-light dark:border-outline-dark focus:border-primary dark:focus:border-primary-container text-on-surface-light dark:text-on-surface-dark" id="first-name" placeholder=" " type="text"/>
+<label class="text-on-surface-variant-light dark:text-on-surface-variant-dark" for="first-name">First name</label>
+</div>
+<div class="form-input">
+<input class="border-outline-light dark:border-outline-dark focus:border-primary dark:focus:border-primary-container text-on-surface-light dark:text-on-surface-dark" id="last-name" placeholder=" " type="text"/>
+<label class="text-on-surface-variant-light dark:text-on-surface-variant-dark" for="last-name">Last name</label>
+</div>
+<div class="form-input">
+<input class="border-outline-light dark:border-outline-dark focus:border-primary dark:focus:border-primary-container text-on-surface-light dark:text-on-surface-dark" id="email" placeholder=" " type="email"/>
+<label class="text-on-surface-variant-light dark:text-on-surface-variant-dark" for="email">Email address</label>
+</div>
+<div class="form-input">
+<input class="border-outline-light dark:border-outline-dark focus:border-primary dark:focus:border-primary-container text-on-surface-light dark:text-on-surface-dark" id="phone" placeholder=" " type="tel"/>
+<label class="text-on-surface-variant-light dark:text-on-surface-variant-dark" for="phone">Phone number</label>
+</div>
+<div class="form-input">
+<input class="border-outline-light dark:border-outline-dark focus:border-primary dark:focus:border-primary-container text-on-surface-light dark:text-on-surface-dark" id="password" placeholder=" " type="password"/>
+<label class="text-on-surface-variant-light dark:text-on-surface-variant-dark" for="password">Password</label>
+</div>
+<p class="text-sm text-on-surface-variant-light dark:text-on-surface-variant-dark pt-2 leading-relaxed">
+                By creating an account, you agree to our <a class="text-primary dark:text-primary-container font-medium" href="#">Terms of Service</a> and <a class="text-primary dark:text-primary-container font-medium" href="#">Privacy Policy</a>.
+            </p>
+</form>
+</main>
+<footer class="p-6">
+<button class="w-full bg-primary text-on-primary font-medium text-base h-12 rounded-full hover:bg-primary/90 focus:outline-none focus:ring-4 focus:ring-primary/30 transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl">
+            Create Account
+        </button>
+</footer>
+</div>
+<style>
+    .form-input input:focus+label {
+        color: #0663ef;
+    }
+    .dark .form-input input:focus+label {
+        color: #d7e2ff;
+    }
+</style>
+
+</body></html>

@@ -33,7 +33,7 @@
             android:textColor="@color/text_secondary"
             android:gravity="center"
             android:background="@drawable/circle_background"
-            android:backgroundTint="@color/background_light"
+            android:backgroundTint="@color/background"
             android:contentDescription="Remove tag" />
 
     </LinearLayout>

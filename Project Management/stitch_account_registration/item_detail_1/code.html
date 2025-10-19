@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BidHub Mobile Bidding Platform</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0663ef",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1723",
+                        "foreground-light": "#0d131c",
+                        "foreground-dark": "#f5f7f8",
+                        "subtle-light": "#476a9e",
+                        "subtle-dark": "#a2b4cc",
+                        "border-light": "#e6ecf4",
+                        "border-dark": "#2c3e50"
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark text-foreground-light dark:text-foreground-dark">
+<div class="relative flex h-auto min-h-screen w-full flex-col justify-between overflow-x-hidden">
+<div class="flex-grow">
+<header class="sticky top-0 z-10 flex items-center justify-between p-4 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm border-b border-border-light dark:border-border-dark">
+<button class="p-2 -m-2">
+<span class="material-symbols-outlined text-foreground-light dark:text-foreground-dark">arrow_back_ios_new</span>
+</button>
+<h1 class="text-lg font-bold">Item Details</h1>
+<div class="flex items-center space-x-2">
+<button class="p-2 -m-2">
+<span class="material-symbols-outlined text-foreground-light dark:text-foreground-dark">share</span>
+</button>
+<button class="p-2 -m-2">
+<span class="material-symbols-outlined text-foreground-light dark:text-foreground-dark">favorite_border</span>
+</button>
+</div>
+</header>
+<main class="pb-24">
+<div class="relative">
+<div class="bg-cover bg-center h-64" style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 25%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuASzA1niqBj7aSdWiOPFDcRixqZovpTTyDdngjZKo47TBAjTKpzZiZmT0GjkWlCzq28FFQxTcx9sV-OjxeRNDsYk3Oxcryw7AkHhhAOp_5xHNOxeQbcg00F_g9JuT7iFfVyT7fEF4b1rIUlAiF2hmCeZaF34kvSpsP_0xYM5GPmenA7eFz6pJS2Z2p6H1AC5xRy6LbrSGkRIuVyC76Hlm3j5bd1gpXxeaVawI4VL_GjX5GUCIL-Kq8p2oOV-KFc9lFSHMmYk2GWJ_Y");'></div>
+<div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+<div class="w-2 h-2 rounded-full bg-white"></div>
+<div class="w-2 h-2 rounded-full bg-white/50"></div>
+<div class="w-2 h-2 rounded-full bg-white/50"></div>
+<div class="w-2 h-2 rounded-full bg-white/50"></div>
+<div class="w-2 h-2 rounded-full bg-white/50"></div>
+</div>
+</div>
+<div class="p-4 space-y-4">
+<div>
+<h2 class="text-2xl font-bold">Luxury Watch</h2>
+<p class="text-subtle-light dark:text-subtle-dark">Watches · New</p>
+</div>
+<div class="grid grid-cols-2 gap-4 text-sm">
+<div class="space-y-1">
+<p class="text-subtle-light dark:text-subtle-dark">Starting Bid</p>
+<p class="font-semibold text-base">$500</p>
+</div>
+<div class="space-y-1">
+<p class="text-subtle-light dark:text-subtle-dark">Current Bid</p>
+<p class="font-semibold text-base text-primary">$750</p>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-1">
+<p class="text-sm font-medium">Time Left</p>
+<p class="text-sm text-subtle-light dark:text-subtle-dark">2d 12h 30m</p>
+</div>
+<div class="w-full bg-border-light dark:bg-border-dark rounded-full h-2">
+<div class="bg-primary h-2 rounded-full" style="width: 50%"></div>
+</div>
+</div>
+</div>
+<hr class="border-border-light dark:border-border-dark"/>
+<div class="p-4 space-y-2">
+<h3 class="text-lg font-bold">Description</h3>
+<p class="text-subtle-light dark:text-subtle-dark leading-relaxed">
+                    This luxury watch features a stainless steel case, sapphire crystal, and automatic movement. It's water-resistant up to 100 meters and comes with a certificate of authenticity.
+                </p>
+</div>
+<hr class="border-border-light dark:border-border-dark"/>
+<div class="p-4 space-y-2">
+<h3 class="text-lg font-bold">Seller Information</h3>
+<div class="flex items-center space-x-4">
+<img alt="Seller avatar" class="w-14 h-14 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7fCNk_8xMckIkpLPD-ky-mwe7p87eaGJZlF6wf-hUifNLVl8DyHp_w6FKIiQdNcQ_ZJ7Xr2rDzSyCKq0JlltXXkjhY4kb-00_I3XyRG93_xAi4Rem616VUJ5rfrBzAR-AFnhKqxnpUUulcZJZL9dkreQjg6REyVfxe0xpLsSTUIo81PTPLqMwX3WLSuQX9k5QtWz8CPT3QXP-Zhj7RQKrrYuXrgR3UDXMtFKlfYoI2xX1xGwAjA1mi1y7khPizoxwXHvLxg3vFE4"/>
+<div>
+<p class="font-semibold">Ethan Carter</p>
+<div class="flex items-center text-sm text-subtle-light dark:text-subtle-dark">
+<span class="material-symbols-outlined text-primary !text-base mr-1">star</span>
+<span>4.8 (125 reviews)</span>
+</div>
+</div>
+</div>
+</div>
+<hr class="border-border-light dark:border-border-dark"/>
+<div class="p-4 space-y-2">
+<h3 class="text-lg font-bold">Bid History</h3>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<div>
+<p class="font-semibold">Sophia Bennett</p>
+<p class="text-sm text-subtle-light dark:text-subtle-dark">10:30 AM</p>
+</div>
+<p class="font-semibold text-primary">$750</p>
+</div>
+<div class="flex justify-between items-center">
+<div>
+<p class="font-semibold">Liam Harper</p>
+<p class="text-sm text-subtle-light dark:text-subtle-dark">10:25 AM</p>
+</div>
+<p class="font-semibold">$700</p>
+</div>
+</div>
+</div>
+</main>
+</div>
+<footer class="fixed bottom-0 left-0 right-0 bg-background-light dark:bg-background-dark border-t border-border-light dark:border-border-dark">
+<div class="p-4 space-y-3">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-bold text-subtle-light dark:text-subtle-dark">$</span>
+<input class="form-input w-full rounded-lg border-2 border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark h-14 pl-8 pr-4 text-lg focus:ring-primary focus:border-primary" placeholder="Enter your bid" type="number"/>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="w-full h-12 rounded-lg bg-primary text-white font-bold">Place Bid</button>
+<button class="w-full h-12 rounded-lg bg-primary/20 dark:bg-primary/30 text-primary font-bold">Buy Now</button>
+</div>
+</div>
+<nav class="flex justify-around items-center h-16 border-t border-border-light dark:border-border-dark">
+<a class="flex flex-col items-center justify-center text-subtle-light dark:text-subtle-dark" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-xs">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary" href="#">
+<span class="material-symbols-outlined !font-bold">search</span>
+<span class="text-xs font-bold">Browse</span>
+</a>
+<a class="flex flex-col items-center justify-center text-subtle-light dark:text-subtle-dark" href="#">
+<span class="material-symbols-outlined">add_box</span>
+<span class="text-xs">Post</span>
+</a>
+<a class="flex flex-col items-center justify-center text-subtle-light dark:text-subtle-dark" href="#">
+<span class="material-symbols-outlined">credit_card</span>
+<span class="text-xs">Credits</span>
+</a>
+<a class="flex flex-col items-center justify-center text-subtle-light dark:text-subtle-dark" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-xs">Profile</span>
+</a>
+</nav>
+<div class="h-safe-area-inset-bottom bg-background-light dark:bg-background-dark"></div>
+</footer>
+</div>
+
+</body></html>

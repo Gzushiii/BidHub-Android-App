@@ -78,8 +78,99 @@ public class ItemManager {
     /**
      * Create new item
      */
-    public boolean createItem(ItemData itemData, String sellerId) {
-        Log.i(TAG, "Creating item for seller: " + sellerId);
+    public boolean createItem(ItemData itemData, String sellerEmail) {
+        Log.i(TAG, "Creating item for seller: " + sellerEmail);
+        
+        try {
+            // Validate item data
+            if (!validateItemData(itemData)) {
+                Log.e(TAG, "Invalid item data - validation failed");
+                Log.e(TAG, "Title: " + (itemData.getTitle() != null ? itemData.getTitle() : "null"));
+                Log.e(TAG, "Description: " + (itemData.getDescription() != null ? itemData.getDescription() : "null"));
+                Log.e(TAG, "StartingPrice: " + itemData.getStartingPrice());
+                Log.e(TAG, "CategoryId: " + (itemData.getCategoryId() != null ? itemData.getCategoryId() : "null"));
+                return false;
+            }
+            
+            // Try to create item via backend API first
+            try {
+                com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(context);
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.createItem(itemData, sellerEmail);
+                
+                if (response.isSuccess()) {
+                    Log.i(TAG, "Item created successfully via backend API");
+                    
+                    // Also store locally for offline access
+                    Item item = new Item();
+                    item.setItemId(UUID.randomUUID().toString());
+                    item.setTitle(itemData.getTitle());
+                    item.setDescription(itemData.getDescription());
+                    item.setStartingPrice(itemData.getStartingPrice());
+                    item.setCurrentPrice(itemData.getStartingPrice());
+                    item.setBuyNowPrice(itemData.getBuyNowPrice());
+                    item.setCurrency(itemData.getCurrency());
+                    item.setSellerId(sellerEmail); // Store email as seller ID for now
+                    item.setCategoryId(itemData.getCategoryId());
+                    item.setCondition(itemData.getCondition());
+                    item.setStartDate(itemData.getStartDate());
+                    item.setEndDate(itemData.getEndDate());
+                    item.setNotes(itemData.getNotes());
+                    item.setMetadata(itemData.getMetadata());
+                    item.setStatus(ItemStatus.ACTIVE); // Mark as active since it was posted to backend
+                    item.setCreatedAt(new Date());
+                    item.setUpdatedAt(new Date());
+                    
+                    // Add tags
+                    if (itemData.getTags() != null) {
+                        item.setTags(new ArrayList<>(itemData.getTags()));
+                    }
+                    
+                    // Add image paths
+                    if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
+                        item.setImagePaths(new ArrayList<>(itemData.getImagePaths()));
+                        itemImages.put(item.getItemId(), new ArrayList<>(itemData.getImagePaths()));
+                    }
+                    
+                    // Store item locally
+                    items.put(item.getItemId(), item);
+                    
+                    // Update user items
+                    userItems.computeIfAbsent(sellerEmail, k -> new ArrayList<>()).add(item.getItemId());
+                    
+                    // Update category items
+                    if (itemData.getCategoryId() != null) {
+                        categoryItems.computeIfAbsent(itemData.getCategoryId(), k -> new ArrayList<>()).add(item.getItemId());
+                    }
+                    
+                    // Initialize counters
+                    itemViewCounts.put(item.getItemId(), 0);
+                    itemBidCounts.put(item.getItemId(), 0);
+                    
+                    Log.i(TAG, "Item created successfully: " + item.getItemId());
+                    return true;
+                } else {
+                    Log.e(TAG, "Backend API error: " + response.getMessage());
+                    // Don't fallback to local storage - return false to show error
+                    return false;
+                }
+            } catch (Exception apiException) {
+                Log.e(TAG, "Backend API call failed", apiException);
+                // Don't fallback to local storage - return false to show error
+                return false;
+            }
+            
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error creating item", e);
+            return false;
+        }
+    }
+    
+    /**
+     * Save item as draft (local only, not posted to backend)
+     */
+    public boolean saveDraftItem(ItemData itemData, String sellerEmail) {
+        Log.i(TAG, "Saving item as draft for seller: " + sellerEmail);
         
         try {
             // Validate item data
@@ -88,7 +179,7 @@ public class ItemManager {
                 return false;
             }
             
-            // Create item
+            // Create item locally only with DRAFT status
             Item item = new Item();
             item.setItemId(UUID.randomUUID().toString());
             item.setTitle(itemData.getTitle());
@@ -97,16 +188,15 @@ public class ItemManager {
             item.setCurrentPrice(itemData.getStartingPrice());
             item.setBuyNowPrice(itemData.getBuyNowPrice());
             item.setCurrency(itemData.getCurrency());
-            item.setSellerId(sellerId);
+            item.setSellerId(sellerEmail);
             item.setCategoryId(itemData.getCategoryId());
             item.setCondition(itemData.getCondition());
-            item.setLocation(itemData.getLocation());
             item.setShippingInfo(itemData.getShippingInfo());
             item.setStartDate(itemData.getStartDate());
             item.setEndDate(itemData.getEndDate());
             item.setNotes(itemData.getNotes());
             item.setMetadata(itemData.getMetadata());
-            item.setStatus(ItemStatus.DRAFT);
+            item.setStatus(ItemStatus.DRAFT); // Explicitly set as DRAFT
             item.setCreatedAt(new Date());
             item.setUpdatedAt(new Date());
             
@@ -115,11 +205,17 @@ public class ItemManager {
                 item.setTags(new ArrayList<>(itemData.getTags()));
             }
             
+            // Add image paths
+            if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
+                item.setImagePaths(new ArrayList<>(itemData.getImagePaths()));
+                itemImages.put(item.getItemId(), new ArrayList<>(itemData.getImagePaths()));
+            }
+            
             // Store item
             items.put(item.getItemId(), item);
             
             // Update user items
-            userItems.computeIfAbsent(sellerId, k -> new ArrayList<>()).add(item.getItemId());
+            userItems.computeIfAbsent(sellerEmail, k -> new ArrayList<>()).add(item.getItemId());
             
             // Update category items
             if (itemData.getCategoryId() != null) {
@@ -130,17 +226,48 @@ public class ItemManager {
             itemViewCounts.put(item.getItemId(), 0);
             itemBidCounts.put(item.getItemId(), 0);
             
-            Log.i(TAG, "Item created successfully: " + item.getItemId());
+            Log.i(TAG, "Item saved as draft successfully: " + item.getItemId());
             return true;
             
         } catch (Exception e) {
-            Log.e(TAG, "Error creating item", e);
+            Log.e(TAG, "Error saving draft item", e);
             return false;
         }
     }
     
     /**
-     * Update item
+     * Update item with Item object
+     */
+    public boolean updateItem(String itemId, Item item) {
+        Log.i(TAG, "Updating item: " + itemId);
+        
+        try {
+            if (item == null) {
+                Log.e(TAG, "Item is null");
+                return false;
+            }
+            
+            // Check if item can be edited
+            if (!item.getStatus().canBeEdited()) {
+                Log.e(TAG, "Item cannot be edited: " + item.getStatus());
+                return false;
+            }
+            
+            // Update item
+            item.setUpdatedAt(new Date());
+            items.put(itemId, item);
+            
+            Log.i(TAG, "Item updated successfully: " + itemId);
+            return true;
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error updating item", e);
+            return false;
+        }
+    }
+    
+    /**
+     * Update item with ItemData
      */
     public boolean updateItem(String itemId, ItemData itemData) {
         Log.i(TAG, "Updating item: " + itemId);
@@ -172,7 +299,6 @@ public class ItemManager {
             item.setCurrency(itemData.getCurrency());
             item.setCategoryId(itemData.getCategoryId());
             item.setCondition(itemData.getCondition());
-            item.setLocation(itemData.getLocation());
             item.setShippingInfo(itemData.getShippingInfo());
             item.setStartDate(itemData.getStartDate());
             item.setEndDate(itemData.getEndDate());
@@ -612,7 +738,7 @@ public class ItemManager {
         }
         
         List<Item> filteredItems = items.values().stream()
-                .filter(item -> item.getStatus() == ItemStatus.ACTIVE)
+                .filter(item -> item.getStatus() == ItemStatus.ACTIVE || item.getStatus() == ItemStatus.DRAFT)
                 .collect(Collectors.toList());
         
         // Apply filters
@@ -652,11 +778,6 @@ public class ItemManager {
                     .collect(Collectors.toList());
         }
         
-        if (criteria.getLocation() != null) {
-            filteredItems = filteredItems.stream()
-                    .filter(item -> criteria.getLocation().equals(item.getLocation()))
-                    .collect(Collectors.toList());
-        }
         
         if (criteria.getIsFeatured() != null) {
             filteredItems = filteredItems.stream()
@@ -716,6 +837,17 @@ public class ItemManager {
     public List<Item> getAllActiveItems() {
         return items.values().stream()
                 .filter(item -> item.getStatus() == ItemStatus.ACTIVE)
+                .sorted(Comparator.comparing(Item::getCreatedAt).reversed())
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get all browsable items (both ACTIVE and DRAFT)
+     */
+    public List<Item> getAllBrowsableItems() {
+        return items.values().stream()
+                .filter(item -> item.getStatus() == ItemStatus.ACTIVE || 
+                               item.getStatus() == ItemStatus.DRAFT)
                 .sorted(Comparator.comparing(Item::getCreatedAt).reversed())
                 .collect(Collectors.toList());
     }
@@ -863,7 +995,7 @@ public class ItemManager {
         laptop.setCategoryId("electronics");
         laptop.setCategoryName("Electronics");
         laptop.setCondition("Like New");
-        laptop.setLocation("Manila");
+        laptop.setSellerName("TechGuru_Manila");
         laptop.setStatus(ItemStatus.ACTIVE);
         laptop.setCurrentPrice(25000.0);
         laptop.setBidCount(5);
@@ -872,11 +1004,64 @@ public class ItemManager {
         laptop.setEndDate(new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)); // 7 days from now
         items.put(laptop.getItemId(), laptop);
         
+        // Sample items for My Listings testing
+        // Add items for test user (you can change this to any email for testing)
+        String testUserEmail = "test@example.com";
+        
+        Item vintageJacket = new Item("Vintage Leather Jacket", "Classic vintage leather jacket in excellent condition", 120.0, testUserEmail);
+        vintageJacket.setCategoryId("clothing");
+        vintageJacket.setCategoryName("Clothing");
+        vintageJacket.setCondition("Good");
+        vintageJacket.setSellerName("Test User");
+        vintageJacket.setStatus(ItemStatus.ACTIVE);
+        vintageJacket.setCurrentPrice(120.0);
+        vintageJacket.setBidCount(3);
+        vintageJacket.setViewCount(45);
+        vintageJacket.setEndDate(new Date(System.currentTimeMillis() + 12 * 60 * 60 * 1000)); // 12 hours from now
+        items.put(vintageJacket.getItemId(), vintageJacket);
+        userItems.computeIfAbsent(testUserEmail, k -> new ArrayList<>()).add(vintageJacket.getItemId());
+        
+        Item antiqueWatch = new Item("Antique Pocket Watch", "Beautiful antique pocket watch from the 1800s", 85.0, testUserEmail);
+        antiqueWatch.setCategoryId("collectibles");
+        antiqueWatch.setCategoryName("Collectibles");
+        antiqueWatch.setCondition("Fair");
+        antiqueWatch.setSellerName("Test User");
+        antiqueWatch.setStatus(ItemStatus.PAUSED);
+        antiqueWatch.setCurrentPrice(85.0);
+        antiqueWatch.setBidCount(1);
+        antiqueWatch.setViewCount(23);
+        items.put(antiqueWatch.getItemId(), antiqueWatch);
+        userItems.computeIfAbsent(testUserEmail, k -> new ArrayList<>()).add(antiqueWatch.getItemId());
+        
+        Item signedBaseball = new Item("Signed Baseball", "Baseball signed by famous player", 250.0, testUserEmail);
+        signedBaseball.setCategoryId("sports");
+        signedBaseball.setCategoryName("Sports");
+        signedBaseball.setCondition("Good");
+        signedBaseball.setSellerName("Test User");
+        signedBaseball.setStatus(ItemStatus.SOLD);
+        signedBaseball.setCurrentPrice(250.0);
+        signedBaseball.setBidCount(7);
+        signedBaseball.setViewCount(89);
+        items.put(signedBaseball.getItemId(), signedBaseball);
+        userItems.computeIfAbsent(testUserEmail, k -> new ArrayList<>()).add(signedBaseball.getItemId());
+        
+        Item rareCoins = new Item("Rare Coin Collection", "Collection of rare coins from different countries", 500.0, testUserEmail);
+        rareCoins.setCategoryId("collectibles");
+        rareCoins.setCategoryName("Collectibles");
+        rareCoins.setCondition("Excellent");
+        rareCoins.setSellerName("Test User");
+        rareCoins.setStatus(ItemStatus.DRAFT);
+        rareCoins.setCurrentPrice(500.0);
+        rareCoins.setBidCount(0);
+        rareCoins.setViewCount(0);
+        items.put(rareCoins.getItemId(), rareCoins);
+        userItems.computeIfAbsent(testUserEmail, k -> new ArrayList<>()).add(rareCoins.getItemId());
+        
         Item phone = new Item("iPhone 14 Pro", "Brand new iPhone 14 Pro 128GB", 45000.0, "seller2");
         phone.setCategoryId("electronics");
         phone.setCategoryName("Electronics");
         phone.setCondition("New");
-        phone.setLocation("Quezon City");
+        phone.setSellerName("MobileDeals_QC");
         phone.setStatus(ItemStatus.ACTIVE);
         phone.setCurrentPrice(45000.0);
         phone.setBidCount(12);
@@ -889,7 +1074,7 @@ public class ItemManager {
         camera.setCategoryId("electronics");
         camera.setCategoryName("Electronics");
         camera.setCondition("Excellent");
-        camera.setLocation("Makati");
+        camera.setSellerName("PhotoPro_Makati");
         camera.setStatus(ItemStatus.ACTIVE);
         camera.setCurrentPrice(180000.0);
         camera.setBidCount(3);
@@ -902,7 +1087,7 @@ public class ItemManager {
         watch.setCategoryId("fashion");
         watch.setCategoryName("Fashion");
         watch.setCondition("Good");
-        watch.setLocation("Taguig");
+        watch.setSellerName("LuxuryWatches_Taguig");
         watch.setStatus(ItemStatus.ACTIVE);
         watch.setCurrentPrice(80000.0);
         watch.setBidCount(8);
@@ -915,7 +1100,7 @@ public class ItemManager {
         shoes.setCategoryId("fashion");
         shoes.setCategoryName("Fashion");
         shoes.setCondition("Like New");
-        shoes.setLocation("Pasig");
+        shoes.setSellerName("SneakerHead_Pasig");
         shoes.setStatus(ItemStatus.ACTIVE);
         shoes.setCurrentPrice(8000.0);
         shoes.setBidCount(15);
@@ -929,7 +1114,7 @@ public class ItemManager {
         furniture.setCategoryId("home_garden");
         furniture.setCategoryName("Home & Garden");
         furniture.setCondition("Good");
-        furniture.setLocation("Marikina");
+        furniture.setSellerName("AntiqueFinds_Marikina");
         furniture.setStatus(ItemStatus.ACTIVE);
         furniture.setCurrentPrice(15000.0);
         furniture.setBidCount(4);
@@ -942,7 +1127,7 @@ public class ItemManager {
         bike.setCategoryId("sports");
         bike.setCategoryName("Sports");
         bike.setCondition("Very Good");
-        bike.setLocation("Mandaluyong");
+        bike.setSellerName("SportsGear_Mandaluyong");
         bike.setStatus(ItemStatus.ACTIVE);
         bike.setCurrentPrice(25000.0);
         bike.setBidCount(6);
@@ -955,7 +1140,7 @@ public class ItemManager {
         book.setCategoryId("books");
         book.setCategoryName("Books");
         book.setCondition("Good");
-        book.setLocation("San Juan");
+        book.setSellerName("BookLover_SanJuan");
         book.setStatus(ItemStatus.ACTIVE);
         book.setCurrentPrice(2000.0);
         book.setBidCount(2);
