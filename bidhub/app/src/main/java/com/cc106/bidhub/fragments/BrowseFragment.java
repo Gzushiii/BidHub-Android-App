@@ -53,7 +53,6 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     // UI Components
     private SwipeRefreshLayout swipeRefreshLayout;
     private TextInputEditText etSearch;
-    private ImageButton btnFilter;
     private ImageButton btnSort;
     private ImageButton btnViewToggle;
     private RecyclerView rvItems;
@@ -115,7 +114,6 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     private void initializeViews(View view) {
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
         etSearch = view.findViewById(R.id.et_search);
-        btnFilter = view.findViewById(R.id.btn_filter);
         btnSort = view.findViewById(R.id.btn_sort);
         btnViewToggle = view.findViewById(R.id.btn_view_toggle);
         rvItems = view.findViewById(R.id.rv_items);
@@ -252,7 +250,6 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     }
     
     private void setupFilter() {
-        btnFilter.setOnClickListener(v -> showFilterDialog());
         btnSort.setOnClickListener(v -> showSortDialog());
         btnClearAllFilters.setOnClickListener(v -> clearAllFilters());
         btnViewToggle.setOnClickListener(v -> toggleView());
@@ -818,7 +815,12 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
             int totalItems = allItems.size();
             int filteredCount = filteredItems.size();
             
-            if (filteredCount == totalItems) {
+            // Debug logging
+            android.util.Log.d("BrowseFragment", "updateItemCount: totalItems=" + totalItems + ", filteredCount=" + filteredCount);
+            
+            if (totalItems == 0) {
+                tvItemCount.setText("No items available");
+            } else if (filteredCount == totalItems) {
                 tvItemCount.setText(totalItems + " items available");
             } else {
                 tvItemCount.setText(filteredCount + " of " + totalItems + " items");

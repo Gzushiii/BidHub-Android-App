@@ -108,28 +108,6 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             com.cc106.bidhub.utils.ImageLoader.loadPlaceholder(holder.itemImage.getContext(), holder.itemImage);
         }
         
-        // Set featured/trending indicators
-        if (item.isFeatured()) {
-            holder.featuredBadge.setVisibility(View.VISIBLE);
-            holder.featuredBadge.setText("FEATURED");
-        } else {
-            holder.featuredBadge.setVisibility(View.GONE);
-        }
-        
-        if (item.isTrending()) {
-            holder.trendingBadge.setVisibility(View.VISIBLE);
-            holder.trendingBadge.setText("TRENDING");
-        } else {
-            holder.trendingBadge.setVisibility(View.GONE);
-        }
-        
-        // Set DRAFT status indicator
-        if (item.getStatus() != null && item.getStatus().toString().equals("DRAFT")) {
-            holder.draftBadge.setVisibility(View.VISIBLE);
-            holder.draftBadge.setText("PENDING UPLOAD");
-        } else {
-            holder.draftBadge.setVisibility(View.GONE);
-        }
         
             // Set click listener with detailed error handling
             holder.itemView.setOnClickListener(v -> {
@@ -198,9 +176,6 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
         TextView sellerText;
         TextView bidCountText;
         TextView timeRemainingText;
-        TextView featuredBadge;
-        TextView trendingBadge;
-        TextView draftBadge;
         
         ItemViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -210,9 +185,6 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             sellerText = itemView.findViewById(R.id.tv_seller_name);
             bidCountText = itemView.findViewById(R.id.tv_bid_count);
             timeRemainingText = itemView.findViewById(R.id.tv_time_remaining);
-            featuredBadge = itemView.findViewById(R.id.tv_featured_badge);
-            trendingBadge = itemView.findViewById(R.id.tv_trending_badge);
-            draftBadge = itemView.findViewById(R.id.tv_draft_badge);
         }
     }
 }
