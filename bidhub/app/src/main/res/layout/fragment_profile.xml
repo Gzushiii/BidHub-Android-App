@@ -85,7 +85,8 @@
                         android:background="@drawable/circle_background"
                         android:backgroundTint="@color/surface_variant"
                         android:contentDescription="Edit Profile"
-                        android:padding="8dp"
+                        android:padding="6dp"
+                        android:scaleType="centerInside"
                         android:stateListAnimator="@null"
                         android:layout_marginEnd="8dp" />
 
@@ -97,7 +98,8 @@
                         android:background="@drawable/circle_background"
                         android:backgroundTint="@color/surface_variant"
                         android:contentDescription="Settings"
-                        android:padding="8dp"
+                        android:padding="6dp"
+                        android:scaleType="centerInside"
                         android:stateListAnimator="@null" />
 
                 </LinearLayout>

@@ -448,7 +448,6 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                 item.setCurrentPrice(itemJson.getDouble("current_bid"));
                 item.setCategoryId(itemJson.getString("category_id"));
                 item.setSellerId(itemJson.getString("seller_email"));
-                item.setLocation(itemJson.optString("location", ""));
                 item.setCondition(itemJson.optString("item_condition", itemJson.optString("condition", "good")));
                 item.setStatus(ItemStatus.ACTIVE);
                 
@@ -605,9 +604,6 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
             addFilterChip("Condition: " + currentFilter.getCondition());
         }
         
-        if (currentFilter.getLocation() != null) {
-            addFilterChip("Location: " + currentFilter.getLocation());
-        }
         
         if (currentFilter.getIsFeatured() != null && currentFilter.getIsFeatured()) {
             addFilterChip("Featured");
@@ -672,7 +668,6 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         } else if (filterText.startsWith("Condition:")) {
             currentFilter.setCondition(null);
         } else if (filterText.startsWith("Location:")) {
-            currentFilter.setLocation(null);
         } else if (filterText.equals("Featured")) {
             currentFilter.setIsFeatured(null);
         } else if (filterText.equals("Trending")) {

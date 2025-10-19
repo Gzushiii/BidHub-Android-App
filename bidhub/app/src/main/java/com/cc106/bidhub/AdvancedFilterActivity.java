@@ -267,9 +267,6 @@ public class AdvancedFilterActivity extends BaseActivity implements CategoryAdap
         }
         
         // Populate location
-        if (currentFilter.getLocation() != null) {
-            etLocation.setText(currentFilter.getLocation());
-        }
         
         // Populate special filters
         if (currentFilter.getIsFeatured() != null) {
@@ -313,7 +310,6 @@ public class AdvancedFilterActivity extends BaseActivity implements CategoryAdap
         
         // Update location
         String location = etLocation.getText().toString().trim();
-        currentFilter.setLocation(location.isEmpty() ? null : location);
         
         // Return result
         Intent resultIntent = new Intent();
@@ -338,7 +334,6 @@ public class AdvancedFilterActivity extends BaseActivity implements CategoryAdap
         target.setMinPrice(source.getMinPrice());
         target.setMaxPrice(source.getMaxPrice());
         target.setCondition(source.getCondition());
-        target.setLocation(source.getLocation());
         target.setIsFeatured(source.getIsFeatured());
         target.setIsTrending(source.getIsTrending());
         target.setSortBy(source.getSortBy());

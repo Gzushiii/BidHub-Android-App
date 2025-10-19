@@ -280,7 +280,6 @@ public class MyListingsActivity extends AppCompatActivity implements MyListingsA
                     item.setCurrentPrice(itemJson.getDouble("current_bid"));
                     item.setCategoryId(itemJson.getString("category_id"));
                     item.setSellerId(itemJson.getString("seller_email"));
-                    item.setLocation(itemJson.optString("location", ""));
                     item.setCondition(itemJson.optString("condition", "good"));
                     
                     // Set status based on database status

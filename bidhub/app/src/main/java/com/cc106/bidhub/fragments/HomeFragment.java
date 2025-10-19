@@ -34,8 +34,7 @@ public class HomeFragment extends Fragment {
 
     // Header components
     private ImageButton btnNotifications;
-    private ImageView imgProfile;
-    private TextView textViewWelcome, textViewCredits, textViewAlias;
+    private TextView textViewAlias;
     private View searchBar;
     
     // Quick action buttons
@@ -117,9 +116,6 @@ public class HomeFragment extends Fragment {
         
         // Header components
         btnNotifications = view.findViewById(R.id.btnNotifications);
-        imgProfile = view.findViewById(R.id.imgProfile);
-        textViewWelcome = view.findViewById(R.id.textViewWelcome);
-        textViewCredits = view.findViewById(R.id.textViewCredits);
         textViewAlias = view.findViewById(R.id.textViewAlias);
         searchBar = view.findViewById(R.id.searchBar);
         
@@ -167,21 +163,6 @@ public class HomeFragment extends Fragment {
             });
         }
         
-                if (imgProfile != null) {
-                    imgProfile.setOnClickListener(v -> {
-                        try {
-                            // Navigate to profile fragment using bottom nav
-                            if (getActivity() instanceof MainActivity) {
-                                ((MainActivity) getActivity()).switchToProfileTab();
-                            }
-                        } catch (Exception e) {
-                            if (getContext() != null) {
-                                ToastHelper.showError(getContext(), "Error opening profile: " + e.getMessage());
-                            }
-                            e.printStackTrace();
-                        }
-                    });
-                }
         
         // Feature cards
         if (cardBrowse != null) {
@@ -297,14 +278,8 @@ public class HomeFragment extends Fragment {
             double credits = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_CREDITS));
 
             // Update the UI
-                if (textViewWelcome != null) {
-            textViewWelcome.setText("Welcome back!");
-                }
                 if (textViewAlias != null) {
                     textViewAlias.setText(alias != null ? alias : "User");
-                }
-                if (textViewCredits != null) {
-            textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", credits));
                 }
             }
         } catch (Exception e) {

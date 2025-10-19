@@ -108,7 +108,6 @@ public class ItemManager {
                     item.setSellerId(sellerEmail); // Store email as seller ID for now
                     item.setCategoryId(itemData.getCategoryId());
                     item.setCondition(itemData.getCondition());
-                    item.setLocation(itemData.getLocation());
                     item.setShippingInfo(itemData.getShippingInfo());
                     item.setStartDate(itemData.getStartDate());
                     item.setEndDate(itemData.getEndDate());
@@ -189,7 +188,6 @@ public class ItemManager {
             item.setSellerId(sellerEmail);
             item.setCategoryId(itemData.getCategoryId());
             item.setCondition(itemData.getCondition());
-            item.setLocation(itemData.getLocation());
             item.setShippingInfo(itemData.getShippingInfo());
             item.setStartDate(itemData.getStartDate());
             item.setEndDate(itemData.getEndDate());
@@ -298,7 +296,6 @@ public class ItemManager {
             item.setCurrency(itemData.getCurrency());
             item.setCategoryId(itemData.getCategoryId());
             item.setCondition(itemData.getCondition());
-            item.setLocation(itemData.getLocation());
             item.setShippingInfo(itemData.getShippingInfo());
             item.setStartDate(itemData.getStartDate());
             item.setEndDate(itemData.getEndDate());
@@ -778,11 +775,6 @@ public class ItemManager {
                     .collect(Collectors.toList());
         }
         
-        if (criteria.getLocation() != null) {
-            filteredItems = filteredItems.stream()
-                    .filter(item -> criteria.getLocation().equals(item.getLocation()))
-                    .collect(Collectors.toList());
-        }
         
         if (criteria.getIsFeatured() != null) {
             filteredItems = filteredItems.stream()
@@ -1000,7 +992,6 @@ public class ItemManager {
         laptop.setCategoryId("electronics");
         laptop.setCategoryName("Electronics");
         laptop.setCondition("Like New");
-        laptop.setLocation("Manila");
         laptop.setSellerName("TechGuru_Manila");
         laptop.setStatus(ItemStatus.ACTIVE);
         laptop.setCurrentPrice(25000.0);
@@ -1018,7 +1009,6 @@ public class ItemManager {
         vintageJacket.setCategoryId("clothing");
         vintageJacket.setCategoryName("Clothing");
         vintageJacket.setCondition("Good");
-        vintageJacket.setLocation("Manila");
         vintageJacket.setSellerName("Test User");
         vintageJacket.setStatus(ItemStatus.ACTIVE);
         vintageJacket.setCurrentPrice(120.0);
@@ -1032,7 +1022,6 @@ public class ItemManager {
         antiqueWatch.setCategoryId("collectibles");
         antiqueWatch.setCategoryName("Collectibles");
         antiqueWatch.setCondition("Fair");
-        antiqueWatch.setLocation("Manila");
         antiqueWatch.setSellerName("Test User");
         antiqueWatch.setStatus(ItemStatus.PAUSED);
         antiqueWatch.setCurrentPrice(85.0);
@@ -1045,7 +1034,6 @@ public class ItemManager {
         signedBaseball.setCategoryId("sports");
         signedBaseball.setCategoryName("Sports");
         signedBaseball.setCondition("Good");
-        signedBaseball.setLocation("Manila");
         signedBaseball.setSellerName("Test User");
         signedBaseball.setStatus(ItemStatus.SOLD);
         signedBaseball.setCurrentPrice(250.0);
@@ -1058,7 +1046,6 @@ public class ItemManager {
         rareCoins.setCategoryId("collectibles");
         rareCoins.setCategoryName("Collectibles");
         rareCoins.setCondition("Excellent");
-        rareCoins.setLocation("Manila");
         rareCoins.setSellerName("Test User");
         rareCoins.setStatus(ItemStatus.DRAFT);
         rareCoins.setCurrentPrice(500.0);
@@ -1071,7 +1058,6 @@ public class ItemManager {
         phone.setCategoryId("electronics");
         phone.setCategoryName("Electronics");
         phone.setCondition("New");
-        phone.setLocation("Quezon City");
         phone.setSellerName("MobileDeals_QC");
         phone.setStatus(ItemStatus.ACTIVE);
         phone.setCurrentPrice(45000.0);
@@ -1085,7 +1071,6 @@ public class ItemManager {
         camera.setCategoryId("electronics");
         camera.setCategoryName("Electronics");
         camera.setCondition("Excellent");
-        camera.setLocation("Makati");
         camera.setSellerName("PhotoPro_Makati");
         camera.setStatus(ItemStatus.ACTIVE);
         camera.setCurrentPrice(180000.0);
@@ -1099,7 +1084,6 @@ public class ItemManager {
         watch.setCategoryId("fashion");
         watch.setCategoryName("Fashion");
         watch.setCondition("Good");
-        watch.setLocation("Taguig");
         watch.setSellerName("LuxuryWatches_Taguig");
         watch.setStatus(ItemStatus.ACTIVE);
         watch.setCurrentPrice(80000.0);
@@ -1113,7 +1097,6 @@ public class ItemManager {
         shoes.setCategoryId("fashion");
         shoes.setCategoryName("Fashion");
         shoes.setCondition("Like New");
-        shoes.setLocation("Pasig");
         shoes.setSellerName("SneakerHead_Pasig");
         shoes.setStatus(ItemStatus.ACTIVE);
         shoes.setCurrentPrice(8000.0);
@@ -1128,7 +1111,6 @@ public class ItemManager {
         furniture.setCategoryId("home_garden");
         furniture.setCategoryName("Home & Garden");
         furniture.setCondition("Good");
-        furniture.setLocation("Marikina");
         furniture.setSellerName("AntiqueFinds_Marikina");
         furniture.setStatus(ItemStatus.ACTIVE);
         furniture.setCurrentPrice(15000.0);
@@ -1142,7 +1124,6 @@ public class ItemManager {
         bike.setCategoryId("sports");
         bike.setCategoryName("Sports");
         bike.setCondition("Very Good");
-        bike.setLocation("Mandaluyong");
         bike.setSellerName("SportsGear_Mandaluyong");
         bike.setStatus(ItemStatus.ACTIVE);
         bike.setCurrentPrice(25000.0);
@@ -1156,7 +1137,6 @@ public class ItemManager {
         book.setCategoryId("books");
         book.setCategoryName("Books");
         book.setCondition("Good");
-        book.setLocation("San Juan");
         book.setSellerName("BookLover_SanJuan");
         book.setStatus(ItemStatus.ACTIVE);
         book.setCurrentPrice(2000.0);

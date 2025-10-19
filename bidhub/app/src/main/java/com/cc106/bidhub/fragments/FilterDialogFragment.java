@@ -34,7 +34,6 @@ public class FilterDialogFragment extends DialogFragment {
     private TextInputEditText etMinPrice;
     private TextInputEditText etMaxPrice;
     private Spinner spinnerCondition;
-    private Spinner spinnerLocation;
     private CheckBox cbFeatured;
     private CheckBox cbTrending;
     private Button btnApply;
@@ -80,7 +79,6 @@ public class FilterDialogFragment extends DialogFragment {
         etMinPrice = view.findViewById(R.id.et_min_price);
         etMaxPrice = view.findViewById(R.id.et_max_price);
         spinnerCondition = view.findViewById(R.id.spinner_condition);
-        spinnerLocation = view.findViewById(R.id.spinner_location);
         cbFeatured = view.findViewById(R.id.cb_featured);
         cbTrending = view.findViewById(R.id.cb_trending);
         btnApply = view.findViewById(R.id.btn_apply);
@@ -109,13 +107,6 @@ public class FilterDialogFragment extends DialogFragment {
         conditionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerCondition.setAdapter(conditionAdapter);
         
-        // Location Spinner
-        String[] locations = {"Any Location", "Manila", "Quezon City", "Makati", "Taguig", "Pasig", 
-                             "Marikina", "Mandaluyong", "San Juan", "Other"};
-        ArrayAdapter<String> locationAdapter = new ArrayAdapter<>(getContext(), 
-            android.R.layout.simple_spinner_item, locations);
-        locationAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerLocation.setAdapter(locationAdapter);
     }
     
     private void populateFields() {
@@ -157,17 +148,6 @@ public class FilterDialogFragment extends DialogFragment {
             }
         }
         
-        // Set location
-        if (filterCriteria.getLocation() != null) {
-            String[] locations = {"Any Location", "Manila", "Quezon City", "Makati", "Taguig", "Pasig", 
-                                 "Marikina", "Mandaluyong", "San Juan", "Other"};
-            for (int i = 0; i < locations.length; i++) {
-                if (locations[i].equals(filterCriteria.getLocation())) {
-                    spinnerLocation.setSelection(i);
-                    break;
-                }
-            }
-        }
         
         // Set checkboxes
         cbFeatured.setChecked(filterCriteria.getIsFeatured() != null && filterCriteria.getIsFeatured());
@@ -216,13 +196,6 @@ public class FilterDialogFragment extends DialogFragment {
             newFilter.setCondition(conditions[conditionIndex]);
         }
         
-        // Location
-        int locationIndex = spinnerLocation.getSelectedItemPosition();
-        if (locationIndex > 0) {
-            String[] locations = {"Any Location", "Manila", "Quezon City", "Makati", "Taguig", "Pasig", 
-                                 "Marikina", "Mandaluyong", "San Juan", "Other"};
-            newFilter.setLocation(locations[locationIndex]);
-        }
         
         // Featured and Trending
         newFilter.setIsFeatured(cbFeatured.isChecked() ? true : null);
@@ -245,7 +218,6 @@ public class FilterDialogFragment extends DialogFragment {
         etMinPrice.setText("");
         etMaxPrice.setText("");
         spinnerCondition.setSelection(0);
-        spinnerLocation.setSelection(0);
         cbFeatured.setChecked(false);
         cbTrending.setChecked(false);
     }

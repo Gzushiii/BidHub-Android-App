@@ -73,7 +73,6 @@ public class PostFragment extends Fragment implements
     private TextInputEditText etStartingPrice;
     private TextInputEditText etBuyNowPrice;
     private AutoCompleteTextView actvAuctionDuration;
-    private TextInputEditText etLocation;
     private TextInputEditText etDonationReason;
     private TextInputLayout layoutDonationReason;
     // Tags functionality removed from new layout
@@ -178,7 +177,6 @@ public class PostFragment extends Fragment implements
         etStartingPrice = view.findViewById(R.id.et_starting_price);
         etBuyNowPrice = view.findViewById(R.id.et_buy_now_price);
         actvAuctionDuration = view.findViewById(R.id.actv_auction_duration);
-        etLocation = view.findViewById(R.id.et_location);
         etDonationReason = view.findViewById(R.id.et_donation_reason);
         layoutDonationReason = view.findViewById(R.id.layout_donation_reason);
         actvSize = view.findViewById(R.id.actv_size);
@@ -912,7 +910,6 @@ public class PostFragment extends Fragment implements
         itemData.setDescription(etItemDescription.getText().toString().trim());
         itemData.setCategoryId(getSelectedCategoryId());
         itemData.setCondition(actvCondition.getText().toString().trim());
-        itemData.setLocation(etLocation.getText().toString().trim());
         
         // Pricing
         if (isForSale) {
@@ -1103,18 +1100,6 @@ public class PostFragment extends Fragment implements
             return false;
         }
         
-        // Validate location
-        String location = etLocation.getText().toString().trim();
-        if (TextUtils.isEmpty(location)) {
-            ToastHelper.showError(getContext(), "Location is required");
-            etLocation.requestFocus();
-            return false;
-        }
-        if (location.length() < 3) {
-            ToastHelper.showError(getContext(), "Please provide a more specific location");
-            etLocation.requestFocus();
-            return false;
-        }
         
         // Validate auction duration
         String duration = actvAuctionDuration.getText().toString().trim();
@@ -1205,7 +1190,6 @@ public class PostFragment extends Fragment implements
         etStartingPrice.setText("");
         etBuyNowPrice.setText("");
         actvAuctionDuration.setText("7 Days");
-        etLocation.setText("");
         etDonationReason.setText("");
         actvSize.setText("Choose");
         actvOrigin.setText("Choose");

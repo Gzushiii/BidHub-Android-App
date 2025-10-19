@@ -66,10 +66,6 @@ public class ItemApiClient {
                 requestData.put("metadata", itemData.getMetadata());
             }
             
-            // Add location if available
-            if (itemData.getLocation() != null && !itemData.getLocation().isEmpty()) {
-                requestData.put("location", itemData.getLocation());
-            }
             
             // Add shipping info if available
             if (itemData.getShippingInfo() != null && !itemData.getShippingInfo().isEmpty()) {

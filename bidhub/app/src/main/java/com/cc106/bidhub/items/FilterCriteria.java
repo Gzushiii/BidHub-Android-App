@@ -16,7 +16,6 @@ public class FilterCriteria implements Serializable {
     private Double minPrice;
     private Double maxPrice;
     private String condition;
-    private String location;
     private ItemStatus status;
     private String sellerId;
     private Boolean isFeatured;
@@ -94,13 +93,6 @@ public class FilterCriteria implements Serializable {
         this.condition = condition;
     }
     
-    public String getLocation() {
-        return location;
-    }
-    
-    public void setLocation(String location) {
-        this.location = location;
-    }
     
     public ItemStatus getStatus() {
         return status;
@@ -228,7 +220,6 @@ public class FilterCriteria implements Serializable {
                 ", minPrice=" + minPrice +
                 ", maxPrice=" + maxPrice +
                 ", condition='" + condition + '\'' +
-                ", location='" + location + '\'' +
                 ", status=" + status +
                 ", sortBy='" + sortBy + '\'' +
                 ", sortOrder='" + sortOrder + '\'' +

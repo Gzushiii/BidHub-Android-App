@@ -15,39 +15,38 @@
         android:gravity="center_vertical"
         android:background="@color/background">
 
+        <!-- Search Bar -->
         <LinearLayout
+            android:id="@+id/searchBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:background="@drawable/search_background_themed"
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:layout_marginEnd="16dp">
 
-            <TextView
-                android:id="@+id/textViewWelcome"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Welcome back, Alex!"
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_search"
+                android:tint="@color/text_hint" />
+
+            <EditText
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:hint="Search for items"
                 android:textColor="@color/text_primary"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/textViewCredits"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="You have 120 credits"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
+                android:textColorHint="@color/text_hint"
+                android:background="@null"
+                android:inputType="text"
+                android:maxLines="1" />
 
         </LinearLayout>
-
-        <ImageView
-            android:id="@+id/imgProfile"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/placeholder"
-            android:background="@drawable/circle_background"
-            android:padding="8dp"
-            android:layout_marginEnd="8dp" />
 
         <ImageButton
             android:id="@+id/btnNotifications"
@@ -73,37 +72,6 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Search Bar -->
-            <LinearLayout
-                android:id="@+id/searchBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:background="@drawable/search_background"
-                android:gravity="center_vertical"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:layout_marginBottom="24dp">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_search"
-                    android:tint="@color/text_secondary" />
-
-                <EditText
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    android:hint="Search for items"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_secondary"
-                    android:textSize="16sp"
-                    android:background="@null"
-                    android:inputType="text" />
-
-            </LinearLayout>
 
             <!-- Quick Actions - All in One Row -->
             <LinearLayout
@@ -121,21 +89,21 @@
                     android:orientation="vertical"
                     android:gravity="center"
                     android:padding="12dp"
-                    android:background="@drawable/quick_action_background"
+                    android:background="@drawable/quick_action_background_themed"
                     android:layout_marginEnd="4dp">
 
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_search"
-                        android:tint="@color/primary"
+                        android:tint="@color/on_primary"
                         android:layout_marginBottom="8dp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Browse"
-                        android:textColor="@color/primary"
+                        android:textColor="@color/on_primary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
@@ -150,21 +118,21 @@
                     android:orientation="vertical"
                     android:gravity="center"
                     android:padding="12dp"
-                    android:background="@drawable/quick_action_background"
+                    android:background="@drawable/quick_action_background_themed"
                     android:layout_marginHorizontal="4dp">
 
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_add_box"
-                        android:tint="@color/primary"
+                        android:tint="@color/on_primary"
                         android:layout_marginBottom="8dp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Post Item"
-                        android:textColor="@color/primary"
+                        android:textColor="@color/on_primary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
@@ -179,21 +147,21 @@
                     android:orientation="vertical"
                     android:gravity="center"
                     android:padding="12dp"
-                    android:background="@drawable/quick_action_background"
+                    android:background="@drawable/quick_action_background_themed"
                     android:layout_marginStart="4dp">
 
                     <ImageView
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_list_alt"
-                        android:tint="@color/primary"
+                        android:tint="@color/on_primary"
                         android:layout_marginBottom="8dp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="My Listings"
-                        android:textColor="@color/primary"
+                        android:textColor="@color/on_primary"
                         android:textSize="12sp"
                         android:textStyle="bold" />
 
@@ -240,7 +208,7 @@
                                 android:layout_height="180dp"
                                 android:src="@drawable/placeholder"
                                 android:scaleType="centerCrop"
-                                android:background="@color/gray_200"
+                                android:background="@color/surface_variant"
                                 android:layout_marginBottom="8dp" />
 
                             <TextView
@@ -273,7 +241,7 @@
                                 android:layout_height="180dp"
                                 android:src="@drawable/placeholder"
                                 android:scaleType="centerCrop"
-                                android:background="@color/gray_200"
+                                android:background="@color/surface_variant"
                                 android:layout_marginBottom="8dp" />
 
                             <TextView
@@ -305,7 +273,7 @@
                                 android:layout_height="180dp"
                                 android:src="@drawable/placeholder"
                                 android:scaleType="centerCrop"
-                                android:background="@color/gray_200"
+                                android:background="@color/surface_variant"
                                 android:layout_marginBottom="8dp" />
 
                             <TextView
@@ -354,7 +322,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:padding="12dp"
-                    android:background="@drawable/card_background"
+                    android:background="@drawable/card_background_themed"
                     android:layout_marginBottom="8dp"
                     android:gravity="center_vertical">
 
@@ -363,7 +331,7 @@
                         android:layout_height="80dp"
                         android:src="@drawable/placeholder"
                         android:scaleType="centerCrop"
-                        android:background="@color/gray_200"
+                        android:background="@color/surface_variant"
                         android:layout_marginEnd="16dp" />
 
                     <LinearLayout
@@ -404,7 +372,7 @@
                         android:text="Bid"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_white"
+                        android:textColor="@color/on_primary"
                         android:background="@drawable/btn_primary_rounded"
                         android:paddingHorizontal="16dp" />
 
@@ -416,7 +384,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:padding="12dp"
-                    android:background="@drawable/card_background"
+                    android:background="@drawable/card_background_themed"
                     android:gravity="center_vertical">
 
                     <ImageView
@@ -424,7 +392,7 @@
                         android:layout_height="80dp"
                         android:src="@drawable/placeholder"
                         android:scaleType="centerCrop"
-                        android:background="@color/gray_200"
+                        android:background="@color/surface_variant"
                         android:layout_marginEnd="16dp" />
 
                     <LinearLayout
@@ -465,7 +433,7 @@
                         android:text="Bid"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        android:textColor="@color/text_white"
+                        android:textColor="@color/on_primary"
                         android:background="@drawable/btn_primary_rounded"
                         android:paddingHorizontal="16dp" />
 

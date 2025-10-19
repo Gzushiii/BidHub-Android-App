@@ -6,7 +6,7 @@
     android:layout_margin="8dp"
     android:elevation="4dp"
     app:cardCornerRadius="12dp"
-    app:cardBackgroundColor="@color/background">
+    app:cardBackgroundColor="@color/surface">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -25,7 +25,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:background="@color/background"
+                android:background="@color/surface_variant"
                 android:src="@drawable/ic_image_placeholder"
                 android:contentDescription="Item Image" />
 
