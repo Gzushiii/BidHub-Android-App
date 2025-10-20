@@ -49,7 +49,12 @@ public class ItemApiClient {
             requestData.put("category_id", itemData.getCategoryId());
             requestData.put("starting_price", itemData.getStartingPrice());
             requestData.put("reserve_price", itemData.getStartingPrice()); // Use starting price as reserve
-            requestData.put("duration_days", 7); // Default 7 days
+            // Get duration from itemData or use default
+            int durationDays = 7; // Default
+            if (itemData.getDurationDays() > 0) {
+                durationDays = itemData.getDurationDays();
+            }
+            requestData.put("duration_days", durationDays);
             requestData.put("seller_email", sellerEmail); // Add seller email for database
             
             // Add images if available

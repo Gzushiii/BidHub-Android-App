@@ -297,6 +297,9 @@ public class PostFragment extends Fragment implements
                 actvAuctionDuration.setAdapter(durationAdapter);
                 actvAuctionDuration.setThreshold(0); // Show dropdown immediately
                 setupDropdownClickListener(actvAuctionDuration);
+                
+                // Set default duration
+                actvAuctionDuration.setText("7 Days", false);
             }
         } catch (Exception e) {
             ToastHelper.showError(getContext(), "Error setting up dropdowns: " + e.getMessage());
@@ -1137,8 +1140,12 @@ public class PostFragment extends Fragment implements
     }
     
     private String getSelectedCategoryId() {
+        android.util.Log.d("PostFragment", "Getting selected category ID...");
+        
         // First check if a subcategory is selected
         String selectedSubcategoryName = actvSubcategory.getText().toString().trim();
+        android.util.Log.d("PostFragment", "Selected subcategory: '" + selectedSubcategoryName + "'");
+        
         if (!TextUtils.isEmpty(selectedSubcategoryName) && 
             !selectedSubcategoryName.equals("Choose Subcategory") && 
             !selectedSubcategoryName.equals("Choose")) {
@@ -1146,6 +1153,7 @@ public class PostFragment extends Fragment implements
             // Find the subcategory ID
             for (Category subcategory : subcategories) {
                 if (subcategory.getName().equals(selectedSubcategoryName)) {
+                    android.util.Log.d("PostFragment", "Found subcategory ID: " + subcategory.getCategoryId());
                     return subcategory.getCategoryId();
                 }
             }
@@ -1153,10 +1161,23 @@ public class PostFragment extends Fragment implements
         
         // If no subcategory selected, use main category
         String selectedCategoryName = actvCategory.getText().toString().trim();
+        android.util.Log.d("PostFragment", "Selected main category: '" + selectedCategoryName + "'");
+        android.util.Log.d("PostFragment", "SelectedMainCategoryId: " + selectedMainCategoryId);
+        
         if (!TextUtils.isEmpty(selectedCategoryName) && !selectedCategoryName.equals("Choose")) {
+            // If selectedMainCategoryId is not set, try to find it by name
+            if (selectedMainCategoryId == null && categories != null) {
+                for (Category category : categories) {
+                    if (category.getName().equals(selectedCategoryName)) {
+                        android.util.Log.d("PostFragment", "Found main category ID by name: " + category.getCategoryId());
+                        return category.getCategoryId();
+                    }
+                }
+            }
             return selectedMainCategoryId;
         }
         
+        android.util.Log.e("PostFragment", "No valid category selected");
         return null;
     }
     
@@ -1194,6 +1215,7 @@ public class PostFragment extends Fragment implements
         
         calendar.add(Calendar.DAY_OF_MONTH, days);
         itemData.setEndDate(calendar.getTime());
+        itemData.setDurationDays(days);
     }
     
     private void clearForm() {
