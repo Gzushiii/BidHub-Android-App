@@ -892,7 +892,7 @@ public class PostFragment extends Fragment implements
                     // User stays on Post tab to create more listings
                 } else {
                     android.util.Log.e("PostFragment", "ItemManager.createItem returned false");
-                    ErrorHandler.showDetailedError(getContext(), "Failed to post item. Please check all required fields and try again.");
+                    ErrorHandler.showDetailedError(getContext(), "Failed to post item. Please scroll up and fill in all required fields:\n• Title (at the top)\n• Category\n• Starting Price\n• At least one photo");
                 }
             } else {
                 android.util.Log.e("PostFragment", "createItemData returned null - validation failed");
@@ -1005,8 +1005,9 @@ public class PostFragment extends Fragment implements
         android.util.Log.d("PostFragment", "Title: '" + title + "'");
         if (TextUtils.isEmpty(title)) {
             android.util.Log.e("PostFragment", "Validation failed: Title is empty");
-            ToastHelper.showError(getContext(), "Please enter a title for your listing");
+            ToastHelper.showError(getContext(), "Please scroll up and enter a title for your listing");
             etItemTitle.requestFocus();
+            scrollToField(etItemTitle);
             return false;
         }
         if (title.length() < 3) {
@@ -1025,8 +1026,9 @@ public class PostFragment extends Fragment implements
         android.util.Log.d("PostFragment", "Category: '" + category + "'");
         if (TextUtils.isEmpty(category) || category.equals("Choose")) {
             android.util.Log.e("PostFragment", "Validation failed: Category not selected");
-            ToastHelper.showError(getContext(), "Please select a category for your item");
+            ToastHelper.showError(getContext(), "Please scroll up and select a category for your item");
             actvCategory.requestFocus();
+            scrollToField(actvCategory);
             return false;
         }
         
@@ -1051,8 +1053,9 @@ public class PostFragment extends Fragment implements
             android.util.Log.d("PostFragment", "Starting price: '" + priceText + "'");
             if (TextUtils.isEmpty(priceText)) {
                 android.util.Log.e("PostFragment", "Validation failed: Starting price is empty");
-                ToastHelper.showError(getContext(), "Please enter a starting price for your item");
+                ToastHelper.showError(getContext(), "Please scroll up and enter a starting price for your item");
                 etStartingPrice.requestFocus();
+                scrollToField(etStartingPrice);
                 return false;
             }
             try {
@@ -1216,6 +1219,27 @@ public class PostFragment extends Fragment implements
         calendar.add(Calendar.DAY_OF_MONTH, days);
         itemData.setEndDate(calendar.getTime());
         itemData.setDurationDays(days);
+    }
+    
+    private void scrollToField(View field) {
+        try {
+            if (field != null && getView() != null) {
+                // Find the ScrollView by traversing up the view hierarchy
+                View parent = (View) field.getParent();
+                while (parent != null && !(parent instanceof android.widget.ScrollView)) {
+                    parent = (View) parent.getParent();
+                }
+                
+                if (parent instanceof android.widget.ScrollView) {
+                    android.widget.ScrollView scrollView = (android.widget.ScrollView) parent;
+                    scrollView.post(() -> {
+                        scrollView.smoothScrollTo(0, field.getTop() - 100);
+                    });
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.e("PostFragment", "Error scrolling to field: " + e.getMessage());
+        }
     }
     
     private void clearForm() {

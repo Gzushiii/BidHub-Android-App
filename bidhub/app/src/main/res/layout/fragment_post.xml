@@ -44,6 +44,33 @@
 
         </LinearLayout>
 
+        <!-- Required Fields Notice -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/background_light"
+            android:padding="12dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp">
+            
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Required Fields:"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:layout_marginBottom="4dp" />
+                
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• Title • Category • Starting Price • At least 1 photo"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
         <!-- Form Content -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -129,7 +156,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Choose Category"
+                    android:hint="Choose Category *"
                     app:boxStrokeColor="@color/border_light"
                     app:hintTextColor="@color/text_secondary"
                     app:endIconMode="dropdown_menu"
@@ -187,7 +214,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Name your listing"
+                    android:hint="Name your listing *"
                     app:boxStrokeColor="@color/border_light"
                     app:hintTextColor="@color/text_secondary"
                     app:counterEnabled="true"
@@ -254,7 +281,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Starting Price (PHP)"
+                    android:hint="Starting Price (PHP) *"
                     app:boxStrokeColor="@color/border_light"
                     app:hintTextColor="@color/text_secondary"
                     app:prefixText="₱">
