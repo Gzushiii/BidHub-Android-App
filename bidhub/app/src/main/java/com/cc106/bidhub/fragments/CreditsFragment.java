@@ -8,6 +8,14 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.cc106.bidhub.toast.ToastHelper;
+import com.cc106.bidhub.utils.SharedPreferencesHelper;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import com.cc106.bidhub.credits.SimpleCreditManager;
 import com.cc106.bidhub.credits.CreditPackage;
 import com.cc106.bidhub.credits.CreditTransaction;
@@ -33,6 +41,7 @@ public class CreditsFragment extends Fragment {
 
     private String loggedInUserEmail;
     private String userId;
+    private SharedPreferencesHelper prefsHelper;
     private SimpleCreditManager creditManager;
     private PaymentGateway paymentGateway;
     private TextView balanceAmount;
@@ -61,6 +70,7 @@ public class CreditsFragment extends Fragment {
         // Initialize credit manager and payment gateway
         creditManager = new SimpleCreditManager(getContext());
         paymentGateway = new MockPaymentGateway();
+        prefsHelper = new SharedPreferencesHelper(getContext());
         
         // Get user ID from email
         userId = creditManager.getUserIdFromEmail(loggedInUserEmail);
@@ -139,16 +149,17 @@ public class CreditsFragment extends Fragment {
     }
     
     private void updateBalanceDisplay() {
-        if (balanceAmount != null) {
-            double balance = creditManager.getCreditBalance(userId);
-            String newBalance = creditManager.formatCurrency(balance);
-            balanceAmount.setText(newBalance);
-        }
+        if (balanceAmount == null) return;
+
+        // Prefer server value stored in SharedPreferences, fallback to local manager
+        double serverCredits = prefsHelper.getCredits();
+        double display = serverCredits > 0 ? serverCredits : creditManager.getCreditBalance(userId);
+        balanceAmount.setText(creditManager.formatCurrency(display));
     }
     
     private void refreshBalance() {
-        updateBalanceDisplay();
-        ToastHelper.showInfo(getContext(), "Balance refreshed");
+        // Fetch from backend and sync
+        fetchBalanceFromBackend();
     }
     
     private void loadCreditPackages() {
@@ -224,11 +235,8 @@ public class CreditsFragment extends Fragment {
     }
     
     private void showPurchaseConfirmation(CreditPackage pkg) {
-        // Simple confirmation for now
-        ToastHelper.showInfo(getContext(), "Purchase: " + pkg.getName() + " for " + creditManager.formatCurrency(pkg.getPrice()));
-        
-        // Process payment
-        processPayment(pkg, "MOCK_PAYMENT");
+        // Trigger backend purchase directly; backend handles transactions and balance
+        purchaseCreditsBackend((int)pkg.getCredits(), "test");
     }
     
     private void processPayment(CreditPackage pkg, String paymentMethod) {
@@ -237,14 +245,9 @@ public class CreditsFragment extends Fragment {
                 @Override
                 public void onPaymentSuccess(String transactionId, String reference) {
                     getActivity().runOnUiThread(() -> {
-                        // Add credits to account
-                        boolean success = creditManager.addCredits(userId, pkg.getCredits(), SimpleCreditManager.TRANSACTION_PURCHASE);
-                        if (success) {
-                            updateBalanceDisplay();
-                            ToastHelper.showSuccess(getContext(), "Purchase successful! " + creditManager.formatCurrency(pkg.getCredits()) + " credits added.");
-                        } else {
-                            ToastHelper.showError(getContext(), "Failed to add credits to account");
-                        }
+                        // Deprecated local add; we rely on backend now
+                        fetchBalanceFromBackend();
+                        ToastHelper.showSuccess(getContext(), "Purchase successful!");
                     });
                 }
                 
@@ -262,6 +265,94 @@ public class CreditsFragment extends Fragment {
                     });
                 }
             });
+    }
+
+    // ---------------- Backend Integration ----------------
+    private static final String BASE_URL = "https://bidhub-android-app.onrender.com/api";
+
+    private void fetchBalanceFromBackend() {
+        new Thread(() -> {
+            try {
+                String token = prefsHelper.getAuthToken();
+                if (token == null || token.isEmpty()) {
+                    getActivity().runOnUiThread(() -> ToastHelper.showError(getContext(), "Please log in again"));
+                    return;
+                }
+
+                URL url = new URL(BASE_URL + "/credits/balance");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Authorization", "Bearer " + token);
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+
+                int code = conn.getResponseCode();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                    code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream()
+                ));
+                StringBuilder sb = new StringBuilder();
+                String line; while ((line = reader.readLine()) != null) sb.append(line);
+                reader.close();
+
+                if (code >= 200 && code < 300) {
+                    JSONObject json = new JSONObject(sb.toString());
+                    double credits = json.optDouble("credits", 0.0);
+                    // sync cache
+                    prefsHelper.setCredits(credits);
+                    getActivity().runOnUiThread(this::updateBalanceDisplay);
+                } else {
+                    getActivity().runOnUiThread(() -> ToastHelper.showError(getContext(), "Failed to fetch balance"));
+                }
+            } catch (Exception e) {
+                getActivity().runOnUiThread(() -> ToastHelper.showError(getContext(), "Network error: " + e.getMessage()));
+            }
+        }).start();
+    }
+
+    private void purchaseCreditsBackend(int amount, String paymentMethod) {
+        new Thread(() -> {
+            try {
+                String token = prefsHelper.getAuthToken();
+                if (token == null || token.isEmpty()) {
+                    getActivity().runOnUiThread(() -> ToastHelper.showError(getContext(), "Please log in again"));
+                    return;
+                }
+
+                URL url = new URL(BASE_URL + "/credits/purchase");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Authorization", "Bearer " + token);
+                conn.setDoOutput(true);
+
+                JSONObject body = new JSONObject();
+                body.put("amount", amount);
+                body.put("payment_method", paymentMethod);
+                body.put("transaction_id", "MOB-" + System.currentTimeMillis());
+
+                try (OutputStream os = conn.getOutputStream()) {
+                    os.write(body.toString().getBytes("UTF-8"));
+                }
+
+                int code = conn.getResponseCode();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                    code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream()
+                ));
+                StringBuilder sb = new StringBuilder();
+                String line; while ((line = reader.readLine()) != null) sb.append(line);
+                reader.close();
+
+                if (code >= 200 && code < 300) {
+                    // After successful purchase, refresh from backend to keep UI and cache in sync
+                    fetchBalanceFromBackend();
+                    getActivity().runOnUiThread(() -> ToastHelper.showSuccess(getContext(), "Purchase successful! ₱" + amount + " credits added."));
+                } else {
+                    getActivity().runOnUiThread(() -> ToastHelper.showError(getContext(), "Purchase failed"));
+                }
+            } catch (Exception e) {
+                getActivity().runOnUiThread(() -> ToastHelper.showError(getContext(), "Network error: " + e.getMessage()));
+            }
+        }).start();
     }
     
     

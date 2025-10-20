@@ -3,6 +3,11 @@ package com.cc106.bidhub.fragments;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -161,6 +166,46 @@ public class ProfileFragment extends Fragment {
             ToastHelper.showError(getContext(), "Error loading user data: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshCreditsFromBackend();
+    }
+
+    private static final String BASE_URL = "https://bidhub-android-app.onrender.com/api";
+
+    private void refreshCreditsFromBackend() {
+        new Thread(() -> {
+            try {
+                String token = prefsHelper.getAuthToken();
+                if (token == null || token.isEmpty()) {
+                    return;
+                }
+                URL url = new URL(BASE_URL + "/credits/balance");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Authorization", "Bearer " + token);
+                int code = conn.getResponseCode();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                    code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream()
+                ));
+                StringBuilder sb = new StringBuilder();
+                String line; while ((line = reader.readLine()) != null) sb.append(line);
+                reader.close();
+                if (code >= 200 && code < 300) {
+                    JSONObject json = new JSONObject(sb.toString());
+                    double credits = json.optDouble("credits", prefsHelper.getCredits());
+                    prefsHelper.setCredits(credits);
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            if (textViewCredits != null) textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", credits));
+                        });
+                    }
+                }
+            } catch (Exception ignored) { }
+        }).start();
     }
 
     private void regenerateAlias() {
