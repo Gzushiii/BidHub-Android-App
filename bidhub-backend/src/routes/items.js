@@ -1,5 +1,5 @@
 const express = require('express');
-const db = require('../config/database');
+const { pool } = require('../config/database');
 const { authenticateToken, checkItemOwnership } = require('../middleware/auth');
 const { createItemSchema, updateItemSchema, paginationSchema } = require('../validators/items');
 const { calculateEndDate, canUpdateItem, canDeleteItem } = require('../utils/validators');
@@ -51,7 +51,7 @@ router.get('/', async (req, res) => {
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
     params.push(parseInt(limit), parseInt(offset));
 
-    const [items] = await db.query(query, params);
+    const [items] = await pool.query(query, params);
 
     // Get total count for pagination
     let countQuery = 'SELECT COUNT(*) as total FROM v_active_items WHERE 1=1';
@@ -82,7 +82,7 @@ router.get('/', async (req, res) => {
       countParams.push(seller_email);
     }
 
-    const [countResult] = await db.query(countQuery, countParams);
+    const [countResult] = await pool.query(countQuery, countParams);
     const total = countResult[0].total;
 
     res.json({ 
@@ -103,7 +103,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [items] = await db.query(
+    const [items] = await pool.query(
       'SELECT * FROM v_active_items WHERE id = ?',
       [id]
     );
@@ -115,19 +115,19 @@ router.get('/:id', async (req, res) => {
     const item = items[0];
 
     // Get item images
-    const [images] = await db.query(
+    const [images] = await pool.query(
       'SELECT * FROM item_images WHERE item_id = ? ORDER BY display_order',
       [id]
     );
 
     // Get seller information
-    const [sellers] = await db.query(
+    const [sellers] = await pool.query(
       'SELECT id, username, alias, first_name, last_name, created_at FROM users WHERE id = ?',
       [item.seller_id]
     );
 
     // Get recent bids
-    const [bids] = await db.query(
+    const [bids] = await pool.query(
       `SELECT b.*, u.alias as bidder_alias 
        FROM bids b 
        JOIN users u ON b.bidder_id = u.id 
@@ -151,7 +151,7 @@ router.get('/:id', async (req, res) => {
 
 // Create new item
 router.post('/', async (req, res) => {
-  const connection = await db.getConnection();
+  const connection = await pool.getConnection();
   
   try {
     await connection.beginTransaction();
@@ -249,7 +249,7 @@ router.post('/', async (req, res) => {
 
 // Update existing item
 router.put('/:id', authenticateToken, checkItemOwnership, async (req, res) => {
-  const connection = await db.getConnection();
+  const connection = await pool.getConnection();
   
   try {
     await connection.beginTransaction();
@@ -359,7 +359,7 @@ router.put('/:id', authenticateToken, checkItemOwnership, async (req, res) => {
 
 // Delete/cancel item
 router.delete('/:id', authenticateToken, checkItemOwnership, async (req, res) => {
-  const connection = await db.getConnection();
+  const connection = await pool.getConnection();
   
   try {
     await connection.beginTransaction();
