@@ -18,7 +18,7 @@ import java.util.List;
  */
 public class ItemApiClient {
     private static final String TAG = "ItemApiClient";
-    private static final String BASE_URL = "http://192.168.18.136:3000/api";
+    private static final String BASE_URL = "https://bidhub-android-app.onrender.com/api";
     private static final String ITEMS_ENDPOINT = BASE_URL + "/items";
     
     private Context context;

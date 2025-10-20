@@ -15,7 +15,7 @@ import java.net.URL;
  */
 public class AuthApiClient {
     private static final String TAG = "AuthApiClient";
-    private static final String BASE_URL = "http://192.168.18.136:3000/api";
+    private static final String BASE_URL = "https://bidhub-android-app.onrender.com/api";
     private static final String LOGIN_ENDPOINT = BASE_URL + "/auth/login";
     private static final String REGISTER_ENDPOINT = BASE_URL + "/auth/register";
     
