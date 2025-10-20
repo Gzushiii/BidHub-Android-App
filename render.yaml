@@ -3,8 +3,8 @@ services:
     name: bidhub-backend
     env: node
     plan: free
-    buildCommand: cd bidhub-backend && npm install
-    startCommand: cd bidhub-backend && npm start
+    buildCommand: npm install --prefix bidhub-backend
+    startCommand: npm start --prefix bidhub-backend
     envVars:
       - key: NODE_ENV
         value: production
