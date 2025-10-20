@@ -857,11 +857,17 @@ public class PostFragment extends Fragment implements
             }
             
             // Debug: Log form data before validation
-            android.util.Log.d("PostFragment", "Form data before validation:");
-            android.util.Log.d("PostFragment", "Title: " + etItemTitle.getText().toString().trim());
-            android.util.Log.d("PostFragment", "Category: " + actvCategory.getText().toString().trim());
-            android.util.Log.d("PostFragment", "Origin: " + actvOrigin.getText().toString().trim());
-            android.util.Log.d("PostFragment", "Images count: " + selectedImages.size());
+            android.util.Log.d("PostFragment", "=== FORM DATA BEFORE VALIDATION ===");
+            android.util.Log.d("PostFragment", "Title: '" + etItemTitle.getText().toString().trim() + "'");
+            android.util.Log.d("PostFragment", "Category: '" + actvCategory.getText().toString().trim() + "'");
+            android.util.Log.d("PostFragment", "Condition: '" + actvCondition.getText().toString().trim() + "'");
+            android.util.Log.d("PostFragment", "Starting Price: '" + etStartingPrice.getText().toString().trim() + "'");
+            android.util.Log.d("PostFragment", "Auction Duration: '" + actvAuctionDuration.getText().toString().trim() + "'");
+            android.util.Log.d("PostFragment", "Description: '" + etItemDescription.getText().toString().trim() + "'");
+            android.util.Log.d("PostFragment", "Origin: '" + actvOrigin.getText().toString().trim() + "'");
+            android.util.Log.d("PostFragment", "Images count: " + (selectedImages != null ? selectedImages.size() : 0));
+            android.util.Log.d("PostFragment", "IsForSale: " + isForSale);
+            android.util.Log.d("PostFragment", "=== END FORM DATA ===");
             
             ItemData itemData = createItemData();
             if (itemData != null) {
@@ -892,7 +898,7 @@ public class PostFragment extends Fragment implements
                     // User stays on Post tab to create more listings
                 } else {
                     android.util.Log.e("PostFragment", "ItemManager.createItem returned false");
-                    ErrorHandler.showDetailedError(getContext(), "Failed to post item. Please scroll up and fill in all required fields:\n• Title (at the top)\n• Category\n• Starting Price\n• At least one photo");
+                    ErrorHandler.showDetailedError(getContext(), "Failed to post item. Please check all required fields and try again.");
                 }
             } else {
                 android.util.Log.e("PostFragment", "createItemData returned null - validation failed");
@@ -999,6 +1005,9 @@ public class PostFragment extends Fragment implements
     
     private boolean validateForm() {
         android.util.Log.d("PostFragment", "Starting form validation...");
+        
+        // Check if required fields are visible and accessible
+        checkFieldVisibility();
         
         // Validate title
         String title = etItemTitle.getText().toString().trim();
@@ -1111,7 +1120,7 @@ public class PostFragment extends Fragment implements
         android.util.Log.d("PostFragment", "Images count: " + (selectedImages != null ? selectedImages.size() : 0));
         if (selectedImages == null || selectedImages.isEmpty()) {
             android.util.Log.e("PostFragment", "Validation failed: No images selected");
-            ToastHelper.showError(getContext(), "Please add at least one photo of your item");
+            ToastHelper.showError(getContext(), "Please scroll up and add at least one photo of your item");
             return false;
         }
         if (selectedImages.size() > MAX_IMAGES) {
@@ -1140,6 +1149,38 @@ public class PostFragment extends Fragment implements
         
         android.util.Log.d("PostFragment", "Form validation passed successfully");
         return true;
+    }
+    
+    private void checkFieldVisibility() {
+        android.util.Log.d("PostFragment", "=== CHECKING FIELD VISIBILITY ===");
+        android.util.Log.d("PostFragment", "etItemTitle visibility: " + (etItemTitle != null ? etItemTitle.getVisibility() : "NULL"));
+        android.util.Log.d("PostFragment", "actvCategory visibility: " + (actvCategory != null ? actvCategory.getVisibility() : "NULL"));
+        android.util.Log.d("PostFragment", "etStartingPrice visibility: " + (etStartingPrice != null ? etStartingPrice.getVisibility() : "NULL"));
+        android.util.Log.d("PostFragment", "actvCondition visibility: " + (actvCondition != null ? actvCondition.getVisibility() : "NULL"));
+        android.util.Log.d("PostFragment", "actvAuctionDuration visibility: " + (actvAuctionDuration != null ? actvAuctionDuration.getVisibility() : "NULL"));
+        android.util.Log.d("PostFragment", "=== END FIELD VISIBILITY CHECK ===");
+    }
+    
+    private void scrollToField(View field) {
+        try {
+            if (field != null && getView() != null) {
+                android.util.Log.d("PostFragment", "Scrolling to field: " + field.getClass().getSimpleName());
+                // Find the ScrollView by traversing up the view hierarchy
+                View parent = (View) field.getParent();
+                while (parent != null && !(parent instanceof android.widget.ScrollView)) {
+                    parent = (View) parent.getParent();
+                }
+                
+                if (parent instanceof android.widget.ScrollView) {
+                    android.widget.ScrollView scrollView = (android.widget.ScrollView) parent;
+                    scrollView.post(() -> {
+                        scrollView.smoothScrollTo(0, field.getTop() - 100);
+                    });
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.e("PostFragment", "Error scrolling to field: " + e.getMessage());
+        }
     }
     
     private String getSelectedCategoryId() {
@@ -1219,27 +1260,6 @@ public class PostFragment extends Fragment implements
         calendar.add(Calendar.DAY_OF_MONTH, days);
         itemData.setEndDate(calendar.getTime());
         itemData.setDurationDays(days);
-    }
-    
-    private void scrollToField(View field) {
-        try {
-            if (field != null && getView() != null) {
-                // Find the ScrollView by traversing up the view hierarchy
-                View parent = (View) field.getParent();
-                while (parent != null && !(parent instanceof android.widget.ScrollView)) {
-                    parent = (View) parent.getParent();
-                }
-                
-                if (parent instanceof android.widget.ScrollView) {
-                    android.widget.ScrollView scrollView = (android.widget.ScrollView) parent;
-                    scrollView.post(() -> {
-                        scrollView.smoothScrollTo(0, field.getTop() - 100);
-                    });
-                }
-            }
-        } catch (Exception e) {
-            android.util.Log.e("PostFragment", "Error scrolling to field: " + e.getMessage());
-        }
     }
     
     private void clearForm() {
