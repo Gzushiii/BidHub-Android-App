@@ -995,10 +995,14 @@ public class PostFragment extends Fragment implements
     }
     
     private boolean validateForm() {
+        android.util.Log.d("PostFragment", "Starting form validation...");
+        
         // Validate title
         String title = etItemTitle.getText().toString().trim();
+        android.util.Log.d("PostFragment", "Title: '" + title + "'");
         if (TextUtils.isEmpty(title)) {
-            ToastHelper.showError(getContext(), "Listing title is required");
+            android.util.Log.e("PostFragment", "Validation failed: Title is empty");
+            ToastHelper.showError(getContext(), "Please enter a title for your listing");
             etItemTitle.requestFocus();
             return false;
         }
@@ -1015,8 +1019,10 @@ public class PostFragment extends Fragment implements
         
         // Validate category
         String category = actvCategory.getText().toString().trim();
+        android.util.Log.d("PostFragment", "Category: '" + category + "'");
         if (TextUtils.isEmpty(category) || category.equals("Choose")) {
-            ToastHelper.showError(getContext(), "Category is required");
+            android.util.Log.e("PostFragment", "Validation failed: Category not selected");
+            ToastHelper.showError(getContext(), "Please select a category for your item");
             actvCategory.requestFocus();
             return false;
         }
@@ -1039,8 +1045,10 @@ public class PostFragment extends Fragment implements
         // Validate price for sale items
         if (isForSale) {
             String priceText = etStartingPrice.getText().toString().trim();
+            android.util.Log.d("PostFragment", "Starting price: '" + priceText + "'");
             if (TextUtils.isEmpty(priceText)) {
-                ToastHelper.showError(getContext(), "Starting price is required for items for sale");
+                android.util.Log.e("PostFragment", "Validation failed: Starting price is empty");
+                ToastHelper.showError(getContext(), "Please enter a starting price for your item");
                 etStartingPrice.requestFocus();
                 return false;
             }
@@ -1094,8 +1102,10 @@ public class PostFragment extends Fragment implements
         }
         
         // Validate images
+        android.util.Log.d("PostFragment", "Images count: " + (selectedImages != null ? selectedImages.size() : 0));
         if (selectedImages == null || selectedImages.isEmpty()) {
-            ToastHelper.showError(getContext(), "At least one photo is required");
+            android.util.Log.e("PostFragment", "Validation failed: No images selected");
+            ToastHelper.showError(getContext(), "Please add at least one photo of your item");
             return false;
         }
         if (selectedImages.size() > MAX_IMAGES) {
@@ -1122,6 +1132,7 @@ public class PostFragment extends Fragment implements
         // Origin field is optional - no validation needed
         // This ensures the field is truly optional and doesn't cause validation failures
         
+        android.util.Log.d("PostFragment", "Form validation passed successfully");
         return true;
     }
     
