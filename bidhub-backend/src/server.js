@@ -8,6 +8,9 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 
+// Import database configuration
+const { initializeDatabase } = require('./config/database');
+
 // Import API routes
 const authRoutes = require('./routes/auth');
 const itemsRoutes = require('./routes/items');
@@ -86,10 +89,23 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`BidHub API server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'production'}`);
-  console.log(`Database: ${process.env.DB_HOST}:${process.env.DB_PORT}`);
-});
+const startServer = async () => {
+  try {
+    // Initialize database connection
+    await initializeDatabase();
+    
+    // Start the server
+    app.listen(PORT, () => {
+      console.log(`BidHub API server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'production'}`);
+      console.log(`Database: ${process.env.DB_HOST}:${process.env.DB_PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 module.exports = app;

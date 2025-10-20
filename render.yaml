@@ -26,6 +26,8 @@ services:
         value: "true"
       - key: JWT_SECRET
         value: ${JWT_SECRET}
+      - key: JWT_EXPIRES_IN
+        value: "24h"
     healthCheckPath: /api/health
     autoDeploy: true
     branch: master
