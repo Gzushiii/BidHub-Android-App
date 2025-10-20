@@ -22,6 +22,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.material.textfield.TextInputLayout;
+import com.cc106.bidhub.utils.SharedPreferencesHelper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -297,9 +298,6 @@ public class PostFragment extends Fragment implements
                 actvAuctionDuration.setAdapter(durationAdapter);
                 actvAuctionDuration.setThreshold(0); // Show dropdown immediately
                 setupDropdownClickListener(actvAuctionDuration);
-                
-                // Set default duration
-                actvAuctionDuration.setText("7 Days", false);
             }
         } catch (Exception e) {
             ToastHelper.showError(getContext(), "Error setting up dropdowns: " + e.getMessage());
@@ -817,10 +815,14 @@ public class PostFragment extends Fragment implements
     
     private void saveDraftItem() {
         try {
-            // Validate user email
+            // Get user email from SharedPreferences if not set
             if (TextUtils.isEmpty(loggedInUserEmail)) {
-                ErrorHandler.showDetailedError(getContext(), "User not logged in. Please log in again.");
-                return;
+                SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(requireContext());
+                loggedInUserEmail = prefsHelper.getUserEmail();
+                if (TextUtils.isEmpty(loggedInUserEmail)) {
+                    ErrorHandler.showDetailedError(getContext(), "User not logged in. Please log in again.");
+                    return;
+                }
             }
             
             ItemData itemData = createItemData();
@@ -850,38 +852,33 @@ public class PostFragment extends Fragment implements
     
     private void postItem() {
         try {
-            // Validate user email
+            // Get user email from SharedPreferences if not set
             if (TextUtils.isEmpty(loggedInUserEmail)) {
-                ErrorHandler.showDetailedError(getContext(), "User not logged in. Please log in again.");
-                return;
+                SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(requireContext());
+                loggedInUserEmail = prefsHelper.getUserEmail();
+                if (TextUtils.isEmpty(loggedInUserEmail)) {
+                    ErrorHandler.showDetailedError(getContext(), "User not logged in. Please log in again.");
+                    return;
+                }
             }
             
             // Debug: Log form data before validation
-            android.util.Log.d("PostFragment", "=== FORM DATA BEFORE VALIDATION ===");
-            android.util.Log.d("PostFragment", "Title: '" + etItemTitle.getText().toString().trim() + "'");
-            android.util.Log.d("PostFragment", "Category: '" + actvCategory.getText().toString().trim() + "'");
-            android.util.Log.d("PostFragment", "Condition: '" + actvCondition.getText().toString().trim() + "'");
-            android.util.Log.d("PostFragment", "Starting Price: '" + etStartingPrice.getText().toString().trim() + "'");
-            android.util.Log.d("PostFragment", "Auction Duration: '" + actvAuctionDuration.getText().toString().trim() + "'");
-            android.util.Log.d("PostFragment", "Description: '" + etItemDescription.getText().toString().trim() + "'");
-            android.util.Log.d("PostFragment", "Origin: '" + actvOrigin.getText().toString().trim() + "'");
-            android.util.Log.d("PostFragment", "Images count: " + (selectedImages != null ? selectedImages.size() : 0));
-            android.util.Log.d("PostFragment", "IsForSale: " + isForSale);
-            android.util.Log.d("PostFragment", "=== END FORM DATA ===");
+            android.util.Log.d("PostFragment", "Form data before validation:");
+            android.util.Log.d("PostFragment", "Title: " + etItemTitle.getText().toString().trim());
+            android.util.Log.d("PostFragment", "Category: " + actvCategory.getText().toString().trim());
+            android.util.Log.d("PostFragment", "Origin: " + actvOrigin.getText().toString().trim());
+            android.util.Log.d("PostFragment", "Images count: " + selectedImages.size());
             
             ItemData itemData = createItemData();
             if (itemData != null) {
                 // Debug: Log item data before posting
-                android.util.Log.d("PostFragment", "=== ITEM DATA CREATED SUCCESSFULLY ===");
-                android.util.Log.d("PostFragment", "Title: '" + itemData.getTitle() + "'");
-                android.util.Log.d("PostFragment", "Description: '" + itemData.getDescription() + "'");
-                android.util.Log.d("PostFragment", "CategoryId: '" + itemData.getCategoryId() + "'");
+                android.util.Log.d("PostFragment", "ItemData created successfully:");
+                android.util.Log.d("PostFragment", "Title: " + itemData.getTitle());
+                android.util.Log.d("PostFragment", "Description: " + itemData.getDescription());
+                android.util.Log.d("PostFragment", "CategoryId: " + itemData.getCategoryId());
                 android.util.Log.d("PostFragment", "StartingPrice: " + itemData.getStartingPrice());
-                android.util.Log.d("PostFragment", "BuyNowPrice: " + itemData.getBuyNowPrice());
-                android.util.Log.d("PostFragment", "Condition: '" + itemData.getCondition() + "'");
-                android.util.Log.d("PostFragment", "DurationDays: " + itemData.getDurationDays());
+                android.util.Log.d("PostFragment", "Condition: " + itemData.getCondition());
                 android.util.Log.d("PostFragment", "Images count: " + (itemData.getImagePaths() != null ? itemData.getImagePaths().size() : 0));
-                android.util.Log.d("PostFragment", "=== END ITEM DATA ===");
                 
                 // Show loading state
                 btnPostItem.setEnabled(false);
@@ -1007,19 +1004,11 @@ public class PostFragment extends Fragment implements
     }
     
     private boolean validateForm() {
-        android.util.Log.d("PostFragment", "Starting form validation...");
-        
-        // Check if required fields are visible and accessible
-        checkFieldVisibility();
-        
         // Validate title
         String title = etItemTitle.getText().toString().trim();
-        android.util.Log.d("PostFragment", "Title: '" + title + "'");
         if (TextUtils.isEmpty(title)) {
-            android.util.Log.e("PostFragment", "Validation failed: Title is empty");
-            ToastHelper.showError(getContext(), "Please scroll up and enter a title for your listing");
+            ToastHelper.showError(getContext(), "Listing title is required");
             etItemTitle.requestFocus();
-            scrollToField(etItemTitle);
             return false;
         }
         if (title.length() < 3) {
@@ -1035,12 +1024,9 @@ public class PostFragment extends Fragment implements
         
         // Validate category
         String category = actvCategory.getText().toString().trim();
-        android.util.Log.d("PostFragment", "Category: '" + category + "'");
         if (TextUtils.isEmpty(category) || category.equals("Choose")) {
-            android.util.Log.e("PostFragment", "Validation failed: Category not selected");
-            ToastHelper.showError(getContext(), "Please scroll up and select a category for your item");
+            ToastHelper.showError(getContext(), "Category is required");
             actvCategory.requestFocus();
-            scrollToField(actvCategory);
             return false;
         }
         
@@ -1062,12 +1048,9 @@ public class PostFragment extends Fragment implements
         // Validate price for sale items
         if (isForSale) {
             String priceText = etStartingPrice.getText().toString().trim();
-            android.util.Log.d("PostFragment", "Starting price: '" + priceText + "'");
             if (TextUtils.isEmpty(priceText)) {
-                android.util.Log.e("PostFragment", "Validation failed: Starting price is empty");
-                ToastHelper.showError(getContext(), "Please scroll up and enter a starting price for your item");
+                ToastHelper.showError(getContext(), "Starting price is required for items for sale");
                 etStartingPrice.requestFocus();
-                scrollToField(etStartingPrice);
                 return false;
             }
             try {
@@ -1120,10 +1103,8 @@ public class PostFragment extends Fragment implements
         }
         
         // Validate images
-        android.util.Log.d("PostFragment", "Images count: " + (selectedImages != null ? selectedImages.size() : 0));
         if (selectedImages == null || selectedImages.isEmpty()) {
-            android.util.Log.e("PostFragment", "Validation failed: No images selected");
-            ToastHelper.showError(getContext(), "Please scroll up and add at least one photo of your item");
+            ToastHelper.showError(getContext(), "At least one photo is required");
             return false;
         }
         if (selectedImages.size() > MAX_IMAGES) {
@@ -1150,49 +1131,12 @@ public class PostFragment extends Fragment implements
         // Origin field is optional - no validation needed
         // This ensures the field is truly optional and doesn't cause validation failures
         
-        android.util.Log.d("PostFragment", "Form validation passed successfully");
         return true;
     }
     
-    private void checkFieldVisibility() {
-        android.util.Log.d("PostFragment", "=== CHECKING FIELD VISIBILITY ===");
-        android.util.Log.d("PostFragment", "etItemTitle visibility: " + (etItemTitle != null ? etItemTitle.getVisibility() : "NULL"));
-        android.util.Log.d("PostFragment", "actvCategory visibility: " + (actvCategory != null ? actvCategory.getVisibility() : "NULL"));
-        android.util.Log.d("PostFragment", "etStartingPrice visibility: " + (etStartingPrice != null ? etStartingPrice.getVisibility() : "NULL"));
-        android.util.Log.d("PostFragment", "actvCondition visibility: " + (actvCondition != null ? actvCondition.getVisibility() : "NULL"));
-        android.util.Log.d("PostFragment", "actvAuctionDuration visibility: " + (actvAuctionDuration != null ? actvAuctionDuration.getVisibility() : "NULL"));
-        android.util.Log.d("PostFragment", "=== END FIELD VISIBILITY CHECK ===");
-    }
-    
-    private void scrollToField(View field) {
-        try {
-            if (field != null && getView() != null) {
-                android.util.Log.d("PostFragment", "Scrolling to field: " + field.getClass().getSimpleName());
-                // Find the ScrollView by traversing up the view hierarchy
-                View parent = (View) field.getParent();
-                while (parent != null && !(parent instanceof android.widget.ScrollView)) {
-                    parent = (View) parent.getParent();
-                }
-                
-                if (parent instanceof android.widget.ScrollView) {
-                    android.widget.ScrollView scrollView = (android.widget.ScrollView) parent;
-                    scrollView.post(() -> {
-                        scrollView.smoothScrollTo(0, field.getTop() - 100);
-                    });
-                }
-            }
-        } catch (Exception e) {
-            android.util.Log.e("PostFragment", "Error scrolling to field: " + e.getMessage());
-        }
-    }
-    
     private String getSelectedCategoryId() {
-        android.util.Log.d("PostFragment", "Getting selected category ID...");
-        
         // First check if a subcategory is selected
         String selectedSubcategoryName = actvSubcategory.getText().toString().trim();
-        android.util.Log.d("PostFragment", "Selected subcategory: '" + selectedSubcategoryName + "'");
-        
         if (!TextUtils.isEmpty(selectedSubcategoryName) && 
             !selectedSubcategoryName.equals("Choose Subcategory") && 
             !selectedSubcategoryName.equals("Choose")) {
@@ -1200,7 +1144,6 @@ public class PostFragment extends Fragment implements
             // Find the subcategory ID
             for (Category subcategory : subcategories) {
                 if (subcategory.getName().equals(selectedSubcategoryName)) {
-                    android.util.Log.d("PostFragment", "Found subcategory ID: " + subcategory.getCategoryId());
                     return subcategory.getCategoryId();
                 }
             }
@@ -1208,23 +1151,10 @@ public class PostFragment extends Fragment implements
         
         // If no subcategory selected, use main category
         String selectedCategoryName = actvCategory.getText().toString().trim();
-        android.util.Log.d("PostFragment", "Selected main category: '" + selectedCategoryName + "'");
-        android.util.Log.d("PostFragment", "SelectedMainCategoryId: " + selectedMainCategoryId);
-        
         if (!TextUtils.isEmpty(selectedCategoryName) && !selectedCategoryName.equals("Choose")) {
-            // If selectedMainCategoryId is not set, try to find it by name
-            if (selectedMainCategoryId == null && categories != null) {
-                for (Category category : categories) {
-                    if (category.getName().equals(selectedCategoryName)) {
-                        android.util.Log.d("PostFragment", "Found main category ID by name: " + category.getCategoryId());
-                        return category.getCategoryId();
-                    }
-                }
-            }
             return selectedMainCategoryId;
         }
         
-        android.util.Log.e("PostFragment", "No valid category selected");
         return null;
     }
     
@@ -1262,7 +1192,6 @@ public class PostFragment extends Fragment implements
         
         calendar.add(Calendar.DAY_OF_MONTH, days);
         itemData.setEndDate(calendar.getTime());
-        itemData.setDurationDays(days);
     }
     
     private void clearForm() {

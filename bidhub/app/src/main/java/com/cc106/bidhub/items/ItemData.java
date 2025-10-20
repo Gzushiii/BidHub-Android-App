@@ -21,7 +21,6 @@ public class ItemData {
     private String shippingInfo;
     private Date startDate;
     private Date endDate;
-    private int durationDays;
     private String notes;
     private String metadata;
     
@@ -148,14 +147,6 @@ public class ItemData {
     
     public void setEndDate(Date endDate) {
         this.endDate = endDate;
-    }
-    
-    public int getDurationDays() {
-        return durationDays;
-    }
-    
-    public void setDurationDays(int durationDays) {
-        this.durationDays = durationDays;
     }
     
     public String getNotes() {

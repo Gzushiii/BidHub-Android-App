@@ -150,18 +150,82 @@ public class ItemManager {
                     return true;
                 } else {
                     Log.e(TAG, "Backend API error: " + response.getMessage());
-                    // Don't fallback to local storage - return false to show error
-                    return false;
+                    Log.i(TAG, "Falling back to local storage due to API error");
+                    // Fallback to local storage when API fails
+                    return createLocalItem(itemData, sellerEmail);
                 }
             } catch (Exception apiException) {
                 Log.e(TAG, "Backend API call failed", apiException);
-                // Don't fallback to local storage - return false to show error
-                return false;
+                Log.i(TAG, "Falling back to local storage due to API exception");
+                // Fallback to local storage when API fails
+                return createLocalItem(itemData, sellerEmail);
             }
             
             
         } catch (Exception e) {
             Log.e(TAG, "Error creating item", e);
+            return false;
+        }
+    }
+    
+    /**
+     * Create item locally (fallback when API fails)
+     */
+    private boolean createLocalItem(ItemData itemData, String sellerEmail) {
+        try {
+            Log.i(TAG, "Creating item locally for seller: " + sellerEmail);
+            
+            // Create local item
+            Item item = new Item();
+            item.setItemId(UUID.randomUUID().toString());
+            item.setTitle(itemData.getTitle());
+            item.setDescription(itemData.getDescription());
+            item.setStartingPrice(itemData.getStartingPrice());
+            item.setCurrentPrice(itemData.getStartingPrice());
+            item.setBuyNowPrice(itemData.getBuyNowPrice());
+            item.setCurrency(itemData.getCurrency());
+            item.setSellerId(sellerEmail);
+            item.setCategoryId(itemData.getCategoryId());
+            item.setCondition(itemData.getCondition());
+            item.setStartDate(itemData.getStartDate());
+            item.setEndDate(itemData.getEndDate());
+            item.setNotes(itemData.getNotes());
+            item.setMetadata(itemData.getMetadata());
+            item.setStatus(ItemStatus.ACTIVE);
+            item.setCreatedAt(new Date());
+            item.setUpdatedAt(new Date());
+            
+            // Add tags
+            if (itemData.getTags() != null) {
+                item.setTags(new ArrayList<>(itemData.getTags()));
+            }
+            
+            // Add image paths
+            if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
+                item.setImagePaths(new ArrayList<>(itemData.getImagePaths()));
+                itemImages.put(item.getItemId(), new ArrayList<>(itemData.getImagePaths()));
+            }
+            
+            // Store item locally
+            items.put(item.getItemId(), item);
+            
+            // Update user items
+            userItems.computeIfAbsent(sellerEmail, k -> new ArrayList<>()).add(item.getItemId());
+            
+            // Update category items
+            if (itemData.getCategoryId() != null) {
+                categoryItems.computeIfAbsent(itemData.getCategoryId(), k -> new ArrayList<>()).add(item.getItemId());
+            }
+            
+            // Initialize counters
+            itemViewCounts.put(item.getItemId(), 0);
+            itemBidCounts.put(item.getItemId(), 0);
+            
+            Log.i(TAG, "Item created locally successfully: " + item.getItemId());
+            return true;
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error creating local item", e);
             return false;
         }
     }
@@ -601,45 +665,39 @@ public class ItemManager {
      * Validate item data
      */
     public boolean validateItemData(ItemData itemData) {
-        Log.d(TAG, "=== VALIDATING ITEM DATA ===");
-        
         if (itemData == null) {
             Log.e(TAG, "Item data is null");
             return false;
         }
         
         // Validate title
-        Log.d(TAG, "Validating title: '" + itemData.getTitle() + "' (length: " + (itemData.getTitle() != null ? itemData.getTitle().length() : 0) + ")");
         if (itemData.getTitle() == null || itemData.getTitle().trim().isEmpty()) {
             Log.e(TAG, "Title is required");
             return false;
         }
         
         if (itemData.getTitle().length() > MAX_TITLE_LENGTH) {
-            Log.e(TAG, "Title too long: " + itemData.getTitle().length() + " > " + MAX_TITLE_LENGTH);
+            Log.e(TAG, "Title too long: " + itemData.getTitle().length());
             return false;
         }
         
         // Validate description
-        Log.d(TAG, "Validating description: '" + itemData.getDescription() + "' (length: " + (itemData.getDescription() != null ? itemData.getDescription().length() : 0) + ")");
         if (itemData.getDescription() == null || itemData.getDescription().trim().isEmpty()) {
             Log.e(TAG, "Description is required");
             return false;
         }
         
         if (itemData.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
-            Log.e(TAG, "Description too long: " + itemData.getDescription().length() + " > " + MAX_DESCRIPTION_LENGTH);
+            Log.e(TAG, "Description too long: " + itemData.getDescription().length());
             return false;
         }
         
         // Validate price
-        Log.d(TAG, "Validating starting price: " + itemData.getStartingPrice() + " (MIN: " + MIN_PRICE + ", MAX: " + MAX_PRICE + ")");
         if (itemData.getStartingPrice() < MIN_PRICE || itemData.getStartingPrice() > MAX_PRICE) {
             Log.e(TAG, "Invalid starting price: " + itemData.getStartingPrice());
             return false;
         }
         
-        Log.d(TAG, "Validating buy now price: " + itemData.getBuyNowPrice());
         if (itemData.getBuyNowPrice() != 0 && 
             (itemData.getBuyNowPrice() < itemData.getStartingPrice() || 
              itemData.getBuyNowPrice() > MAX_PRICE)) {
@@ -647,21 +705,12 @@ public class ItemManager {
             return false;
         }
         
-        // Validate category ID
-        Log.d(TAG, "Validating category ID: '" + itemData.getCategoryId() + "'");
-        if (itemData.getCategoryId() == null || itemData.getCategoryId().trim().isEmpty()) {
-            Log.e(TAG, "Category ID is required");
-            return false;
-        }
-        
         // Validate tags
-        Log.d(TAG, "Validating tags: " + (itemData.getTags() != null ? itemData.getTags().size() : 0) + " (MAX: " + MAX_TAGS_PER_ITEM + ")");
         if (itemData.getTags() != null && itemData.getTags().size() > MAX_TAGS_PER_ITEM) {
             Log.e(TAG, "Too many tags: " + itemData.getTags().size());
             return false;
         }
         
-        Log.d(TAG, "=== ITEM DATA VALIDATION PASSED ===");
         return true;
     }
     
