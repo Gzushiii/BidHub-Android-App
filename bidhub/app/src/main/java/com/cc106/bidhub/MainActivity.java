@@ -370,6 +370,15 @@ public class MainActivity extends BaseActivity {
     }
     
     /**
+     * Refresh ProfileFragment when credits are updated
+     */
+    public void refreshProfileFragment() {
+        if (profileFragment != null) {
+            profileFragment.refreshUserData();
+        }
+    }
+    
+    /**
      * Check and re-initialize fragments if needed
      */
     private void ensureFragmentsInitialized() {

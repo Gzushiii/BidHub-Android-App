@@ -14,6 +14,7 @@ import com.cc106.bidhub.credits.CreditTransaction;
 import com.cc106.bidhub.credits.CreditUIHelper;
 import com.cc106.bidhub.payments.PaymentGateway;
 import com.cc106.bidhub.payments.MockPaymentGateway;
+import com.cc106.bidhub.utils.SharedPreferencesHelper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -35,6 +36,7 @@ public class CreditsFragment extends Fragment {
     private String userId;
     private SimpleCreditManager creditManager;
     private PaymentGateway paymentGateway;
+    private SharedPreferencesHelper prefsHelper;
     private TextView balanceAmount;
     private TextView balanceStatus;
     private LinearLayout packagesContainer;
@@ -61,6 +63,7 @@ public class CreditsFragment extends Fragment {
         // Initialize credit manager and payment gateway
         creditManager = new SimpleCreditManager(getContext());
         paymentGateway = new MockPaymentGateway();
+        prefsHelper = new SharedPreferencesHelper(getContext());
         
         // Get user ID from email
         userId = creditManager.getUserIdFromEmail(loggedInUserEmail);
@@ -240,7 +243,17 @@ public class CreditsFragment extends Fragment {
                         // Add credits to account
                         boolean success = creditManager.addCredits(userId, pkg.getCredits(), SimpleCreditManager.TRANSACTION_PURCHASE);
                         if (success) {
+                            // Update SharedPreferences to sync with other parts of the app
+                            double newBalance = creditManager.getCreditBalance(userId);
+                            prefsHelper.setCredits(newBalance);
+                            
                             updateBalanceDisplay();
+                            
+                            // Refresh ProfileFragment if MainActivity is available
+                            if (getActivity() instanceof com.cc106.bidhub.MainActivity) {
+                                ((com.cc106.bidhub.MainActivity) getActivity()).refreshProfileFragment();
+                            }
+                            
                             ToastHelper.showSuccess(getContext(), "Purchase successful! " + creditManager.formatCurrency(pkg.getCredits()) + " credits added.");
                         } else {
                             ToastHelper.showError(getContext(), "Failed to add credits to account");
