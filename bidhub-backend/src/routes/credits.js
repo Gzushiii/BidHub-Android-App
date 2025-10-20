@@ -154,7 +154,7 @@ router.post('/purchase', authenticateToken, async (req, res) => {
 
     // Check for duplicate transaction
     const [existingTransactions] = await connection.query(
-      'SELECT id FROM credit_transactions WHERE reference = ? AND type = "purchase"',
+      "SELECT id FROM credit_transactions WHERE reference = ? AND type = 'purchase'",
       [transaction_id]
     );
 
