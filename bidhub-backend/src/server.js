@@ -1,4 +1,7 @@
-require('dotenv').config({ path: '../.env' });
+// Load environment variables
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config({ path: '../.env' });
+}
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');

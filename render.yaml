@@ -28,4 +28,4 @@ services:
         value: ${JWT_SECRET}
     healthCheckPath: /api/health
     autoDeploy: true
-    branch: listmng
+    branch: master

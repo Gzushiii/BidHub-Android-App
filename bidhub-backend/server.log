@@ -1,0 +1,11 @@
+
+> bidhub-backend@1.0.0 start
+> node src/server.js
+
+Creating database connection to: bidhub-bidhub.b.aivencloud.com 27575
+SSL enabled: true
+Ignoring invalid configuration option passed to Connection: acquireTimeout. This is currently a warning, but in future versions of MySQL2, an error will be thrown if you pass an invalid configuration option to a Connection
+Ignoring invalid configuration option passed to Connection: timeout. This is currently a warning, but in future versions of MySQL2, an error will be thrown if you pass an invalid configuration option to a Connection
+BidHub API server running on port 3000
+Environment: development
+Database: bidhub-bidhub.b.aivencloud.com:27575
