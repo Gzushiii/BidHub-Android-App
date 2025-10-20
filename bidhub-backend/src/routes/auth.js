@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { registerValidator, loginValidator } = require('../validators/auth');
-const db = require('../config/database');
+const { pool } = require('../config/database');
 
 const router = express.Router();
 
@@ -20,7 +20,7 @@ router.post('/register', async (req, res) => {
 
     // Check if user exists
     console.log('Checking if user exists...');
-    const [existing] = await db.query(
+    const [existing] = await pool.query(
       'SELECT id FROM users WHERE email = ? OR username = ? OR alias = ?',
       [email, username, alias]
     );
@@ -36,7 +36,7 @@ router.post('/register', async (req, res) => {
 
     // Insert user
     console.log('Inserting user into database...');
-    const [result] = await db.query(
+    const [result] = await pool.query(
       `INSERT INTO users (username, email, phone_number, password_hash, salt, 
        first_name, last_name, alias, credits) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 100.00)`,
@@ -88,7 +88,7 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     // Find user by email
-    const [users] = await db.query(
+    const [users] = await pool.query(
       'SELECT * FROM users WHERE email = ?',
       [email]
     );

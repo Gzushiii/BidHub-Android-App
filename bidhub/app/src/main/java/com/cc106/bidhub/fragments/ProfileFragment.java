@@ -17,7 +17,6 @@ import com.cc106.bidhub.api.ApiResponse;
 import com.cc106.bidhub.toast.ToastHelper;
 import com.cc106.bidhub.utils.ProfilePictureManager;
 import com.cc106.bidhub.utils.SharedPreferencesHelper;
-import com.cc106.bidhub.credits.SimpleCreditManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,7 +40,6 @@ public class ProfileFragment extends Fragment {
     private ImageView imageViewProfilePicture;
     private DatabaseHelper dbHelper;
     private SharedPreferencesHelper prefsHelper;
-    private SimpleCreditManager creditManager;
     private String loggedInUserEmail;
     private String userId;
 
@@ -58,7 +56,6 @@ public class ProfileFragment extends Fragment {
         
         dbHelper = new DatabaseHelper(getContext());
         prefsHelper = new SharedPreferencesHelper(getContext());
-        creditManager = new SimpleCreditManager(getContext());
         
         // Initialize Views
         textViewWelcome = view.findViewById(R.id.textViewWelcome);
@@ -146,17 +143,11 @@ public class ProfileFragment extends Fragment {
             String email = prefsHelper.getUserEmail();
             String username = prefsHelper.getUsername();
             String alias = prefsHelper.getAlias();
+            double credits = prefsHelper.getCredits();
             
             if (email == null || email.isEmpty()) {
                 ToastHelper.showError(getContext(), "No user data found. Please log in again.");
                 return;
-            }
-
-            // Get credits from SimpleCreditManager (same system as CreditsFragment)
-            double credits = 0.0;
-            if (creditManager != null) {
-                // Use email as userId for consistency with CreditsFragment
-                credits = creditManager.getCreditBalance(email);
             }
 
             // Update the UI with user data
@@ -216,14 +207,5 @@ public class ProfileFragment extends Fragment {
         this.loggedInUserEmail = email;
         loadUserData();
         loadProfilePicture();
-    }
-    
-    /**
-     * Refresh user data, especially credits
-     */
-    public void refreshUserData() {
-        if (getView() != null) {
-            loadUserData();
-        }
     }
 }

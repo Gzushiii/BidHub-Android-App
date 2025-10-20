@@ -24,6 +24,9 @@ const categoriesRoutes = require('./routes/categories');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Behind Render/Proxies, trust X-Forwarded-* so rate-limit works
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 app.use(cors({

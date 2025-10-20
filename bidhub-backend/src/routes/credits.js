@@ -2,7 +2,7 @@ const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
 const { purchaseCreditsSchema, transactionFilterSchema } = require('../validators/items');
 const { validateCreditPurchase } = require('../utils/validators');
-const db = require('../config/database');
+const { pool } = require('../config/database');
 
 const router = express.Router();
 
@@ -12,7 +12,7 @@ router.get('/balance', authenticateToken, async (req, res) => {
     const user_id = req.user.id;
 
     // Get user credits
-    const [users] = await db.query(
+    const [users] = await pool.query(
       'SELECT credits FROM users WHERE id = ?',
       [user_id]
     );
@@ -24,7 +24,7 @@ router.get('/balance', authenticateToken, async (req, res) => {
     const credits = users[0].credits;
 
     // Get recent transactions
-    const [transactions] = await db.query(
+    const [transactions] = await pool.query(
       `SELECT * FROM credit_transactions 
        WHERE user_id = ? 
        ORDER BY created_at DESC 
@@ -82,7 +82,7 @@ router.get('/transactions', authenticateToken, async (req, res) => {
     query += ' ORDER BY ct.created_at DESC LIMIT ? OFFSET ?';
     params.push(limit, offset);
 
-    const [transactions] = await db.query(query, params);
+    const [transactions] = await pool.query(query, params);
 
     // Get total count for pagination
     let countQuery = 'SELECT COUNT(*) as total FROM credit_transactions WHERE user_id = ?';
@@ -98,7 +98,7 @@ router.get('/transactions', authenticateToken, async (req, res) => {
       countParams.push(status);
     }
 
-    const [countResult] = await db.query(countQuery, countParams);
+    const [countResult] = await pool.query(countQuery, countParams);
     const total = countResult[0].total;
 
     res.json({
@@ -117,7 +117,7 @@ router.get('/transactions', authenticateToken, async (req, res) => {
 
 // Purchase credits
 router.post('/purchase', authenticateToken, async (req, res) => {
-  const connection = await db.getConnection();
+  const connection = await pool.getConnection();
   
   try {
     await connection.beginTransaction();
