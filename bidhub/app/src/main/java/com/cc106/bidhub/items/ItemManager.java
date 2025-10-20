@@ -601,39 +601,45 @@ public class ItemManager {
      * Validate item data
      */
     public boolean validateItemData(ItemData itemData) {
+        Log.d(TAG, "=== VALIDATING ITEM DATA ===");
+        
         if (itemData == null) {
             Log.e(TAG, "Item data is null");
             return false;
         }
         
         // Validate title
+        Log.d(TAG, "Validating title: '" + itemData.getTitle() + "' (length: " + (itemData.getTitle() != null ? itemData.getTitle().length() : 0) + ")");
         if (itemData.getTitle() == null || itemData.getTitle().trim().isEmpty()) {
             Log.e(TAG, "Title is required");
             return false;
         }
         
         if (itemData.getTitle().length() > MAX_TITLE_LENGTH) {
-            Log.e(TAG, "Title too long: " + itemData.getTitle().length());
+            Log.e(TAG, "Title too long: " + itemData.getTitle().length() + " > " + MAX_TITLE_LENGTH);
             return false;
         }
         
         // Validate description
+        Log.d(TAG, "Validating description: '" + itemData.getDescription() + "' (length: " + (itemData.getDescription() != null ? itemData.getDescription().length() : 0) + ")");
         if (itemData.getDescription() == null || itemData.getDescription().trim().isEmpty()) {
             Log.e(TAG, "Description is required");
             return false;
         }
         
         if (itemData.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
-            Log.e(TAG, "Description too long: " + itemData.getDescription().length());
+            Log.e(TAG, "Description too long: " + itemData.getDescription().length() + " > " + MAX_DESCRIPTION_LENGTH);
             return false;
         }
         
         // Validate price
+        Log.d(TAG, "Validating starting price: " + itemData.getStartingPrice() + " (MIN: " + MIN_PRICE + ", MAX: " + MAX_PRICE + ")");
         if (itemData.getStartingPrice() < MIN_PRICE || itemData.getStartingPrice() > MAX_PRICE) {
             Log.e(TAG, "Invalid starting price: " + itemData.getStartingPrice());
             return false;
         }
         
+        Log.d(TAG, "Validating buy now price: " + itemData.getBuyNowPrice());
         if (itemData.getBuyNowPrice() != 0 && 
             (itemData.getBuyNowPrice() < itemData.getStartingPrice() || 
              itemData.getBuyNowPrice() > MAX_PRICE)) {
@@ -641,12 +647,21 @@ public class ItemManager {
             return false;
         }
         
+        // Validate category ID
+        Log.d(TAG, "Validating category ID: '" + itemData.getCategoryId() + "'");
+        if (itemData.getCategoryId() == null || itemData.getCategoryId().trim().isEmpty()) {
+            Log.e(TAG, "Category ID is required");
+            return false;
+        }
+        
         // Validate tags
+        Log.d(TAG, "Validating tags: " + (itemData.getTags() != null ? itemData.getTags().size() : 0) + " (MAX: " + MAX_TAGS_PER_ITEM + ")");
         if (itemData.getTags() != null && itemData.getTags().size() > MAX_TAGS_PER_ITEM) {
             Log.e(TAG, "Too many tags: " + itemData.getTags().size());
             return false;
         }
         
+        Log.d(TAG, "=== ITEM DATA VALIDATION PASSED ===");
         return true;
     }
     

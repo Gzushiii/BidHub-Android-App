@@ -872,13 +872,16 @@ public class PostFragment extends Fragment implements
             ItemData itemData = createItemData();
             if (itemData != null) {
                 // Debug: Log item data before posting
-                android.util.Log.d("PostFragment", "ItemData created successfully:");
-                android.util.Log.d("PostFragment", "Title: " + itemData.getTitle());
-                android.util.Log.d("PostFragment", "Description: " + itemData.getDescription());
-                android.util.Log.d("PostFragment", "CategoryId: " + itemData.getCategoryId());
+                android.util.Log.d("PostFragment", "=== ITEM DATA CREATED SUCCESSFULLY ===");
+                android.util.Log.d("PostFragment", "Title: '" + itemData.getTitle() + "'");
+                android.util.Log.d("PostFragment", "Description: '" + itemData.getDescription() + "'");
+                android.util.Log.d("PostFragment", "CategoryId: '" + itemData.getCategoryId() + "'");
                 android.util.Log.d("PostFragment", "StartingPrice: " + itemData.getStartingPrice());
-                android.util.Log.d("PostFragment", "Condition: " + itemData.getCondition());
+                android.util.Log.d("PostFragment", "BuyNowPrice: " + itemData.getBuyNowPrice());
+                android.util.Log.d("PostFragment", "Condition: '" + itemData.getCondition() + "'");
+                android.util.Log.d("PostFragment", "DurationDays: " + itemData.getDurationDays());
                 android.util.Log.d("PostFragment", "Images count: " + (itemData.getImagePaths() != null ? itemData.getImagePaths().size() : 0));
+                android.util.Log.d("PostFragment", "=== END ITEM DATA ===");
                 
                 // Show loading state
                 btnPostItem.setEnabled(false);
