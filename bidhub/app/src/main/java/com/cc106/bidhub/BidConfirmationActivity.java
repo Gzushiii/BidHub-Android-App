@@ -15,6 +15,7 @@ import com.cc106.bidhub.bidding.BiddingEngine;
 import com.cc106.bidhub.credits.CreditManager;
 import com.cc106.bidhub.items.Item;
 import com.cc106.bidhub.items.ItemManager;
+import com.cc106.bidhub.utils.SharedPreferencesHelper;
 
 import java.text.NumberFormat;
 import java.util.Currency;
@@ -46,6 +47,7 @@ public class BidConfirmationActivity extends AppCompatActivity {
     private BiddingEngine biddingEngine;
     private ItemManager itemManager;
     private CreditManager creditManager;
+    private SharedPreferencesHelper prefsHelper;
     
     // Formatting
     private NumberFormat currencyFormat;
@@ -77,6 +79,7 @@ public class BidConfirmationActivity extends AppCompatActivity {
         biddingEngine = BiddingEngine.getInstance(this);
         itemManager = ItemManager.getInstance(this);
         creditManager = new CreditManager(this);
+        prefsHelper = new SharedPreferencesHelper(this);
         
         // Initialize currency formatter
         currencyFormat = NumberFormat.getCurrencyInstance(Locale.getDefault());
@@ -163,8 +166,8 @@ public class BidConfirmationActivity extends AppCompatActivity {
     }
     
     private void updateCreditDisplay() {
-        // Get current credit balance
-        double currentBalance = creditManager.getCreditBalance(userId);
+        // Get current credit balance from backend
+        double currentBalance = prefsHelper.getCredits();
         creditBalanceText.setText(currencyFormat.format(currentBalance));
         
         // Calculate remaining balance after bid
@@ -230,8 +233,8 @@ public class BidConfirmationActivity extends AppCompatActivity {
             return false;
         }
         
-        // Check if user has sufficient credits
-        double currentBalance = creditManager.getCreditBalance(userId);
+        // Check if user has sufficient credits from backend
+        double currentBalance = prefsHelper.getCredits();
         if (currentBalance < bidAmount) {
             Toast.makeText(this, "Insufficient credits to place bid", Toast.LENGTH_SHORT).show();
             return false;
