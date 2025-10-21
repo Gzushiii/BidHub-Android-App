@@ -1003,7 +1003,7 @@ public class ItemDetailActivity extends AppCompatActivity {
             com.cc106.bidhub.bidding.BiddingEngine biddingEngine = com.cc106.bidhub.bidding.BiddingEngine.getInstance(this);
             com.cc106.bidhub.bidding.BidResult result = biddingEngine.placeBid(
                 currentItem.getItemId(),
-                userId,
+                getCurrentUserId(),
                 getCurrentUserAlias(),
                 bidAmount
             );
