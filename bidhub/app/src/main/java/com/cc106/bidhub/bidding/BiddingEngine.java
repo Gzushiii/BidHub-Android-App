@@ -6,12 +6,18 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.cc106.bidhub.DatabaseHelper;
+import com.cc106.bidhub.api.ApiResponse;
+import com.cc106.bidhub.api.BidApiClient;
 import com.cc106.bidhub.credits.CreditManager;
 import com.cc106.bidhub.items.Item;
 import com.cc106.bidhub.items.ItemManager;
 import com.cc106.bidhub.items.ItemStatus;
 import com.cc106.bidhub.utils.SharedPreferencesHelper;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,6 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+
+import org.json.JSONObject;
 
 /**
  * Comprehensive Bidding Engine
@@ -104,27 +112,38 @@ public class BiddingEngine {
                 return new BidResult(false, "Insufficient credits to place bid", null);
             }
             
-            // Create bid
-            Bid bid = new Bid(itemId, bidderId, bidderAlias, amount);
-            bid.setStatus(BidStatus.ACTIVE);
-            
-            // Process bid in database
-            if (!saveBidToDatabase(bid)) {
-                // Note: Backend will handle credit deduction when bid is processed
-                return new BidResult(false, "Failed to save bid to database", null);
+            // Get auth token for API call
+            String authToken = prefsHelper.getAuthToken();
+            if (authToken == null || authToken.isEmpty()) {
+                return new BidResult(false, "User not authenticated. Please log in again.", null);
             }
             
-            // Update item current bid
-            updateItemCurrentBid(itemId, amount, bidderId);
+            // Call backend API to place bid
+            ApiResponse apiResponse = BidApiClient.placeBid(authToken, itemId, amount);
             
-            // Update caches
-            updateBidCaches(bid);
-            
-            // Process outbid notifications
-            processOutbidNotifications(itemId, bid);
-            
-            Log.i(TAG, "Bid placed successfully: " + bid.getBidId());
-            return new BidResult(true, "Bid placed successfully", bid);
+            if (apiResponse.isSuccess()) {
+                // Create bid object for local caching
+                Bid bid = new Bid(itemId, bidderId, bidderAlias, amount);
+                bid.setStatus(BidStatus.ACTIVE);
+                
+                // Update local caches
+                updateBidCaches(bid);
+                
+                // Update item current bid locally
+                updateItemCurrentBid(itemId, amount, bidderId);
+                
+                // Process outbid notifications
+                processOutbidNotifications(itemId, bid);
+                
+                // Refresh credit balance from backend after successful bid
+                refreshCreditBalanceFromBackend();
+                
+                Log.i(TAG, "Bid placed successfully via API: " + bid.getBidId());
+                return new BidResult(true, "Bid placed successfully", bid);
+            } else {
+                Log.e(TAG, "Backend bid placement failed: " + apiResponse.getMessage());
+                return new BidResult(false, apiResponse.getMessage(), null);
+            }
             
         } catch (Exception e) {
             Log.e(TAG, "Error placing bid", e);
@@ -631,6 +650,47 @@ public class BiddingEngine {
      */
     private double getCurrentUserBalance() {
         return prefsHelper.getCredits();
+    }
+    
+    /**
+     * Refresh credit balance from backend after successful bid
+     */
+    private void refreshCreditBalanceFromBackend() {
+        new Thread(() -> {
+            try {
+                String authToken = prefsHelper.getAuthToken();
+                if (authToken == null || authToken.isEmpty()) {
+                    return;
+                }
+                
+                // Call backend to get updated credit balance
+                URL url = new URL("https://bidhub-android-app.onrender.com/api/credits/balance");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setRequestProperty("Authorization", "Bearer " + authToken);
+                
+                int responseCode = connection.getResponseCode();
+                if (responseCode >= 200 && responseCode < 300) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                    reader.close();
+                    
+                    JSONObject jsonResponse = new JSONObject(response.toString());
+                    double newBalance = jsonResponse.optDouble("balance", 0.0);
+                    
+                    // Update SharedPreferences with new balance
+                    prefsHelper.setCredits(newBalance);
+                    
+                    Log.i(TAG, "Credit balance refreshed from backend: " + newBalance);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error refreshing credit balance from backend", e);
+            }
+        }).start();
     }
 }
 
