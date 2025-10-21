@@ -2,13 +2,13 @@ const express = require('express');
 const { authenticateToken, optionalAuth, checkBidOwnership } = require('../middleware/auth');
 const { paginationSchema } = require('../validators/items');
 const { canRetractBid } = require('../utils/validators');
-const db = require('../config/database');
+const { pool } = require('../config/database');
 
 const router = express.Router();
 
 // Place a bid
 router.post('/place', authenticateToken, async (req, res) => {
-  const connection = await db.getConnection();
+  const connection = await pool.getConnection();
   
   try {
     await connection.beginTransaction();
@@ -118,7 +118,7 @@ router.get('/', authenticateToken, async (req, res) => {
     const userId = req.user.id;
 
     // Get user's bids with item details
-    const [bids] = await db.query(
+    const [bids] = await pool.query(
       `SELECT 
         b.*,
         i.title as item_title,
@@ -139,7 +139,7 @@ router.get('/', authenticateToken, async (req, res) => {
     );
 
     // Get total count for pagination
-    const [countResult] = await db.query(
+    const [countResult] = await pool.query(
       'SELECT COUNT(*) as total FROM bids WHERE bidder_id = ?',
       [userId]
     );
@@ -175,7 +175,7 @@ router.get('/item/:itemId', optionalAuth, async (req, res) => {
     const { itemId } = req.params;
 
     // Check if item exists
-    const [items] = await db.query(
+    const [items] = await pool.query(
       'SELECT id, title, status FROM items WHERE id = ?',
       [itemId]
     );
@@ -185,7 +185,7 @@ router.get('/item/:itemId', optionalAuth, async (req, res) => {
     }
 
     // Get bids for the item
-    const [bids] = await db.query(
+    const [bids] = await pool.query(
       `SELECT 
         b.id,
         b.amount,
@@ -201,7 +201,7 @@ router.get('/item/:itemId', optionalAuth, async (req, res) => {
     );
 
     // Get total count for pagination
-    const [countResult] = await db.query(
+    const [countResult] = await pool.query(
       'SELECT COUNT(*) as total FROM bids WHERE item_id = ?',
       [itemId]
     );
@@ -238,7 +238,7 @@ router.get('/user/:userId', optionalAuth, async (req, res) => {
     const { userId } = req.params;
 
     // Check if user exists
-    const [users] = await db.query(
+    const [users] = await pool.query(
       'SELECT id, alias FROM users WHERE id = ?',
       [userId]
     );
@@ -248,7 +248,7 @@ router.get('/user/:userId', optionalAuth, async (req, res) => {
     }
 
     // Get user's public bid history
-    const [bids] = await db.query(
+    const [bids] = await pool.query(
       `SELECT 
         b.id,
         b.amount,
@@ -270,7 +270,7 @@ router.get('/user/:userId', optionalAuth, async (req, res) => {
     );
 
     // Get total count for pagination
-    const [countResult] = await db.query(
+    const [countResult] = await pool.query(
       'SELECT COUNT(*) as total FROM bids WHERE bidder_id = ?',
       [userId]
     );
