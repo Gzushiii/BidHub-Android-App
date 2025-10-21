@@ -10,6 +10,7 @@ import com.cc106.bidhub.credits.CreditManager;
 import com.cc106.bidhub.items.Item;
 import com.cc106.bidhub.items.ItemManager;
 import com.cc106.bidhub.items.ItemStatus;
+import com.cc106.bidhub.utils.SharedPreferencesHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,6 +45,7 @@ public class BiddingEngine {
     private DatabaseHelper dbHelper;
     private CreditManager creditManager;
     private ItemManager itemManager;
+    private SharedPreferencesHelper prefsHelper;
     
     // Caches
     private final Map<String, List<Bid>> itemBidsCache;
@@ -55,6 +57,7 @@ public class BiddingEngine {
         this.dbHelper = new DatabaseHelper(context);
         this.creditManager = new CreditManager(context);
         this.itemManager = ItemManager.getInstance(context);
+        this.prefsHelper = new SharedPreferencesHelper(context);
         this.executorService = Executors.newCachedThreadPool();
         this.itemBidsCache = new ConcurrentHashMap<>();
         this.userBidsCache = new ConcurrentHashMap<>();
@@ -95,8 +98,9 @@ public class BiddingEngine {
                 return new BidResult(false, "Auction has ended or is not available for bidding", null);
             }
             
-            // Deduct credits immediately when placing bid
-            if (!creditManager.deductCredits(bidderId, amount, "bid")) {
+            // Check credit balance from backend before placing bid
+            double currentBalance = getCurrentUserBalance();
+            if (currentBalance < amount) {
                 return new BidResult(false, "Insufficient credits to place bid", null);
             }
             
@@ -106,8 +110,7 @@ public class BiddingEngine {
             
             // Process bid in database
             if (!saveBidToDatabase(bid)) {
-                // Refund credits on failure
-                creditManager.addCredits(bidderId, amount, "bid_refund");
+                // Note: Backend will handle credit deduction when bid is processed
                 return new BidResult(false, "Failed to save bid to database", null);
             }
             
@@ -621,6 +624,13 @@ public class BiddingEngine {
             executorService.shutdownNow();
             Thread.currentThread().interrupt();
         }
+    }
+    
+    /**
+     * Get current user balance from SharedPreferences (synced with backend)
+     */
+    private double getCurrentUserBalance() {
+        return prefsHelper.getCredits();
     }
 }
 
