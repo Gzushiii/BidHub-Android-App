@@ -1337,7 +1337,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                 return;
             }
 
-            java.net.URL url = new java.net.URL("https://bidhub-android-app.onrender.com/api/items/" + currentItem.getId() + "/buy-now");
+            java.net.URL url = new java.net.URL("https://bidhub-android-app.onrender.com/api/items/" + currentItem.getItemId() + "/buy-now");
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
