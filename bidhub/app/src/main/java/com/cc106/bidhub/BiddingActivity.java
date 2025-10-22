@@ -196,7 +196,7 @@ public class BiddingActivity extends AppCompatActivity {
         placeBidButton.setText("Placing Bid...");
         
         // Note: In a real implementation, this would be done asynchronously
-        BidResult result = biddingEngine.placeBid(itemId, userId, userAlias, bidAmount);
+        BidResult result = biddingEngine.placeBid(itemId, bidAmount);
         
         if (result.isSuccess()) {
             Toast.makeText(this, "Bid placed successfully!", Toast.LENGTH_SHORT).show();

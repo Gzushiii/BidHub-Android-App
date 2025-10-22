@@ -88,6 +88,7 @@ public class AuthApiClient {
                     prefsHelper.saveAuthToken(token);
                     prefsHelper.saveUserEmail(email);
                     prefsHelper.saveUsername(user.optString("username", ""));
+                    prefsHelper.setUserId(String.valueOf(user.optInt("id", 0)));
                     prefsHelper.setAlias(user.optString("alias", ""));
                     prefsHelper.setCredits(user.optDouble("credits", 0.0));
                     
@@ -172,6 +173,7 @@ public class AuthApiClient {
                     prefsHelper.saveAuthToken(token);
                     prefsHelper.saveUserEmail(email);
                     prefsHelper.saveUsername(username);
+                    prefsHelper.setUserId(String.valueOf(user.optInt("id", 0)));
                     prefsHelper.setAlias(user.optString("alias", ""));
                     prefsHelper.setCredits(user.optDouble("credits", 0.0));
                     

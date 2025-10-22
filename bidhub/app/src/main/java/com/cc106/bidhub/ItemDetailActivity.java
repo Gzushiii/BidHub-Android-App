@@ -1003,8 +1003,6 @@ public class ItemDetailActivity extends AppCompatActivity {
             com.cc106.bidhub.bidding.BiddingEngine biddingEngine = com.cc106.bidhub.bidding.BiddingEngine.getInstance(this);
             com.cc106.bidhub.bidding.BidResult result = biddingEngine.placeBid(
                 currentItem.getItemId(),
-                getCurrentUserId(),
-                getCurrentUserAlias(),
                 bidAmount
             );
             
@@ -1030,26 +1028,12 @@ public class ItemDetailActivity extends AppCompatActivity {
     
     private String getCurrentUserId() {
         try {
-            if (loggedInUserEmail != null && !loggedInUserEmail.isEmpty()) {
-                // Get user ID from database using email
-                DatabaseHelper dbHelper = new DatabaseHelper(this);
-                SQLiteDatabase db = dbHelper.getReadableDatabase();
-                
-                String[] columns = {DatabaseHelper.COLUMN_USER_ID};
-                String selection = DatabaseHelper.COLUMN_USER_EMAIL + " = ?";
-                String[] selectionArgs = {loggedInUserEmail};
-                
-                Cursor cursor = db.query(DatabaseHelper.TABLE_USERS, columns, selection, selectionArgs, null, null, null);
-                
-                if (cursor != null && cursor.moveToFirst()) {
-                    String userId = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_ID));
-                    cursor.close();
-                    return userId;
-                }
-                
-                if (cursor != null) {
-                    cursor.close();
-                }
+            // Get user ID from SharedPreferences (synced with backend)
+            SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(this);
+            String userId = prefsHelper.getUserId();
+            
+            if (userId != null && !userId.isEmpty()) {
+                return userId;
             }
         } catch (Exception e) {
             android.util.Log.e("ItemDetailActivity", "Error getting user ID: " + e.getMessage(), e);
@@ -1070,26 +1054,12 @@ public class ItemDetailActivity extends AppCompatActivity {
     
     private String getCurrentUserAlias() {
         try {
-            if (loggedInUserEmail != null && !loggedInUserEmail.isEmpty()) {
-                // Get user alias from database using email
-                DatabaseHelper dbHelper = new DatabaseHelper(this);
-                SQLiteDatabase db = dbHelper.getReadableDatabase();
-                
-                String[] columns = {DatabaseHelper.COLUMN_USER_ALIAS};
-                String selection = DatabaseHelper.COLUMN_USER_EMAIL + " = ?";
-                String[] selectionArgs = {loggedInUserEmail};
-                
-                Cursor cursor = db.query(DatabaseHelper.TABLE_USERS, columns, selection, selectionArgs, null, null, null);
-                
-                if (cursor != null && cursor.moveToFirst()) {
-                    String alias = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_ALIAS));
-                    cursor.close();
-                    return alias;
-                }
-                
-                if (cursor != null) {
-                    cursor.close();
-                }
+            // Get user alias from SharedPreferences (synced with backend)
+            SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(this);
+            String alias = prefsHelper.getAlias();
+            
+            if (alias != null && !alias.isEmpty()) {
+                return alias;
             }
         } catch (Exception e) {
             android.util.Log.e("ItemDetailActivity", "Error getting user alias: " + e.getMessage(), e);

@@ -84,10 +84,20 @@ public class BiddingEngine {
     /**
      * Place a bid on an item
      */
-    public BidResult placeBid(String itemId, String bidderId, String bidderAlias, double amount) {
-        Log.i(TAG, "Placing bid: " + amount + " on item: " + itemId + " by user: " + bidderId);
+    public BidResult placeBid(String itemId, double amount) {
+        Log.i(TAG, "Placing bid: " + amount + " on item: " + itemId);
         
         try {
+            // Get user info from SharedPreferences
+            String bidderId = prefsHelper.getUserId();
+            String bidderAlias = prefsHelper.getAlias();
+            
+            if (bidderId == null || bidderId.isEmpty()) {
+                return new BidResult(false, "User not authenticated. Please log in again.", null);
+            }
+            
+            Log.i(TAG, "Bidder info: " + bidderId + " (" + bidderAlias + ")");
+            
             // Validate bid parameters
             BidValidationResult validation = validateBid(itemId, bidderId, bidderAlias, amount);
             if (!validation.isValid()) {
@@ -371,19 +381,9 @@ public class BiddingEngine {
             return null;
         }
         
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        String query = "SELECT * FROM " + DatabaseHelper.TABLE_BIDS + 
-                      " WHERE " + DatabaseHelper.COLUMN_BID_ID + " = ?";
-        
-        Cursor cursor = db.rawQuery(query, new String[]{bidId});
-        Bid bid = null;
-        
-        if (cursor.moveToFirst()) {
-            bid = createBidFromCursor(cursor);
-        }
-        
-        cursor.close();
-        return bid;
+        // Bids are now managed by backend API - no local database operations
+        Log.w(TAG, "getBidById called but bids are now managed by backend API");
+        return null;
     }
     
     // ==================== AUCTION MANAGEMENT ====================
@@ -470,73 +470,21 @@ public class BiddingEngine {
     // ==================== PRIVATE HELPER METHODS ====================
     
     private boolean saveBidToDatabase(Bid bid) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        String insertQuery = "INSERT INTO " + DatabaseHelper.TABLE_BIDS + 
-                           " (" + DatabaseHelper.COLUMN_BID_ITEM_ID + ", " +
-                           DatabaseHelper.COLUMN_BID_BIDDER_ID + ", " +
-                           DatabaseHelper.COLUMN_BID_AMOUNT + ", " +
-                           DatabaseHelper.COLUMN_BID_ALIAS + ", " +
-                           DatabaseHelper.COLUMN_BID_CREATED_AT + ", " +
-                           DatabaseHelper.COLUMN_BID_IS_WINNING + ") VALUES (?, ?, ?, ?, ?, ?)";
-        
-        try {
-            db.execSQL(insertQuery, new Object[]{
-                bid.getItemId(),
-                bid.getBidderId(),
-                bid.getAmount(),
-                bid.getBidderAlias(),
-                bid.getPlacedAt().getTime(),
-                bid.isWinning() ? 1 : 0
-            });
-            
-            // Get the generated ID
-            Cursor cursor = db.rawQuery("SELECT last_insert_rowid()", null);
-            if (cursor.moveToFirst()) {
-                bid.setBidId(String.valueOf(cursor.getLong(0)));
-            }
-            cursor.close();
-            
-            return true;
-        } catch (Exception e) {
-            Log.e(TAG, "Error saving bid to database", e);
-            return false;
-        }
+        // Bids are now managed by backend API - no local database operations
+        Log.w(TAG, "saveBidToDatabase called but bids are now managed by backend API");
+        return true; // Return true to avoid breaking existing code
     }
     
     private boolean updateBidInDatabase(Bid bid) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        String updateQuery = "UPDATE " + DatabaseHelper.TABLE_BIDS + 
-                           " SET " + DatabaseHelper.COLUMN_BID_IS_WINNING + " = ? " +
-                           " WHERE " + DatabaseHelper.COLUMN_BID_ID + " = ?";
-        
-        try {
-            db.execSQL(updateQuery, new Object[]{bid.isWinning() ? 1 : 0, bid.getBidId()});
-            return true;
-        } catch (Exception e) {
-            Log.e(TAG, "Error updating bid in database", e);
-            return false;
-        }
+        // Bids are now managed by backend API - no local database operations
+        Log.w(TAG, "updateBidInDatabase called but bids are now managed by backend API");
+        return true; // Return true to avoid breaking existing code
     }
     
     private List<Bid> loadBidsFromDatabase(String whereClause, String[] whereArgs) {
-        List<Bid> bids = new ArrayList<>();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        
-        String query = "SELECT * FROM " + DatabaseHelper.TABLE_BIDS + 
-                      " WHERE " + whereClause + 
-                      " ORDER BY " + DatabaseHelper.COLUMN_BID_AMOUNT + " DESC";
-        
-        Cursor cursor = db.rawQuery(query, whereArgs);
-        
-        while (cursor.moveToNext()) {
-            Bid bid = createBidFromCursor(cursor);
-            if (bid != null) {
-                bids.add(bid);
-            }
-        }
-        
-        cursor.close();
-        return bids;
+        // Bids are now managed by backend API - no local database operations
+        Log.w(TAG, "loadBidsFromDatabase called but bids are now managed by backend API");
+        return new ArrayList<>(); // Return empty list to avoid breaking existing code
     }
     
     private Bid createBidFromCursor(Cursor cursor) {

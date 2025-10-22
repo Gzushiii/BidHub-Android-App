@@ -15,9 +15,17 @@ router.post('/place', authenticateToken, async (req, res) => {
 
     const { item_id, amount } = req.body;
     const bidder_id = req.user.id;
+    const bidder_alias = req.user.alias;
+
+    // Add detailed logging
+    console.log('=== BID PLACEMENT DEBUG ===');
+    console.log('Request body:', req.body);
+    console.log('User info:', { id: bidder_id, alias: bidder_alias });
+    console.log('Bid details:', { item_id, amount });
 
     // Validate input
     if (!item_id || !amount || amount <= 0) {
+      console.log('Validation failed: Invalid bid data');
       return res.status(400).json({ error: 'Invalid bid data' });
     }
 
@@ -58,31 +66,111 @@ router.post('/place', authenticateToken, async (req, res) => {
     }
 
     // Check if user has enough credits
-    const [users] = await connection.query(
-      'SELECT credits FROM users WHERE id = ?',
-      [bidder_id]
-    );
+    console.log('Checking user credits for bidder_id:', bidder_id, 'Type:', typeof bidder_id);
+    
+    // Try multiple query formats to handle potential data type issues
+    let users = [];
+    try {
+      // First try with integer
+      [users] = await connection.query(
+        'SELECT id, email, alias, credits FROM users WHERE id = ?',
+        [parseInt(bidder_id)]
+      );
+      console.log('Integer query result:', users);
+    } catch (intError) {
+      console.log('Integer query failed:', intError.message);
+      
+      try {
+        // Try with string
+        [users] = await connection.query(
+          'SELECT id, email, alias, credits FROM users WHERE id = ?',
+          [String(bidder_id)]
+        );
+        console.log('String query result:', users);
+      } catch (stringError) {
+        console.log('String query failed:', stringError.message);
+        
+        // Try with CAST
+        [users] = await connection.query(
+          'SELECT id, email, alias, credits FROM users WHERE CAST(id AS CHAR) = ?',
+          [String(bidder_id)]
+        );
+        console.log('CAST query result:', users);
+      }
+    }
+
+    console.log('Final user query result:', users);
 
     if (users.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      console.log('User not found in database with bidder_id:', bidder_id);
+      
+      // Try to find user by email as fallback
+      const [emailUsers] = await connection.query(
+        'SELECT id, email, alias, credits FROM users WHERE email = ?',
+        [req.user.email]
+      );
+      console.log('Email fallback query result:', emailUsers);
+      
+      if (emailUsers.length > 0) {
+        console.log('Found user by email, using that ID instead');
+        users = emailUsers;
+      } else {
+        return res.status(404).json({ 
+          error: 'User not found',
+          bidder_id: bidder_id,
+          user_email: req.user.email
+        });
+      }
     }
 
     const userCredits = users[0].credits;
+    const actualUserId = users[0].id;
+    console.log('User credits check:', { 
+      actualUserId, 
+      userCredits, 
+      amount, 
+      sufficient: userCredits >= amount,
+      bidder_id_from_token: bidder_id,
+      user_email: users[0].email
+    });
+    
     if (userCredits < amount) {
+      console.log('Insufficient credits error:', { 
+        required: amount, 
+        available: userCredits,
+        user_id: actualUserId,
+        user_email: users[0].email
+      });
       return res.status(400).json({ 
         error: 'Insufficient credits',
         required: amount,
-        available: userCredits
+        available: userCredits,
+        user_id: actualUserId
       });
     }
 
-    // Call the PlaceBid stored procedure
-    await connection.query(
-      'CALL PlaceBid(?, ?, ?, ?)',
-      [item_id, bidder_id, amount, req.user.alias]
-    );
+    // Call the PlaceBid stored procedure with the actual user ID we found
+    console.log('Calling PlaceBid stored procedure with:', { 
+      item_id, 
+      actual_bidder_id: actualUserId, 
+      original_bidder_id: bidder_id,
+      amount, 
+      alias: bidder_alias 
+    });
+    
+    try {
+      await connection.query(
+        'CALL PlaceBid(?, ?, ?, ?)',
+        [item_id, actualUserId, amount, bidder_alias]
+      );
+      console.log('PlaceBid stored procedure completed successfully');
+    } catch (procError) {
+      console.error('PlaceBid stored procedure error:', procError);
+      throw procError;
+    }
 
     await connection.commit();
+    console.log('Transaction committed successfully');
     
     res.json({ 
       message: 'Bid placed successfully',

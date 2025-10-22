@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.cc106.bidhub.toast.ToastHelper;
+import com.cc106.bidhub.utils.SharedPreferencesHelper;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -259,41 +260,21 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        SQLiteDatabase db = null;
-        Cursor cursor = null;
-        
+        // Load user data from SharedPreferences (synced with backend)
         try {
-            db = dbHelper.getReadableDatabase();
-            cursor = db.query(
-                DatabaseHelper.TABLE_USERS,
-                new String[]{DatabaseHelper.COLUMN_USER_ALIAS, DatabaseHelper.COLUMN_USER_CREDITS},
-                DatabaseHelper.COLUMN_USER_EMAIL + " = ?",
-                new String[]{loggedInUserEmail},
-                null, null, null
-        );
-
-        if (cursor != null && cursor.moveToFirst()) {
-            // Get data from the cursor
-            String alias = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_ALIAS));
-            double credits = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.COLUMN_USER_CREDITS));
+            SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(getContext());
+            String alias = prefsHelper.getAlias();
+            double credits = prefsHelper.getCredits();
 
             // Update the UI
-                if (textViewAlias != null) {
-                    textViewAlias.setText(alias != null ? alias : "User");
-                }
+            if (textViewAlias != null) {
+                textViewAlias.setText(alias != null ? alias : "User");
             }
         } catch (Exception e) {
             if (getContext() != null) {
                 ToastHelper.showError(getContext(), "Error loading user data: " + e.getMessage());
             }
             e.printStackTrace();
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-            if (db != null) {
-                db.close();
-            }
         }
         
         // Load additional data

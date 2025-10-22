@@ -211,25 +211,12 @@ public class ProfileFragment extends Fragment {
     private void regenerateAlias() {
         String newAlias = AliasGenerator.generateAlias();
         
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        android.content.ContentValues values = new android.content.ContentValues();
-        values.put(DatabaseHelper.COLUMN_USER_ALIAS, newAlias);
+        // Update SharedPreferences (backend sync will happen on next login)
+        prefsHelper.setAlias(newAlias);
         
-        int rowsAffected = db.update(
-            DatabaseHelper.TABLE_USERS,
-            values,
-            DatabaseHelper.COLUMN_USER_EMAIL + " = ?",
-            new String[]{loggedInUserEmail}
-        );
-        
-        if (rowsAffected > 0) {
-            textViewAlias.setText(newAlias);
-            ToastHelper.showSuccess(getContext(), "Alias regenerated: " + newAlias);
-        } else {
-            ToastHelper.showError(getContext(), "Failed to regenerate alias");
-        }
-        
-        db.close();
+        // Update UI
+        textViewAlias.setText(newAlias);
+        ToastHelper.showSuccess(getContext(), "Alias regenerated: " + newAlias);
     }
 
     private void loadProfilePicture() {

@@ -197,7 +197,7 @@ public class BidConfirmationActivity extends AppCompatActivity {
         confirmBidButton.setText("Placing Bid...");
         
         // Place bid
-        BidResult result = biddingEngine.placeBid(itemId, userId, userAlias, bidAmount);
+        BidResult result = biddingEngine.placeBid(itemId, bidAmount);
         
         if (result.isSuccess()) {
             // Show success message
