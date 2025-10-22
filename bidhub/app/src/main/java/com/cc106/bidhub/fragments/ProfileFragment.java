@@ -174,7 +174,7 @@ public class ProfileFragment extends Fragment {
         refreshCreditsFromBackend();
     }
 
-    private static final String BASE_URL = "https://bidhub-android-app.onrender.com/api";
+    private static final String BASE_URL = "https://bidhub-backend.onrender.com/api";
 
     private void refreshCreditsFromBackend() {
         new Thread(() -> {

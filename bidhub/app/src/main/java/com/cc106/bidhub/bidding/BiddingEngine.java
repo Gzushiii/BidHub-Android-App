@@ -612,7 +612,7 @@ public class BiddingEngine {
                 }
                 
                 // Call backend to get updated credit balance
-                URL url = new URL("https://bidhub-android-app.onrender.com/api/credits/balance");
+                URL url = new URL("https://bidhub-backend.onrender.com/api/credits/balance");
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 connection.setRequestProperty("Authorization", "Bearer " + authToken);
