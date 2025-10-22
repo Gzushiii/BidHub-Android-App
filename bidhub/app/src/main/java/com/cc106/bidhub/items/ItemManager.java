@@ -62,7 +62,7 @@ public class ItemManager {
         this.itemBidCounts = new ConcurrentHashMap<>();
         
         initializeDefaultCategories();
-        initializeSampleData();
+        // Do not seed sample data in production; rely on backend as source of truth
         startCleanupTask();
     }
     

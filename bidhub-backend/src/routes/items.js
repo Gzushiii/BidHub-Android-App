@@ -149,8 +149,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new item
-router.post('/', async (req, res) => {
+// Create new item (requires auth)
+router.post('/', authenticateToken, async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
@@ -175,23 +175,19 @@ router.post('/', async (req, res) => {
       images = []
     } = value;
 
-    // For testing without auth, use seller_email to find user ID
-    const seller_email = req.body.seller_email;
-    if (!seller_email) {
-      return res.status(400).json({ error: 'seller_email is required' });
+    // Determine seller from authenticated user
+    let seller_id = req.user?.id;
+    if (!seller_id && req.body.seller_email) {
+      // Fallback for legacy clients
+      const [users] = await connection.query(
+        'SELECT id FROM users WHERE email = ?',
+        [req.body.seller_email]
+      );
+      if (users.length > 0) seller_id = users[0].id;
     }
-    
-    // Find user by email
-    const [users] = await connection.query(
-      'SELECT id FROM users WHERE email = ?',
-      [seller_email]
-    );
-    
-    if (users.length === 0) {
-      return res.status(400).json({ error: 'User not found' });
+    if (!seller_id) {
+      return res.status(401).json({ error: 'Unauthorized: seller id not resolved' });
     }
-    
-    const seller_id = users[0].id;
     const end_date = calculateEndDate(duration_days);
 
     // Create the item

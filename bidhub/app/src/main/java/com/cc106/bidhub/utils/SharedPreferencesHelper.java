@@ -85,4 +85,8 @@ public class SharedPreferencesHelper {
     public void clearAll() {
         prefs.edit().clear().apply();
     }
+
+    public void logout() {
+        clearAll();
+    }
 }

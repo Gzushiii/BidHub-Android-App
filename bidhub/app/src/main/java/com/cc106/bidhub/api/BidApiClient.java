@@ -15,7 +15,7 @@ import java.net.URL;
  */
 public class BidApiClient {
     private static final String TAG = "BidApiClient";
-    private static final String BASE_URL = "https://bidhub-backend.onrender.com/api";
+    private static final String BASE_URL = "https://bidhub-android-app.onrender.com/api";
     
     /**
      * Place a bid on an item

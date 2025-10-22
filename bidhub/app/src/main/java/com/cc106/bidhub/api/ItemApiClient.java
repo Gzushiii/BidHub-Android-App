@@ -18,7 +18,7 @@ import java.util.List;
  */
 public class ItemApiClient {
     private static final String TAG = "ItemApiClient";
-    private static final String BASE_URL = "https://bidhub-backend.onrender.com/api";
+    private static final String BASE_URL = "https://bidhub-android-app.onrender.com/api";
     private static final String ITEMS_ENDPOINT = BASE_URL + "/items";
     
     private Context context;
@@ -48,9 +48,12 @@ public class ItemApiClient {
             requestData.put("description", itemData.getDescription());
             requestData.put("category_id", itemData.getCategoryId());
             requestData.put("starting_price", itemData.getStartingPrice());
-            requestData.put("reserve_price", itemData.getStartingPrice()); // Use starting price as reserve
-            requestData.put("duration_days", 7); // Default 7 days
-            requestData.put("seller_email", sellerEmail); // Add seller email for database
+            requestData.put("reserve_price", itemData.getStartingPrice());
+            requestData.put("duration_days", 7);
+            // Rely on backend auth; still send seller_email for compatibility if backend allows it
+            requestData.put("seller_email", sellerEmail);
+            // Ensure item is visible in Browse after create
+            requestData.put("status", "active");
             
             // Add images if available
             if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
@@ -83,6 +86,8 @@ public class ItemApiClient {
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
             connection.setDoOutput(true);
+            connection.setConnectTimeout(60000);
+            connection.setReadTimeout(60000);
             
             // Send request
             OutputStream os = connection.getOutputStream();
@@ -160,6 +165,8 @@ public class ItemApiClient {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
+            connection.setConnectTimeout(60000);
+            connection.setReadTimeout(60000);
             
             // Get response
             int responseCode = connection.getResponseCode();

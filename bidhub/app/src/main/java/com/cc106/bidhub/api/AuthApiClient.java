@@ -15,7 +15,7 @@ import java.net.URL;
  */
 public class AuthApiClient {
     private static final String TAG = "AuthApiClient";
-    private static final String BASE_URL = "https://bidhub-backend.onrender.com/api";
+    private static final String BASE_URL = "https://bidhub-android-app.onrender.com/api";
     private static final String LOGIN_ENDPOINT = BASE_URL + "/auth/login";
     private static final String REGISTER_ENDPOINT = BASE_URL + "/auth/register";
     
@@ -40,8 +40,9 @@ public class AuthApiClient {
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Accept", "application/json");
             connection.setDoOutput(true);
-            connection.setConnectTimeout(10000);
-            connection.setReadTimeout(10000);
+            // Render free tier can cold start and take ~50s; increase timeouts accordingly
+            connection.setConnectTimeout(60000);
+            connection.setReadTimeout(60000);
             
             // Create request body
             JSONObject requestData = new JSONObject();
@@ -90,7 +91,28 @@ public class AuthApiClient {
                     prefsHelper.saveUsername(user.optString("username", ""));
                     prefsHelper.setUserId(String.valueOf(user.optInt("id", 0)));
                     prefsHelper.setAlias(user.optString("alias", ""));
-                    prefsHelper.setCredits(user.optDouble("credits", 0.0));
+                    // Immediately refresh credits from backend to avoid stale cache
+                    try {
+                        URL balUrl = new URL(BASE_URL + "/credits/balance");
+                        HttpURLConnection balConn = (HttpURLConnection) balUrl.openConnection();
+                        balConn.setRequestMethod("GET");
+                        balConn.setRequestProperty("Authorization", "Bearer " + token);
+                        balConn.setConnectTimeout(60000);
+                        balConn.setReadTimeout(60000);
+                        int balCode = balConn.getResponseCode();
+                        if (balCode >= 200 && balCode < 300) {
+                            BufferedReader br = new BufferedReader(new InputStreamReader(balConn.getInputStream()));
+                            StringBuilder sb = new StringBuilder();
+                            String ln; while ((ln = br.readLine()) != null) sb.append(ln); br.close();
+                            JSONObject balJson = new JSONObject(sb.toString());
+                            double credits = balJson.optDouble("credits", balJson.optDouble("balance", 0.0));
+                            prefsHelper.setCredits(credits);
+                        } else {
+                            prefsHelper.setCredits(user.optDouble("credits", 0.0));
+                        }
+                    } catch (Exception ignore) {
+                        prefsHelper.setCredits(user.optDouble("credits", 0.0));
+                    }
                     
                     return new ApiResponse(true, "Login successful", jsonResponse);
                 } else {
@@ -123,8 +145,9 @@ public class AuthApiClient {
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Accept", "application/json");
             connection.setDoOutput(true);
-            connection.setConnectTimeout(10000);
-            connection.setReadTimeout(10000);
+            // Render free tier can cold start and take ~50s; increase timeouts accordingly
+            connection.setConnectTimeout(60000);
+            connection.setReadTimeout(60000);
             
             // Create request body
             JSONObject requestData = new JSONObject();

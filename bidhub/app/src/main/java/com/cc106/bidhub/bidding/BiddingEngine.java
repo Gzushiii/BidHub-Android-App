@@ -116,10 +116,12 @@ public class BiddingEngine {
                 return new BidResult(false, "Auction has ended or is not available for bidding", null);
             }
             
-            // Check credit balance from backend before placing bid
-            double currentBalance = getCurrentUserBalance();
+            // Refresh credit balance from backend before placing bid.
+            // Do NOT hard-block locally; proceed and let the backend be the source of truth.
+            double currentBalance = fetchBalanceFromBackendBlocking();
             if (currentBalance < amount) {
-                return new BidResult(false, "Insufficient credits to place bid", null);
+                Log.w(TAG, "Local balance insufficient (" + currentBalance + ") vs amount " + amount +
+                        ". Proceeding to backend validation to avoid false negatives from stale cache.");
             }
             
             // Get auth token for API call
@@ -601,6 +603,44 @@ public class BiddingEngine {
     }
     
     /**
+     * Synchronously fetch the latest balance from backend and update SharedPreferences.
+     * Returns the latest known balance (or cached balance if call fails).
+     */
+    private double fetchBalanceFromBackendBlocking() {
+        try {
+            String authToken = prefsHelper.getAuthToken();
+            if (authToken == null || authToken.isEmpty()) {
+                return getCurrentUserBalance();
+            }
+            java.net.URL url = new java.net.URL("https://bidhub-android-app.onrender.com/api/credits/balance");
+            java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Authorization", "Bearer " + authToken);
+            // Allow for Render free-tier cold starts (~50s)
+            connection.setConnectTimeout(60000);
+            connection.setReadTimeout(60000);
+            int responseCode = connection.getResponseCode();
+            if (responseCode >= 200 && responseCode < 300) {
+                java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(connection.getInputStream()));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+                org.json.JSONObject json = new org.json.JSONObject(response.toString());
+                double balance = json.optDouble("credits", json.optDouble("balance", getCurrentUserBalance()));
+                prefsHelper.setCredits(balance);
+                Log.i(TAG, "Fetched latest balance from backend: " + balance);
+                return balance;
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to refresh balance from backend: " + e.getMessage());
+        }
+        return getCurrentUserBalance();
+    }
+
+    /**
      * Refresh credit balance from backend after successful bid
      */
     private void refreshCreditBalanceFromBackend() {
@@ -612,10 +652,12 @@ public class BiddingEngine {
                 }
                 
                 // Call backend to get updated credit balance
-                URL url = new URL("https://bidhub-backend.onrender.com/api/credits/balance");
+                URL url = new URL("https://bidhub-android-app.onrender.com/api/credits/balance");
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 connection.setRequestProperty("Authorization", "Bearer " + authToken);
+                connection.setConnectTimeout(60000);
+                connection.setReadTimeout(60000);
                 
                 int responseCode = connection.getResponseCode();
                 if (responseCode >= 200 && responseCode < 300) {
