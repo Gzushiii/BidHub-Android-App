@@ -74,6 +74,11 @@
             android:name=".CreditsActivity"
             android:exported="false" />
         
+        <!-- Payment confirmation screen for successful purchases -->
+        <activity
+            android:name=".PaymentConfirmationActivity"
+            android:exported="false" />
+        
         <activity
             android:name=".ProfileActivity"
             android:exported="false" />

@@ -394,3 +394,67 @@ router.delete('/:id', authenticateToken, checkItemOwnership, async (req, res) =>
 });
 
 module.exports = router;
+ 
+// Buy Now endpoint - completes purchase immediately
+router.post('/:id/buy-now', authenticateToken, async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const itemId = parseInt(req.params.id);
+    const buyerId = req.user.id;
+    const amount = parseFloat(req.body?.amount);
+
+    if (!itemId || !amount || amount <= 0) {
+      return res.status(400).json({ error: 'Invalid purchase data' });
+    }
+
+    // Load item
+    const [items] = await connection.query('SELECT * FROM items WHERE id = ? FOR UPDATE', [itemId]);
+    if (items.length === 0) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+    const item = items[0];
+
+    if (item.status !== 'active') {
+      return res.status(400).json({ error: 'Item is not available for purchase' });
+    }
+    if (item.seller_id === buyerId) {
+      return res.status(400).json({ error: 'Cannot buy your own item' });
+    }
+
+    // Check buyer credits
+    const [users] = await connection.query('SELECT credits FROM users WHERE id = ? FOR UPDATE', [buyerId]);
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const buyerCredits = parseFloat(users[0].credits || 0);
+    if (buyerCredits < amount) {
+      return res.status(400).json({ error: 'Insufficient credits' });
+    }
+
+    // Deduct credits
+    await connection.query('UPDATE users SET credits = credits - ? WHERE id = ?', [amount, buyerId]);
+
+    // Mark item as sold
+    await connection.query(
+      'UPDATE items SET status = "sold", current_price = ?, current_bidder_id = ?, updated_at = NOW() WHERE id = ?',
+      [amount, buyerId, itemId]
+    );
+
+    // Record transaction (as purchase)
+    await connection.query(
+      'INSERT INTO credit_transactions (user_id, type, amount, payment_method, status, reference, transaction_id) VALUES (?, "purchase", ?, "buy_now", "completed", CONCAT("BUY-", ?), CONCAT("BUY-", ?))',
+      [buyerId, amount, itemId, itemId]
+    );
+
+    await connection.commit();
+    res.json({ message: 'Purchase completed', item_id: itemId, amount });
+  } catch (err) {
+    await connection.rollback();
+    console.error('Buy Now error:', err);
+    res.status(500).json({ error: 'Failed to complete purchase' });
+  } finally {
+    connection.release();
+  }
+});

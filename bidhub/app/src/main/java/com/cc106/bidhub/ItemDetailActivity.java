@@ -1330,10 +1330,55 @@ public class ItemDetailActivity extends AppCompatActivity {
         double buyNowPrice = currentItem.getBuyNowPrice();
         
         try {
-            // For now, just show success - backend will handle credit deduction
-            boolean success = true; // creditManager.deductCredits(userId, buyNowPrice, "Buy Now: " + currentItem.getTitle());
-            
-            if (success) {
+            // Complete purchase via backend
+            String token = prefsHelper.getAuthToken();
+            if (token == null || token.isEmpty()) {
+                ToastHelper.showError(this, "User not authenticated. Please log in.");
+                return;
+            }
+
+            java.net.URL url = new java.net.URL("https://bidhub-android-app.onrender.com/api/items/" + currentItem.getId() + "/buy-now");
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+            conn.setDoOutput(true);
+            conn.setConnectTimeout(60000);
+            conn.setReadTimeout(60000);
+            org.json.JSONObject payload = new org.json.JSONObject();
+            payload.put("amount", buyNowPrice);
+            try (java.io.OutputStream os = conn.getOutputStream()) {
+                os.write(payload.toString().getBytes("UTF-8"));
+            }
+            int code = conn.getResponseCode();
+            if (code < 200 || code >= 300) {
+                java.io.BufferedReader er = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getErrorStream()));
+                StringBuilder sb = new StringBuilder();
+                String ln; while ((ln = er.readLine()) != null) sb.append(ln); er.close();
+                ToastHelper.showError(this, "Purchase failed: " + sb.toString());
+                return;
+            }
+
+            // Refresh credits from backend
+            try {
+                java.net.URL balUrl = new java.net.URL("https://bidhub-android-app.onrender.com/api/credits/balance");
+                java.net.HttpURLConnection balConn = (java.net.HttpURLConnection) balUrl.openConnection();
+                balConn.setRequestMethod("GET");
+                balConn.setRequestProperty("Authorization", "Bearer " + token);
+                balConn.setConnectTimeout(60000);
+                balConn.setReadTimeout(60000);
+                int balCode = balConn.getResponseCode();
+                if (balCode >= 200 && balCode < 300) {
+                    java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(balConn.getInputStream()));
+                    StringBuilder r = new StringBuilder();
+                    String l; while ((l = br.readLine()) != null) r.append(l); br.close();
+                    org.json.JSONObject balJson = new org.json.JSONObject(r.toString());
+                    double newBal = balJson.optDouble("credits", balJson.optDouble("balance", userBalance));
+                    prefsHelper.setCredits(newBal);
+                }
+            } catch (Exception ignored) {}
+
+            {
                 // Update item status to sold
                 currentItem.setStatus(com.cc106.bidhub.items.ItemStatus.SOLD);
                 currentItem.setCurrentPrice(buyNowPrice);
@@ -1352,9 +1397,6 @@ public class ItemDetailActivity extends AppCompatActivity {
                 intent.putExtra("PURCHASE_PRICE", buyNowPrice);
                 intent.putExtra("USER_EMAIL", getCurrentUserEmail());
                 startActivity(intent);
-                
-            } else {
-                ToastHelper.showError(this, "Failed to process purchase. Please try again.");
             }
             
         } catch (Exception e) {
