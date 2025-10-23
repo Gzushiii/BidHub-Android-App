@@ -950,24 +950,16 @@ public class ItemDetailActivity extends AppCompatActivity {
         tvDialogItemName.setText(tvItemTitle.getText());
         tvDialogBidAmount.setText(currencyFormat.format(bidAmount));
         
-        // Get actual user balance from backend (SharedPreferences cache)
-        double currentBalance = prefsHelper.getCredits();
-        
         // Calculate credit cost (assuming 1 credit = $1 for simplicity)
         int creditCost = (int) bidAmount;
         tvDialogCreditCost.setText(creditCost + " Credits");
         
-        // Calculate remaining balance
-        int remainingBalance = (int) (currentBalance - creditCost);
-        tvDialogRemainingBalance.setText(remainingBalance + " Credits");
+        // Show loading state while fetching fresh balance
+        tvDialogRemainingBalance.setText("Loading balance...");
+        tvDialogRemainingBalance.setTextColor(getResources().getColor(R.color.text_secondary));
         
-        // Show warning if insufficient balance
-        if (remainingBalance < 0) {
-            tvDialogRemainingBalance.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-            tvDialogRemainingBalance.setText("Insufficient Credits! (" + remainingBalance + ")");
-        } else {
-            tvDialogRemainingBalance.setTextColor(getResources().getColor(R.color.text_primary));
-        }
+        // Fetch fresh credit balance from backend before showing dialog
+        fetchFreshCreditBalanceAndUpdateDialog(bidAmount, tvDialogRemainingBalance, btnConfirm);
 
         // Set click listeners
         btnCancel.setOnClickListener(new View.OnClickListener() {
@@ -987,6 +979,82 @@ public class ItemDetailActivity extends AppCompatActivity {
         });
 
         bidConfirmationDialog.show();
+    }
+
+    private void fetchFreshCreditBalanceAndUpdateDialog(double bidAmount, TextView tvDialogRemainingBalance, Button btnConfirm) {
+        new Thread(() -> {
+            try {
+                String authToken = prefsHelper.getAuthToken();
+                if (authToken == null || authToken.isEmpty()) {
+                    runOnUiThread(() -> {
+                        tvDialogRemainingBalance.setText("Authentication error");
+                        tvDialogRemainingBalance.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                        btnConfirm.setEnabled(false);
+                    });
+                    return;
+                }
+
+                // Call backend to get fresh credit balance
+                URL url = new URL("https://bidhub-android-app.onrender.com/api/credits/balance");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setRequestProperty("Authorization", "Bearer " + authToken);
+                connection.setConnectTimeout(60000); // 60 seconds
+                connection.setReadTimeout(60000);    // 60 seconds
+
+                int responseCode = connection.getResponseCode();
+                if (responseCode >= 200 && responseCode < 300) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                    reader.close();
+
+                    JSONObject jsonResponse = new JSONObject(response.toString());
+                    double freshBalance = jsonResponse.optDouble("credits", jsonResponse.optDouble("balance", 0.0));
+                    
+                    // Update SharedPreferences with fresh balance
+                    prefsHelper.setCredits(freshBalance);
+                    
+                    // Calculate remaining balance
+                    int creditCost = (int) bidAmount;
+                    int remainingBalance = (int) (freshBalance - creditCost);
+                    
+                    // Update UI on main thread
+                    runOnUiThread(() -> {
+                        tvDialogRemainingBalance.setText(remainingBalance + " Credits");
+                        
+                        if (remainingBalance < 0) {
+                            tvDialogRemainingBalance.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                            tvDialogRemainingBalance.setText("Insufficient Credits! (" + remainingBalance + ")");
+                            btnConfirm.setEnabled(false);
+                            btnConfirm.setText("Insufficient Credits");
+                        } else {
+                            tvDialogRemainingBalance.setTextColor(getResources().getColor(R.color.text_primary));
+                            btnConfirm.setEnabled(true);
+                            btnConfirm.setText("Confirm Bid");
+                        }
+                    });
+                    
+                    Log.i("ItemDetailActivity", "Fresh credit balance fetched: " + freshBalance + ", remaining after bid: " + remainingBalance);
+                } else {
+                    runOnUiThread(() -> {
+                        tvDialogRemainingBalance.setText("Failed to load balance");
+                        tvDialogRemainingBalance.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                        btnConfirm.setEnabled(false);
+                    });
+                }
+            } catch (Exception e) {
+                Log.e("ItemDetailActivity", "Error fetching fresh credit balance", e);
+                runOnUiThread(() -> {
+                    tvDialogRemainingBalance.setText("Error loading balance");
+                    tvDialogRemainingBalance.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                    btnConfirm.setEnabled(false);
+                });
+            }
+        }).start();
     }
 
     private void processBid(double bidAmount) {

@@ -116,12 +116,14 @@ public class BiddingEngine {
                 return new BidResult(false, "Auction has ended or is not available for bidding", null);
             }
             
-            // Refresh credit balance from backend before placing bid.
-            // Do NOT hard-block locally; proceed and let the backend be the source of truth.
+            // Refresh credit balance from backend before placing bid
             double currentBalance = fetchBalanceFromBackendBlocking();
             if (currentBalance < amount) {
                 Log.w(TAG, "Local balance insufficient (" + currentBalance + ") vs amount " + amount +
                         ". Proceeding to backend validation to avoid false negatives from stale cache.");
+                // Still proceed to backend - let backend be the authoritative source
+            } else {
+                Log.i(TAG, "Local balance check passed: " + currentBalance + " >= " + amount);
             }
             
             // Get auth token for API call
