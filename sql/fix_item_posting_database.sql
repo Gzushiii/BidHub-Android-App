@@ -114,10 +114,71 @@ INSERT IGNORE INTO categories (id, name, description) VALUES
 -- STEP 6: Add missing columns to items table if needed
 -- ==============================================
 
-ALTER TABLE items ADD COLUMN IF NOT EXISTS buy_now_price DECIMAL(10,2) DEFAULT NULL;
-ALTER TABLE items ADD COLUMN IF NOT EXISTS item_condition ENUM('new', 'used', 'good', 'fair', 'poor') DEFAULT 'good';
-ALTER TABLE items ADD COLUMN IF NOT EXISTS current_bidder_id INT UNSIGNED NULL;
-ALTER TABLE items ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+-- Check if columns exist before adding them
+SET @buy_now_price_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = 'defaultdb'
+      AND TABLE_NAME = 'items'
+      AND COLUMN_NAME = 'buy_now_price'
+);
+
+SET @item_condition_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = 'defaultdb'
+      AND TABLE_NAME = 'items'
+      AND COLUMN_NAME = 'item_condition'
+);
+
+SET @current_bidder_id_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = 'defaultdb'
+      AND TABLE_NAME = 'items'
+      AND COLUMN_NAME = 'current_bidder_id'
+);
+
+SET @updated_at_exists = (
+    SELECT COUNT(*)
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = 'defaultdb'
+      AND TABLE_NAME = 'items'
+      AND COLUMN_NAME = 'updated_at'
+);
+
+-- Add columns only if they don't exist
+SET @sql_buy_now = IF(@buy_now_price_exists = 0,
+    'ALTER TABLE items ADD COLUMN buy_now_price DECIMAL(10,2) DEFAULT NULL;',
+    'SELECT ''Column buy_now_price already exists'' AS message;'
+);
+PREPARE stmt_buy_now FROM @sql_buy_now;
+EXECUTE stmt_buy_now;
+DEALLOCATE PREPARE stmt_buy_now;
+
+SET @sql_condition = IF(@item_condition_exists = 0,
+    'ALTER TABLE items ADD COLUMN item_condition ENUM(''new'', ''used'', ''good'', ''fair'', ''poor'') DEFAULT ''good'';',
+    'SELECT ''Column item_condition already exists'' AS message;'
+);
+PREPARE stmt_condition FROM @sql_condition;
+EXECUTE stmt_condition;
+DEALLOCATE PREPARE stmt_condition;
+
+SET @sql_bidder = IF(@current_bidder_id_exists = 0,
+    'ALTER TABLE items ADD COLUMN current_bidder_id INT UNSIGNED NULL;',
+    'SELECT ''Column current_bidder_id already exists'' AS message;'
+);
+PREPARE stmt_bidder FROM @sql_bidder;
+EXECUTE stmt_bidder;
+DEALLOCATE PREPARE stmt_bidder;
+
+SET @sql_updated = IF(@updated_at_exists = 0,
+    'ALTER TABLE items ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;',
+    'SELECT ''Column updated_at already exists'' AS message;'
+);
+PREPARE stmt_updated FROM @sql_updated;
+EXECUTE stmt_updated;
+DEALLOCATE PREPARE stmt_updated;
 
 -- ==============================================
 -- STEP 7: Add foreign key constraints if they don't exist
