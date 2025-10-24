@@ -1424,7 +1424,17 @@ public class ItemDetailActivity extends AppCompatActivity {
                 java.io.BufferedReader er = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getErrorStream()));
                 StringBuilder sb = new StringBuilder();
                 String ln; while ((ln = er.readLine()) != null) sb.append(ln); er.close();
-                ToastHelper.showError(this, "Purchase failed: " + sb.toString());
+                
+                // Parse error response for better error message
+                String errorMessage = "Purchase failed";
+                try {
+                    org.json.JSONObject errorJson = new org.json.JSONObject(sb.toString());
+                    errorMessage = errorJson.optString("error", "Purchase failed");
+                } catch (Exception parseError) {
+                    errorMessage = "Purchase failed: " + sb.toString();
+                }
+                
+                ToastHelper.showError(this, errorMessage);
                 return;
             }
 
@@ -1470,7 +1480,11 @@ public class ItemDetailActivity extends AppCompatActivity {
             
         } catch (Exception e) {
             android.util.Log.e("ItemDetailActivity", "Error processing buy now: " + e.getMessage(), e);
-            ToastHelper.showError(this, "Error processing purchase: " + e.getMessage());
+            String errorMessage = e.getMessage();
+            if (errorMessage == null || errorMessage.isEmpty()) {
+                errorMessage = "Network error or server unavailable";
+            }
+            ToastHelper.showError(this, "Error processing purchase: " + errorMessage);
         }
     }
     

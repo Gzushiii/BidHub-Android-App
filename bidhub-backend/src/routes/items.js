@@ -444,8 +444,8 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
 
     // Record transaction (as purchase)
     await connection.query(
-      'INSERT INTO credit_transactions (user_id, type, amount, payment_method, status, reference, transaction_id) VALUES (?, "purchase", ?, "buy_now", "completed", CONCAT("BUY-", ?), CONCAT("BUY-", ?))',
-      [buyerId, amount, itemId, itemId]
+      'INSERT INTO credit_transactions (user_id, type, amount, payment_method, status, reference, transaction_id) VALUES (?, ?, ?, ?, ?, CONCAT("BUY-", ?), CONCAT("BUY-", ?))',
+      [buyerId, 'purchase', amount, 'buy_now', 'completed', itemId, itemId]
     );
 
     await connection.commit();
