@@ -1411,13 +1411,21 @@ public class ItemDetailActivity extends AppCompatActivity {
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setRequestProperty("Authorization", "Bearer " + token);
+            conn.setRequestProperty("Accept", "application/json");
             conn.setDoOutput(true);
-            conn.setConnectTimeout(60000);
-            conn.setReadTimeout(60000);
+            conn.setConnectTimeout(30000); // Reduced timeout
+            conn.setReadTimeout(30000);    // Reduced timeout
+            
+            // Add connection properties for better reliability
+            conn.setUseCaches(false);
+            conn.setDoInput(true);
+            
             org.json.JSONObject payload = new org.json.JSONObject();
             payload.put("amount", buyNowPrice);
+            
             try (java.io.OutputStream os = conn.getOutputStream()) {
                 os.write(payload.toString().getBytes("UTF-8"));
+                os.flush();
             }
             int code = conn.getResponseCode();
             if (code < 200 || code >= 300) {
