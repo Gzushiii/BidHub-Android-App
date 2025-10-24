@@ -214,7 +214,7 @@ BEGIN
     
     -- Check if bid amount is higher than current highest bid
     IF p_amount <= v_current_bid THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = CONCAT('Bid must be higher than current highest bid (P', v_current_bid, '). Your bid: P', p_amount);
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Bid must be higher than current highest bid';
     END IF;
     
     -- Get user's current credit balance
@@ -224,7 +224,7 @@ BEGIN
     
     -- Check if user has sufficient credits
     IF v_user_credits < p_amount THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = CONCAT('Insufficient credits. Required: P', p_amount, ', Available: P', v_user_credits);
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Insufficient credits';
     END IF;
     
     -- Deduct credits from user
@@ -257,7 +257,7 @@ BEGIN
     
     -- Record transaction
     INSERT INTO credit_transactions (user_id, type, amount, status, reference, transaction_date)
-    VALUES (p_bidder_id, 'bid', p_amount, 'completed', CONCAT('BID_', p_item_id), NOW());
+    VALUES (p_bidder_id, 'bid', p_amount, 'completed', 'BID', NOW());
     
     COMMIT;
     
