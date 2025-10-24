@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 import com.cc106.bidhub.credits.CreditManager;
 import com.cc106.bidhub.items.Item;
