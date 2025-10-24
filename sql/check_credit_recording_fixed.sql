@@ -1,6 +1,5 @@
 -- Check if credits are being recorded in user accounts (FIXED VERSION)
--- This script provides comprehensive queries to verify credit system functionality
--- Fixed to work with actual database schema
+-- This script works with the current table structure
 
 USE defaultdb;
 
