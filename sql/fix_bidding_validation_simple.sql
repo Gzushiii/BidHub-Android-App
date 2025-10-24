@@ -1,30 +1,12 @@
--- Fix the bidding validation logic issue
+-- Simple fix for bidding validation logic (without CONCAT to avoid syntax issues)
 -- This addresses the "Insufficient credits" error when bid amount is too low
 
 USE defaultdb;
 
--- ==============================================
--- ROOT CAUSE: VALIDATION ORDER ISSUE
--- ==============================================
-
--- The problem is that the backend is checking credits BEFORE validating bid amount
--- This causes "Insufficient credits" instead of "Bid must be higher than current bid"
-
--- ==============================================
--- SOLUTION 1: Fix the backend validation order
--- ==============================================
-
--- The backend should validate in this order:
--- 1. Check if bid amount > current highest bid
--- 2. THEN check if user has sufficient credits
--- 3. THEN proceed with bid placement
-
--- ==============================================
--- SOLUTION 2: Improve PlaceBid procedure error messages
--- ==============================================
-
+-- Drop existing procedure
 DROP PROCEDURE IF EXISTS PlaceBid;
 
+-- Create fixed procedure
 DELIMITER //
 
 CREATE PROCEDURE PlaceBid(
@@ -81,7 +63,7 @@ BEGIN
     
     -- CRITICAL FIX: Check bid amount FIRST, before credit check
     IF p_amount <= v_current_bid THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = CONCAT('Bid must be higher than current highest bid (P', v_current_bid, '). Your bid: P', p_amount);
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Bid must be higher than current highest bid';
     END IF;
     
     -- Get user's current credit balance
@@ -91,7 +73,7 @@ BEGIN
     
     -- Check if user has sufficient credits
     IF v_user_credits < p_amount THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = CONCAT('Insufficient credits. Required: P', p_amount, ', Available: P', v_user_credits);
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Insufficient credits';
     END IF;
     
     -- Deduct credits from user
@@ -128,35 +110,6 @@ END //
 
 DELIMITER ;
 
--- ==============================================
--- SOLUTION 3: Add better error handling in backend
--- ==============================================
-
--- The backend should also be updated to handle these errors properly:
--- 1. Catch "Bid must be higher" errors and show appropriate message
--- 2. Catch "Insufficient credits" errors and show appropriate message
--- 3. Don't show "Insufficient credits" when the real issue is bid amount too low
-
--- ==============================================
--- VERIFICATION
--- ==============================================
-
-SELECT '=== VERIFICATION: PLACEBID PROCEDURE UPDATED ===' as section;
-SELECT 
-    ROUTINE_NAME,
-    ROUTINE_TYPE,
-    CREATED,
-    LAST_ALTERED
-FROM information_schema.ROUTINES 
-WHERE ROUTINE_SCHEMA = 'defaultdb' 
-AND ROUTINE_NAME = 'PlaceBid';
-
--- ==============================================
--- TEST SCENARIO
--- ==============================================
-
-SELECT '=== TEST SCENARIO ===' as section;
-SELECT 
-    'User tries to bid P100 on item with P1,000 current bid' as scenario,
-    'Expected: "Bid must be higher than current highest bid (P1000). Your bid: P100"' as expected_error,
-    'Previous: "Insufficient credits" (incorrect)' as previous_error;
+-- Verify the procedure was created
+SELECT 'PlaceBid procedure created successfully' as status;
+SHOW PROCEDURE STATUS WHERE Name = 'PlaceBid';
