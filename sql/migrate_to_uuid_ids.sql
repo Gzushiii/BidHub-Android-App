@@ -40,6 +40,7 @@ DESCRIBE items;
 -- Create backup of current items table
 SELECT 'Creating backup of current items table...' AS '';
 CREATE TABLE items_backup AS SELECT * FROM items;
+ALTER TABLE items_backup ADD PRIMARY KEY (id);
 
 -- Step 4: Update items table to use UUID primary key
 SELECT 'Step 4: Updating items table to use UUID primary key...' AS '';
