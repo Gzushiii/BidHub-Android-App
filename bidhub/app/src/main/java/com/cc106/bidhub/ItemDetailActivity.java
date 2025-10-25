@@ -1403,7 +1403,9 @@ public class ItemDetailActivity extends AppCompatActivity {
         double userBalance = prefsHelper.getCredits();
         double buyNowPrice = currentItem.getBuyNowPrice();
         
-        try {
+        // Move network operation to background thread to avoid NetworkOnMainThreadException
+        new Thread(() -> {
+            try {
             // Complete purchase via backend
             String token = prefsHelper.getAuthToken();
             android.util.Log.i("ItemDetailActivity", "=== BUY NOW DEBUG ===");
@@ -1411,11 +1413,11 @@ public class ItemDetailActivity extends AppCompatActivity {
             android.util.Log.i("ItemDetailActivity", "Item ID: " + currentItem.getItemId());
             android.util.Log.i("ItemDetailActivity", "Buy now price: " + buyNowPrice);
             
-            if (token == null || token.isEmpty()) {
-                android.util.Log.e("ItemDetailActivity", "No auth token available");
-                ToastHelper.showError(this, "User not authenticated. Please log in.");
-                return;
-            }
+                if (token == null || token.isEmpty()) {
+                    android.util.Log.e("ItemDetailActivity", "No auth token available");
+                    runOnUiThread(() -> ToastHelper.showError(this, "User not authenticated. Please log in."));
+                    return;
+                }
 
             java.net.URL url = new java.net.URL("https://bidhub-android-app.onrender.com/api/items/" + currentItem.getItemId() + "/buy-now");
             android.util.Log.i("ItemDetailActivity", "Buy now URL: " + url.toString());
@@ -1474,7 +1476,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                     errorMessage = "Purchase failed: " + sb.toString();
                 }
                 
-                ToastHelper.showError(this, errorMessage);
+                runOnUiThread(() -> ToastHelper.showError(this, errorMessage));
                 return;
             }
 
@@ -1503,29 +1505,33 @@ public class ItemDetailActivity extends AppCompatActivity {
                 currentItem.setCurrentPrice(buyNowPrice);
                 currentItem.setUpdatedAt(new java.util.Date());
                 
-                // Update UI - disable buttons
-                btnPlaceBid.setEnabled(false);
-                btnBuyNow.setEnabled(false);
-                
-                // Show success message
-                ToastHelper.showSuccess(this, "Purchase successful! You have bought this item.");
-                
-                // Navigate to payment confirmation
-                Intent intent = new Intent(this, com.cc106.bidhub.PaymentConfirmationActivity.class);
-                intent.putExtra("ITEM_TITLE", currentItem.getTitle());
-                intent.putExtra("PURCHASE_PRICE", buyNowPrice);
-                intent.putExtra("USER_EMAIL", getCurrentUserEmail());
-                startActivity(intent);
+                // Update UI on main thread
+                runOnUiThread(() -> {
+                    // Update UI - disable buttons
+                    btnPlaceBid.setEnabled(false);
+                    btnBuyNow.setEnabled(false);
+                    
+                    // Show success message
+                    ToastHelper.showSuccess(this, "Purchase successful! You have bought this item.");
+                    
+                    // Navigate to payment confirmation
+                    Intent intent = new Intent(this, com.cc106.bidhub.PaymentConfirmationActivity.class);
+                    intent.putExtra("ITEM_TITLE", currentItem.getTitle());
+                    intent.putExtra("PURCHASE_PRICE", buyNowPrice);
+                    intent.putExtra("USER_EMAIL", getCurrentUserEmail());
+                    startActivity(intent);
+                });
             }
             
-        } catch (Exception e) {
-            android.util.Log.e("ItemDetailActivity", "Error processing buy now: " + e.getMessage(), e);
-            String errorMessage = e.getMessage();
-            if (errorMessage == null || errorMessage.isEmpty()) {
-                errorMessage = "Network error or server unavailable";
+            } catch (Exception e) {
+                android.util.Log.e("ItemDetailActivity", "Error processing buy now: " + e.getMessage(), e);
+                String errorMessage = e.getMessage();
+                if (errorMessage == null || errorMessage.isEmpty()) {
+                    errorMessage = "Network error or server unavailable";
+                }
+                runOnUiThread(() -> ToastHelper.showError(this, "Error processing purchase: " + errorMessage));
             }
-            ToastHelper.showError(this, "Error processing purchase: " + errorMessage);
-        }
+        }).start();
     }
 
     /**

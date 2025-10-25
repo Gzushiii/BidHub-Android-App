@@ -21,6 +21,8 @@ public class BidApiClient {
      * Place a bid on an item
      */
     public static ApiResponse placeBid(String authToken, String itemId, double amount) {
+        // This method should be called from a background thread
+        // The calling code (BiddingEngine) already runs in a background thread
         try {
             Log.i(TAG, "=== BID API CLIENT DEBUG ===");
             Log.i(TAG, "Placing bid: " + amount + " on item: " + itemId);
