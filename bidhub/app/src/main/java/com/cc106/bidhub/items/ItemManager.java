@@ -231,7 +231,7 @@ public class ItemManager {
     }
     
     /**
-     * Save item as draft (local only, not posted to backend)
+     * Save item as draft (persisted to backend)
      */
     public boolean saveDraftItem(ItemData itemData, String sellerEmail) {
         Log.i(TAG, "Saving item as draft for seller: " + sellerEmail);
@@ -243,7 +243,73 @@ public class ItemManager {
                 return false;
             }
             
-            // Create item locally only with DRAFT status
+            // Try to create draft via backend API first
+            try {
+                com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(context);
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.createDraftItem(itemData, sellerEmail);
+                
+                if (response.isSuccess()) {
+                    Log.i(TAG, "Draft item created successfully via backend API");
+                    
+                    // Also store locally for offline access
+                    Item item = new Item();
+                    item.setItemId(UUID.randomUUID().toString());
+                    item.setTitle(itemData.getTitle());
+                    item.setDescription(itemData.getDescription());
+                    item.setStartingPrice(itemData.getStartingPrice());
+                    item.setCurrentPrice(itemData.getStartingPrice());
+                    item.setBuyNowPrice(itemData.getBuyNowPrice());
+                    item.setCurrency(itemData.getCurrency());
+                    item.setSellerId(sellerEmail);
+                    item.setCategoryId(itemData.getCategoryId());
+                    item.setCondition(itemData.getCondition());
+                    item.setShippingInfo(itemData.getShippingInfo());
+                    item.setStartDate(itemData.getStartDate());
+                    item.setEndDate(itemData.getEndDate());
+                    item.setNotes(itemData.getNotes());
+                    item.setMetadata(itemData.getMetadata());
+                    item.setStatus(ItemStatus.DRAFT); // Explicitly set as DRAFT
+                    item.setCreatedAt(new Date());
+                    item.setUpdatedAt(new Date());
+                    
+                    // Add tags
+                    if (itemData.getTags() != null) {
+                        item.setTags(new ArrayList<>(itemData.getTags()));
+                    }
+                    
+                    // Add image paths
+                    if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
+                        item.setImagePaths(new ArrayList<>(itemData.getImagePaths()));
+                        itemImages.put(item.getItemId(), new ArrayList<>(itemData.getImagePaths()));
+                    }
+                    
+                    // Store item locally
+                    items.put(item.getItemId(), item);
+                    
+                    // Update user items
+                    userItems.computeIfAbsent(sellerEmail, k -> new ArrayList<>()).add(item.getItemId());
+                    
+                    // Update category items
+                    if (itemData.getCategoryId() != null) {
+                        categoryItems.computeIfAbsent(itemData.getCategoryId(), k -> new ArrayList<>()).add(item.getItemId());
+                    }
+                    
+                    // Initialize counters
+                    itemViewCounts.put(item.getItemId(), 0);
+                    itemBidCounts.put(item.getItemId(), 0);
+                    
+                    Log.i(TAG, "Draft item saved successfully: " + item.getItemId());
+                    return true;
+                } else {
+                    Log.e(TAG, "Failed to create draft via API: " + response.getMessage());
+                    return false;
+                }
+            } catch (Exception apiError) {
+                Log.e(TAG, "Error creating draft via API, falling back to local storage", apiError);
+                // Fallback to local storage if API fails
+            }
+            
+            // Fallback: Create item locally only with DRAFT status
             Item item = new Item();
             item.setItemId(UUID.randomUUID().toString());
             item.setTitle(itemData.getTitle());
@@ -290,7 +356,7 @@ public class ItemManager {
             itemViewCounts.put(item.getItemId(), 0);
             itemBidCounts.put(item.getItemId(), 0);
             
-            Log.i(TAG, "Item saved as draft successfully: " + item.getItemId());
+            Log.i(TAG, "Item saved as draft locally: " + item.getItemId());
             return true;
             
         } catch (Exception e) {

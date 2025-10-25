@@ -27,7 +27,7 @@ SELECT
 FROM items i
 LEFT JOIN users u ON i.seller_id = u.id
 LEFT JOIN categories c ON i.category_id = c.id
-WHERE i.status IN ('active', 'draft');
+WHERE i.status = 'active';
 
 -- Verify the view was created
 SHOW TABLES LIKE 'v_%';

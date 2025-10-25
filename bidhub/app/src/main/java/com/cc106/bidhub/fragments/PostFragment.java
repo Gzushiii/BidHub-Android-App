@@ -1102,12 +1102,8 @@ public class PostFragment extends Fragment implements
             return false;
         }
         
-        // Validate images
-        if (selectedImages == null || selectedImages.isEmpty()) {
-            ToastHelper.showError(getContext(), "At least one photo is required");
-            return false;
-        }
-        if (selectedImages.size() > MAX_IMAGES) {
+        // Validate images (optional)
+        if (selectedImages != null && selectedImages.size() > MAX_IMAGES) {
             ToastHelper.showError(getContext(), "Maximum " + MAX_IMAGES + " photos allowed");
             return false;
         }

@@ -52,7 +52,7 @@ public class ItemApiClient {
             requestData.put("duration_days", 7);
             // Rely on backend auth; still send seller_email for compatibility if backend allows it
             requestData.put("seller_email", sellerEmail);
-            // Ensure item is visible in Browse after create
+            // Set status based on whether this is a draft or active item
             requestData.put("status", "active");
             
             // Add images if available
@@ -123,6 +123,165 @@ public class ItemApiClient {
             
         } catch (Exception e) {
             Log.e(TAG, "Error creating item via API", e);
+            return new ApiResponse(false, "Network error: " + e.getMessage(), null);
+        }
+    }
+    
+    /**
+     * Create a draft item via backend API
+     */
+    public ApiResponse createDraftItem(ItemData itemData, String sellerEmail) {
+        Log.i(TAG, "Creating draft item via API: " + itemData.getTitle());
+        
+        try {
+            // Get auth token
+            String authToken = prefsHelper.getAuthToken();
+            if (authToken == null || authToken.isEmpty()) {
+                return new ApiResponse(false, "Authentication token not found", null);
+            }
+            
+            // Prepare request data for draft
+            JSONObject requestData = new JSONObject();
+            requestData.put("title", itemData.getTitle());
+            requestData.put("description", itemData.getDescription());
+            requestData.put("category_id", itemData.getCategoryId());
+            requestData.put("starting_price", itemData.getStartingPrice());
+            requestData.put("reserve_price", itemData.getStartingPrice());
+            requestData.put("duration_days", 7);
+            requestData.put("seller_email", sellerEmail);
+            requestData.put("status", "draft"); // Set as draft
+            
+            // Add images if available
+            if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
+                JSONArray imagesArray = new JSONArray();
+                for (String imagePath : itemData.getImagePaths()) {
+                    imagesArray.put(imagePath);
+                }
+                requestData.put("images", imagesArray);
+            }
+            
+            // Add metadata if available
+            if (itemData.getMetadata() != null && !itemData.getMetadata().isEmpty()) {
+                requestData.put("metadata", itemData.getMetadata());
+            }
+            
+            // Add condition if available
+            if (itemData.getCondition() != null && !itemData.getCondition().isEmpty()) {
+                requestData.put("item_condition", itemData.getCondition());
+            }
+            
+            // Add buy now price if available
+            if (itemData.getBuyNowPrice() > 0) {
+                requestData.put("buy_now_price", itemData.getBuyNowPrice());
+            }
+            
+            // Make API call
+            URL url = new URL(ITEMS_ENDPOINT);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setRequestProperty("Authorization", "Bearer " + authToken);
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(60000);
+            connection.setReadTimeout(60000);
+            
+            // Send request
+            OutputStream os = connection.getOutputStream();
+            os.write(requestData.toString().getBytes("UTF-8"));
+            os.close();
+            
+            // Get response
+            int responseCode = connection.getResponseCode();
+            BufferedReader reader;
+            
+            if (responseCode >= 200 && responseCode < 300) {
+                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            } else {
+                reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+            }
+            
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+            
+            if (responseCode >= 200 && responseCode < 300) {
+                Log.i(TAG, "Draft item created successfully via API");
+                Log.d(TAG, "API Response: " + response.toString());
+                return new ApiResponse(true, "Draft item created successfully", response.toString());
+            } else {
+                Log.e(TAG, "API error: " + responseCode + " - " + response.toString());
+                Log.e(TAG, "Request data was: " + requestData.toString());
+                return new ApiResponse(false, "API error: " + responseCode + " - " + response.toString(), response.toString());
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error creating draft item via API", e);
+            return new ApiResponse(false, "Network error: " + e.getMessage(), null);
+        }
+    }
+    
+    /**
+     * Publish a draft item
+     */
+    public ApiResponse publishDraftItem(String itemId, int durationDays) {
+        Log.i(TAG, "Publishing draft item: " + itemId);
+        
+        try {
+            // Get auth token
+            String authToken = prefsHelper.getAuthToken();
+            if (authToken == null || authToken.isEmpty()) {
+                return new ApiResponse(false, "Authentication token not found", null);
+            }
+            
+            // Prepare request data
+            JSONObject requestData = new JSONObject();
+            requestData.put("duration_days", durationDays);
+            
+            // Make API call
+            URL url = new URL(ITEMS_ENDPOINT + "/" + itemId + "/publish");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setRequestProperty("Authorization", "Bearer " + authToken);
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(60000);
+            connection.setReadTimeout(60000);
+            
+            // Send request
+            OutputStream os = connection.getOutputStream();
+            os.write(requestData.toString().getBytes("UTF-8"));
+            os.close();
+            
+            // Get response
+            int responseCode = connection.getResponseCode();
+            BufferedReader reader;
+            
+            if (responseCode >= 200 && responseCode < 300) {
+                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            } else {
+                reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+            }
+            
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+            
+            if (responseCode >= 200 && responseCode < 300) {
+                Log.i(TAG, "Draft item published successfully via API");
+                return new ApiResponse(true, "Item published successfully", response.toString());
+            } else {
+                Log.e(TAG, "API error: " + responseCode + " - " + response.toString());
+                return new ApiResponse(false, "API error: " + responseCode + " - " + response.toString(), response.toString());
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error publishing draft item via API", e);
             return new ApiResponse(false, "Network error: " + e.getMessage(), null);
         }
     }

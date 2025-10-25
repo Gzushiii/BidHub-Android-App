@@ -477,6 +477,31 @@ public class MyListingsActivity extends AppCompatActivity implements MyListingsA
     }
     
     @Override
+    public void onPublishDraft(Item item) {
+        // Publish draft item
+        new Thread(() -> {
+            try {
+                com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(this);
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.publishDraftItem(item.getItemId(), 7);
+                
+                runOnUiThread(() -> {
+                    if (response.isSuccess()) {
+                        ToastHelper.showSuccess(this, "Item published successfully!");
+                        // Refresh the listings to show updated status
+                        loadMyListings();
+                    } else {
+                        ToastHelper.showError(this, "Failed to publish item: " + response.getMessage());
+                    }
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    ToastHelper.showError(this, "Error publishing item: " + e.getMessage());
+                });
+            }
+        }).start();
+    }
+    
+    @Override
     protected void onResume() {
         super.onResume();
         // Refresh listings when returning to this activity

@@ -79,11 +79,10 @@ const createItemSchema = Joi.object({
           'string.max': 'Image URL cannot exceed 500 characters'
         })
     )
-    .min(1)
     .max(10)
     .optional()
+    .allow([])
     .messages({
-      'array.min': 'At least 1 image is required',
       'array.max': 'Cannot have more than 10 images'
     })
 });
@@ -128,11 +127,10 @@ const updateItemSchema = Joi.object({
           'string.max': 'Image URL cannot exceed 500 characters'
         })
     )
-    .min(1)
     .max(10)
     .optional()
+    .allow([])
     .messages({
-      'array.min': 'At least 1 image is required',
       'array.max': 'Cannot have more than 10 images'
     })
 });

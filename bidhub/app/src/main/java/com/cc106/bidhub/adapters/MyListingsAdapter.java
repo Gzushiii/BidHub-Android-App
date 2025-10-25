@@ -23,6 +23,7 @@ public class MyListingsAdapter extends RecyclerView.Adapter<MyListingsAdapter.Vi
         void onViewBids(Item item);
         void onEditListing(Item item);
         void onMarkAsSold(Item item);
+        void onPublishDraft(Item item);
         void onItemClick(Item item);
     }
 
@@ -263,10 +264,38 @@ public class MyListingsAdapter extends RecyclerView.Adapter<MyListingsAdapter.Vi
 
             case "Draft":
                 holder.btnAction1.setVisibility(View.VISIBLE);
-                holder.btnAction1.setText("Edit Listing");
-                holder.btnAction1.setBackgroundResource(R.drawable.button_secondary);
-                holder.btnAction1.setTextColor(context.getResources().getColor(R.color.text_primary));
+                holder.btnAction1.setText("Publish");
+                holder.btnAction1.setBackgroundResource(R.drawable.button_primary);
+                holder.btnAction1.setTextColor(context.getResources().getColor(R.color.white));
                 holder.btnAction1.setOnClickListener(v -> {
+                    try {
+                        if (listener != null) {
+                            listener.onPublishDraft(item);
+                        } else {
+                            com.cc106.bidhub.utils.ErrorHandler.logWarning(
+                                "MyListingsAdapter", 
+                                "Publish draft listener is null",
+                                String.format("ItemID: %s, Title: %s", 
+                                    item.getItemId(), item.getTitle())
+                            );
+                        }
+                    } catch (Exception e) {
+                        com.cc106.bidhub.utils.ErrorHandler.handleAdapterError(
+                            context,
+                            "MyListingsAdapter",
+                            "publish draft click",
+                            e,
+                            String.format("ItemID: %s, Title: %s", 
+                                item.getItemId(), item.getTitle())
+                        );
+                    }
+                });
+
+                holder.btnAction2.setVisibility(View.VISIBLE);
+                holder.btnAction2.setText("Edit");
+                holder.btnAction2.setBackgroundResource(R.drawable.button_secondary);
+                holder.btnAction2.setTextColor(context.getResources().getColor(R.color.text_primary));
+                holder.btnAction2.setOnClickListener(v -> {
                     try {
                         if (listener != null) {
                             listener.onEditListing(item);
