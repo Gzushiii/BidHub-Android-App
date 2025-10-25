@@ -1059,48 +1059,55 @@ public class ItemDetailActivity extends AppCompatActivity {
     }
 
     private void processBid(double bidAmount) {
-        // Let the backend handle credit validation
-        // Proceed with bid placement
-        try {
-            // Use BiddingEngine to place the bid
-            com.cc106.bidhub.bidding.BiddingEngine biddingEngine = com.cc106.bidhub.bidding.BiddingEngine.getInstance(this);
-            com.cc106.bidhub.bidding.BidResult result = biddingEngine.placeBid(
-                currentItem.getItemId(),
-
+        // Move bid placement to background thread to avoid NetworkOnMainThreadException
+        new Thread(() -> {
+            try {
+                // Use BiddingEngine to place the bid
+                com.cc106.bidhub.bidding.BiddingEngine biddingEngine = com.cc106.bidhub.bidding.BiddingEngine.getInstance(this);
+                com.cc106.bidhub.bidding.BidResult result = biddingEngine.placeBid(
+                    currentItem.getItemId(),
                     bidAmount
-            );
-            
-            if (result.isSuccess()) {
-                android.widget.Toast.makeText(this, "Bid of " + currencyFormat.format(bidAmount) + " placed successfully!", android.widget.Toast.LENGTH_LONG).show();
+                );
                 
-                // Update current bid display
-                tvCurrentBid.setText(currencyFormat.format(bidAmount));
-                
-                // Clear bid input
-                etBidAmount.setText("");
-                
-                // Refresh bid history
-                setupBidHistory();
-            } else {
-                String errorMessage = result.getMessage();
-                
-                // Check if it's an insufficient credits error
-                if (errorMessage != null && (errorMessage.toLowerCase().contains("insufficient credits") || 
-                    errorMessage.toLowerCase().contains("insufficient credit"))) {
-                    
-                    // Redirect to credits screen for insufficient credits
-                    ToastHelper.showError(this, "Insufficient credits. Please purchase more credits to continue.");
-                    Intent intent = new Intent(this, com.cc106.bidhub.CreditsActivity.class);
-                    intent.putExtra("USER_EMAIL", getCurrentUserEmail());
-                    startActivity(intent);
+                if (result.isSuccess()) {
+                    // Update UI on main thread
+                    runOnUiThread(() -> {
+                        android.widget.Toast.makeText(this, "Bid of " + currencyFormat.format(bidAmount) + " placed successfully!", android.widget.Toast.LENGTH_LONG).show();
+                        
+                        // Update current bid display
+                        tvCurrentBid.setText(currencyFormat.format(bidAmount));
+                        
+                        // Clear bid input
+                        etBidAmount.setText("");
+                        
+                        // Refresh bid history
+                        setupBidHistory();
+                    });
                 } else {
-                    android.widget.Toast.makeText(this, "Failed to place bid: " + errorMessage, android.widget.Toast.LENGTH_LONG).show();
+                    String errorMessage = result.getMessage();
+                    
+                    // Check if it's an insufficient credits error
+                    if (errorMessage != null && (errorMessage.toLowerCase().contains("insufficient credits") || 
+                        errorMessage.toLowerCase().contains("insufficient credit"))) {
+                        
+                        // Redirect to credits screen for insufficient credits
+                        runOnUiThread(() -> {
+                            ToastHelper.showError(this, "Insufficient credits. Please purchase more credits to continue.");
+                            Intent intent = new Intent(this, com.cc106.bidhub.CreditsActivity.class);
+                            intent.putExtra("USER_EMAIL", getCurrentUserEmail());
+                            startActivity(intent);
+                        });
+                    } else {
+                        final String finalErrorMessage = errorMessage;
+                        runOnUiThread(() -> android.widget.Toast.makeText(this, "Failed to place bid: " + finalErrorMessage, android.widget.Toast.LENGTH_LONG).show());
+                    }
                 }
+            } catch (Exception e) {
+                android.util.Log.e("ItemDetailActivity", "Error placing bid: " + e.getMessage(), e);
+                final String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error occurred";
+                runOnUiThread(() -> android.widget.Toast.makeText(this, "Error placing bid: " + errorMessage, android.widget.Toast.LENGTH_LONG).show());
             }
-        } catch (Exception e) {
-            android.widget.Toast.makeText(this, "Error placing bid: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
-            e.printStackTrace();
-        }
+        }).start();
     }
     
     private String getCurrentUserId() {
