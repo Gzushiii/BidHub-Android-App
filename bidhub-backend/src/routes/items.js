@@ -172,7 +172,8 @@ router.post('/', authenticateToken, async (req, res) => {
       starting_price,
       reserve_price,
       duration_days,
-      images = []
+      images = [],
+      status = 'active' // Allow status to be specified
     } = value;
 
     // Determine seller from authenticated user
@@ -188,18 +189,24 @@ router.post('/', authenticateToken, async (req, res) => {
     if (!seller_id) {
       return res.status(401).json({ error: 'Unauthorized: seller id not resolved' });
     }
-    const end_date = calculateEndDate(duration_days);
 
-    // Create the item
+    // For draft items, don't set end_date (duration starts only after publish)
+    let end_date = null;
+    if (status === 'active') {
+      end_date = calculateEndDate(duration_days);
+    }
+
+    // Create the item with UUID
+    const itemUuid = require('crypto').randomUUID();
     const [result] = await connection.query(
       `INSERT INTO items 
-       (title, description, category_id, seller_id, starting_price, reserve_price, 
+       (uuid_id, title, description, category_id, seller_id, starting_price, reserve_price, 
         current_price, end_date, status, created_at, updated_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', NOW(), NOW())`,
-      [title, description, category_id, seller_id, starting_price, reserve_price, starting_price, end_date]
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      [itemUuid, title, description, category_id, seller_id, starting_price, reserve_price, starting_price, end_date, status]
     );
 
-    const itemId = result.insertId;
+    const itemId = itemUuid;
 
     // Add images if provided
     if (images.length > 0) {
@@ -217,12 +224,12 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // Get the created item with details
     const [items] = await connection.query(
-      'SELECT * FROM items WHERE id = ?',
+      'SELECT * FROM items WHERE uuid_id = ?',
       [itemId]
     );
 
     const [itemImages] = await connection.query(
-      'SELECT * FROM item_images WHERE item_id = ? ORDER BY display_order',
+      'SELECT * FROM item_images WHERE item_uuid_id = ? ORDER BY display_order',
       [itemId]
     );
 
@@ -393,6 +400,54 @@ router.delete('/:id', authenticateToken, checkItemOwnership, async (req, res) =>
   }
 });
 
+// Publish draft item (requires auth and ownership)
+router.post('/:id/publish', authenticateToken, checkItemOwnership, async (req, res) => {
+  const connection = await pool.getConnection();
+  
+  try {
+    await connection.beginTransaction();
+
+    const itemId = req.params.id;
+    const { duration_days = 7 } = req.body;
+
+    // Check if item exists and is draft
+    const [items] = await connection.query(
+      'SELECT * FROM items WHERE id = ? AND status = ?',
+      [itemId, 'draft']
+    );
+
+    if (items.length === 0) {
+      return res.status(404).json({ error: 'Draft item not found' });
+    }
+
+    const item = items[0];
+
+    // Calculate end date for active status
+    const end_date = calculateEndDate(duration_days);
+
+    // Update item to active status and set end date
+    await connection.query(
+      'UPDATE items SET status = ?, end_date = ?, updated_at = NOW() WHERE id = ?',
+      ['active', end_date, itemId]
+    );
+
+    await connection.commit();
+
+    res.json({
+      message: 'Item published successfully',
+      item_id: itemId,
+      end_date: end_date
+    });
+
+  } catch (err) {
+    await connection.rollback();
+    console.error('Item publish error:', err);
+    res.status(500).json({ error: 'Failed to publish item' });
+  } finally {
+    connection.release();
+  }
+});
+
 module.exports = router;
  
 // Buy Now endpoint - completes purchase immediately using BuyNow procedure
@@ -445,7 +500,7 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
     console.log('Items table columns:', columns.map(c => c.Field).join(', '));
     
     // Try the item query
-    const [items] = await connection.query('SELECT * FROM items WHERE id = ?', [itemId]);
+    const [items] = await connection.query('SELECT * FROM items WHERE uuid_id = ?', [itemId]);
     console.log('Item query result:', items);
     console.log('Item query result length:', items.length);
     

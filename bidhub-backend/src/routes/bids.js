@@ -62,7 +62,7 @@ router.post('/place', authenticateToken, async (req, res) => {
     let itemsWithoutFilter;
     try {
       [itemsWithoutFilter] = await connection.query(
-        'SELECT * FROM items WHERE id = ?',
+        'SELECT * FROM items WHERE uuid_id = ?',
         [item_id]
       );
       console.log('Item query result (no filter):', itemsWithoutFilter);
@@ -77,7 +77,7 @@ router.post('/place', authenticateToken, async (req, res) => {
     let items;
     try {
       [items] = await connection.query(
-        'SELECT * FROM items WHERE id = ? AND status IN (?, ?)',
+        'SELECT * FROM items WHERE uuid_id = ? AND status IN (?, ?)',
         [item_id, 'active', 'draft']
       );
       console.log('Item query result (with filter):', items);

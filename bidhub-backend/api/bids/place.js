@@ -22,7 +22,7 @@ app.post('/api/bids/place', async (req, res) => {
 
     // Check if item exists and is active or draft (matching v_active_items view logic)
     const [items] = await connection.query(
-      'SELECT * FROM items WHERE id = ? AND status IN (?, ?)',
+      'SELECT * FROM items WHERE uuid_id = ? AND status IN (?, ?)',
       [item_id, 'active', 'draft']
     );
 
