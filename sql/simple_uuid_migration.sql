@@ -40,16 +40,23 @@ SELECT '' AS '';
 
 -- Step 3: Update items with UUIDs
 SELECT 'Step 3: Updating items with UUIDs...' AS '';
-UPDATE items 
-SET uuid_id = (
-    SELECT new_id 
-    FROM id_mapping 
-    WHERE id_mapping.old_id = items.id
-)
-WHERE uuid_id IS NULL 
-  AND id IN (SELECT old_id FROM id_mapping);
 
-SELECT 'Items updated with UUIDs:', ROW_COUNT() as updated_count;
+-- Update each item individually to avoid safe update mode issues
+SELECT 'Updating items one by one...' AS '';
+SET @updated_count = 0;
+
+-- Create a cursor-like approach using a loop
+SET @item_id = (SELECT MIN(id) FROM items WHERE uuid_id IS NULL);
+WHILE @item_id IS NOT NULL DO
+    UPDATE items 
+    SET uuid_id = (SELECT new_id FROM id_mapping WHERE old_id = @item_id)
+    WHERE id = @item_id;
+    
+    SET @updated_count = @updated_count + 1;
+    SET @item_id = (SELECT MIN(id) FROM items WHERE uuid_id IS NULL AND id > @item_id);
+END WHILE;
+
+SELECT CONCAT('Items updated with UUIDs: ', @updated_count) as updated_count;
 
 SELECT '' AS '';
 
