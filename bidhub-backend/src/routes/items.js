@@ -111,25 +111,47 @@ router.get('/', async (req, res) => {
 
 // Get item by ID
 router.get('/:id', async (req, res) => {
+  const correlationId = req.headers['x-correlation-id'] || require('crypto').randomUUID();
+  
   try {
     const { id } = req.params;
 
     console.log('=== ITEM DETAILS REQUEST ===');
+    console.log('Correlation ID:', correlationId);
+    console.log('Route: GET /api/items/:id');
     console.log('Item ID:', id);
+
+    // Log database connection info
+    const [dbInfo] = await pool.query('SELECT DATABASE() AS db, @@hostname AS host');
+    console.log('Database Info:', dbInfo[0]);
 
     // Use unified lookup utility
     const item = await fetchActiveItem(id);
+
+    console.log('Item lookup result:', { 
+      correlationId,
+      route: 'GET /api/items/:id',
+      itemId: id,
+      found: !!item,
+      itemStatus: item?.status 
+    });
 
     if (!item) {
       console.log('Item not found for ID:', id);
       return res.status(404).json({ 
         error: 'item_not_found',
         details: 'item_does_not_exist',
-        message: 'Item not found'
+        message: 'Item not found',
+        correlationId
       });
     }
 
-    console.log('Item found:', { id: item.id, title: item.title, status: item.status });
+    console.log('Item found:', { 
+      correlationId,
+      id: item.id, 
+      title: item.title, 
+      status: item.status 
+    });
 
     // Get item images using unified utility
     const images = await getItemImages(id);
@@ -151,10 +173,12 @@ router.get('/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('Item fetch error:', err);
+    console.error('Correlation ID:', correlationId);
     res.status(500).json({ 
       error: 'server_error',
       details: 'failed_to_fetch_item',
-      message: 'Failed to fetch item'
+      message: 'Failed to fetch item',
+      correlationId
     });
   }
 });
@@ -508,7 +532,11 @@ router.post('/:id/publish', authenticateToken, checkItemOwnership, async (req, r
 
 // Buy Now endpoint - completes purchase immediately using BuyNow procedure
 router.post('/:id/buy-now', authenticateToken, async (req, res) => {
+  const correlationId = req.headers['x-correlation-id'] || require('crypto').randomUUID();
+  
   console.log('=== BUY NOW REQUEST RECEIVED ===');
+  console.log('Correlation ID:', correlationId);
+  console.log('Route: POST /api/items/:id/buy-now');
   console.log('Headers:', req.headers);
   console.log('Request body:', req.body);
   console.log('User from JWT:', req.user);
@@ -523,11 +551,24 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
     const requestedAmount =
       req.body?.amount !== undefined ? Number(req.body.amount) : NaN;
 
+    console.log('Buy-now request details:', {
+      correlationId,
+      route: 'POST /api/items/:id/buy-now',
+      normalizedItemId,
+      buyerId,
+      requestedAmount
+    });
+
+    // Log database connection info
+    const [dbInfo] = await connection.query('SELECT DATABASE() AS db, @@hostname AS host');
+    console.log('Database Info:', dbInfo[0]);
+
     if (!normalizedItemId) {
       return res.status(400).json({
         error: 'invalid_purchase',
         details: 'missing_item_id',
-        message: 'Item ID is required'
+        message: 'Item ID is required',
+        correlationId
       });
     }
 
@@ -536,8 +577,17 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
       normalizedItemId
     );
 
+    console.log('Buy-now item lookup result:', {
+      correlationId,
+      route: 'POST /api/items/:id/buy-now',
+      itemId: normalizedItemId,
+      found: !!item,
+      lookupError: lookupError?.code
+    });
+
     if (!item) {
       console.log('Buy-now lookup failed', {
+        correlationId,
         normalizedItemId,
         lookupError
       });
@@ -548,7 +598,8 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
             error: 'item_not_found',
             message: 'Item not found'
           }),
-          request_item_id: normalizedItemId
+          request_item_id: normalizedItemId,
+          correlationId
         });
     }
 
@@ -557,14 +608,24 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
       buyerId
     );
 
+    console.log('Buy-now validation result:', {
+      correlationId,
+      valid,
+      validationError: validationError?.json?.error
+    });
+
     if (!valid) {
       console.log('Buy-now validation failed', {
+        correlationId,
         normalizedItemId,
         validationError
       });
       return res
         .status(validationError.http_status)
-        .json(validationError.json);
+        .json({
+          ...validationError.json,
+          correlationId
+        });
     }
 
     const canonicalItemId = item.canonical_id || normalizedItemId;
@@ -580,9 +641,17 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
       return res.status(400).json({
         error: 'invalid_purchase',
         details: 'invalid_amount',
-        message: 'A valid Buy Now amount is required'
+        message: 'A valid Buy Now amount is required',
+        correlationId
       });
     }
+
+    console.log('Buy-now proceeding with purchase:', {
+      correlationId,
+      canonicalItemId,
+      buyerId,
+      purchaseAmount
+    });
 
     await connection.query('CALL BuyNow(?, ?, ?)', [
       canonicalItemId,
@@ -593,23 +662,27 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
     return res.json({
       message: 'Purchase completed successfully',
       item_id: canonicalItemId,
-      amount: purchaseAmount
+      amount: purchaseAmount,
+      correlationId
     });
   } catch (err) {
     console.error('Buy Now error:', err);
+    console.error('Correlation ID:', correlationId);
 
     if (err.sqlMessage) {
       return res.status(400).json({
         error: 'purchase_failed',
         details: 'database_error',
-        message: err.sqlMessage
+        message: err.sqlMessage,
+        correlationId
       });
     }
 
     return res.status(500).json({
       error: 'purchase_failed',
       details: 'internal_error',
-      message: 'Failed to complete purchase'
+      message: 'Failed to complete purchase',
+      correlationId
     });
   } finally {
     if (connection) {

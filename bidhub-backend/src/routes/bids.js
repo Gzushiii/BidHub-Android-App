@@ -13,7 +13,11 @@ const router = express.Router();
 
 // Place a bid - unified lookup and validation
 router.post('/place', authenticateToken, async (req, res) => {
+  const correlationId = req.headers['x-correlation-id'] || require('crypto').randomUUID();
+  
   console.log('=== BID PLACEMENT REQUEST RECEIVED ===');
+  console.log('Correlation ID:', correlationId);
+  console.log('Route: POST /api/bids/place');
   console.log('Headers:', req.headers);
   console.log('Request body:', req.body);
   console.log('User from JWT:', req.user);
@@ -31,8 +35,21 @@ router.post('/place', authenticateToken, async (req, res) => {
     const normalizedItemId = String(item_id ?? '').trim();
     const bidAmount = Number(amount);
 
+    console.log('Bid request details:', {
+      correlationId,
+      route: 'POST /api/bids/place',
+      normalizedItemId,
+      bidder_id,
+      bidAmount
+    });
+
+    // Log database connection info
+    const [dbInfo] = await connection.query('SELECT DATABASE() AS db, @@hostname AS host');
+    console.log('Database Info:', dbInfo[0]);
+
     if (!normalizedItemId || !Number.isFinite(bidAmount) || bidAmount <= 0) {
       console.log('Validation failed: invalid bid payload', {
+        correlationId,
         normalizedItemId,
         bidAmount
       });
@@ -40,7 +57,8 @@ router.post('/place', authenticateToken, async (req, res) => {
       return res.status(400).json({
         error: 'invalid_bid',
         details: 'invalid_payload',
-        message: 'Invalid bid data'
+        message: 'Invalid bid data',
+        correlationId
       });
     }
 
@@ -49,8 +67,17 @@ router.post('/place', authenticateToken, async (req, res) => {
       normalizedItemId
     );
 
+    console.log('Bid item lookup result:', {
+      correlationId,
+      route: 'POST /api/bids/place',
+      itemId: normalizedItemId,
+      found: !!item,
+      itemError: itemError?.code
+    });
+
     if (!item) {
       console.log('Item lookup failed for bid', {
+        correlationId,
         normalizedItemId,
         itemError
       });
@@ -62,7 +89,8 @@ router.post('/place', authenticateToken, async (req, res) => {
             error: 'item_not_found',
             message: 'Item not found'
           }),
-          request_item_id: normalizedItemId
+          request_item_id: normalizedItemId,
+          correlationId
         });
     }
 
@@ -71,15 +99,25 @@ router.post('/place', authenticateToken, async (req, res) => {
       bidder_id
     );
 
+    console.log('Bid validation result:', {
+      correlationId,
+      valid,
+      validationError: validationError?.json?.error
+    });
+
     if (!valid) {
       console.log('Item not valid for bidding', {
+        correlationId,
         normalizedItemId,
         validationError
       });
       await connection.rollback();
       return res
         .status(validationError.http_status)
-        .json(validationError.json);
+        .json({
+          ...validationError.json,
+          correlationId
+        });
     }
 
     const canonicalItemId = item.canonical_id || normalizedItemId;
@@ -190,7 +228,8 @@ router.post('/place', authenticateToken, async (req, res) => {
     return res.json({
       message: 'Bid placed successfully',
       bid_amount: bidAmount,
-      item_id: canonicalItemId
+      item_id: canonicalItemId,
+      correlationId
     });
   } catch (err) {
     await connection.rollback();
@@ -200,14 +239,16 @@ router.post('/place', authenticateToken, async (req, res) => {
       return res.status(400).json({
         error: 'bid_failed',
         details: 'sql_error',
-        message: err.sqlMessage
+        message: err.sqlMessage,
+        correlationId
       });
     }
 
     return res.status(500).json({
       error: 'bid_failed',
       details: 'internal_error',
-      message: 'Failed to place bid'
+      message: 'Failed to place bid',
+      correlationId
     });
   } finally {
     if (connection) {
