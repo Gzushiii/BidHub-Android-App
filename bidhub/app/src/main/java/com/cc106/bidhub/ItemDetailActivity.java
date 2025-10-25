@@ -1418,8 +1418,8 @@ public class ItemDetailActivity extends AppCompatActivity {
             conn.setRequestProperty("Authorization", "Bearer " + token);
             conn.setRequestProperty("Accept", "application/json");
             conn.setDoOutput(true);
-            conn.setConnectTimeout(30000); // Reduced timeout
-            conn.setReadTimeout(30000);    // Reduced timeout
+            conn.setConnectTimeout(60000); // 60 seconds for Render cold starts
+            conn.setReadTimeout(60000);    // 60 seconds for Render cold starts
             
             // Add connection properties for better reliability
             conn.setUseCaches(false);

@@ -12,6 +12,8 @@ router.post('/place', authenticateToken, async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
+    // Set connection timeout to prevent hanging
+    await connection.query('SET SESSION wait_timeout = 30');
     await connection.beginTransaction();
 
     const { item_id, amount } = req.body;
@@ -168,14 +170,19 @@ router.post('/place', authenticateToken, async (req, res) => {
   } catch (err) {
     await connection.rollback();
     console.error('Bid placement error:', err);
+    console.error('Error stack:', err.stack);
     
     if (err.sqlMessage) {
       res.status(400).json({ error: err.sqlMessage });
+    } else if (err.message) {
+      res.status(500).json({ error: 'Failed to place bid: ' + err.message });
     } else {
       res.status(500).json({ error: 'Failed to place bid' });
     }
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 });
 

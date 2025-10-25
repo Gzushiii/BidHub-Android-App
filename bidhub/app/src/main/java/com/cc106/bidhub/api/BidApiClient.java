@@ -29,7 +29,14 @@ public class BidApiClient {
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
+            connection.setRequestProperty("Accept", "application/json");
             connection.setDoOutput(true);
+            connection.setDoInput(true);
+            connection.setUseCaches(false);
+            
+            // Set timeouts to handle Render cold starts
+            connection.setConnectTimeout(60000); // 60 seconds
+            connection.setReadTimeout(60000);    // 60 seconds
             
             // Create request body
             JSONObject requestData = new JSONObject();
@@ -72,7 +79,13 @@ public class BidApiClient {
             
         } catch (Exception e) {
             Log.e(TAG, "Error placing bid", e);
-            return new ApiResponse(false, "Network error: " + e.getMessage(), null);
+            String errorMessage = e.getMessage();
+            if (errorMessage == null || errorMessage.isEmpty()) {
+                errorMessage = "Network error or server unavailable";
+            } else {
+                errorMessage = "Network error: " + errorMessage;
+            }
+            return new ApiResponse(false, errorMessage, null);
         }
     }
 }

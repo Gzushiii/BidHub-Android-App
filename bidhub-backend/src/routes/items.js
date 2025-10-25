@@ -399,6 +399,8 @@ module.exports = router;
 router.post('/:id/buy-now', authenticateToken, async (req, res) => {
   const connection = await pool.getConnection();
   try {
+    // Set connection timeout to prevent hanging
+    await connection.query('SET SESSION wait_timeout = 30');
     const itemId = parseInt(req.params.id);
     const buyerId = req.user.id;
     const buyNowPrice = parseFloat(req.body?.amount);
@@ -447,8 +449,16 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
     });
   } catch (err) {
     console.error('Buy Now error:', err);
-    res.status(500).json({ error: 'Failed to complete purchase' });
+    console.error('Error stack:', err.stack);
+    
+    if (err.message) {
+      res.status(500).json({ error: 'Failed to complete purchase: ' + err.message });
+    } else {
+      res.status(500).json({ error: 'Failed to complete purchase' });
+    }
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 });
