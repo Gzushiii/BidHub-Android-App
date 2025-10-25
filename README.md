@@ -635,4 +635,4 @@ For support and questions:
 
 ---
 
-*Last updated: September 2025*
+*Last updated: October 2025*

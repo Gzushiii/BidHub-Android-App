@@ -121,27 +121,52 @@ router.post('/place', authenticateToken, async (req, res) => {
     }
 
     const canonicalItemId = item.canonical_id || normalizedItemId;
+    const numericItemId = item.id; // Numeric INT ID for stored procedure
+
+    // Enhanced logging for debugging ID issues
+    console.log('Item ID analysis:', {
+      correlationId,
+      requestedItemId: normalizedItemId,
+      itemObject: {
+        id: item.id,
+        uuid_id: item.uuid_id,
+        canonical_id: item.canonical_id
+      },
+      numericItemId,
+      numericItemIdType: typeof numericItemId
+    });
+
+    // Defensive check: ensure we have a numeric ID
+    if (!numericItemId || isNaN(parseInt(numericItemId, 10))) {
+      console.log('Missing or invalid numeric item ID', {
+        correlationId,
+        item_id: item.id,
+        uuid_id: item.uuid_id
+      });
+      await connection.rollback();
+      return res.status(500).json({
+        error: 'internal_error',
+        details: 'missing_numeric_id',
+        message: 'Item numeric ID not found',
+        correlationId
+      });
+    }
+
     const startingPrice = Number(
       item.starting_price ?? item.starting_bid ?? 0
     );
 
     let currentMaxBid = 0;
     try {
+      // Use numeric ID for bids lookup (bids table uses INT item_id)
       const [currentBids] = await connection.query(
-        'SELECT MAX(amount) as max_bid FROM bids WHERE item_id = ? OR item_uuid_id = ?',
-        [canonicalItemId, canonicalItemId]
+        'SELECT MAX(amount) as max_bid FROM bids WHERE item_id = ?',
+        [numericItemId]
       );
       currentMaxBid = Number(currentBids[0]?.max_bid ?? 0);
     } catch (lookupError) {
-      if (lookupError.code === 'ER_BAD_FIELD_ERROR') {
-        const [currentBids] = await connection.query(
-          'SELECT MAX(amount) as max_bid FROM bids WHERE item_id = ?',
-          [canonicalItemId]
-        );
-        currentMaxBid = Number(currentBids[0]?.max_bid ?? 0);
-      } else {
-        throw lookupError;
-      }
+      console.error('Error looking up current max bid:', lookupError);
+      throw lookupError;
     }
 
     const minimumBid = Math.max(
@@ -216,8 +241,17 @@ router.post('/place', authenticateToken, async (req, res) => {
       });
     }
 
+    // Call stored procedure with numeric INT ID (not UUID)
+    console.log('Calling PlaceBid stored procedure', {
+      correlationId,
+      numericItemId,
+      actualUserId,
+      bidAmount,
+      bidder_alias
+    });
+
     await connection.query('CALL PlaceBid(?, ?, ?, ?)', [
-      canonicalItemId,
+      numericItemId,  // Use numeric INT ID instead of UUID
       actualUserId,
       bidAmount,
       bidder_alias
@@ -225,10 +259,17 @@ router.post('/place', authenticateToken, async (req, res) => {
 
     await connection.commit();
 
+    console.log('Bid placed successfully', {
+      correlationId,
+      bid_amount: bidAmount,
+      item_id: canonicalItemId,
+      numeric_item_id: numericItemId
+    });
+
     return res.json({
       message: 'Bid placed successfully',
       bid_amount: bidAmount,
-      item_id: canonicalItemId,
+      item_id: canonicalItemId,  // Return UUID for client compatibility
       correlationId
     });
   } catch (err) {

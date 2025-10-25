@@ -233,7 +233,7 @@ router.post('/', authenticateToken, async (req, res) => {
     // Create the item with UUID
     const itemUuid = require('crypto').randomUUID();
     const [result] = await connection.query(
-      `INSERT INTO items
+      `INSERT INTO items 
        (uuid_id, title, description, category_id, seller_id, starting_bid, reserve_price,
         current_bid, end_date, status, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -245,7 +245,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // Add images if provided
     if (images.length > 0) {
-      const imageValues = images.map((imageUrl, index) =>
+      const imageValues = images.map((imageUrl, index) => 
         [itemIntegerId, imageUrl, index + 1] // Use integer ID for item_images FK
       );
 
@@ -529,7 +529,7 @@ router.post('/:id/publish', authenticateToken, checkItemOwnership, async (req, r
     connection.release();
   }
 });
-
+ 
 // Buy Now endpoint - completes purchase immediately using BuyNow procedure
 router.post('/:id/buy-now', authenticateToken, async (req, res) => {
   const correlationId = req.headers['x-correlation-id'] || require('crypto').randomUUID();
@@ -660,7 +660,7 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
     ]);
 
     return res.json({
-      message: 'Purchase completed successfully',
+      message: 'Purchase completed successfully', 
       item_id: canonicalItemId,
       amount: purchaseAmount,
       correlationId
@@ -686,7 +686,7 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
     });
   } finally {
     if (connection) {
-      connection.release();
+    connection.release();
     }
   }
 });
