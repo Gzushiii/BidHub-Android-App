@@ -45,7 +45,8 @@ router.post('/place', authenticateToken, async (req, res) => {
     
     // Check if items table exists
     const [tableCheck] = await connection.query(
-      'SHOW TABLES LIKE "items"'
+      'SHOW TABLES LIKE ?',
+      ['items']
     );
     console.log('Items table exists:', tableCheck.length > 0);
     
