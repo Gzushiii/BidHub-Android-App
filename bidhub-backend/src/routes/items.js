@@ -427,9 +427,31 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
     }
 
     // Get item details to validate buy now price
+    console.log('=== ITEM LOOKUP DEBUG ===');
     console.log('Querying item with ID:', itemId);
+    console.log('Item ID type:', typeof itemId);
+    console.log('Item ID length:', itemId ? itemId.length : 'null');
+    
+    // First check what database we're connected to
+    const [dbInfo] = await connection.query('SELECT DATABASE() as current_db');
+    console.log('Current database:', dbInfo[0].current_db);
+    
+    // Check if items table exists
+    const [tableCheck] = await connection.query('SHOW TABLES LIKE ?', ['items']);
+    console.log('Items table exists:', tableCheck.length > 0);
+    
+    // Check items table structure
+    const [columns] = await connection.query('DESCRIBE items');
+    console.log('Items table columns:', columns.map(c => c.Field).join(', '));
+    
+    // Try the item query
     const [items] = await connection.query('SELECT * FROM items WHERE id = ?', [itemId]);
     console.log('Item query result:', items);
+    console.log('Item query result length:', items.length);
+    
+    // Also try a broader search to see if the item exists with different casing or format
+    const [allItems] = await connection.query('SELECT id, title, status FROM items LIMIT 5');
+    console.log('Sample items in database:', allItems);
     
     if (items.length === 0) {
       console.log('Item not found for ID:', itemId);

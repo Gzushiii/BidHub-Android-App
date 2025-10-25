@@ -22,8 +22,8 @@ app.post('/api/bids/place', async (req, res) => {
 
     // Check if item exists and is active
     const [items] = await connection.query(
-      'SELECT * FROM items WHERE id = ? AND status = "active"',
-      [item_id]
+      'SELECT * FROM items WHERE id = ? AND status = ?',
+      [item_id, 'active']
     );
 
     if (items.length === 0) {
