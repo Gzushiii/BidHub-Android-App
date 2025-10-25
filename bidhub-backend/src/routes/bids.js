@@ -37,10 +37,12 @@ router.post('/place', authenticateToken, async (req, res) => {
     }
 
     // Check if item exists and is active
+    console.log('Checking item with ID:', item_id);
     const [items] = await connection.query(
       'SELECT * FROM items WHERE id = ? AND status = "active"',
       [item_id]
     );
+    console.log('Item query result:', items);
 
     if (items.length === 0) {
       return res.status(404).json({ error: 'Item not found or not active' });
