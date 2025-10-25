@@ -40,10 +40,14 @@ SELECT '' AS '';
 
 -- Step 3: Update items with UUIDs
 SELECT 'Step 3: Updating items with UUIDs...' AS '';
-UPDATE items i 
-JOIN id_mapping m ON i.id = m.old_id 
-SET i.uuid_id = m.new_id
-WHERE i.id = m.old_id AND i.uuid_id IS NULL;
+UPDATE items 
+SET uuid_id = (
+    SELECT new_id 
+    FROM id_mapping 
+    WHERE id_mapping.old_id = items.id
+)
+WHERE uuid_id IS NULL 
+  AND id IN (SELECT old_id FROM id_mapping);
 
 SELECT 'Items updated with UUIDs:', ROW_COUNT() as updated_count;
 
