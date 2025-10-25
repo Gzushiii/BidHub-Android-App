@@ -69,7 +69,9 @@ app.get('/api/health', (req, res) => {
     status: 'OK', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'production',
-    message: 'BidHub API is running successfully on Render!'
+    message: 'BidHub API is running successfully on Render!',
+    version: '2025-10-25-v2',
+    debugMode: 'active'
   });
 });
 

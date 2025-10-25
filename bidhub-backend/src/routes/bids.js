@@ -38,11 +38,33 @@ router.post('/place', authenticateToken, async (req, res) => {
 
     // Check if item exists and is active
     console.log('Checking item with ID:', item_id);
-    const [items] = await connection.query(
-      'SELECT * FROM items WHERE id = ? AND status = "active"',
-      [item_id]
+    
+    // First check what database we're connected to
+    const [dbInfo] = await connection.query('SELECT DATABASE() as current_db');
+    console.log('Current database:', dbInfo[0].current_db);
+    
+    // Check if items table exists
+    const [tableCheck] = await connection.query(
+      'SHOW TABLES LIKE "items"'
     );
-    console.log('Item query result:', items);
+    console.log('Items table exists:', tableCheck.length > 0);
+    
+    // Check items table structure
+    const [columns] = await connection.query('DESCRIBE items');
+    console.log('Items table columns:', columns.map(c => c.Field).join(', '));
+    
+    // Now try the actual query
+    let items;
+    try {
+      [items] = await connection.query(
+        'SELECT * FROM items WHERE id = ? AND status = "active"',
+        [item_id]
+      );
+      console.log('Item query result:', items);
+    } catch (queryError) {
+      console.error('Query error details:', queryError);
+      throw queryError;
+    }
 
     if (items.length === 0) {
       return res.status(404).json({ error: 'Item not found or not active' });
@@ -155,16 +177,19 @@ router.post('/place', authenticateToken, async (req, res) => {
       alias: bidder_alias 
     });
     
-    try {
-      await connection.query(
-        'CALL PlaceBid(?, ?, ?, ?)',
-        [item_id, actualUserId, amount, bidder_alias]
-      );
-      console.log('PlaceBid stored procedure completed successfully');
-    } catch (procError) {
-      console.error('PlaceBid stored procedure error:', procError);
-      throw procError;
-    }
+    // Temporarily comment out stored procedure to test basic functionality
+    console.log('Skipping stored procedure call for testing');
+    
+    // try {
+    //   await connection.query(
+    //     'CALL PlaceBid(?, ?, ?, ?)',
+    //     [item_id, actualUserId, amount, bidder_alias]
+    //   );
+    //   console.log('PlaceBid stored procedure completed successfully');
+    // } catch (procError) {
+    //   console.error('PlaceBid stored procedure error:', procError);
+    //   throw procError;
+    // }
 
     await connection.commit();
     console.log('Transaction committed successfully');
