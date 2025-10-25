@@ -64,7 +64,8 @@ ALTER TABLE items ADD COLUMN uuid_id VARCHAR(36) UNIQUE;
 -- Update the uuid_id column with mapped UUIDs
 UPDATE items i 
 JOIN id_mapping m ON i.id = m.old_id 
-SET i.uuid_id = m.new_id;
+SET i.uuid_id = m.new_id
+WHERE i.id = m.old_id;
 
 -- Show the updated items
 SELECT 'Updated items with UUIDs (first 5):' AS '';
@@ -90,11 +91,13 @@ ALTER TABLE item_images ADD COLUMN item_uuid_id VARCHAR(36);
 -- Update the UUID columns in related tables
 UPDATE bids b 
 JOIN id_mapping m ON b.item_id = m.old_id 
-SET b.item_uuid_id = m.new_id;
+SET b.item_uuid_id = m.new_id
+WHERE b.item_id = m.old_id;
 
 UPDATE item_images ii 
 JOIN id_mapping m ON ii.item_id = m.old_id 
-SET ii.item_uuid_id = m.new_id;
+SET ii.item_uuid_id = m.new_id
+WHERE ii.item_id = m.old_id;
 
 SELECT 'Updated related tables with UUIDs:' AS '';
 SELECT 'Bids with UUIDs (first 3):' AS '';
