@@ -1454,7 +1454,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                 String ln; while ((ln = er.readLine()) != null) sb.append(ln); er.close();
                 
                 // Parse error response for better error message
-                final String errorMessage;
+                String errorMessage = "Purchase failed";
                 try {
                     org.json.JSONObject errorJson = new org.json.JSONObject(sb.toString());
                     String parsedError = errorJson.optString("error", "Purchase failed");
