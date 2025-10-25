@@ -3,6 +3,7 @@ const { pool } = require('../config/database');
 const { authenticateToken, checkItemOwnership } = require('../middleware/auth');
 const { createItemSchema, updateItemSchema, paginationSchema } = require('../validators/items');
 const { calculateEndDate, canUpdateItem, canDeleteItem } = require('../utils/validators');
+const { fetchActiveItem, fetchItemById, validateItemForAction, getItemImages, getItemBids } = require('../utils/itemLookup');
 
 const router = express.Router();
 
@@ -103,22 +104,25 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [items] = await pool.query(
-      'SELECT * FROM v_active_items WHERE id = ?',
-      [id]
-    );
+    console.log('=== ITEM DETAILS REQUEST ===');
+    console.log('Item ID:', id);
 
-    if (items.length === 0) {
-      return res.status(404).json({ error: 'Item not found' });
+    // Use unified lookup utility
+    const item = await fetchActiveItem(id);
+
+    if (!item) {
+      console.log('Item not found for ID:', id);
+      return res.status(404).json({ 
+        error: 'item_not_found',
+        details: 'item_does_not_exist',
+        message: 'Item not found'
+      });
     }
 
-    const item = items[0];
+    console.log('Item found:', { id: item.id, title: item.title, status: item.status });
 
-    // Get item images
-    const [images] = await pool.query(
-      'SELECT * FROM item_images WHERE item_id = ? ORDER BY display_order',
-      [id]
-    );
+    // Get item images using unified utility
+    const images = await getItemImages(id);
 
     // Get seller information
     const [sellers] = await pool.query(
@@ -126,16 +130,8 @@ router.get('/:id', async (req, res) => {
       [item.seller_id]
     );
 
-    // Get recent bids
-    const [bids] = await pool.query(
-      `SELECT b.*, u.alias as bidder_alias 
-       FROM bids b 
-       JOIN users u ON b.bidder_id = u.id 
-       WHERE b.item_id = ? 
-       ORDER BY b.placed_at DESC 
-       LIMIT 10`,
-      [id]
-    );
+    // Get recent bids using unified utility
+    const bids = await getItemBids(id);
 
     res.json({
       ...item,
@@ -145,7 +141,11 @@ router.get('/:id', async (req, res) => {
     });
   } catch (err) {
     console.error('Item fetch error:', err);
-    res.status(500).json({ error: 'Failed to fetch item' });
+    res.status(500).json({ 
+      error: 'server_error',
+      details: 'failed_to_fetch_item',
+      message: 'Failed to fetch item'
+    });
   }
 });
 
@@ -482,63 +482,24 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
       });
     }
 
-    // Get item details to validate buy now price
-    console.log('=== ITEM LOOKUP DEBUG ===');
-    console.log('Querying item with ID:', itemId);
-    console.log('Item ID type:', typeof itemId);
-    console.log('Item ID length:', itemId ? itemId.length : 'null');
+    // Use unified lookup utility
+    console.log('=== BUY-NOW ITEM LOOKUP ===');
+    const item = await fetchActiveItem(itemId, connection);
     
-    // First check what database we're connected to
-    const [dbInfo] = await connection.query('SELECT DATABASE() as current_db');
-    console.log('Current database:', dbInfo[0].current_db);
-    
-    // Check if items table exists
-    const [tableCheck] = await connection.query('SHOW TABLES LIKE ?', ['items']);
-    console.log('Items table exists:', tableCheck.length > 0);
-    
-    // Check items table structure
-    const [columns] = await connection.query('DESCRIBE items');
-    console.log('Items table columns:', columns.map(c => c.Field).join(', '));
-    
-    // Try the item query
-    const [items] = await connection.query('SELECT * FROM items WHERE uuid_id = ?', [itemId]);
-    console.log('Item query result:', items);
-    console.log('Item query result length:', items.length);
-    
-    // Also try a broader search to see if the item exists with different casing or format
-    const [allItems] = await connection.query('SELECT id, title, status FROM items LIMIT 5');
-    console.log('Sample items in database:', allItems);
-    
-    if (items.length === 0) {
-      console.log('=== BUY-NOW ITEM NOT FOUND ANALYSIS ===');
-      console.log('Item not found for ID:', itemId);
-      console.log('Sample items in database:', allItems);
-      return res.status(404).json({ 
-        error: 'item_not_found', 
-        details: 'item_does_not_exist',
-        message: 'Item not found'
-      });
-    }
-    const item = items[0];
-    console.log('Item found:', { id: item.id, status: item.status, seller_id: item.seller_id, buy_now_price: item.buy_now_price });
-
-    if (item.status !== 'active' && item.status !== 'draft') {
-      console.log('Item not active or draft:', item.status);
-      return res.status(400).json({ 
-        error: 'item_not_available', 
-        details: 'item_not_active',
-        message: 'Item is not available for purchase'
-      });
+    // Validate item for purchase
+    const validation = validateItemForAction(item, buyerId);
+    if (!validation.success) {
+      console.log('Item validation failed:', validation);
+      return res.status(400).json(validation);
     }
 
-    if (item.seller_id === buyerId) {
-      console.log('Buyer is seller:', { buyerId, sellerId: item.seller_id });
-      return res.status(400).json({ 
-        error: 'invalid_purchase', 
-        details: 'cannot_buy_own_item',
-        message: 'Cannot buy your own item'
-      });
-    }
+    console.log('Item validated for purchase:', { 
+      id: item.id, 
+      title: item.title, 
+      status: item.status, 
+      seller_id: item.seller_id, 
+      buy_now_price: item.buy_now_price 
+    });
 
     // Use the BuyNow stored procedure for proper credit handling
     console.log('Calling BuyNow procedure with:', { itemId, buyerId, buyNowPrice });

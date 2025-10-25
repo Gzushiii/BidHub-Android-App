@@ -4,6 +4,7 @@
 const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
 const { pool } = require('../config/database');
+const { fetchActiveItem, validateItemForAction } = require('../utils/itemLookup');
 
 const router = express.Router();
 
@@ -36,93 +37,32 @@ router.post('/place', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'Invalid bid data' });
     }
 
-    // Check if item exists and is active
-    console.log('=== BID ITEM LOOKUP DEBUG ===');
-    console.log('Checking item with ID:', item_id);
-    console.log('Item ID type:', typeof item_id);
-    console.log('Item ID length:', item_id ? item_id.length : 'null');
+    // Use unified lookup utility
+    console.log('=== BID ITEM LOOKUP ===');
+    const item = await fetchActiveItem(item_id, connection);
     
-    // First check what database we're connected to
-    const [dbInfo] = await connection.query('SELECT DATABASE() as current_db');
-    console.log('Current database:', dbInfo[0].current_db);
-    
-    // Check if items table exists
-    const [tableCheck] = await connection.query(
-      'SHOW TABLES LIKE ?',
-      ['items']
-    );
-    console.log('Items table exists:', tableCheck.length > 0);
-    
-    // Check items table structure
-    const [columns] = await connection.query('DESCRIBE items');
-    console.log('Items table columns:', columns.map(c => c.Field).join(', '));
-    
-    // Try the item query WITHOUT status filter first
-    console.log('=== TRYING ITEM QUERY WITHOUT STATUS FILTER ===');
-    let itemsWithoutFilter;
-    try {
-      [itemsWithoutFilter] = await connection.query(
-        'SELECT * FROM items WHERE uuid_id = ?',
-        [item_id]
-      );
-      console.log('Item query result (no filter):', itemsWithoutFilter);
-      console.log('Item query result length (no filter):', itemsWithoutFilter.length);
-    } catch (queryError) {
-      console.error('Query error details (no filter):', queryError);
-      throw queryError;
-    }
-    
-    // Now try the actual query WITH status filter (matching v_active_items view logic)
-    console.log('=== TRYING ITEM QUERY WITH STATUS FILTER ===');
-    let items;
-    try {
-      [items] = await connection.query(
-        'SELECT * FROM items WHERE uuid_id = ? AND status IN (?, ?)',
-        [item_id, 'active', 'draft']
-      );
-      console.log('Item query result (with filter):', items);
-      console.log('Item query result length (with filter):', items.length);
-    } catch (queryError) {
-      console.error('Query error details (with filter):', queryError);
-      throw queryError;
-    }
-    
-    // Also try a broader search to see if the item exists with different casing or format
-    const [allItems] = await connection.query('SELECT id, title, status FROM items LIMIT 5');
-    console.log('Sample items in database:', allItems);
-
-    if (items.length === 0) {
-      console.log('=== ITEM NOT FOUND ANALYSIS ===');
-      console.log('Item exists without filter:', itemsWithoutFilter.length > 0);
-      if (itemsWithoutFilter.length > 0) {
-        console.log('Item found but not active:', itemsWithoutFilter[0]);
-        console.log('Item status:', itemsWithoutFilter[0].status);
-        return res.status(400).json({ 
-          error: 'item_not_active', 
-          details: 'item_exists_but_not_active',
-          message: `Item exists but status is '${itemsWithoutFilter[0].status}', not 'active' or 'draft'`,
-          item_status: itemsWithoutFilter[0].status
-        });
-      } else {
-        console.log('Item does not exist at all');
-        return res.status(404).json({ 
-          error: 'item_not_found', 
-          details: 'item_does_not_exist',
-          message: 'Item not found'
-        });
-      }
+    // Validate item for bidding
+    const validation = validateItemForAction(item, bidder_id);
+    if (!validation.success) {
+      console.log('Item validation failed:', validation);
+      return res.status(400).json(validation);
     }
 
-    const item = items[0];
+    console.log('Item validated for bidding:', { 
+      id: item.id, 
+      title: item.title, 
+      status: item.status, 
+      seller_id: item.seller_id, 
+      current_bid: item.current_bid 
+    });
 
     // Check if auction has ended
     if (new Date() > new Date(item.end_date)) {
-      return res.status(400).json({ error: 'Auction has ended' });
-    }
-
-    // Check if bidder is not the seller
-    if (bidder_id === item.seller_id) {
-      return res.status(400).json({ error: 'Cannot bid on your own item' });
+      return res.status(400).json({ 
+        error: 'auction_ended',
+        details: 'auction_has_ended',
+        message: 'Auction has ended'
+      });
     }
 
     // CRITICAL FIX: Check bid amount FIRST, before credit check
