@@ -1454,14 +1454,14 @@ public class ItemDetailActivity extends AppCompatActivity {
                 String ln; while ((ln = er.readLine()) != null) sb.append(ln); er.close();
                 
                 // Parse error response for better error message
-                String errorMessage = "Purchase failed";
+                final String errorMessage;
                 try {
                     org.json.JSONObject errorJson = new org.json.JSONObject(sb.toString());
-                    errorMessage = errorJson.optString("error", "Purchase failed");
+                    String parsedError = errorJson.optString("error", "Purchase failed");
                     
                     // Check if it's an insufficient credits error
-                    if (errorMessage.toLowerCase().contains("insufficient credits") || 
-                        errorMessage.toLowerCase().contains("insufficient credit")) {
+                    if (parsedError.toLowerCase().contains("insufficient credits") || 
+                        parsedError.toLowerCase().contains("insufficient credit")) {
                         
                         // Redirect to credits screen for insufficient credits
                         runOnUiThread(() -> {
@@ -1472,11 +1472,13 @@ public class ItemDetailActivity extends AppCompatActivity {
                         });
                         return;
                     }
+                    errorMessage = parsedError;
                 } catch (Exception parseError) {
                     errorMessage = "Purchase failed: " + sb.toString();
                 }
                 
-                runOnUiThread(() -> ToastHelper.showError(this, errorMessage));
+                final String finalErrorMessage = errorMessage;
+                runOnUiThread(() -> ToastHelper.showError(this, finalErrorMessage));
                 return;
             }
 
@@ -1529,7 +1531,8 @@ public class ItemDetailActivity extends AppCompatActivity {
                 if (errorMessage == null || errorMessage.isEmpty()) {
                     errorMessage = "Network error or server unavailable";
                 }
-                runOnUiThread(() -> ToastHelper.showError(this, "Error processing purchase: " + errorMessage));
+                final String finalErrorMessage = "Error processing purchase: " + errorMessage;
+                runOnUiThread(() -> ToastHelper.showError(this, finalErrorMessage));
             }
         }).start();
     }
