@@ -1406,12 +1406,19 @@ public class ItemDetailActivity extends AppCompatActivity {
         try {
             // Complete purchase via backend
             String token = prefsHelper.getAuthToken();
+            android.util.Log.i("ItemDetailActivity", "=== BUY NOW DEBUG ===");
+            android.util.Log.i("ItemDetailActivity", "Auth token: " + (token != null ? token.substring(0, Math.min(20, token.length())) + "..." : "NULL"));
+            android.util.Log.i("ItemDetailActivity", "Item ID: " + currentItem.getItemId());
+            android.util.Log.i("ItemDetailActivity", "Buy now price: " + buyNowPrice);
+            
             if (token == null || token.isEmpty()) {
+                android.util.Log.e("ItemDetailActivity", "No auth token available");
                 ToastHelper.showError(this, "User not authenticated. Please log in.");
                 return;
             }
 
             java.net.URL url = new java.net.URL("https://bidhub-android-app.onrender.com/api/items/" + currentItem.getItemId() + "/buy-now");
+            android.util.Log.i("ItemDetailActivity", "Buy now URL: " + url.toString());
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
@@ -1428,11 +1435,17 @@ public class ItemDetailActivity extends AppCompatActivity {
             org.json.JSONObject payload = new org.json.JSONObject();
             payload.put("amount", buyNowPrice);
             
+            String requestBody = payload.toString();
+            android.util.Log.i("ItemDetailActivity", "Buy now request body: " + requestBody);
+            
             try (java.io.OutputStream os = conn.getOutputStream()) {
-                os.write(payload.toString().getBytes("UTF-8"));
+                os.write(requestBody.getBytes("UTF-8"));
                 os.flush();
             }
+            android.util.Log.i("ItemDetailActivity", "Buy now request sent successfully");
+            
             int code = conn.getResponseCode();
+            android.util.Log.i("ItemDetailActivity", "Buy now response code: " + code);
             if (code < 200 || code >= 300) {
                 java.io.BufferedReader er = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getErrorStream()));
                 StringBuilder sb = new StringBuilder();

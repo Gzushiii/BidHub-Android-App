@@ -22,9 +22,13 @@ public class BidApiClient {
      */
     public static ApiResponse placeBid(String authToken, String itemId, double amount) {
         try {
+            Log.i(TAG, "=== BID API CLIENT DEBUG ===");
             Log.i(TAG, "Placing bid: " + amount + " on item: " + itemId);
+            Log.i(TAG, "Auth token: " + (authToken != null ? authToken.substring(0, Math.min(20, authToken.length())) + "..." : "NULL"));
+            Log.i(TAG, "Base URL: " + BASE_URL);
             
             URL url = new URL(BASE_URL + "/bids/place");
+            Log.i(TAG, "Full URL: " + url.toString());
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json");
@@ -43,19 +47,27 @@ public class BidApiClient {
             requestData.put("item_id", itemId);
             requestData.put("amount", amount);
             
+            String requestBody = requestData.toString();
+            Log.i(TAG, "Request body: " + requestBody);
+            
             // Send request
             OutputStream os = connection.getOutputStream();
-            os.write(requestData.toString().getBytes("UTF-8"));
+            os.write(requestBody.getBytes("UTF-8"));
             os.close();
+            Log.i(TAG, "Request sent successfully");
             
             // Get response
             int responseCode = connection.getResponseCode();
+            Log.i(TAG, "Response code: " + responseCode);
+            
             BufferedReader reader;
             
             if (responseCode >= 200 && responseCode < 300) {
                 reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                Log.i(TAG, "Reading from input stream (success)");
             } else {
                 reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                Log.i(TAG, "Reading from error stream (error)");
             }
             
             StringBuilder response = new StringBuilder();

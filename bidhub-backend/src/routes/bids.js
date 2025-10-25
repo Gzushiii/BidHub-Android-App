@@ -9,6 +9,11 @@ const router = express.Router();
 
 // Place a bid - FIXED VERSION
 router.post('/place', authenticateToken, async (req, res) => {
+  console.log('=== BID PLACEMENT REQUEST RECEIVED ===');
+  console.log('Headers:', req.headers);
+  console.log('Request body:', req.body);
+  console.log('User from JWT:', req.user);
+  
   const connection = await pool.getConnection();
   
   try {

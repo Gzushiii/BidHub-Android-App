@@ -397,6 +397,11 @@ module.exports = router;
  
 // Buy Now endpoint - completes purchase immediately using BuyNow procedure
 router.post('/:id/buy-now', authenticateToken, async (req, res) => {
+  console.log('=== BUY NOW REQUEST RECEIVED ===');
+  console.log('Headers:', req.headers);
+  console.log('Request body:', req.body);
+  console.log('User from JWT:', req.user);
+  
   const connection = await pool.getConnection();
   try {
     // Set connection timeout to prevent hanging
