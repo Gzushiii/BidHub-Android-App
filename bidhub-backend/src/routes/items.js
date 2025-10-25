@@ -199,19 +199,20 @@ router.post('/', authenticateToken, async (req, res) => {
     // Create the item with UUID
     const itemUuid = require('crypto').randomUUID();
     const [result] = await connection.query(
-      `INSERT INTO items 
-       (uuid_id, title, description, category_id, seller_id, starting_price, reserve_price, 
-        current_price, end_date, status, created_at, updated_at) 
+      `INSERT INTO items
+       (uuid_id, title, description, category_id, seller_id, starting_price, reserve_price,
+        current_price, end_date, status, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [itemUuid, title, description, category_id, seller_id, starting_price, reserve_price, starting_price, end_date, status]
     );
 
-    const itemId = itemUuid;
+    const itemIntegerId = result.insertId; // Integer ID for foreign keys
+    const itemUuidId = itemUuid; // UUID for API responses
 
     // Add images if provided
     if (images.length > 0) {
-      const imageValues = images.map((imageUrl, index) => 
-        [itemId, imageUrl, index + 1]
+      const imageValues = images.map((imageUrl, index) =>
+        [itemIntegerId, imageUrl, index + 1] // Use integer ID for item_images FK
       );
 
       await connection.query(
@@ -225,12 +226,12 @@ router.post('/', authenticateToken, async (req, res) => {
     // Get the created item with details
     const [items] = await connection.query(
       'SELECT * FROM items WHERE uuid_id = ?',
-      [itemId]
+      [itemUuidId]
     );
 
     const [itemImages] = await connection.query(
-      'SELECT * FROM item_images WHERE item_uuid_id = ? ORDER BY display_order',
-      [itemId]
+      'SELECT * FROM item_images WHERE item_id = ? ORDER BY display_order',
+      [itemIntegerId] // Use integer ID to query item_images
     );
 
     res.status(201).json({

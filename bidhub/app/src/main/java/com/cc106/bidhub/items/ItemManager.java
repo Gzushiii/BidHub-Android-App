@@ -99,10 +99,35 @@ public class ItemManager {
                 
                 if (response.isSuccess()) {
                     Log.i(TAG, "Item created successfully via backend API");
-                    
+
+                    // Parse the backend response to get the UUID assigned by backend
+                    String backendItemId = null;
+                    try {
+                        if (response.getData() != null && !response.getData().isEmpty()) {
+                            org.json.JSONObject responseJson = new org.json.JSONObject(response.getData());
+                            if (responseJson.has("item")) {
+                                org.json.JSONObject itemJson = responseJson.getJSONObject("item");
+                                // Backend returns uuid_id field
+                                if (itemJson.has("uuid_id")) {
+                                    backendItemId = itemJson.getString("uuid_id");
+                                    Log.i(TAG, "Extracted backend item UUID: " + backendItemId);
+                                }
+                            }
+                        }
+                    } catch (org.json.JSONException e) {
+                        Log.e(TAG, "Failed to parse backend response for UUID", e);
+                    }
+
                     // Also store locally for offline access
                     Item item = new Item();
-                    item.setItemId(UUID.randomUUID().toString());
+                    // CRITICAL FIX: Use backend's UUID if available, otherwise fallback to local UUID
+                    if (backendItemId != null && !backendItemId.isEmpty()) {
+                        item.setItemId(backendItemId);
+                        Log.i(TAG, "Using backend UUID for local storage: " + backendItemId);
+                    } else {
+                        item.setItemId(UUID.randomUUID().toString());
+                        Log.w(TAG, "Backend did not return UUID, generated local UUID (this may cause 404 errors!)");
+                    }
                     item.setTitle(itemData.getTitle());
                     item.setDescription(itemData.getDescription());
                     item.setStartingPrice(itemData.getStartingPrice());
