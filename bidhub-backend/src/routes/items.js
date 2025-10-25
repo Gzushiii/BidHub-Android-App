@@ -373,8 +373,8 @@ router.delete('/:id', authenticateToken, checkItemOwnership, async (req, res) =>
 
     // Set status to cancelled instead of hard delete
     await connection.query(
-      'UPDATE items SET status = "cancelled", updated_at = NOW() WHERE id = ?',
-      [itemId]
+      'UPDATE items SET status = ?, updated_at = NOW() WHERE id = ?',
+      ['cancelled', itemId]
     );
 
     await connection.commit();
@@ -406,7 +406,7 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
   try {
     // Set connection timeout to prevent hanging
     await connection.query('SET SESSION wait_timeout = 30');
-    const itemId = parseInt(req.params.id);
+    const itemId = req.params.id; // Keep as string since it's a UUID
     const buyerId = req.user.id;
     const buyNowPrice = parseFloat(req.body?.amount);
 
@@ -414,36 +414,78 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
     console.log('Item ID:', itemId);
     console.log('Buyer ID:', buyerId);
     console.log('Buy Now Price:', buyNowPrice);
+    console.log('Request params:', req.params);
+    console.log('Request body:', req.body);
 
     if (!itemId || !buyNowPrice || buyNowPrice <= 0) {
-      return res.status(400).json({ error: 'Invalid purchase data' });
+      console.log('Validation failed:', { itemId, buyNowPrice, hasAmount: !!req.body?.amount });
+      return res.status(400).json({ 
+        error: 'validation_failed', 
+        details: 'invalid_purchase_data',
+        message: 'Invalid purchase data - missing or invalid item ID or amount'
+      });
     }
 
     // Get item details to validate buy now price
+    console.log('Querying item with ID:', itemId);
     const [items] = await connection.query('SELECT * FROM items WHERE id = ?', [itemId]);
+    console.log('Item query result:', items);
+    
     if (items.length === 0) {
-      return res.status(404).json({ error: 'Item not found' });
+      console.log('Item not found for ID:', itemId);
+      return res.status(404).json({ 
+        error: 'item_not_found', 
+        details: 'item_does_not_exist',
+        message: 'Item not found'
+      });
     }
     const item = items[0];
+    console.log('Item found:', { id: item.id, status: item.status, seller_id: item.seller_id, buy_now_price: item.buy_now_price });
 
     if (item.status !== 'active') {
-      return res.status(400).json({ error: 'Item is not available for purchase' });
+      console.log('Item not active:', item.status);
+      return res.status(400).json({ 
+        error: 'item_not_available', 
+        details: 'item_not_active',
+        message: 'Item is not available for purchase'
+      });
     }
 
     if (item.seller_id === buyerId) {
-      return res.status(400).json({ error: 'Cannot buy your own item' });
+      console.log('Buyer is seller:', { buyerId, sellerId: item.seller_id });
+      return res.status(400).json({ 
+        error: 'invalid_purchase', 
+        details: 'cannot_buy_own_item',
+        message: 'Cannot buy your own item'
+      });
     }
 
     // Use the BuyNow stored procedure for proper credit handling
+    console.log('Calling BuyNow procedure with:', { itemId, buyerId, buyNowPrice });
     try {
       await connection.query('CALL BuyNow(?, ?, ?)', [itemId, buyerId, buyNowPrice]);
       console.log('BuyNow procedure completed successfully');
     } catch (procError) {
       console.error('BuyNow procedure error:', procError);
+      console.error('Error details:', {
+        message: procError.message,
+        sqlMessage: procError.sqlMessage,
+        code: procError.code,
+        errno: procError.errno
+      });
+      
       if (procError.sqlMessage) {
-        return res.status(400).json({ error: procError.sqlMessage });
+        return res.status(400).json({ 
+          error: 'purchase_failed', 
+          details: 'stored_procedure_error',
+          message: procError.sqlMessage
+        });
       } else {
-        return res.status(500).json({ error: 'Failed to process buy now' });
+        return res.status(500).json({ 
+          error: 'purchase_failed', 
+          details: 'internal_error',
+          message: 'Failed to process buy now'
+        });
       }
     }
 
@@ -455,11 +497,31 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Buy Now error:', err);
     console.error('Error stack:', err.stack);
+    console.error('Error details:', {
+      message: err.message,
+      sqlMessage: err.sqlMessage,
+      code: err.code,
+      errno: err.errno
+    });
     
-    if (err.message) {
-      res.status(500).json({ error: 'Failed to complete purchase: ' + err.message });
+    if (err.sqlMessage) {
+      res.status(400).json({ 
+        error: 'purchase_failed', 
+        details: 'database_error',
+        message: err.sqlMessage
+      });
+    } else if (err.message) {
+      res.status(500).json({ 
+        error: 'purchase_failed', 
+        details: 'internal_error',
+        message: 'Failed to complete purchase: ' + err.message
+      });
     } else {
-      res.status(500).json({ error: 'Failed to complete purchase' });
+      res.status(500).json({ 
+        error: 'purchase_failed', 
+        details: 'unknown_error',
+        message: 'Failed to complete purchase'
+      });
     }
   } finally {
     if (connection) {

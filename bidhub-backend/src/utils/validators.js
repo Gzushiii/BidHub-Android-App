@@ -22,8 +22,8 @@ const validateBidAmount = async (itemId, bidAmount, currentUserId) => {
   try {
     // Get item details
     const [items] = await db.query(
-      'SELECT * FROM items WHERE id = ? AND status = "active"',
-      [itemId]
+      'SELECT * FROM items WHERE id = ? AND status = ?',
+      [itemId, 'active']
     );
 
     if (items.length === 0) {

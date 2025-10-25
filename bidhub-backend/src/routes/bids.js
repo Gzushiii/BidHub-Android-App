@@ -58,8 +58,8 @@ router.post('/place', authenticateToken, async (req, res) => {
     let items;
     try {
       [items] = await connection.query(
-        'SELECT * FROM items WHERE id = ? AND status = "active"',
-        [item_id]
+        'SELECT * FROM items WHERE id = ? AND status = ?',
+        [item_id, 'active']
       );
       console.log('Item query result:', items);
     } catch (queryError) {
@@ -204,13 +204,31 @@ router.post('/place', authenticateToken, async (req, res) => {
     await connection.rollback();
     console.error('Bid placement error:', err);
     console.error('Error stack:', err.stack);
+    console.error('Error details:', {
+      message: err.message,
+      sqlMessage: err.sqlMessage,
+      code: err.code,
+      errno: err.errno
+    });
     
     if (err.sqlMessage) {
-      res.status(400).json({ error: err.sqlMessage });
+      res.status(400).json({ 
+        error: 'bid_failed', 
+        details: 'database_error',
+        message: err.sqlMessage
+      });
     } else if (err.message) {
-      res.status(500).json({ error: 'Failed to place bid: ' + err.message });
+      res.status(500).json({ 
+        error: 'bid_failed', 
+        details: 'internal_error',
+        message: 'Failed to place bid: ' + err.message
+      });
     } else {
-      res.status(500).json({ error: 'Failed to place bid' });
+      res.status(500).json({ 
+        error: 'bid_failed', 
+        details: 'unknown_error',
+        message: 'Failed to place bid'
+      });
     }
   } finally {
     if (connection) {
