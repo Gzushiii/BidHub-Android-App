@@ -81,7 +81,6 @@ const createItemSchema = Joi.object({
     )
     .max(10)
     .optional()
-    .allow(null, [])
     .messages({
       'array.max': 'Cannot have more than 10 images'
     })
@@ -129,7 +128,6 @@ const updateItemSchema = Joi.object({
     )
     .max(10)
     .optional()
-    .allow(null, [])
     .messages({
       'array.max': 'Cannot have more than 10 images'
     })
