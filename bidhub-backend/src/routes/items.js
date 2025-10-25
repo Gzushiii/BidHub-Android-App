@@ -629,6 +629,37 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
     }
 
     const canonicalItemId = item.canonical_id || normalizedItemId;
+    const numericItemId = item.id; // Use numeric INT ID for stored procedure
+    
+    // Enhanced logging for debugging ID issues
+    console.log('Buy-now item ID analysis:', {
+      correlationId,
+      requestedItemId: normalizedItemId,
+      itemObject: {
+        id: item.id,
+        uuid_id: item.uuid_id,
+        canonical_id: item.canonical_id
+      },
+      numericItemId,
+      numericItemIdType: typeof numericItemId
+    });
+
+    // Defensive check: ensure we have a numeric ID
+    if (!numericItemId || isNaN(parseInt(numericItemId, 10))) {
+      console.log('Missing or invalid numeric item ID for buy-now', {
+        correlationId,
+        item_id: item.id,
+        uuid_id: item.uuid_id
+      });
+      await connection.rollback();
+      return res.status(500).json({
+        error: 'internal_error',
+        details: 'invalid_item_id',
+        message: 'Invalid item ID for purchase',
+        correlationId
+      });
+    }
+
     const itemBuyNowPrice = Number(
       item.buy_now_price ?? item.buy_now_amount ?? item.buy_now
     );
@@ -649,12 +680,13 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
     console.log('Buy-now proceeding with purchase:', {
       correlationId,
       canonicalItemId,
+      numericItemId,
       buyerId,
       purchaseAmount
     });
 
     await connection.query('CALL BuyNow(?, ?, ?)', [
-      canonicalItemId,
+      numericItemId,  // Use numeric INT ID instead of UUID
       buyerId,
       purchaseAmount
     ]);
