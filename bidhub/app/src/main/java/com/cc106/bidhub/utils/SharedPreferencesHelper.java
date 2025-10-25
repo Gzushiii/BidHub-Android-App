@@ -2,6 +2,7 @@ package com.cc106.bidhub.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 /**
  * Helper class for managing SharedPreferences
@@ -22,11 +23,17 @@ public class SharedPreferencesHelper {
     }
     
     public void setAuthToken(String token) {
+        Log.i("SharedPreferencesHelper", "=== SETTING AUTH TOKEN ===");
+        Log.i("SharedPreferencesHelper", "Token: " + (token != null ? token.substring(0, Math.min(20, token.length())) + "..." : "NULL"));
         prefs.edit().putString(KEY_AUTH_TOKEN, token).apply();
+        Log.i("SharedPreferencesHelper", "Token saved to SharedPreferences");
     }
     
     public String getAuthToken() {
-        return prefs.getString(KEY_AUTH_TOKEN, null);
+        String token = prefs.getString(KEY_AUTH_TOKEN, null);
+        Log.i("SharedPreferencesHelper", "=== RETRIEVING AUTH TOKEN ===");
+        Log.i("SharedPreferencesHelper", "Retrieved token: " + (token != null ? token.substring(0, Math.min(20, token.length())) + "..." : "NULL"));
+        return token;
     }
     
     public void setUserEmail(String email) {
@@ -71,6 +78,8 @@ public class SharedPreferencesHelper {
     
     // Alias methods for compatibility with AuthApiClient
     public void saveAuthToken(String token) {
+        Log.i("SharedPreferencesHelper", "=== SAVE AUTH TOKEN (ALIAS) ===");
+        Log.i("SharedPreferencesHelper", "Token: " + (token != null ? token.substring(0, Math.min(20, token.length())) + "..." : "NULL"));
         setAuthToken(token);
     }
     
