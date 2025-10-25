@@ -617,7 +617,8 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     }
     
     private void onFilterApplied(FilterCriteria newFilter) {
-        currentFilter = newFilter;
+        // Normalize the filter before applying it
+        currentFilter = FilterCriteria.normalize(newFilter);
         applyFilters();
         updateFilterChips();
     }
@@ -728,8 +729,9 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         // Clear search
         etSearch.setText("");
         
-        // Reset filter criteria
+        // Reset filter criteria and normalize it immediately
         currentFilter = new FilterCriteria();
+        currentFilter = FilterCriteria.normalize(currentFilter);
         
         // Clear filter chips
         layoutFilterChips.removeAllViews();

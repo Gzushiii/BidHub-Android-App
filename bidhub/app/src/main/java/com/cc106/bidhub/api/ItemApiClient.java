@@ -46,7 +46,14 @@ public class ItemApiClient {
             JSONObject requestData = new JSONObject();
             requestData.put("title", itemData.getTitle());
             requestData.put("description", itemData.getDescription());
-            requestData.put("category_id", itemData.getCategoryId());
+            // Convert category_id from string to integer
+            try {
+                int categoryIdInt = Integer.parseInt(itemData.getCategoryId());
+                requestData.put("category_id", categoryIdInt);
+            } catch (NumberFormatException e) {
+                Log.e(TAG, "Invalid category_id: " + itemData.getCategoryId(), e);
+                return new ApiResponse(false, "Invalid category ID", null);
+            }
             requestData.put("starting_price", itemData.getStartingPrice());
             requestData.put("reserve_price", itemData.getStartingPrice());
             requestData.put("duration_days", 7);
@@ -169,7 +176,14 @@ public class ItemApiClient {
             JSONObject requestData = new JSONObject();
             requestData.put("title", itemData.getTitle());
             requestData.put("description", itemData.getDescription());
-            requestData.put("category_id", itemData.getCategoryId());
+            // Convert category_id from string to integer
+            try {
+                int categoryIdInt = Integer.parseInt(itemData.getCategoryId());
+                requestData.put("category_id", categoryIdInt);
+            } catch (NumberFormatException e) {
+                Log.e(TAG, "Invalid category_id: " + itemData.getCategoryId(), e);
+                return new ApiResponse(false, "Invalid category ID", null);
+            }
             requestData.put("starting_price", itemData.getStartingPrice());
             requestData.put("reserve_price", itemData.getStartingPrice());
             requestData.put("duration_days", 7);
