@@ -59,7 +59,23 @@ WHERE TABLE_SCHEMA = 'defaultdb'
   AND REFERENCED_TABLE_NAME IS NOT NULL;
 
 -- For now, let's add a new UUID column and populate it
-ALTER TABLE items ADD COLUMN uuid_id VARCHAR(36) UNIQUE;
+-- Check if uuid_id column already exists
+SET @column_exists = (
+    SELECT COUNT(*) 
+    FROM information_schema.COLUMNS 
+    WHERE TABLE_SCHEMA = 'defaultdb' 
+      AND TABLE_NAME = 'items' 
+      AND COLUMN_NAME = 'uuid_id'
+);
+
+-- Only add the column if it doesn't exist
+SET @sql = IF(@column_exists = 0, 
+    'ALTER TABLE items ADD COLUMN uuid_id VARCHAR(36) UNIQUE',
+    'SELECT "uuid_id column already exists, skipping..." as message'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- Update the uuid_id column with mapped UUIDs
 UPDATE items i 
@@ -85,8 +101,40 @@ SELECT 'Item_images table structure:' AS '';
 DESCRIBE item_images;
 
 -- Add UUID columns to related tables
-ALTER TABLE bids ADD COLUMN item_uuid_id VARCHAR(36);
-ALTER TABLE item_images ADD COLUMN item_uuid_id VARCHAR(36);
+-- Check if item_uuid_id column already exists in bids table
+SET @bids_column_exists = (
+    SELECT COUNT(*) 
+    FROM information_schema.COLUMNS 
+    WHERE TABLE_SCHEMA = 'defaultdb' 
+      AND TABLE_NAME = 'bids' 
+      AND COLUMN_NAME = 'item_uuid_id'
+);
+
+-- Check if item_uuid_id column already exists in item_images table
+SET @images_column_exists = (
+    SELECT COUNT(*) 
+    FROM information_schema.COLUMNS 
+    WHERE TABLE_SCHEMA = 'defaultdb' 
+      AND TABLE_NAME = 'item_images' 
+      AND COLUMN_NAME = 'item_uuid_id'
+);
+
+-- Only add columns if they don't exist
+SET @sql = IF(@bids_column_exists = 0, 
+    'ALTER TABLE bids ADD COLUMN item_uuid_id VARCHAR(36)',
+    'SELECT "item_uuid_id column already exists in bids table, skipping..." as message'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = IF(@images_column_exists = 0, 
+    'ALTER TABLE item_images ADD COLUMN item_uuid_id VARCHAR(36)',
+    'SELECT "item_uuid_id column already exists in item_images table, skipping..." as message'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- Update the UUID columns in related tables
 UPDATE bids b 
