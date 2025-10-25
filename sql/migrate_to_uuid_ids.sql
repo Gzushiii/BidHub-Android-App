@@ -39,8 +39,17 @@ DESCRIBE items;
 
 -- Create backup of current items table
 SELECT 'Creating backup of current items table...' AS '';
-CREATE TABLE items_backup AS SELECT * FROM items;
+-- First, let's get the exact structure of the items table
+SET @sql = CONCAT('CREATE TABLE items_backup AS SELECT * FROM items WHERE 1=0');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Add primary key to the empty backup table
 ALTER TABLE items_backup ADD PRIMARY KEY (id);
+
+-- Now insert the data
+INSERT INTO items_backup SELECT * FROM items;
 
 -- Step 4: Update items table to use UUID primary key
 SELECT 'Step 4: Updating items table to use UUID primary key...' AS '';
