@@ -1059,14 +1059,8 @@ public class ItemDetailActivity extends AppCompatActivity {
     }
 
     private void processBid(double bidAmount) {
-        // Check if user has sufficient credit balance from backend
-        double currentBalance = prefsHelper.getCredits();
-        if (currentBalance < bidAmount) {
-            ToastHelper.showError(this, "Insufficient credits. Please top up your account.");
-            return;
-        }
-        
-        // Sufficient balance - proceed with bid
+        // Let the backend handle credit validation
+        // Proceed with bid placement
         try {
             // Use BiddingEngine to place the bid
             com.cc106.bidhub.bidding.BiddingEngine biddingEngine = com.cc106.bidhub.bidding.BiddingEngine.getInstance(this);
@@ -1088,7 +1082,20 @@ public class ItemDetailActivity extends AppCompatActivity {
                 // Refresh bid history
                 setupBidHistory();
             } else {
-                android.widget.Toast.makeText(this, "Failed to place bid: " + result.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                String errorMessage = result.getMessage();
+                
+                // Check if it's an insufficient credits error
+                if (errorMessage != null && (errorMessage.toLowerCase().contains("insufficient credits") || 
+                    errorMessage.toLowerCase().contains("insufficient credit"))) {
+                    
+                    // Redirect to credits screen for insufficient credits
+                    ToastHelper.showError(this, "Insufficient credits. Please purchase more credits to continue.");
+                    Intent intent = new Intent(this, com.cc106.bidhub.CreditsActivity.class);
+                    intent.putExtra("USER_EMAIL", getCurrentUserEmail());
+                    startActivity(intent);
+                } else {
+                    android.widget.Toast.makeText(this, "Failed to place bid: " + errorMessage, android.widget.Toast.LENGTH_LONG).show();
+                }
             }
         } catch (Exception e) {
             android.widget.Toast.makeText(this, "Error placing bid: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
@@ -1343,49 +1350,47 @@ public class ItemDetailActivity extends AppCompatActivity {
             ToastHelper.showError(this, "Item information not available");
             return;
         }
-        
-        // Check user's credit balance from backend
-        double userBalance = prefsHelper.getCredits();
+
         double buyNowPrice = currentItem.getBuyNowPrice();
-        
-        if (userBalance < buyNowPrice) {
-            // Insufficient balance - redirect to credits screen
-            ToastHelper.showError(this, "Insufficient credits. Redirecting to top-up screen...");
-            
-            Intent intent = new Intent(this, com.cc106.bidhub.CreditsActivity.class);
-            intent.putExtra("USER_EMAIL", getCurrentUserEmail());
-            startActivity(intent);
-            return;
-        }
-        
-        // Create and show buy now confirmation dialog
-        Dialog buyNowDialog = new Dialog(this);
-        buyNowDialog.setContentView(R.layout.dialog_buy_now_confirmation);
-        buyNowDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        
-        // Get dialog views
-        TextView tvItemName = buyNowDialog.findViewById(R.id.tv_item_name);
-        TextView tvBuyNowPrice = buyNowDialog.findViewById(R.id.tv_buy_now_price);
-        TextView tvCreditCost = buyNowDialog.findViewById(R.id.tv_credit_cost);
-        TextView tvRemainingBalance = buyNowDialog.findViewById(R.id.tv_remaining_balance);
-        Button btnConfirmPurchase = buyNowDialog.findViewById(R.id.btn_confirm_purchase);
-        Button btnCancelPurchase = buyNowDialog.findViewById(R.id.btn_cancel_purchase);
-        
-        // Set dialog content
-        tvItemName.setText(currentItem.getTitle());
-        tvBuyNowPrice.setText(currencyFormat.format(buyNowPrice));
-        tvCreditCost.setText(currencyFormat.format(buyNowPrice));
-        tvRemainingBalance.setText(currencyFormat.format(userBalance - buyNowPrice));
-        
-        // Set click listeners
-        btnConfirmPurchase.setOnClickListener(v -> {
-            buyNowDialog.dismiss();
-            processBuyNow();
+
+        // Show loading message while fetching balance
+        runOnUiThread(() -> ToastHelper.showInfo(this, "Checking your balance..."));
+
+        // Show buy now confirmation dialog immediately
+        // Let the backend handle credit validation during actual purchase
+        runOnUiThread(() -> {
+            // Get current balance for display purposes only
+            double currentBalance = prefsHelper.getCredits();
+
+            // Create and show buy now confirmation dialog
+                Dialog buyNowDialog = new Dialog(this);
+                buyNowDialog.setContentView(R.layout.dialog_buy_now_confirmation);
+                buyNowDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
+                // Get dialog views
+                TextView tvItemName = buyNowDialog.findViewById(R.id.tv_item_name);
+                TextView tvBuyNowPrice = buyNowDialog.findViewById(R.id.tv_buy_now_price);
+                TextView tvCreditCost = buyNowDialog.findViewById(R.id.tv_credit_cost);
+                TextView tvRemainingBalance = buyNowDialog.findViewById(R.id.tv_remaining_balance);
+                Button btnConfirmPurchase = buyNowDialog.findViewById(R.id.btn_confirm_purchase);
+                Button btnCancelPurchase = buyNowDialog.findViewById(R.id.btn_cancel_purchase);
+
+                // Set dialog content with current balance
+                tvItemName.setText(currentItem.getTitle());
+                tvBuyNowPrice.setText(currencyFormat.format(buyNowPrice));
+                tvCreditCost.setText(currencyFormat.format(buyNowPrice));
+                tvRemainingBalance.setText(currencyFormat.format(currentBalance - buyNowPrice));
+
+                // Set click listeners
+                btnConfirmPurchase.setOnClickListener(v -> {
+                    buyNowDialog.dismiss();
+                    processBuyNow();
+                });
+
+                btnCancelPurchase.setOnClickListener(v -> buyNowDialog.dismiss());
+
+                buyNowDialog.show();
         });
-        
-        btnCancelPurchase.setOnClickListener(v -> buyNowDialog.dismiss());
-        
-        buyNowDialog.show();
     }
     
     private void processBuyNow() {
@@ -1438,6 +1443,20 @@ public class ItemDetailActivity extends AppCompatActivity {
                 try {
                     org.json.JSONObject errorJson = new org.json.JSONObject(sb.toString());
                     errorMessage = errorJson.optString("error", "Purchase failed");
+                    
+                    // Check if it's an insufficient credits error
+                    if (errorMessage.toLowerCase().contains("insufficient credits") || 
+                        errorMessage.toLowerCase().contains("insufficient credit")) {
+                        
+                        // Redirect to credits screen for insufficient credits
+                        runOnUiThread(() -> {
+                            ToastHelper.showError(this, "Insufficient credits. Please purchase more credits to continue.");
+                            Intent intent = new Intent(this, com.cc106.bidhub.CreditsActivity.class);
+                            intent.putExtra("USER_EMAIL", getCurrentUserEmail());
+                            startActivity(intent);
+                        });
+                        return;
+                    }
                 } catch (Exception parseError) {
                     errorMessage = "Purchase failed: " + sb.toString();
                 }
@@ -1495,5 +1514,59 @@ public class ItemDetailActivity extends AppCompatActivity {
             ToastHelper.showError(this, "Error processing purchase: " + errorMessage);
         }
     }
-    
+
+    /**
+     * Fetches the latest credit balance from the backend server.
+     * This method blocks the calling thread, so it should be called from a background thread.
+     * If the fetch fails, it returns the cached balance from SharedPreferences.
+     *
+     * @return The user's current credit balance
+     */
+    private double fetchFreshBalanceFromBackend() {
+        try {
+            String authToken = prefsHelper.getAuthToken();
+            if (authToken == null || authToken.isEmpty()) {
+                Log.w("ItemDetailActivity", "No auth token available, using cached balance");
+                return prefsHelper.getCredits();
+            }
+
+            // Call backend API to get fresh balance
+            URL url = new URL("https://bidhub-android-app.onrender.com/api/credits/balance");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Authorization", "Bearer " + authToken);
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setConnectTimeout(60000); // 60 seconds for cold starts
+            connection.setReadTimeout(60000);
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode >= 200 && responseCode < 300) {
+                // Read response
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+
+                // Parse JSON response
+                JSONObject jsonResponse = new JSONObject(response.toString());
+                double freshBalance = jsonResponse.optDouble("credits", jsonResponse.optDouble("balance", prefsHelper.getCredits()));
+
+                // Update cached balance
+                prefsHelper.setCredits(freshBalance);
+
+                Log.i("ItemDetailActivity", "Fresh balance fetched from backend: " + freshBalance);
+                return freshBalance;
+            } else {
+                Log.w("ItemDetailActivity", "Failed to fetch balance from backend, status: " + responseCode);
+                return prefsHelper.getCredits();
+            }
+        } catch (Exception e) {
+            Log.e("ItemDetailActivity", "Error fetching balance from backend, using cached value", e);
+            return prefsHelper.getCredits();
+        }
+    }
+
 }

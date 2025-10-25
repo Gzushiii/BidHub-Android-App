@@ -212,10 +212,8 @@ public class BiddingEngine {
             return new BidValidationResult(false, "Bid must be at least " + MIN_BID_INCREMENT + " higher than current bid");
         }
         
-        // Check user credit balance
-        if (!creditManager.validateCreditBalance(bidderId, amount)) {
-            return new BidValidationResult(false, "Insufficient credit balance");
-        }
+        // Credit balance validation is handled by the backend
+        // Skip client-side validation to avoid false negatives from stale cache
         
         // Check user's active bid count
         List<Bid> userBids = getUserActiveBids(bidderId);
