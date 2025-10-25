@@ -3,7 +3,17 @@ const { pool } = require('../config/database');
 const { authenticateToken, checkItemOwnership } = require('../middleware/auth');
 const { createItemSchema, updateItemSchema, paginationSchema } = require('../validators/items');
 const { calculateEndDate, canUpdateItem, canDeleteItem } = require('../utils/validators');
-const { fetchActiveItem, fetchItemById, validateItemForAction, getItemImages, getItemBids } = require('../utils/itemLookup');
+const {
+  fetchActiveItem,
+  fetchItemById,
+  getItemImages,
+  getItemBids
+} = require('../utils/itemLookup');
+const {
+  fetchItemRecord,
+  fetchItemWithErrorInfo,
+  validateItemForBuyNow
+} = require('../utils/itemHelpers');
 
 const router = express.Router();
 
@@ -224,11 +234,7 @@ router.post('/', authenticateToken, async (req, res) => {
     await connection.commit();
 
     // Get the created item with details
-    const [items] = await connection.query(
-      'SELECT * FROM items WHERE uuid_id = ?',
-      [itemUuidId]
-    );
-
+    const createdItem = await fetchItemRecord(connection, itemUuidId);
     const [itemImages] = await connection.query(
       'SELECT * FROM item_images WHERE item_id = ? ORDER BY display_order',
       [itemIntegerId] // Use integer ID to query item_images
@@ -237,7 +243,7 @@ router.post('/', authenticateToken, async (req, res) => {
     res.status(201).json({
       message: 'Item created successfully',
       item: {
-        ...items[0],
+        ...(createdItem || { id: itemUuidId, uuid_id: itemUuidId }),
         images: itemImages
       }
     });
@@ -411,32 +417,100 @@ router.post('/:id/publish', authenticateToken, checkItemOwnership, async (req, r
     const itemId = req.params.id;
     const { duration_days = 7 } = req.body;
 
-    // Check if item exists and is draft
-    const [items] = await connection.query(
-      'SELECT * FROM items WHERE id = ? AND status = ?',
-      [itemId, 'draft']
-    );
+    const itemRecord = await fetchItemRecord(connection, itemId);
 
-    if (items.length === 0) {
-      return res.status(404).json({ error: 'Draft item not found' });
+    if (
+      !itemRecord ||
+      String(itemRecord.status || '').trim().toLowerCase() !== 'draft'
+    ) {
+      await connection.rollback();
+      return res.status(404).json({
+        error: 'draft_not_found',
+        details: 'item_not_in_draft_state',
+        message: 'Draft item not found',
+        item_id: itemId
+      });
     }
 
-    const item = items[0];
+    const canonicalItemId = itemRecord.canonical_id || itemId;
 
     // Calculate end date for active status
     const end_date = calculateEndDate(duration_days);
+    const startTimestamp = new Date();
+
+    const runUpdateWithFallback = async (sqlFragment, params) => {
+      const variants = [
+        {
+          sql: `${sqlFragment} WHERE id = ? OR uuid_id = ?`,
+          params: [...params, canonicalItemId, canonicalItemId],
+          tolerate: ['ER_BAD_FIELD_ERROR']
+        },
+        {
+          sql: `${sqlFragment} WHERE id = ?`,
+          params: [...params, canonicalItemId],
+          tolerate: []
+        },
+        {
+          sql: `${sqlFragment} WHERE uuid_id = ?`,
+          params: [...params, canonicalItemId],
+          tolerate: ['ER_BAD_FIELD_ERROR']
+        }
+      ];
+
+      for (const variant of variants) {
+        try {
+          const [result] = await connection.query(variant.sql, variant.params);
+          if (result.affectedRows > 0) {
+            return result;
+          }
+        } catch (error) {
+          const tolerated = variant.tolerate || [];
+          if (!tolerated.includes(error.code)) {
+            throw error;
+          }
+        }
+      }
+
+      return null;
+    };
 
     // Update item to active status and set end date
-    await connection.query(
-      'UPDATE items SET status = ?, end_date = ?, updated_at = NOW() WHERE id = ?',
-      ['active', end_date, itemId]
+    const primaryUpdate = await runUpdateWithFallback(
+      'UPDATE items SET status = ?, end_date = ?, updated_at = NOW()',
+      ['active', end_date]
     );
+
+    if (!primaryUpdate) {
+      throw new Error('Failed to publish draft item: no rows updated');
+    }
+
+    // Optional lifecycle fields (ignore if columns are absent)
+    await runUpdateWithFallback(
+      'UPDATE items SET state = ?, updated_at = NOW()',
+      ['active']
+    );
+
+    await runUpdateWithFallback('UPDATE items SET is_draft = ?', [0]);
+
+    await runUpdateWithFallback('UPDATE items SET deleted_at = NULL', []);
+
+    await runUpdateWithFallback(
+      'UPDATE items SET start_time = COALESCE(start_time, ?)',
+      [startTimestamp]
+    );
+
+    await runUpdateWithFallback(
+      'UPDATE items SET start_date = COALESCE(start_date, ?)',
+      [startTimestamp]
+    );
+
+    await runUpdateWithFallback('UPDATE items SET end_time = ?', [end_date]);
 
     await connection.commit();
 
     res.json({
       message: 'Item published successfully',
-      item_id: itemId,
+      item_id: canonicalItemId,
       end_date: end_date
     });
 
@@ -449,124 +523,116 @@ router.post('/:id/publish', authenticateToken, checkItemOwnership, async (req, r
   }
 });
 
-module.exports = router;
- 
 // Buy Now endpoint - completes purchase immediately using BuyNow procedure
 router.post('/:id/buy-now', authenticateToken, async (req, res) => {
   console.log('=== BUY NOW REQUEST RECEIVED ===');
   console.log('Headers:', req.headers);
   console.log('Request body:', req.body);
   console.log('User from JWT:', req.user);
-  
+
   const connection = await pool.getConnection();
+
   try {
-    // Set connection timeout to prevent hanging
     await connection.query('SET SESSION wait_timeout = 30');
-    const itemId = req.params.id; // Keep as string since it's a UUID
+
+    const normalizedItemId = String(req.params.id ?? '').trim();
     const buyerId = req.user.id;
-    const buyNowPrice = parseFloat(req.body?.amount);
+    const requestedAmount =
+      req.body?.amount !== undefined ? Number(req.body.amount) : NaN;
 
-    console.log('=== BUY NOW DEBUG ===');
-    console.log('Item ID:', itemId);
-    console.log('Buyer ID:', buyerId);
-    console.log('Buy Now Price:', buyNowPrice);
-    console.log('Request params:', req.params);
-    console.log('Request body:', req.body);
-
-    if (!itemId || !buyNowPrice || buyNowPrice <= 0) {
-      console.log('Validation failed:', { itemId, buyNowPrice, hasAmount: !!req.body?.amount });
-      return res.status(400).json({ 
-        error: 'validation_failed', 
-        details: 'invalid_purchase_data',
-        message: 'Invalid purchase data - missing or invalid item ID or amount'
+    if (!normalizedItemId) {
+      return res.status(400).json({
+        error: 'invalid_purchase',
+        details: 'missing_item_id',
+        message: 'Item ID is required'
       });
     }
 
-    // Use unified lookup utility
-    console.log('=== BUY-NOW ITEM LOOKUP ===');
-    const item = await fetchActiveItem(itemId, connection);
-    
-    // Validate item for purchase
-    const validation = validateItemForAction(item, buyerId);
-    if (!validation.success) {
-      console.log('Item validation failed:', validation);
-      return res.status(400).json(validation);
-    }
+    const { item, error: lookupError } = await fetchItemWithErrorInfo(
+      connection,
+      normalizedItemId
+    );
 
-    console.log('Item validated for purchase:', { 
-      id: item.id, 
-      title: item.title, 
-      status: item.status, 
-      seller_id: item.seller_id, 
-      buy_now_price: item.buy_now_price 
-    });
-
-    // Use the BuyNow stored procedure for proper credit handling
-    console.log('Calling BuyNow procedure with:', { itemId, buyerId, buyNowPrice });
-    try {
-      await connection.query('CALL BuyNow(?, ?, ?)', [itemId, buyerId, buyNowPrice]);
-      console.log('BuyNow procedure completed successfully');
-    } catch (procError) {
-      console.error('BuyNow procedure error:', procError);
-      console.error('Error details:', {
-        message: procError.message,
-        sqlMessage: procError.sqlMessage,
-        code: procError.code,
-        errno: procError.errno
+    if (!item) {
+      console.log('Buy-now lookup failed', {
+        normalizedItemId,
+        lookupError
       });
-      
-      if (procError.sqlMessage) {
-        return res.status(400).json({ 
-          error: 'purchase_failed', 
-          details: 'stored_procedure_error',
-          message: procError.sqlMessage
+      return res
+        .status(lookupError?.http_status || 404)
+        .json({
+          ...(lookupError?.json || {
+            error: 'item_not_found',
+            message: 'Item not found'
+          }),
+          request_item_id: normalizedItemId
         });
-      } else {
-        return res.status(500).json({ 
-          error: 'purchase_failed', 
-          details: 'internal_error',
-          message: 'Failed to process buy now'
-        });
-      }
     }
 
-    res.json({ 
-      message: 'Purchase completed successfully', 
-      item_id: itemId, 
-      amount: buyNowPrice 
+    const { valid, error: validationError } = validateItemForBuyNow(
+      item,
+      buyerId
+    );
+
+    if (!valid) {
+      console.log('Buy-now validation failed', {
+        normalizedItemId,
+        validationError
+      });
+      return res
+        .status(validationError.http_status)
+        .json(validationError.json);
+    }
+
+    const canonicalItemId = item.canonical_id || normalizedItemId;
+    const itemBuyNowPrice = Number(
+      item.buy_now_price ?? item.buy_now_amount ?? item.buy_now
+    );
+    const purchaseAmount =
+      Number.isFinite(requestedAmount) && requestedAmount > 0
+        ? requestedAmount
+        : itemBuyNowPrice;
+
+    if (!Number.isFinite(purchaseAmount) || purchaseAmount <= 0) {
+      return res.status(400).json({
+        error: 'invalid_purchase',
+        details: 'invalid_amount',
+        message: 'A valid Buy Now amount is required'
+      });
+    }
+
+    await connection.query('CALL BuyNow(?, ?, ?)', [
+      canonicalItemId,
+      buyerId,
+      purchaseAmount
+    ]);
+
+    return res.json({
+      message: 'Purchase completed successfully',
+      item_id: canonicalItemId,
+      amount: purchaseAmount
     });
   } catch (err) {
     console.error('Buy Now error:', err);
-    console.error('Error stack:', err.stack);
-    console.error('Error details:', {
-      message: err.message,
-      sqlMessage: err.sqlMessage,
-      code: err.code,
-      errno: err.errno
-    });
-    
+
     if (err.sqlMessage) {
-      res.status(400).json({ 
-        error: 'purchase_failed', 
+      return res.status(400).json({
+        error: 'purchase_failed',
         details: 'database_error',
         message: err.sqlMessage
       });
-    } else if (err.message) {
-      res.status(500).json({ 
-        error: 'purchase_failed', 
-        details: 'internal_error',
-        message: 'Failed to complete purchase: ' + err.message
-      });
-    } else {
-      res.status(500).json({ 
-        error: 'purchase_failed', 
-        details: 'unknown_error',
-        message: 'Failed to complete purchase'
-      });
     }
+
+    return res.status(500).json({
+      error: 'purchase_failed',
+      details: 'internal_error',
+      message: 'Failed to complete purchase'
+    });
   } finally {
     if (connection) {
       connection.release();
     }
   }
 });
+
+module.exports = router;

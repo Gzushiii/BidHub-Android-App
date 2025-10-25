@@ -8,22 +8,26 @@ DROP VIEW IF EXISTS v_active_items;
 
 -- Create the view
 CREATE VIEW v_active_items AS
-SELECT 
+SELECT
     i.id,
+    i.uuid_id,
     i.title,
     i.description,
     i.category_id,
     i.seller_id,
-    i.seller_email,
-    i.starting_bid,
-    i.current_bid,
+    i.starting_price,
+    i.reserve_price,
+    i.current_price,
+    i.buy_now_price,
+    i.item_condition,
     i.status,
+    i.end_date,
+    i.current_bidder_id,
     i.created_at,
     i.updated_at,
-    u.username as seller_username,
-    u.email as seller_user_email,
-    c.name as category_name,
-    c.description as category_description
+    u.email as seller_email,
+    u.alias as seller_alias,
+    c.name as category_name
 FROM items i
 LEFT JOIN users u ON i.seller_id = u.id
 LEFT JOIN categories c ON i.category_id = c.id

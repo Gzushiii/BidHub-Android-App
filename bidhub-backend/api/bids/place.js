@@ -1,101 +1,193 @@
 const express = require('express');
 const { authenticateToken } = require('../../src/middleware/auth');
-const db = require('../../src/config/database');
+const { pool } = require('../../src/config/database');
+const {
+  fetchItemWithErrorInfo,
+  validateItemForBidding
+} = require('../../src/utils/itemHelpers');
 
 const app = express();
 app.use(express.json());
 app.use(authenticateToken);
 
 app.post('/api/bids/place', async (req, res) => {
-  const connection = await db.getConnection();
-  
+  const connection = await pool.getConnection();
+
   try {
+    await connection.query('SET SESSION wait_timeout = 30');
     await connection.beginTransaction();
 
     const { item_id, amount } = req.body;
     const bidder_id = req.user.id;
 
-    // Validate input
-    if (!item_id || !amount || amount <= 0) {
-      return res.status(400).json({ error: 'Invalid bid data' });
-    }
+    const normalizedItemId = String(item_id ?? '').trim();
+    const bidAmount = Number(amount);
 
-    // Check if item exists and is active or draft (matching v_active_items view logic)
-    const [items] = await connection.query(
-      'SELECT * FROM items WHERE uuid_id = ? AND status IN (?, ?)',
-      [item_id, 'active', 'draft']
-    );
-
-    if (items.length === 0) {
-      return res.status(404).json({ error: 'Item not found or not active' });
-    }
-
-    const item = items[0];
-
-    // Check if auction has ended
-    if (new Date() > new Date(item.end_date)) {
-      return res.status(400).json({ error: 'Auction has ended' });
-    }
-
-    // Check if bidder is not the seller
-    if (bidder_id === item.seller_id) {
-      return res.status(400).json({ error: 'Cannot bid on your own item' });
-    }
-
-    // Check if bid amount is higher than current highest bid
-    const [currentBids] = await connection.query(
-      'SELECT MAX(amount) as max_bid FROM bids WHERE item_id = ?',
-      [item_id]
-    );
-
-    const currentMaxBid = currentBids[0].max_bid || item.starting_price;
-    
-    if (amount <= currentMaxBid) {
-      return res.status(400).json({ 
-        error: `Bid must be higher than current highest bid (${currentMaxBid})` 
+    if (!normalizedItemId || !Number.isFinite(bidAmount) || bidAmount <= 0) {
+      await connection.rollback();
+      return res.status(400).json({
+        error: 'invalid_bid',
+        details: 'invalid_payload',
+        message: 'Invalid bid data'
       });
     }
 
-    // Check if user has enough credits
-    const [users] = await connection.query(
-      'SELECT credits FROM users WHERE id = ?',
-      [bidder_id]
+    const { item, error: itemError } = await fetchItemWithErrorInfo(
+      connection,
+      normalizedItemId
     );
+
+    if (!item) {
+      await connection.rollback();
+      return res
+        .status(itemError?.http_status || 404)
+        .json({
+          ...(itemError?.json || {
+            error: 'item_not_found',
+            message: 'Item not found'
+          }),
+          request_item_id: normalizedItemId
+        });
+    }
+
+    const { valid, error: validationError } = validateItemForBidding(
+      item,
+      bidder_id
+    );
+
+    if (!valid) {
+      await connection.rollback();
+      return res
+        .status(validationError.http_status)
+        .json(validationError.json);
+    }
+
+    const canonicalItemId = item.canonical_id || normalizedItemId;
+    const startingPrice = Number(
+      item.starting_price ?? item.starting_bid ?? 0
+    );
+
+    let currentMaxBid = 0;
+    try {
+      const [currentBids] = await connection.query(
+        'SELECT MAX(amount) as max_bid FROM bids WHERE item_id = ? OR item_uuid_id = ?',
+        [canonicalItemId, canonicalItemId]
+      );
+      currentMaxBid = Number(currentBids[0]?.max_bid ?? 0);
+    } catch (lookupError) {
+      if (lookupError.code === 'ER_BAD_FIELD_ERROR') {
+        const [currentBids] = await connection.query(
+          'SELECT MAX(amount) as max_bid FROM bids WHERE item_id = ?',
+          [canonicalItemId]
+        );
+        currentMaxBid = Number(currentBids[0]?.max_bid ?? 0);
+      } else {
+        throw lookupError;
+      }
+    }
+
+    const minimumBid = Math.max(
+      currentMaxBid || startingPrice,
+      startingPrice
+    );
+
+    if (bidAmount <= minimumBid) {
+      await connection.rollback();
+      return res.status(400).json({
+        error: 'bid_too_low',
+        details: 'amount_not_high_enough',
+        message: `Bid must be higher than current highest bid (₱${minimumBid}).`,
+        current_bid: minimumBid,
+        your_bid: bidAmount,
+        required_bid: minimumBid + 1
+      });
+    }
+
+    let users = [];
+    try {
+      [users] = await connection.query(
+        'SELECT id, email, alias, credits FROM users WHERE id = ?',
+        [parseInt(bidder_id, 10)]
+      );
+    } catch (intError) {
+      try {
+        [users] = await connection.query(
+          'SELECT id, email, alias, credits FROM users WHERE id = ?',
+          [String(bidder_id)]
+        );
+      } catch (stringError) {
+        [users] = await connection.query(
+          'SELECT id, email, alias, credits FROM users WHERE CAST(id AS CHAR) = ?',
+          [String(bidder_id)]
+        );
+      }
+    }
 
     if (users.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      const [emailUsers] = await connection.query(
+        'SELECT id, email, alias, credits FROM users WHERE email = ?',
+        [req.user.email]
+      );
+
+      if (emailUsers.length > 0) {
+        users = emailUsers;
+      } else {
+        await connection.rollback();
+        return res.status(404).json({
+          error: 'user_not_found',
+          details: 'bidder_missing',
+          message: 'User not found',
+          bidder_id: bidder_id,
+          user_email: req.user.email
+        });
+      }
     }
 
-    const userCredits = users[0].credits;
-    if (userCredits < amount) {
-      return res.status(400).json({ 
-        error: 'Insufficient credits',
-        required: amount,
-        available: userCredits
+    const userCredits = Number(users[0].credits ?? 0);
+    const actualUserId = users[0].id;
+
+    if (userCredits < bidAmount) {
+      await connection.rollback();
+      return res.status(400).json({
+        error: 'insufficient_credits',
+        details: 'balance_too_low',
+        message: `Insufficient credits. Required: ₱${bidAmount}, Available: ₱${userCredits}`,
+        required: bidAmount,
+        available: userCredits,
+        user_id: actualUserId
       });
     }
 
-    // Call the PlaceBid stored procedure
-    await connection.query(
-      'CALL PlaceBid(?, ?, ?, ?)',
-      [item_id, bidder_id, amount, req.user.alias]
-    );
+    await connection.query('CALL PlaceBid(?, ?, ?, ?)', [
+      canonicalItemId,
+      actualUserId,
+      bidAmount,
+      req.user.alias
+    ]);
 
     await connection.commit();
-    
-    res.json({ 
+
+    res.json({
       message: 'Bid placed successfully',
-      bid_amount: amount,
-      item_id: item_id
+      bid_amount: bidAmount,
+      item_id: canonicalItemId
     });
   } catch (err) {
     await connection.rollback();
     console.error('Bid placement error:', err);
-    
+
     if (err.sqlMessage) {
-      res.status(400).json({ error: err.sqlMessage });
+      res.status(400).json({
+        error: 'bid_failed',
+        details: 'sql_error',
+        message: err.sqlMessage
+      });
     } else {
-      res.status(500).json({ error: 'Failed to place bid' });
+      res.status(500).json({
+        error: 'bid_failed',
+        details: 'internal_error',
+        message: 'Failed to place bid'
+      });
     }
   } finally {
     connection.release();

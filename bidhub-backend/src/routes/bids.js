@@ -4,21 +4,23 @@
 const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
 const { pool } = require('../config/database');
-const { fetchActiveItem, validateItemForAction } = require('../utils/itemLookup');
+const {
+  fetchItemWithErrorInfo,
+  validateItemForBidding
+} = require('../utils/itemHelpers');
 
 const router = express.Router();
 
-// Place a bid - FIXED VERSION
+// Place a bid - unified lookup and validation
 router.post('/place', authenticateToken, async (req, res) => {
   console.log('=== BID PLACEMENT REQUEST RECEIVED ===');
   console.log('Headers:', req.headers);
   console.log('Request body:', req.body);
   console.log('User from JWT:', req.user);
-  
+
   const connection = await pool.getConnection();
-  
+
   try {
-    // Set connection timeout to prevent hanging
     await connection.query('SET SESSION wait_timeout = 30');
     await connection.beginTransaction();
 
@@ -26,75 +28,106 @@ router.post('/place', authenticateToken, async (req, res) => {
     const bidder_id = req.user.id;
     const bidder_alias = req.user.alias;
 
-    console.log('=== BID PLACEMENT DEBUG (FIXED) ===');
-    console.log('Request body:', req.body);
-    console.log('User info:', { id: bidder_id, alias: bidder_alias });
-    console.log('Bid details:', { item_id, amount });
+    const normalizedItemId = String(item_id ?? '').trim();
+    const bidAmount = Number(amount);
 
-    // Validate input
-    if (!item_id || !amount || amount <= 0) {
-      console.log('Validation failed: Invalid bid data');
-      return res.status(400).json({ error: 'Invalid bid data' });
-    }
-
-    // Use unified lookup utility
-    console.log('=== BID ITEM LOOKUP ===');
-    const item = await fetchActiveItem(item_id, connection);
-    
-    // Validate item for bidding
-    const validation = validateItemForAction(item, bidder_id);
-    if (!validation.success) {
-      console.log('Item validation failed:', validation);
-      return res.status(400).json(validation);
-    }
-
-    console.log('Item validated for bidding:', { 
-      id: item.id, 
-      title: item.title, 
-      status: item.status, 
-      seller_id: item.seller_id, 
-      current_bid: item.current_bid 
-    });
-
-    // Check if auction has ended
-    if (new Date() > new Date(item.end_date)) {
-      return res.status(400).json({ 
-        error: 'auction_ended',
-        details: 'auction_has_ended',
-        message: 'Auction has ended'
+    if (!normalizedItemId || !Number.isFinite(bidAmount) || bidAmount <= 0) {
+      console.log('Validation failed: invalid bid payload', {
+        normalizedItemId,
+        bidAmount
+      });
+      await connection.rollback();
+      return res.status(400).json({
+        error: 'invalid_bid',
+        details: 'invalid_payload',
+        message: 'Invalid bid data'
       });
     }
 
-    // CRITICAL FIX: Check bid amount FIRST, before credit check
-    const [currentBids] = await connection.query(
-      'SELECT MAX(amount) as max_bid FROM bids WHERE item_id = ?',
-      [item_id]
+    const { item, error: itemError } = await fetchItemWithErrorInfo(
+      connection,
+      normalizedItemId
     );
 
-    const currentMaxBid = currentBids[0].max_bid || item.starting_price;
-    
-    // Use the higher of starting price or current highest bid
-    const minimumBid = Math.max(currentMaxBid, item.starting_price);
-    
-    if (amount <= minimumBid) {
-      console.log(`Bid validation failed: ${amount} <= ${minimumBid}`);
-      return res.status(400).json({ 
-        error: `Bid must be higher than current highest bid (₱${minimumBid}). Your bid: ₱${amount}`,
+    if (!item) {
+      console.log('Item lookup failed for bid', {
+        normalizedItemId,
+        itemError
+      });
+      await connection.rollback();
+      return res
+        .status(itemError?.http_status || 404)
+        .json({
+          ...(itemError?.json || {
+            error: 'item_not_found',
+            message: 'Item not found'
+          }),
+          request_item_id: normalizedItemId
+        });
+    }
+
+    const { valid, error: validationError } = validateItemForBidding(
+      item,
+      bidder_id
+    );
+
+    if (!valid) {
+      console.log('Item not valid for bidding', {
+        normalizedItemId,
+        validationError
+      });
+      await connection.rollback();
+      return res
+        .status(validationError.http_status)
+        .json(validationError.json);
+    }
+
+    const canonicalItemId = item.canonical_id || normalizedItemId;
+    const startingPrice = Number(
+      item.starting_price ?? item.starting_bid ?? 0
+    );
+
+    let currentMaxBid = 0;
+    try {
+      const [currentBids] = await connection.query(
+        'SELECT MAX(amount) as max_bid FROM bids WHERE item_id = ? OR item_uuid_id = ?',
+        [canonicalItemId, canonicalItemId]
+      );
+      currentMaxBid = Number(currentBids[0]?.max_bid ?? 0);
+    } catch (lookupError) {
+      if (lookupError.code === 'ER_BAD_FIELD_ERROR') {
+        const [currentBids] = await connection.query(
+          'SELECT MAX(amount) as max_bid FROM bids WHERE item_id = ?',
+          [canonicalItemId]
+        );
+        currentMaxBid = Number(currentBids[0]?.max_bid ?? 0);
+      } else {
+        throw lookupError;
+      }
+    }
+
+    const minimumBid = Math.max(
+      currentMaxBid || startingPrice,
+      startingPrice
+    );
+
+    if (bidAmount <= minimumBid) {
+      await connection.rollback();
+      return res.status(400).json({
+        error: 'bid_too_low',
+        details: 'amount_not_high_enough',
+        message: `Bid must be higher than current highest bid (₱${minimumBid}).`,
         current_bid: minimumBid,
-        your_bid: amount,
+        your_bid: bidAmount,
         required_bid: minimumBid + 1
       });
     }
 
-    // Only check credits AFTER validating bid amount
-    console.log('Bid amount validation passed, checking user credits...');
-    
-    // Get user info
     let users = [];
     try {
       [users] = await connection.query(
         'SELECT id, email, alias, credits FROM users WHERE id = ?',
-        [parseInt(bidder_id)]
+        [parseInt(bidder_id, 10)]
       );
     } catch (intError) {
       try {
@@ -111,107 +144,71 @@ router.post('/place', authenticateToken, async (req, res) => {
     }
 
     if (users.length === 0) {
-      // Try to find user by email as fallback
       const [emailUsers] = await connection.query(
         'SELECT id, email, alias, credits FROM users WHERE email = ?',
         [req.user.email]
       );
-      
+
       if (emailUsers.length > 0) {
         users = emailUsers;
       } else {
-        return res.status(404).json({ 
-          error: 'User not found',
+        await connection.rollback();
+        return res.status(404).json({
+          error: 'user_not_found',
+          details: 'bidder_missing',
+          message: 'User not found',
           bidder_id: bidder_id,
           user_email: req.user.email
         });
       }
     }
 
-    const userCredits = users[0].credits;
+    const userCredits = Number(users[0].credits ?? 0);
     const actualUserId = users[0].id;
-    
-    console.log('Credit check:', { 
-      actualUserId, 
-      userCredits, 
-      amount, 
-      sufficient: userCredits >= amount
-    });
-    
-    if (userCredits < amount) {
-      console.log('Insufficient credits error:', { 
-        required: amount, 
-        available: userCredits,
-        user_id: actualUserId
-      });
-      return res.status(400).json({ 
-        error: `Insufficient credits. Required: ₱${amount}, Available: ₱${userCredits}`,
-        required: amount,
+
+    if (userCredits < bidAmount) {
+      await connection.rollback();
+      return res.status(400).json({
+        error: 'insufficient_credits',
+        details: 'balance_too_low',
+        message: `Insufficient credits. Required: ₱${bidAmount}, Available: ₱${userCredits}`,
+        required: bidAmount,
         available: userCredits,
         user_id: actualUserId
       });
     }
 
-    // Call the PlaceBid stored procedure
-    console.log('Calling PlaceBid stored procedure with:', { 
-      item_id, 
-      actual_bidder_id: actualUserId, 
-      amount, 
-      alias: bidder_alias 
-    });
-    
-    // Temporarily comment out stored procedure to test basic functionality
-    console.log('Skipping stored procedure call for testing');
-    
-    // try {
-    //   await connection.query(
-    //     'CALL PlaceBid(?, ?, ?, ?)',
-    //     [item_id, actualUserId, amount, bidder_alias]
-    //   );
-    //   console.log('PlaceBid stored procedure completed successfully');
-    // } catch (procError) {
-    //   console.error('PlaceBid stored procedure error:', procError);
-    //   throw procError;
-    // }
+    await connection.query('CALL PlaceBid(?, ?, ?, ?)', [
+      canonicalItemId,
+      actualUserId,
+      bidAmount,
+      bidder_alias
+    ]);
 
     await connection.commit();
-    console.log('Transaction committed successfully');
-    
-    res.json({ 
+
+    return res.json({
       message: 'Bid placed successfully',
-      bid_amount: amount,
-      item_id: item_id
+      bid_amount: bidAmount,
+      item_id: canonicalItemId
     });
   } catch (err) {
     await connection.rollback();
     console.error('Bid placement error:', err);
-    console.error('Error stack:', err.stack);
-    console.error('Error details:', {
-      message: err.message,
-      sqlMessage: err.sqlMessage,
-      code: err.code,
-      errno: err.errno
-    });
-    
+
     if (err.sqlMessage) {
-      res.status(400).json({ 
-        error: 'bid_failed', 
-        details: 'database_error',
+      return res.status(400).json({
+        error: 'bid_failed',
+        details: 'sql_error',
         message: err.sqlMessage
       });
-    } else if (err.message) {
-      res.status(500).json({ 
-        error: 'bid_failed', 
-        details: 'internal_error',
-        message: 'Failed to place bid: ' + err.message
-      });
-    } else {
-      res.status(500).json({ 
-        error: 'bid_failed', 
-        details: 'unknown_error',
-        message: 'Failed to place bid'
-      });
     }
+
+    return res.status(500).json({
+      error: 'bid_failed',
+      details: 'internal_error',
+      message: 'Failed to place bid'
+    });
   } finally {
     if (connection) {
       connection.release();
