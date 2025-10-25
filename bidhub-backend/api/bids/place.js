@@ -20,10 +20,10 @@ app.post('/api/bids/place', async (req, res) => {
       return res.status(400).json({ error: 'Invalid bid data' });
     }
 
-    // Check if item exists and is active
+    // Check if item exists and is active or draft (matching v_active_items view logic)
     const [items] = await connection.query(
-      'SELECT * FROM items WHERE id = ? AND status = ?',
-      [item_id, 'active']
+      'SELECT * FROM items WHERE id = ? AND status IN (?, ?)',
+      [item_id, 'active', 'draft']
     );
 
     if (items.length === 0) {

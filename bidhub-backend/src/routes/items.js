@@ -454,7 +454,9 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
     console.log('Sample items in database:', allItems);
     
     if (items.length === 0) {
+      console.log('=== BUY-NOW ITEM NOT FOUND ANALYSIS ===');
       console.log('Item not found for ID:', itemId);
+      console.log('Sample items in database:', allItems);
       return res.status(404).json({ 
         error: 'item_not_found', 
         details: 'item_does_not_exist',
@@ -464,8 +466,8 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
     const item = items[0];
     console.log('Item found:', { id: item.id, status: item.status, seller_id: item.seller_id, buy_now_price: item.buy_now_price });
 
-    if (item.status !== 'active') {
-      console.log('Item not active:', item.status);
+    if (item.status !== 'active' && item.status !== 'draft') {
+      console.log('Item not active or draft:', item.status);
       return res.status(400).json({ 
         error: 'item_not_available', 
         details: 'item_not_active',

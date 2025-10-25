@@ -37,7 +37,10 @@ router.post('/place', authenticateToken, async (req, res) => {
     }
 
     // Check if item exists and is active
+    console.log('=== BID ITEM LOOKUP DEBUG ===');
     console.log('Checking item with ID:', item_id);
+    console.log('Item ID type:', typeof item_id);
+    console.log('Item ID length:', item_id ? item_id.length : 'null');
     
     // First check what database we're connected to
     const [dbInfo] = await connection.query('SELECT DATABASE() as current_db');
@@ -54,21 +57,60 @@ router.post('/place', authenticateToken, async (req, res) => {
     const [columns] = await connection.query('DESCRIBE items');
     console.log('Items table columns:', columns.map(c => c.Field).join(', '));
     
-    // Now try the actual query
+    // Try the item query WITHOUT status filter first
+    console.log('=== TRYING ITEM QUERY WITHOUT STATUS FILTER ===');
+    let itemsWithoutFilter;
+    try {
+      [itemsWithoutFilter] = await connection.query(
+        'SELECT * FROM items WHERE id = ?',
+        [item_id]
+      );
+      console.log('Item query result (no filter):', itemsWithoutFilter);
+      console.log('Item query result length (no filter):', itemsWithoutFilter.length);
+    } catch (queryError) {
+      console.error('Query error details (no filter):', queryError);
+      throw queryError;
+    }
+    
+    // Now try the actual query WITH status filter (matching v_active_items view logic)
+    console.log('=== TRYING ITEM QUERY WITH STATUS FILTER ===');
     let items;
     try {
       [items] = await connection.query(
-        'SELECT * FROM items WHERE id = ? AND status = ?',
-        [item_id, 'active']
+        'SELECT * FROM items WHERE id = ? AND status IN (?, ?)',
+        [item_id, 'active', 'draft']
       );
-      console.log('Item query result:', items);
+      console.log('Item query result (with filter):', items);
+      console.log('Item query result length (with filter):', items.length);
     } catch (queryError) {
-      console.error('Query error details:', queryError);
+      console.error('Query error details (with filter):', queryError);
       throw queryError;
     }
+    
+    // Also try a broader search to see if the item exists with different casing or format
+    const [allItems] = await connection.query('SELECT id, title, status FROM items LIMIT 5');
+    console.log('Sample items in database:', allItems);
 
     if (items.length === 0) {
-      return res.status(404).json({ error: 'Item not found or not active' });
+      console.log('=== ITEM NOT FOUND ANALYSIS ===');
+      console.log('Item exists without filter:', itemsWithoutFilter.length > 0);
+      if (itemsWithoutFilter.length > 0) {
+        console.log('Item found but not active:', itemsWithoutFilter[0]);
+        console.log('Item status:', itemsWithoutFilter[0].status);
+        return res.status(400).json({ 
+          error: 'item_not_active', 
+          details: 'item_exists_but_not_active',
+          message: `Item exists but status is '${itemsWithoutFilter[0].status}', not 'active' or 'draft'`,
+          item_status: itemsWithoutFilter[0].status
+        });
+      } else {
+        console.log('Item does not exist at all');
+        return res.status(404).json({ 
+          error: 'item_not_found', 
+          details: 'item_does_not_exist',
+          message: 'Item not found'
+        });
+      }
     }
 
     const item = items[0];
