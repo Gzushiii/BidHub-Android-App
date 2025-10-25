@@ -831,20 +831,31 @@ public class PostFragment extends Fragment implements
                 btnSaveDraft.setEnabled(false);
                 btnSaveDraft.setText("Saving...");
                 
-                boolean success = itemManager.saveDraftItem(itemData, loggedInUserEmail);
-                if (success) {
-                    ErrorHandler.showSuccess(getContext(), "Item saved as draft");
-                    clearForm();
-                } else {
-                    ErrorHandler.showDetailedError(getContext(), "Failed to save draft");
-                }
+                // Use async version to prevent NetworkOnMainThreadException
+                itemManager.saveDraftItemAsync(itemData, loggedInUserEmail, new ItemManager.ItemCreationCallback() {
+                    @Override
+                    public void onResult(boolean success) {
+                        // This callback runs on the main thread
+                        if (success) {
+                            ErrorHandler.showSuccess(getContext(), "Item saved as draft");
+                            clearForm();
+                        } else {
+                            ErrorHandler.showDetailedError(getContext(), "Failed to save draft");
+                        }
+                        
+                        // Reset button state
+                        btnSaveDraft.setEnabled(true);
+                        btnSaveDraft.setText("Save as Draft");
+                    }
+                });
             } else {
                 ErrorHandler.showDetailedError(getContext(), "Please fill in all required fields correctly.");
             }
         } catch (Exception e) {
             ErrorHandler.handleInitError(getContext(), "SaveDraft", e, "Saving draft item");
             e.printStackTrace();
-        } finally {
+            
+            // Reset button state on error
             btnSaveDraft.setEnabled(true);
             btnSaveDraft.setText("Save as Draft");
         }
@@ -887,19 +898,32 @@ public class PostFragment extends Fragment implements
                     progressBar.setVisibility(View.VISIBLE);
                 }
                 
-                boolean success = itemManager.createItem(itemData, loggedInUserEmail);
-                if (success) {
-                    ErrorHandler.showSuccess(getContext(), "Item posted successfully!");
-                    clearForm();
-                    
-                    // Debug: Log item count after creation
-                    android.util.Log.d("PostFragment", "Item created successfully. Total items in manager: " + itemManager.getAllBrowsableItems().size());
-                    
-                    // User stays on Post tab to create more listings
-                } else {
-                    android.util.Log.e("PostFragment", "ItemManager.createItem returned false");
-                    ErrorHandler.showDetailedError(getContext(), "Failed to post item. Please check all required fields and try again.");
-                }
+                // Use async version to prevent NetworkOnMainThreadException
+                itemManager.createItemAsync(itemData, loggedInUserEmail, new ItemManager.ItemCreationCallback() {
+                    @Override
+                    public void onResult(boolean success) {
+                        // This callback runs on the main thread
+                        if (success) {
+                            ErrorHandler.showSuccess(getContext(), "Item posted successfully!");
+                            clearForm();
+                            
+                            // Debug: Log item count after creation
+                            android.util.Log.d("PostFragment", "Item created successfully. Total items in manager: " + itemManager.getAllBrowsableItems().size());
+                            
+                            // User stays on Post tab to create more listings
+                        } else {
+                            android.util.Log.e("PostFragment", "ItemManager.createItemAsync returned false");
+                            ErrorHandler.showDetailedError(getContext(), "Failed to post item. Please check all required fields and try again.");
+                        }
+                        
+                        // Reset button state
+                        btnPostItem.setEnabled(true);
+                        btnPostItem.setText("Post Item");
+                        if (progressBar != null) {
+                            progressBar.setVisibility(View.GONE);
+                        }
+                    }
+                });
             } else {
                 android.util.Log.e("PostFragment", "createItemData returned null - validation failed");
                 ErrorHandler.showDetailedError(getContext(), "Please fill in all required fields correctly.");
@@ -907,8 +931,8 @@ public class PostFragment extends Fragment implements
         } catch (Exception e) {
             ErrorHandler.handleInitError(getContext(), "PostItem", e, "Posting item");
             e.printStackTrace();
-        } finally {
-            // Reset button state
+            
+            // Reset button state on error
             btnPostItem.setEnabled(true);
             btnPostItem.setText("Post Item");
             if (progressBar != null) {
@@ -920,6 +944,11 @@ public class PostFragment extends Fragment implements
     private ItemData createItemData() {
         // Validate required fields
         if (!validateForm()) {
+            return null;
+        }
+        
+        // Additional client-side validation to prevent 400 errors
+        if (!validateItemDataForAPI()) {
             return null;
         }
         
@@ -1003,6 +1032,56 @@ public class PostFragment extends Fragment implements
         return itemData;
     }
     
+    /**
+     * Additional client-side validation to prevent 400 errors from API
+     */
+    private boolean validateItemDataForAPI() {
+        android.util.Log.d("PostFragment", "Performing client-side API validation");
+        
+        // Validate title
+        String title = etItemTitle.getText().toString().trim();
+        if (title.length() < 3) {
+            ErrorHandler.showDetailedError(getContext(), "Title must be at least 3 characters long");
+            android.util.Log.d("PostFragment", "Validation failed: Title too short (" + title.length() + " chars)");
+            return false;
+        }
+        
+        // Validate description (matches server requirement: >= 10 chars)
+        String description = etItemDescription.getText().toString().trim();
+        if (description.length() < 10) {
+            ErrorHandler.showDetailedError(getContext(), "Description must be at least 10 characters long");
+            android.util.Log.d("PostFragment", "Validation failed: Description too short (" + description.length() + " chars)");
+            return false;
+        }
+        
+        // Validate starting price
+        String priceText = etStartingPrice.getText().toString().trim();
+        if (!priceText.isEmpty()) {
+            try {
+                double price = Double.parseDouble(priceText);
+                if (price <= 0) {
+                    ErrorHandler.showDetailedError(getContext(), "Starting price must be greater than 0");
+                    android.util.Log.d("PostFragment", "Validation failed: Invalid starting price (" + price + ")");
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                ErrorHandler.showDetailedError(getContext(), "Please enter a valid starting price");
+                android.util.Log.d("PostFragment", "Validation failed: Invalid price format (" + priceText + ")");
+                return false;
+            }
+        }
+        
+        // Validate at least one image
+        if (selectedImages == null || selectedImages.isEmpty()) {
+            ErrorHandler.showDetailedError(getContext(), "Please add at least one image");
+            android.util.Log.d("PostFragment", "Validation failed: No images selected");
+            return false;
+        }
+        
+        android.util.Log.d("PostFragment", "Client-side validation passed");
+        return true;
+    }
+    
     private boolean validateForm() {
         // Validate title
         String title = etItemTitle.getText().toString().trim();
@@ -1021,7 +1100,25 @@ public class PostFragment extends Fragment implements
             etItemTitle.requestFocus();
             return false;
         }
-        
+
+        // Validate description
+        String description = etItemDescription.getText().toString().trim();
+        if (TextUtils.isEmpty(description)) {
+            ToastHelper.showError(getContext(), "Description is required");
+            etItemDescription.requestFocus();
+            return false;
+        }
+        if (description.length() < 10) {
+            ToastHelper.showError(getContext(), "Description must be at least 10 characters long");
+            etItemDescription.requestFocus();
+            return false;
+        }
+        if (description.length() > 1000) {
+            ToastHelper.showError(getContext(), "Description must be less than 1000 characters");
+            etItemDescription.requestFocus();
+            return false;
+        }
+
         // Validate category
         String category = actvCategory.getText().toString().trim();
         if (TextUtils.isEmpty(category) || category.equals("Choose")) {
@@ -1102,20 +1199,16 @@ public class PostFragment extends Fragment implements
             return false;
         }
         
-        // Validate images (optional)
-        if (selectedImages != null && selectedImages.size() > MAX_IMAGES) {
+        // Validate images
+        if (selectedImages == null || selectedImages.isEmpty()) {
+            ToastHelper.showError(getContext(), "At least one image is required");
+            return false;
+        }
+        if (selectedImages.size() > MAX_IMAGES) {
             ToastHelper.showError(getContext(), "Maximum " + MAX_IMAGES + " photos allowed");
             return false;
         }
-        
-        // Validate description length
-        String description = etItemDescription.getText().toString().trim();
-        if (!TextUtils.isEmpty(description) && description.length() > 1000) {
-            ToastHelper.showError(getContext(), "Description must be less than 1000 characters");
-            etItemDescription.requestFocus();
-            return false;
-        }
-        
+
         // Validate auction duration
         String duration = actvAuctionDuration.getText().toString().trim();
         if (TextUtils.isEmpty(duration) || duration.equals("Choose")) {

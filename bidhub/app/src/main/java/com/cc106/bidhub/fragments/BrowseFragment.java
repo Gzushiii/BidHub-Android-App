@@ -89,6 +89,7 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     // View state
     private boolean isGridView = true;
     private boolean isLoadingMore = false;
+    private boolean isLoading = false; // Prevent duplicate loading
     private int currentPage = 0;
     private static final int ITEMS_PER_PAGE = 20;
 
@@ -321,28 +322,61 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     
     private void applyFilters() {
         showLoading(true);
-        
-        // Debug: Log before filtering
+
+        // Debug: Log before filtering with comprehensive filter info
         android.util.Log.d("BrowseFragment", "Applying filters to " + allItems.size() + " items");
+        android.util.Log.d("BrowseFragment", "Current filter criteria (raw): " + (currentFilter != null ? currentFilter.toString() : "null"));
+
+        // Normalize filter criteria to convert "null" strings to actual null
+        FilterCriteria normalizedFilter = FilterCriteria.normalize(currentFilter);
+
+        // Update currentFilter to use normalized version to prevent future issues
+        currentFilter = normalizedFilter;
+
+        // Enhanced logging to verify normalization worked
+        android.util.Log.d("BrowseFragment", "Current filter criteria (normalized): " + normalizedFilter.toString());
+        android.util.Log.d("BrowseFragment", "  - query: " + (normalizedFilter.getQuery() == null ? "null" : "'" + normalizedFilter.getQuery() + "'"));
+        android.util.Log.d("BrowseFragment", "  - categoryId: " + (normalizedFilter.getCategoryId() == null ? "null" : "'" + normalizedFilter.getCategoryId() + "'"));
         
+        // Verify normalization worked - should never contain literal "null" strings
+        if (normalizedFilter != null) {
+            String normalizedStr = normalizedFilter.toString();
+            if (normalizedStr.contains("'null'")) {
+                android.util.Log.e("BrowseFragment", "ERROR: Normalization failed - still contains 'null' strings: " + normalizedStr);
+            } else {
+                android.util.Log.d("BrowseFragment", "Normalization successful - no 'null' strings found");
+            }
+        }
+        android.util.Log.d("BrowseFragment", "  - condition: " + (normalizedFilter.getCondition() == null ? "null" : "'" + normalizedFilter.getCondition() + "'"));
+        android.util.Log.d("BrowseFragment", "  - limit: " + normalizedFilter.getLimit() + ", offset: " + normalizedFilter.getOffset());
+
         // Perform filtering on background thread
         new Thread(() -> {
-            List<Item> results = itemManager.filterItems(currentFilter);
-            
+            List<Item> results = itemManager.filterItems(normalizedFilter);
+
             // Debug: Log filter results
             android.util.Log.d("BrowseFragment", "Filter results: " + results.size() + " items");
-            
+
+            // Defensive fallback: if filtering resulted in 0 items but we have items, use unfiltered list
+            final List<Item> finalResults;
+            if (results.isEmpty() && !allItems.isEmpty() && normalizedFilter.isAllCriteriaNull()) {
+                android.util.Log.w("BrowseFragment", "WARNING: Filtering resulted in 0 items from " + allItems.size() + " total items with default filters. Using unfiltered list as fallback.");
+                finalResults = new ArrayList<>(allItems);
+            } else {
+                finalResults = results;
+            }
+
             // Update UI on main thread - check if fragment is still attached
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
                     if (isAdded()) { // Check if fragment is still added to activity
                         filteredItems.clear();
-                        filteredItems.addAll(results);
+                        filteredItems.addAll(finalResults);
                         itemAdapter.notifyDataSetChanged();
-                        
+
                         // Debug: Log after updating adapter
                         android.util.Log.d("BrowseFragment", "Adapter updated with " + filteredItems.size() + " filtered items");
-                        
+
                         showLoading(false);
                         updateEmptyState();
                         updateItemCount();
@@ -353,6 +387,13 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     }
     
     public void loadItems() {
+        // Prevent duplicate loading
+        if (isLoading) {
+            android.util.Log.d("BrowseFragment", "Already loading items, skipping duplicate load");
+            return;
+        }
+        
+        isLoading = true;
         showLoading(true);
         
         // Debug: Log before loading
@@ -382,6 +423,7 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                         if (isAdded()) {
                             allItems.clear();
                             allItems.addAll(activeItems);
+                            isLoading = false; // Reset loading flag
                             applyFilters();
                         }
                     });
@@ -393,7 +435,10 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
             } catch (Exception e) {
                 // Fallback to local items
                 android.util.Log.e("BrowseFragment", "Error fetching from database", e);
-                getActivity().runOnUiThread(() -> loadLocalItems());
+                getActivity().runOnUiThread(() -> {
+                    isLoading = false; // Reset loading flag
+                    loadLocalItems();
+                });
             }
         }).start();
     }
@@ -419,6 +464,7 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                     if (isAdded()) { // Check if fragment is still added to activity
                         allItems.clear();
                         allItems.addAll(activeItems);
+                        isLoading = false; // Reset loading flag
                         
                         // Debug: Log after updating allItems
                         android.util.Log.d("BrowseFragment", "Updated allItems with " + allItems.size() + " active items");

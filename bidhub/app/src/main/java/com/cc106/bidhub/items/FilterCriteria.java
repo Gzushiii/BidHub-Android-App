@@ -212,6 +212,53 @@ public class FilterCriteria implements Serializable {
         return tags != null && !tags.isEmpty();
     }
     
+    /**
+     * Normalize filter criteria by converting "null" strings to actual null values
+     * This method MUTATES the existing instance instead of creating a new one
+     */
+    public static FilterCriteria normalize(FilterCriteria criteria) {
+        if (criteria == null) {
+            return new FilterCriteria();
+        }
+        
+        // Normalize string fields in-place - convert "null" strings to actual null
+        criteria.query = normalizeString(criteria.query);
+        criteria.categoryId = normalizeString(criteria.categoryId);
+        criteria.condition = normalizeString(criteria.condition);
+        
+        // Other fields remain as-is (they're already the correct types)
+        
+        return criteria;
+    }
+    
+    /**
+     * Normalize a string field - convert "null" strings to actual null
+     */
+    private static String normalizeString(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        if (trimmed.isEmpty() || "null".equalsIgnoreCase(trimmed)) {
+            return null;
+        }
+        return trimmed;
+    }
+    
+    /**
+     * Check if all criteria are null/empty (after normalization)
+     */
+    public boolean isAllCriteriaNull() {
+        return query == null && 
+               categoryId == null && 
+               condition == null && 
+               minPrice == null && 
+               maxPrice == null && 
+               status == null && 
+               isFeatured == null && 
+               isTrending == null;
+    }
+
     @Override
     public String toString() {
         return "FilterCriteria{" +

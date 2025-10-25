@@ -194,6 +194,31 @@ public class ItemManager {
     }
     
     /**
+     * Create new item (asynchronous version to prevent NetworkOnMainThreadException)
+     */
+    public void createItemAsync(ItemData itemData, String sellerEmail, ItemCreationCallback callback) {
+        Log.i(TAG, "Creating item async for seller: " + sellerEmail);
+        
+        // Run on background thread to prevent NetworkOnMainThreadException
+        new Thread(() -> {
+            boolean success = createItem(itemData, sellerEmail);
+            
+            // Call callback on main thread
+            if (callback != null) {
+                android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+                mainHandler.post(() -> callback.onResult(success));
+            }
+        }).start();
+    }
+    
+    /**
+     * Callback interface for async item creation
+     */
+    public interface ItemCreationCallback {
+        void onResult(boolean success);
+    }
+    
+    /**
      * Create item locally (fallback when API fails)
      */
     private boolean createLocalItem(ItemData itemData, String sellerEmail) {
@@ -388,6 +413,24 @@ public class ItemManager {
             Log.e(TAG, "Error saving draft item", e);
             return false;
         }
+    }
+    
+    /**
+     * Save item as draft (asynchronous version to prevent NetworkOnMainThreadException)
+     */
+    public void saveDraftItemAsync(ItemData itemData, String sellerEmail, ItemCreationCallback callback) {
+        Log.i(TAG, "Saving item as draft async for seller: " + sellerEmail);
+        
+        // Run on background thread to prevent NetworkOnMainThreadException
+        new Thread(() -> {
+            boolean success = saveDraftItem(itemData, sellerEmail);
+            
+            // Call callback on main thread
+            if (callback != null) {
+                android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+                mainHandler.post(() -> callback.onResult(success));
+            }
+        }).start();
     }
     
     /**
@@ -885,81 +928,107 @@ public class ItemManager {
     }
     
     /**
-     * Filter items
+     * Filter items with comprehensive logging and proper no-op defaults
      */
     public List<Item> filterItems(FilterCriteria criteria) {
         if (criteria == null) {
+            android.util.Log.w("ItemManager", "FilterCriteria is null, returning empty list");
             return new ArrayList<>();
         }
         
+        // Normalize criteria to convert "null" strings to actual null
+        FilterCriteria fc = FilterCriteria.normalize(criteria);
+        
+        // Log normalized filter criteria for debugging
+        android.util.Log.d("ItemManager", "Filter criteria (normalized): " + fc.toString());
+        
+        // Start with all active/draft items
         List<Item> filteredItems = items.values().stream()
                 .filter(item -> item.getStatus() == ItemStatus.ACTIVE || item.getStatus() == ItemStatus.DRAFT)
                 .collect(Collectors.toList());
         
-        // Apply filters
-        if (criteria.getQuery() != null && !criteria.getQuery().trim().isEmpty()) {
-            String searchQuery = criteria.getQuery().toLowerCase().trim();
-            filteredItems = filteredItems.stream()
-                    .filter(item -> 
-                        item.getTitle().toLowerCase().contains(searchQuery) ||
-                        item.getDescription().toLowerCase().contains(searchQuery) ||
+        android.util.Log.d("ItemManager", "Starting with " + filteredItems.size() + " active/draft items");
+        
+        // Apply filters with proper no-op defaults
+        filteredItems = filteredItems.stream()
+                .filter(item -> {
+                    // Search filter (no-op if null)
+                    boolean matchesSearch = (fc.getQuery() == null) || 
+                        item.getTitle().toLowerCase().contains(fc.getQuery().toLowerCase()) ||
+                        item.getDescription().toLowerCase().contains(fc.getQuery().toLowerCase()) ||
                         (item.getTags() != null && item.getTags().stream()
-                            .anyMatch(tag -> tag.toLowerCase().contains(searchQuery)))
-                    )
-                    .collect(Collectors.toList());
-        }
+                            .anyMatch(tag -> tag.toLowerCase().contains(fc.getQuery().toLowerCase())));
+                    
+                    // Category filter (no-op if null)
+                    boolean matchesCategory = (fc.getCategoryId() == null) || 
+                        fc.getCategoryId().equals(item.getCategoryId());
+                    
+                    // Condition filter (no-op if null)
+                    boolean matchesCondition = (fc.getCondition() == null) || 
+                        fc.getCondition().equals(item.getCondition());
+                    
+                    // Price filters (no-op if null, use current price or starting bid)
+                    double price = item.getCurrentPrice() > 0 ? item.getCurrentPrice() : 
+                                  (item.getStartingPrice() > 0 ? item.getStartingPrice() : 0.0);
+                    boolean matchesMin = (fc.getMinPrice() == null) || price >= fc.getMinPrice();
+                    boolean matchesMax = (fc.getMaxPrice() == null) || price <= fc.getMaxPrice();
+                    
+                    // Status filter (no-op if null)
+                    boolean matchesStatus = (fc.getStatus() == null) || 
+                        fc.getStatus().equals(item.getStatus());
+                    
+                    // Featured filter (no-op if null)
+                    boolean matchesFeatured = (fc.getIsFeatured() == null) || 
+                        fc.getIsFeatured() == item.isFeatured();
+                    
+                    // Trending filter (no-op if null)
+                    boolean matchesTrending = (fc.getIsTrending() == null) || 
+                        fc.getIsTrending() == item.isTrending();
+                    
+                    return matchesSearch && matchesCategory && matchesCondition && 
+                           matchesMin && matchesMax && matchesStatus && 
+                           matchesFeatured && matchesTrending;
+                })
+                .collect(Collectors.toList());
         
-        if (criteria.getCategoryId() != null) {
-            filteredItems = filteredItems.stream()
-                    .filter(item -> criteria.getCategoryId().equals(item.getCategoryId()))
-                    .collect(Collectors.toList());
-        }
-        
-        if (criteria.getMinPrice() != null) {
-            filteredItems = filteredItems.stream()
-                    .filter(item -> item.getCurrentPrice() >= criteria.getMinPrice())
-                    .collect(Collectors.toList());
-        }
-        
-        if (criteria.getMaxPrice() != null) {
-            filteredItems = filteredItems.stream()
-                    .filter(item -> item.getCurrentPrice() <= criteria.getMaxPrice())
-                    .collect(Collectors.toList());
-        }
-        
-        if (criteria.getCondition() != null) {
-            filteredItems = filteredItems.stream()
-                    .filter(item -> criteria.getCondition().equals(item.getCondition()))
-                    .collect(Collectors.toList());
-        }
-        
-        
-        if (criteria.getIsFeatured() != null) {
-            filteredItems = filteredItems.stream()
-                    .filter(item -> criteria.getIsFeatured() == item.isFeatured())
-                    .collect(Collectors.toList());
-        }
-        
-        if (criteria.getIsTrending() != null) {
-            filteredItems = filteredItems.stream()
-                    .filter(item -> criteria.getIsTrending() == item.isTrending())
-                    .collect(Collectors.toList());
-        }
+        android.util.Log.d("ItemManager", "After all filters: " + filteredItems.size() + " items");
         
         // Sort items
-        Comparator<Item> comparator = getComparator(criteria.getSortBy(), criteria.getSortOrder());
+        Comparator<Item> comparator = getComparator(fc.getSortBy(), fc.getSortOrder());
         filteredItems.sort(comparator);
+        android.util.Log.d("ItemManager", "After sorting by " + fc.getSortBy() + " " + fc.getSortOrder() + ": " + filteredItems.size() + " items");
         
-        // Apply pagination
-        int offset = criteria.getOffset();
-        int limit = Math.min(criteria.getLimit(), MAX_ITEMS_PER_PAGE);
+        // Apply pagination with safe bounds AFTER filtering and sorting
+        List<Item> paginatedItems;
+        int totalFiltered = filteredItems.size();
+        int from = Math.max(0, fc.getOffset());
+        int maxLimit = (fc.getLimit() <= 0) ? totalFiltered : Math.min(fc.getLimit(), MAX_ITEMS_PER_PAGE);
+        int to = Math.min(totalFiltered, from + maxLimit);
         
-        if (offset >= filteredItems.size()) {
-            return new ArrayList<>();
+        // Ensure from doesn't exceed bounds
+        if (from >= totalFiltered) {
+            from = totalFiltered;
+            to = totalFiltered;
         }
         
-        int endIndex = Math.min(offset + limit, filteredItems.size());
-        return filteredItems.subList(offset, endIndex);
+        if (from == to) {
+            // No items in range
+            paginatedItems = new ArrayList<>();
+            android.util.Log.d("ItemManager", "Paging: total=" + totalFiltered + " from=" + from + " to=" + to + " page=0 (empty range)");
+        } else {
+            paginatedItems = filteredItems.subList(from, to);
+            android.util.Log.d("ItemManager", "Paging: total=" + totalFiltered + " from=" + from + " to=" + to + " page=" + paginatedItems.size());
+        }
+        
+        // Defensive fallback: if all criteria are null and result is empty, use unfiltered list
+        if (fc.isAllCriteriaNull() && paginatedItems.isEmpty() && !items.isEmpty()) {
+            android.util.Log.w("ItemManager", "WARNING: Empty result with default filters - using unfiltered list as fallback");
+            paginatedItems = new ArrayList<>(items.values());
+        }
+        
+        android.util.Log.d("ItemManager", "Final result: " + paginatedItems.size() + " items");
+        
+        return paginatedItems;
     }
     
     /**
