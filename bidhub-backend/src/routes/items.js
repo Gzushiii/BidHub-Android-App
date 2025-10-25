@@ -210,8 +210,8 @@ router.post('/', authenticateToken, async (req, res) => {
     const itemUuid = require('crypto').randomUUID();
     const [result] = await connection.query(
       `INSERT INTO items
-       (uuid_id, title, description, category_id, seller_id, starting_price, reserve_price,
-        current_price, end_date, status, created_at, updated_at)
+       (uuid_id, title, description, category_id, seller_id, starting_bid, reserve_price,
+        current_bid, end_date, status, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [itemUuid, title, description, category_id, seller_id, starting_price, reserve_price, starting_price, end_date, status]
     );
@@ -484,27 +484,10 @@ router.post('/:id/publish', authenticateToken, checkItemOwnership, async (req, r
       throw new Error('Failed to publish draft item: no rows updated');
     }
 
-    // Optional lifecycle fields (ignore if columns are absent)
-    await runUpdateWithFallback(
-      'UPDATE items SET state = ?, updated_at = NOW()',
-      ['active']
-    );
-
-    await runUpdateWithFallback('UPDATE items SET is_draft = ?', [0]);
-
-    await runUpdateWithFallback('UPDATE items SET deleted_at = NULL', []);
-
-    await runUpdateWithFallback(
-      'UPDATE items SET start_time = COALESCE(start_time, ?)',
-      [startTimestamp]
-    );
-
-    await runUpdateWithFallback(
-      'UPDATE items SET start_date = COALESCE(start_date, ?)',
-      [startTimestamp]
-    );
-
-    await runUpdateWithFallback('UPDATE items SET end_time = ?', [end_date]);
+    // Note: Only updating columns that actually exist in the database
+    // The database schema only has: id, uuid_id, title, description, category_id,
+    // seller_id, seller_email, starting_bid, current_bid, buy_now_price, 
+    // status, created_at, updated_at
 
     await connection.commit();
 
