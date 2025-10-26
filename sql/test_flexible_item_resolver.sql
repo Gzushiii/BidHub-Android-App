@@ -3,30 +3,30 @@
 
 -- First, let's see what items exist
 SELECT '=== EXISTING ITEMS ===' as section;
-SELECT id, uuid_id, canonical_id, title, status, seller_id 
+SELECT id, uuid_id, title, status, seller_id 
 FROM items 
 WHERE status = 'active' 
 LIMIT 5;
 
 -- Test 1: Lookup by numeric ID
 SELECT '=== TEST 1: NUMERIC ID LOOKUP ===' as section;
-SELECT id, uuid_id, canonical_id, title, status 
+SELECT id, uuid_id, title, status 
 FROM items 
 WHERE id = 1 
 LIMIT 1;
 
 -- Test 2: Lookup by UUID (if any exist)
 SELECT '=== TEST 2: UUID LOOKUP ===' as section;
-SELECT id, uuid_id, canonical_id, title, status 
+SELECT id, uuid_id, title, status 
 FROM items 
 WHERE uuid_id IS NOT NULL AND uuid_id != '' 
 LIMIT 1;
 
--- Test 3: Lookup by canonical_id (if any exist)
-SELECT '=== TEST 3: CANONICAL ID LOOKUP ===' as section;
-SELECT id, uuid_id, canonical_id, title, status 
+-- Test 3: Lookup by title (for debugging)
+SELECT '=== TEST 3: TITLE LOOKUP ===' as section;
+SELECT id, uuid_id, title, status 
 FROM items 
-WHERE canonical_id IS NOT NULL AND canonical_id != '' 
+WHERE title LIKE '%Bunny%' 
 LIMIT 1;
 
 -- Test 4: Test the flexible lookup logic (simulate what the resolver does)
@@ -44,16 +44,15 @@ SELECT
 
 -- Test 5: Check for items that might match the problematic UUID
 SELECT '=== TEST 5: SEARCH FOR PROBLEMATIC UUID ===' as section;
-SELECT id, uuid_id, canonical_id, title, status, seller_id, created_at
+SELECT id, uuid_id, title, status, seller_id, created_at
 FROM items 
 WHERE uuid_id = 'fd2edd76-58b6-4197-9863-254413bc13d8'
-   OR canonical_id = 'fd2edd76-58b6-4197-9863-254413bc13d8'
    OR title LIKE '%Bunny%'
    OR title LIKE '%bunny%';
 
 -- Test 6: Check recent items that might be the "Bunny" item
 SELECT '=== TEST 6: RECENT ITEMS (POTENTIAL BUNNY) ===' as section;
-SELECT id, uuid_id, canonical_id, title, status, seller_id, created_at
+SELECT id, uuid_id, title, status, seller_id, created_at
 FROM items 
 WHERE created_at >= DATE_SUB(NOW(), INTERVAL 1 DAY)
 ORDER BY created_at DESC
@@ -61,7 +60,7 @@ LIMIT 10;
 
 -- Test 7: Check if there are any items with "others" category that failed to sync
 SELECT '=== TEST 7: ITEMS WITH POTENTIAL SYNC ISSUES ===' as section;
-SELECT id, uuid_id, canonical_id, title, status, seller_id, created_at
+SELECT id, uuid_id, title, status, seller_id, created_at
 FROM items 
 WHERE title LIKE '%Bunny%' 
    OR title LIKE '%bunny%'

@@ -8,6 +8,7 @@ const {
   fetchItemWithErrorInfo,
   validateItemForBidding
 } = require('../utils/itemHelpers');
+const { getItemWithErrorInfo } = require('../utils/itemResolver');
 
 const router = express.Router();
 
@@ -62,7 +63,8 @@ router.post('/place', authenticateToken, async (req, res) => {
       });
     }
 
-    const { item, error: itemError } = await fetchItemWithErrorInfo(
+    // Use flexible item resolver to handle multiple ID formats
+    const { found, item, error: itemError } = await getItemWithErrorInfo(
       connection,
       normalizedItemId
     );
@@ -71,11 +73,11 @@ router.post('/place', authenticateToken, async (req, res) => {
       correlationId,
       route: 'POST /api/bids/place',
       itemId: normalizedItemId,
-      found: !!item,
-      itemError: itemError?.code
+      found: found,
+      itemError: itemError?.type
     });
 
-    if (!item) {
+    if (!found || !item) {
       console.log('Item lookup failed for bid', {
         correlationId,
         normalizedItemId,

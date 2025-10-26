@@ -14,8 +14,82 @@ const {
   fetchItemWithErrorInfo,
   validateItemForBuyNow
 } = require('../utils/itemHelpers');
+const { getItemWithErrorInfo } = require('../utils/itemResolver');
 
 const router = express.Router();
+
+// Get specific item by ID (for existence checking and 404 recovery)
+router.get('/:id', async (req, res) => {
+  const connection = await pool.getConnection();
+  const correlationId = `get_item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  try {
+    const itemId = req.params.id;
+    
+    if (!itemId) {
+      return res.status(400).json({
+        error: 'invalid_request',
+        message: 'Item ID is required',
+        correlationId
+      });
+    }
+
+    // Use flexible item resolver to handle multiple ID formats
+    const { found, item, error: lookupError } = await getItemWithErrorInfo(
+      connection,
+      itemId
+    );
+
+    console.log('Item lookup result:', {
+      correlationId,
+      route: 'GET /api/items/:id',
+      itemId: itemId,
+      found: found,
+      lookupError: lookupError?.type
+    });
+
+    if (!found || !item) {
+      return res.status(404).json({
+        error: 'item_not_found',
+        message: 'Item not found',
+        requested_id: itemId,
+        correlationId
+      });
+    }
+
+    // Return item details
+    return res.json({
+      success: true,
+      item: {
+        id: item.id,
+        uuid_id: item.uuid_id,
+        title: item.title,
+        status: item.status,
+        seller_id: item.seller_id,
+        current_bid: item.current_bid,
+        buy_now_price: item.buy_now_price,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      },
+      correlationId
+    });
+
+  } catch (error) {
+    console.error('Error in GET /api/items/:id:', {
+      correlationId,
+      error: error.message,
+      stack: error.stack
+    });
+    
+    return res.status(500).json({
+      error: 'internal_error',
+      message: 'Internal server error',
+      correlationId
+    });
+  } finally {
+    connection.release();
+  }
+});
 
 // Get all items with filtering and pagination
 router.get('/', async (req, res) => {
@@ -572,7 +646,8 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
       });
     }
 
-    const { item, error: lookupError } = await fetchItemWithErrorInfo(
+    // Use flexible item resolver to handle multiple ID formats
+    const { found, item, error: lookupError } = await getItemWithErrorInfo(
       connection,
       normalizedItemId
     );
@@ -581,11 +656,11 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
       correlationId,
       route: 'POST /api/items/:id/buy-now',
       itemId: normalizedItemId,
-      found: !!item,
-      lookupError: lookupError?.code
+      found: found,
+      lookupError: lookupError?.type
     });
 
-    if (!item) {
+    if (!found || !item) {
       console.log('Buy-now lookup failed', {
         correlationId,
         normalizedItemId,
