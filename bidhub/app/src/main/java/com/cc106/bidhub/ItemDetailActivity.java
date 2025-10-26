@@ -1062,6 +1062,11 @@ public class ItemDetailActivity extends AppCompatActivity {
         // Move bid placement to background thread to avoid NetworkOnMainThreadException
         new Thread(() -> {
             try {
+                // First check if item exists on server
+                if (!checkItemExistsOnServer()) {
+                    return; // Error already handled in checkItemExistsOnServer
+                }
+                
                 // Use BiddingEngine to place the bid
                 com.cc106.bidhub.bidding.BiddingEngine biddingEngine = com.cc106.bidhub.bidding.BiddingEngine.getInstance(this);
                 com.cc106.bidhub.bidding.BidResult result = biddingEngine.placeBid(
@@ -1400,6 +1405,40 @@ public class ItemDetailActivity extends AppCompatActivity {
         });
     }
     
+    /**
+     * Check if the current item exists on the server
+     * @return true if item exists, false if not (error already handled)
+     */
+    private boolean checkItemExistsOnServer() {
+        if (currentItem == null || currentItem.getItemId() == null) {
+            runOnUiThread(() -> ToastHelper.showError(this, "Item information not available"));
+            return false;
+        }
+        
+        try {
+            com.cc106.bidhub.api.ItemApiClient itemApiClient = new com.cc106.bidhub.api.ItemApiClient(this);
+            com.cc106.bidhub.api.ApiResponse response = itemApiClient.checkItemExists(currentItem.getItemId());
+            
+            if (!response.isSuccess()) {
+                android.util.Log.w("ItemDetailActivity", "Item not found on server: " + currentItem.getItemId());
+                runOnUiThread(() -> {
+                    android.widget.Toast.makeText(this, 
+                        "This item is not available on the server. It may not have been synced yet. Please try refreshing or recreating the item.", 
+                        android.widget.Toast.LENGTH_LONG).show();
+                });
+                return false;
+            }
+            
+            android.util.Log.i("ItemDetailActivity", "Item confirmed to exist on server: " + currentItem.getItemId());
+            return true;
+            
+        } catch (Exception e) {
+            android.util.Log.e("ItemDetailActivity", "Error checking item existence", e);
+            runOnUiThread(() -> ToastHelper.showError(this, "Error verifying item availability"));
+            return false;
+        }
+    }
+    
     private void processBuyNow() {
         if (currentItem == null) {
             ToastHelper.showError(this, "Item information not available");
@@ -1413,6 +1452,11 @@ public class ItemDetailActivity extends AppCompatActivity {
         // Move network operation to background thread to avoid NetworkOnMainThreadException
         new Thread(() -> {
             try {
+                // First check if item exists on server
+                if (!checkItemExistsOnServer()) {
+                    return; // Error already handled in checkItemExistsOnServer
+                }
+                
             // Complete purchase via backend
             String token = prefsHelper.getAuthToken();
             android.util.Log.i("ItemDetailActivity", "=== BUY NOW DEBUG ===");

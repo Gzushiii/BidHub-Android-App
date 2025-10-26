@@ -158,6 +158,55 @@ public class ItemApiClient {
     public interface ItemCreationCallback {
         void onResult(ApiResponse response);
     }
+
+    /**
+     * Check if an item exists on the server
+     * @param itemId Item ID to check
+     * @return ApiResponse with success/failure and item details if found
+     */
+    public ApiResponse checkItemExists(String itemId) {
+        try {
+            String authToken = prefsHelper.getAuthToken();
+            if (authToken == null || authToken.isEmpty()) {
+                return new ApiResponse(false, "Authentication token not found", null);
+            }
+            
+            URL url = new URL(ITEMS_ENDPOINT + "/" + itemId);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Authorization", "Bearer " + authToken);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(30000);
+            
+            int responseCode = connection.getResponseCode();
+            BufferedReader reader;
+            
+            if (responseCode >= 200 && responseCode < 300) {
+                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            } else {
+                reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+            }
+            
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+            
+            if (responseCode >= 200 && responseCode < 300) {
+                Log.i(TAG, "Item exists on server: " + itemId);
+                return new ApiResponse(true, "Item found", response.toString());
+            } else {
+                Log.w(TAG, "Item not found on server: " + itemId + " - " + responseCode);
+                return new ApiResponse(false, "Item not found", response.toString());
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking item existence: " + itemId, e);
+            return new ApiResponse(false, "Network error: " + e.getMessage(), null);
+        }
+    }
     
     /**
      * Create a draft item via backend API (synchronous version for backward compatibility)
