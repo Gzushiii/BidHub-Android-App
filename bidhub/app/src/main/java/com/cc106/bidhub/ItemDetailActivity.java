@@ -1417,7 +1417,7 @@ public class ItemDetailActivity extends AppCompatActivity {
         
         try {
             com.cc106.bidhub.api.ItemApiClient itemApiClient = new com.cc106.bidhub.api.ItemApiClient(this);
-            com.cc106.bidhub.api.ApiResponse response = itemApiClient.checkItemExists(currentItem.getItemId());
+            com.cc106.bidhub.api.ItemApiClient.ApiResponse response = itemApiClient.checkItemExists(currentItem.getItemId());
             
             if (!response.isSuccess()) {
                 android.util.Log.w("ItemDetailActivity", "Item not found on server: " + currentItem.getItemId());
