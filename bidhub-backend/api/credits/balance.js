@@ -1,6 +1,6 @@
 const express = require('express');
 const { authenticateToken } = require('../../src/middleware/auth');
-const db = require('../../src/config/database');
+const { pool } = require('../../src/config/database');
 
 const app = express();
 app.use(authenticateToken);
@@ -10,7 +10,7 @@ app.get('/api/credits/balance', async (req, res) => {
     const user_id = req.user.id;
 
     // Get user credits
-    const [users] = await db.query(
+    const [users] = await pool.query(
       'SELECT credits FROM users WHERE id = ?',
       [user_id]
     );
