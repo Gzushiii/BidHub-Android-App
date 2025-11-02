@@ -11,7 +11,7 @@ if (missingEnv.length > 0) {
   process.exit(1);
 }
 
-// Database configuration (env-driven)
+// Database configuration (env-driven) - OPTIMIZED for performance
 const dbConfig = {
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT) || 3306,
@@ -21,8 +21,16 @@ const dbConfig = {
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
   charset: 'utf8mb4',
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT) || 20, // Increased from 10 to 20
+  queueLimit: 0,
+  // OPTIMIZED: Connection timeout settings
+  acquireTimeout: 60000, // 60 seconds to acquire connection
+  timeout: 60000, // 60 seconds query timeout
+  // OPTIMIZED: Enable multiple statements for efficiency (safe in our use case)
+  multipleStatements: false,
+  // OPTIMIZED: Connection pool settings
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0
 };
 
 // Create connection pool

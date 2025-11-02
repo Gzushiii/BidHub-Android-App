@@ -331,25 +331,43 @@ router.post('/', authenticateToken, async (req, res) => {
 
     await connection.commit();
 
-    // Get the created item with details
-    const createdItem = await fetchItemRecord(connection, itemUuidId);
-    const [itemImages] = await connection.query(
+    // Get the created item with details using a new query (connection might be released)
+    const [items] = await pool.query(
+      'SELECT * FROM items WHERE uuid_id = ?',
+      [itemUuidId]
+    );
+    
+    const [itemImages] = await pool.query(
       'SELECT * FROM item_images WHERE item_id = ? ORDER BY display_order',
       [itemIntegerId] // Use integer ID to query item_images
     );
 
+    const createdItem = items[0] || null;
+
     res.status(201).json({
       message: 'Item created successfully',
       item: {
-        ...(createdItem || { id: itemUuidId, uuid_id: itemUuidId }),
-        images: itemImages
+        id: itemUuidId,
+        uuid_id: itemUuidId,
+        ...(createdItem || {}),
+        images: itemImages || []
       }
     });
 
   } catch (err) {
     await connection.rollback();
     console.error('Item creation error:', err);
-    res.status(500).json({ error: 'Failed to create item' });
+    console.error('Error stack:', err.stack);
+    console.error('Error details:', {
+      message: err.message,
+      code: err.code,
+      sqlState: err.sqlState,
+      sqlMessage: err.sqlMessage
+    });
+    res.status(500).json({ 
+      error: 'Failed to create item',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   } finally {
     connection.release();
   }
