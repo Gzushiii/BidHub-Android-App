@@ -167,7 +167,12 @@ public class AuthApiClient {
             requestData.put("first_name", firstName);
             requestData.put("last_name", lastName);
             requestData.put("alias", alias);
-            
+
+            // Debug logging
+            Log.d(TAG, "Register request - Username: " + username + ", Email: " + email +
+                      ", Phone: " + phoneNumber + ", Name: " + firstName + " " + lastName +
+                      ", Alias: " + alias);
+
             // Send request
             try (OutputStream os = connection.getOutputStream()) {
                 byte[] input = requestData.toString().getBytes("utf-8");
