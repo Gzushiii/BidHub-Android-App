@@ -14,12 +14,16 @@ const path = require('path');
 // Import database configuration
 const { initializeDatabase } = require('./config/database');
 
+// Import services
+const keepAliveService = require('./services/keepAlive');
+
 // Import API routes
 const authRoutes = require('./routes/auth');
 const itemsRoutes = require('./routes/items');
 const bidsRoutes = require('./routes/bids');
 const creditsRoutes = require('./routes/credits');
 const categoriesRoutes = require('./routes/categories');
+const topupsRoutes = require('./routes/topups');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -57,21 +61,32 @@ app.get('/', (req, res) => {
       items: '/api/items',
       bids: '/api/bids',
       credits: '/api/credits',
-      categories: '/api/categories'
+      categories: '/api/categories',
+      topups: '/api/topups'
     },
     documentation: 'Visit /api/health for server status'
   });
 });
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
+  // Test database connection
+  let dbStatus = 'OK';
+  try {
+    await pool.query('SELECT 1');
+  } catch (err) {
+    dbStatus = 'ERROR';
+  }
+
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'production',
     message: 'BidHub API is running successfully on Render!',
-    version: '2025-10-25-v2',
-    debugMode: 'active'
+    version: '2025-11-03-v1',
+    debugMode: 'active',
+    database: dbStatus,
+    keepAlive: keepAliveService.getStatus()
   });
 });
 
@@ -81,6 +96,7 @@ app.use('/api/items', itemsRoutes);
 app.use('/api/bids', bidsRoutes);
 app.use('/api/credits', creditsRoutes);
 app.use('/api/categories', categoriesRoutes);
+app.use('/api/topups', topupsRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -107,12 +123,28 @@ const startServer = async () => {
       console.log(`BidHub API server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'production'}`);
       console.log(`Database: ${process.env.DB_HOST}:${process.env.DB_PORT}`);
+      
+      // Start keep-alive service
+      keepAliveService.start();
     });
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
   }
 };
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  keepAliveService.stop();
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  keepAliveService.stop();
+  process.exit(0);
+});
 
 startServer();
 

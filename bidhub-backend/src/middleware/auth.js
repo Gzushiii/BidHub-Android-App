@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const db = require('../config/database');
+const { pool } = require('../config/database');
 
 const authenticateToken = (req, res, next) => {
   console.log('=== AUTHENTICATION MIDDLEWARE DEBUG ===');
@@ -60,7 +60,7 @@ const checkItemOwnership = async (req, res, next) => {
     }
 
     // Get item details
-    const [items] = await db.query(
+    const [items] = await pool.query(
       'SELECT * FROM items WHERE id = ?',
       [itemId]
     );
@@ -102,7 +102,7 @@ const checkBidOwnership = async (req, res, next) => {
     }
 
     // Get bid details
-    const [bids] = await db.query(
+    const [bids] = await pool.query(
       'SELECT * FROM bids WHERE id = ?',
       [bidId]
     );
