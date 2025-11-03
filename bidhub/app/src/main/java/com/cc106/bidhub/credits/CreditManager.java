@@ -104,20 +104,20 @@ public class CreditManager {
             // Add credits to user account
             if (addCredits(userId, amount, TRANSACTION_PURCHASE)) {
                 transaction.setStatus(STATUS_COMPLETED);
-                saveTransaction(transaction);
+                saveTransaction(transaction, null);
                 updateDailyLimit(userId, price, "purchase");
                 logCreditActivity(userId, "PURCHASE", amount);
                 Log.i(TAG, "Credits purchased successfully: " + amount + " for user: " + userId);
                 return true;
             } else {
                 transaction.setStatus(STATUS_FAILED);
-                saveTransaction(transaction);
+                saveTransaction(transaction, null);
                 Log.e(TAG, "Failed to add credits after payment");
                 return false;
             }
         } else {
             transaction.setStatus(STATUS_FAILED);
-            saveTransaction(transaction);
+            saveTransaction(transaction, null);
             Log.e(TAG, "Payment processing failed");
             return false;
         }
@@ -164,14 +164,14 @@ public class CreditManager {
                                " WHERE " + DatabaseHelper.COLUMN_USER_ID + " = ?";
             db.execSQL(updateQuery, new Object[]{newAvailableCredits, userId});
             
-            // Create transaction record
+            // Create transaction record using the same database connection
             String transactionId = generateTransactionId();
             CreditTransaction transaction = new CreditTransaction(
                 transactionId, userId, transactionType, -amount,
                 "Credit deduction: " + transactionType, null, STATUS_COMPLETED,
                 new Date(), null
             );
-            saveTransaction(transaction);
+            saveTransaction(transaction, db);
             
             // Update cache
             balance.setAvailableCredits(newAvailableCredits);
@@ -214,14 +214,14 @@ public class CreditManager {
                                " WHERE " + DatabaseHelper.COLUMN_USER_ID + " = ?";
             db.execSQL(updateQuery, new Object[]{newAvailableCredits, userId});
             
-            // Create transaction record
+            // Create transaction record using the same database connection
             String transactionId = generateTransactionId();
             CreditTransaction transaction = new CreditTransaction(
                 transactionId, userId, transactionType, amount,
                 "Credit addition: " + transactionType, null, STATUS_COMPLETED,
                 new Date(), null
             );
-            saveTransaction(transaction);
+            saveTransaction(transaction, db);
             
             // Update cache
             balance.setAvailableCredits(newAvailableCredits);
@@ -381,7 +381,7 @@ public class CreditManager {
         
         // Deduct credits (refund amount is negative, so we add the positive amount)
         if (addCredits(transaction.getUserId(), Math.abs(transaction.getAmount()), TRANSACTION_REFUND)) {
-            saveTransaction(refund);
+            saveTransaction(refund, null);
             logCreditActivity(transaction.getUserId(), "REFUND", Math.abs(transaction.getAmount()));
             Log.i(TAG, "Transaction refunded successfully: " + transactionId);
             return true;
@@ -560,7 +560,7 @@ public class CreditManager {
                 return false;
             }
             
-            // Create transfer transaction record
+            // Create transfer transaction record using the same database connection
             String transactionId = generateTransactionId();
             CreditTransaction transfer = new CreditTransaction(
                 transactionId, fromUserId, TRANSACTION_TRANSFER, -amount,
@@ -568,7 +568,7 @@ public class CreditManager {
                 new Date(), toUserId
             );
             transfer.setToUserId(toUserId);
-            saveTransaction(transfer);
+            saveTransaction(transfer, db);
             
             updateDailyLimit(fromUserId, amount, "transfer");
             logCreditActivity(fromUserId, "TRANSFER_OUT", amount);
@@ -728,8 +728,16 @@ public class CreditManager {
         return true;
     }
     
-    private void saveTransaction(CreditTransaction transaction) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+    /**
+     * Save transaction record using an existing database connection
+     * @param db The existing SQLiteDatabase connection to use (will create new connection if null)
+     */
+    private void saveTransaction(CreditTransaction transaction, SQLiteDatabase db) {
+        // Use provided connection, or create new one if null
+        if (db == null) {
+            db = dbHelper.getWritableDatabase();
+        }
+        
         String insertQuery = "INSERT INTO " + DatabaseHelper.TABLE_CREDIT_TRANSACTIONS + 
                            " (" + DatabaseHelper.COLUMN_TRANSACTION_USER_ID + ", " +
                            DatabaseHelper.COLUMN_TRANSACTION_TYPE + ", " +
