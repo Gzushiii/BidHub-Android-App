@@ -46,13 +46,18 @@ public class ItemApiClient {
             JSONObject requestData = new JSONObject();
             requestData.put("title", itemData.getTitle());
             requestData.put("description", itemData.getDescription());
-            // Convert category_id from string to integer
+            // Convert category_id from string to integer using mapping
             try {
-                int categoryIdInt = Integer.parseInt(itemData.getCategoryId());
+                Integer categoryIdInt = com.cc106.bidhub.utils.CategoryMapping.toBackendCategoryId(itemData.getCategoryId());
+                if (categoryIdInt == null) {
+                    Log.e(TAG, "No mapping found for category_id: " + itemData.getCategoryId());
+                    Log.e(TAG, "Available categories: " + com.cc106.bidhub.utils.CategoryMapping.getAllCategoryIds());
+                    return new ApiResponse(false, "Category not found in mapping. Please update CategoryMapping class.", null);
+                }
                 requestData.put("category_id", categoryIdInt);
-            } catch (NumberFormatException e) {
-                Log.e(TAG, "Invalid category_id: " + itemData.getCategoryId(), e);
-                return new ApiResponse(false, "Invalid category ID", null);
+            } catch (Exception e) {
+                Log.e(TAG, "Error mapping category_id: " + itemData.getCategoryId(), e);
+                return new ApiResponse(false, "Invalid category ID mapping", null);
             }
             requestData.put("starting_price", itemData.getStartingPrice());
             requestData.put("reserve_price", itemData.getStartingPrice());
@@ -225,13 +230,18 @@ public class ItemApiClient {
             JSONObject requestData = new JSONObject();
             requestData.put("title", itemData.getTitle());
             requestData.put("description", itemData.getDescription());
-            // Convert category_id from string to integer
+            // Convert category_id from string to integer using mapping
             try {
-                int categoryIdInt = Integer.parseInt(itemData.getCategoryId());
+                Integer categoryIdInt = com.cc106.bidhub.utils.CategoryMapping.toBackendCategoryId(itemData.getCategoryId());
+                if (categoryIdInt == null) {
+                    Log.e(TAG, "No mapping found for category_id: " + itemData.getCategoryId());
+                    Log.e(TAG, "Available categories: " + com.cc106.bidhub.utils.CategoryMapping.getAllCategoryIds());
+                    return new ApiResponse(false, "Category not found in mapping. Please update CategoryMapping class.", null);
+                }
                 requestData.put("category_id", categoryIdInt);
-            } catch (NumberFormatException e) {
-                Log.e(TAG, "Invalid category_id: " + itemData.getCategoryId(), e);
-                return new ApiResponse(false, "Invalid category ID", null);
+            } catch (Exception e) {
+                Log.e(TAG, "Error mapping category_id: " + itemData.getCategoryId(), e);
+                return new ApiResponse(false, "Invalid category ID mapping", null);
             }
             requestData.put("starting_price", itemData.getStartingPrice());
             requestData.put("reserve_price", itemData.getStartingPrice());
