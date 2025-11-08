@@ -145,3 +145,6 @@ SELECT '' AS '';
 -- Clean up
 DROP PROCEDURE IF EXISTS EnsureIndex;
 
+
+
+

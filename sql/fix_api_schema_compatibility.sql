@@ -404,7 +404,7 @@ BEGIN
         WHERE item_id = p_item_id AND bidder_id = v_previous_bidder_id AND status = 'winning';
         
         -- Record refund transaction
-        INSERT INTO credit_transactions (user_id, transaction_type, amount, description, item_id)
+        INSERT INTO credit_transactions (user_id, type, amount, description, item_id)
         VALUES (v_previous_bidder_id, 'outbid_refund', v_previous_bid_amount, 
                 CONCAT('Refund for outbid on item ', p_item_id), p_item_id);
     END IF;
@@ -415,7 +415,7 @@ BEGIN
     WHERE id = p_bidder_id;
 
     -- Record bid transaction
-    INSERT INTO credit_transactions (user_id, transaction_type, amount, description, item_id)
+    INSERT INTO credit_transactions (user_id, type, amount, description, item_id)
     VALUES (p_bidder_id, 'bid', p_amount, 
             CONCAT('Bid placed on item ', p_item_id), p_item_id);
 
@@ -512,12 +512,12 @@ BEGIN
     WHERE id = v_seller_id;
 
     -- Record buyer transaction
-    INSERT INTO credit_transactions (user_id, transaction_type, amount, description, item_id)
+    INSERT INTO credit_transactions (user_id, type, amount, description, item_id)
     VALUES (p_buyer_id, 'buy_now', v_buy_now_price, 
             CONCAT('Buy now purchase of item ', p_item_id), p_item_id);
 
     -- Record seller transaction (as credit addition)
-    INSERT INTO credit_transactions (user_id, transaction_type, amount, description, item_id)
+    INSERT INTO credit_transactions (user_id, type, amount, description, item_id)
     VALUES (v_seller_id, 'buy_now', v_buy_now_price, 
             CONCAT('Item ', p_item_id, ' sold via buy now'), p_item_id);
 
