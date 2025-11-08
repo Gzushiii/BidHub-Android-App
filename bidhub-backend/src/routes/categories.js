@@ -1,12 +1,12 @@
 const express = require('express');
-const db = require('../config/database');
+const { pool } = require('../config/database');
 
 const router = express.Router();
 
 // Get all categories with subcategories
 router.get('/', async (req, res) => {
   try {
-    const [categories] = await db.query(
+    const [categories] = await pool.query(
       `SELECT c.*, 
               COUNT(sc.id) as subcategory_count
        FROM categories c
@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
 
     // Get subcategories for each category
     for (let category of categories) {
-      const [subcategories] = await db.query(
+      const [subcategories] = await pool.query(
         'SELECT * FROM categories WHERE parent_id = ? ORDER BY name',
         [category.id]
       );
@@ -37,7 +37,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [categories] = await db.query(
+    const [categories] = await pool.query(
       'SELECT * FROM categories WHERE id = ?',
       [id]
     );
@@ -50,7 +50,7 @@ router.get('/:id', async (req, res) => {
 
     // Get subcategories if it's a parent category
     if (!category.parent_id) {
-      const [subcategories] = await db.query(
+      const [subcategories] = await pool.query(
         'SELECT * FROM categories WHERE parent_id = ? ORDER BY name',
         [id]
       );
