@@ -91,15 +91,18 @@ public class BidApiClient {
                 return new ApiResponse(false, errorMessage, null);
             }
             
+        } catch (java.net.UnknownHostException e) {
+            Log.e(TAG, "Error placing bid: Unable to resolve host - " + e.getMessage(), e);
+            return new ApiResponse(false, "Unable to connect to server. Please check your internet connection.", null);
+        } catch (java.net.SocketTimeoutException e) {
+            Log.e(TAG, "Error placing bid: Connection timed out - " + e.getMessage(), e);
+            return new ApiResponse(false, "Connection timed out. The server may be busy. Please try again.", null);
+        } catch (java.io.IOException e) {
+            Log.e(TAG, "Error placing bid: Network I/O problem - " + e.getMessage(), e);
+            return new ApiResponse(false, "Network error. Please check your internet connection and try again.", null);
         } catch (Exception e) {
-            Log.e(TAG, "Error placing bid", e);
-            String errorMessage = e.getMessage();
-            if (errorMessage == null || errorMessage.isEmpty()) {
-                errorMessage = "Network error or server unavailable";
-            } else {
-                errorMessage = "Network error: " + errorMessage;
-            }
-            return new ApiResponse(false, errorMessage, null);
+            Log.e(TAG, "Error placing bid: Unexpected error - " + e.getMessage(), e);
+            return new ApiResponse(false, "An unexpected error occurred. Please try again.", null);
         }
     }
 }

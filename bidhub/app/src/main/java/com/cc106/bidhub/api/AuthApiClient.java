@@ -125,9 +125,18 @@ public class AuthApiClient {
                 return new ApiResponse(false, errorMessage, null);
             }
             
+        } catch (java.net.UnknownHostException e) {
+            Log.e(TAG, "Login error: Unable to resolve host - " + e.getMessage(), e);
+            return new ApiResponse(false, "Unable to connect to server. Please check your internet connection.", null);
+        } catch (java.net.SocketTimeoutException e) {
+            Log.e(TAG, "Login error: Connection timed out - " + e.getMessage(), e);
+            return new ApiResponse(false, "Connection timed out. The server may be busy. Please try again.", null);
+        } catch (java.io.IOException e) {
+            Log.e(TAG, "Login error: Network I/O problem - " + e.getMessage(), e);
+            return new ApiResponse(false, "Network error. Please check your internet connection and try again.", null);
         } catch (Exception e) {
-            Log.e(TAG, "Login error", e);
-            return new ApiResponse(false, "Network error: " + e.getMessage(), null);
+            Log.e(TAG, "Login error: Unexpected error - " + e.getMessage(), e);
+            return new ApiResponse(false, "An unexpected error occurred during login. Please try again.", null);
         }
     }
     
@@ -158,7 +167,12 @@ public class AuthApiClient {
             requestData.put("first_name", firstName);
             requestData.put("last_name", lastName);
             requestData.put("alias", alias);
-            
+
+            // Debug logging
+            Log.d(TAG, "Register request - Username: " + username + ", Email: " + email +
+                      ", Phone: " + phoneNumber + ", Name: " + firstName + " " + lastName +
+                      ", Alias: " + alias);
+
             // Send request
             try (OutputStream os = connection.getOutputStream()) {
                 byte[] input = requestData.toString().getBytes("utf-8");
@@ -210,9 +224,18 @@ public class AuthApiClient {
                 return new ApiResponse(false, errorMessage, null);
             }
             
+        } catch (java.net.UnknownHostException e) {
+            Log.e(TAG, "Register error: Unable to resolve host - " + e.getMessage(), e);
+            return new ApiResponse(false, "Unable to connect to server. Please check your internet connection.", null);
+        } catch (java.net.SocketTimeoutException e) {
+            Log.e(TAG, "Register error: Connection timed out - " + e.getMessage(), e);
+            return new ApiResponse(false, "Connection timed out. The server may be busy. Please try again.", null);
+        } catch (java.io.IOException e) {
+            Log.e(TAG, "Register error: Network I/O problem - " + e.getMessage(), e);
+            return new ApiResponse(false, "Network error. Please check your internet connection and try again.", null);
         } catch (Exception e) {
-            Log.e(TAG, "Register error", e);
-            return new ApiResponse(false, "Network error: " + e.getMessage(), null);
+            Log.e(TAG, "Register error: Unexpected error - " + e.getMessage(), e);
+            return new ApiResponse(false, "An unexpected error occurred during registration. Please try again.", null);
         }
     }
 }

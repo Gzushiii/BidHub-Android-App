@@ -30,6 +30,25 @@ public class ItemApiClient {
     }
     
     /**
+     * Handle network exceptions and return appropriate error message
+     */
+    private ApiResponse handleNetworkException(Exception e, String operation) {
+        if (e instanceof java.net.UnknownHostException) {
+            Log.e(TAG, operation + ": Unable to resolve host - " + e.getMessage(), e);
+            return new ApiResponse(false, "Unable to connect to server. Please check your internet connection.", null);
+        } else if (e instanceof java.net.SocketTimeoutException) {
+            Log.e(TAG, operation + ": Connection timed out - " + e.getMessage(), e);
+            return new ApiResponse(false, "Connection timed out. The server may be busy. Please try again.", null);
+        } else if (e instanceof java.io.IOException) {
+            Log.e(TAG, operation + ": Network I/O problem - " + e.getMessage(), e);
+            return new ApiResponse(false, "Network error. Please check your internet connection and try again.", null);
+        } else {
+            Log.e(TAG, operation + ": Unexpected error - " + e.getMessage(), e);
+            return new ApiResponse(false, "An unexpected error occurred. Please try again.", null);
+        }
+    }
+    
+    /**
      * Create a new item via backend API (synchronous version for backward compatibility)
      */
     public ApiResponse createItem(ItemData itemData, String sellerEmail) {
@@ -46,13 +65,18 @@ public class ItemApiClient {
             JSONObject requestData = new JSONObject();
             requestData.put("title", itemData.getTitle());
             requestData.put("description", itemData.getDescription());
-            // Convert category_id from string to integer
+            // Convert category_id from string to integer using mapping
             try {
-                int categoryIdInt = Integer.parseInt(itemData.getCategoryId());
+                Integer categoryIdInt = com.cc106.bidhub.utils.CategoryMapping.toBackendCategoryId(itemData.getCategoryId());
+                if (categoryIdInt == null) {
+                    Log.e(TAG, "No mapping found for category_id: " + itemData.getCategoryId());
+                    Log.e(TAG, "Available categories: " + com.cc106.bidhub.utils.CategoryMapping.getAllCategoryIds());
+                    return new ApiResponse(false, "Category not found in mapping. Please update CategoryMapping class.", null);
+                }
                 requestData.put("category_id", categoryIdInt);
-            } catch (NumberFormatException e) {
-                Log.e(TAG, "Invalid category_id: " + itemData.getCategoryId(), e);
-                return new ApiResponse(false, "Invalid category ID", null);
+            } catch (Exception e) {
+                Log.e(TAG, "Error mapping category_id: " + itemData.getCategoryId(), e);
+                return new ApiResponse(false, "Invalid category ID mapping", null);
             }
             requestData.put("starting_price", itemData.getStartingPrice());
             requestData.put("reserve_price", itemData.getStartingPrice());
@@ -129,8 +153,7 @@ public class ItemApiClient {
             }
             
         } catch (Exception e) {
-            Log.e(TAG, "Error creating item via API", e);
-            return new ApiResponse(false, "Network error: " + e.getMessage(), null);
+            return handleNetworkException(e, "Error creating item via API");
         }
     }
     
@@ -203,8 +226,7 @@ public class ItemApiClient {
             }
             
         } catch (Exception e) {
-            Log.e(TAG, "Error checking item existence: " + itemId, e);
-            return new ApiResponse(false, "Network error: " + e.getMessage(), null);
+            return handleNetworkException(e, "Error checking item existence: " + itemId);
         }
     }
     
@@ -225,13 +247,18 @@ public class ItemApiClient {
             JSONObject requestData = new JSONObject();
             requestData.put("title", itemData.getTitle());
             requestData.put("description", itemData.getDescription());
-            // Convert category_id from string to integer
+            // Convert category_id from string to integer using mapping
             try {
-                int categoryIdInt = Integer.parseInt(itemData.getCategoryId());
+                Integer categoryIdInt = com.cc106.bidhub.utils.CategoryMapping.toBackendCategoryId(itemData.getCategoryId());
+                if (categoryIdInt == null) {
+                    Log.e(TAG, "No mapping found for category_id: " + itemData.getCategoryId());
+                    Log.e(TAG, "Available categories: " + com.cc106.bidhub.utils.CategoryMapping.getAllCategoryIds());
+                    return new ApiResponse(false, "Category not found in mapping. Please update CategoryMapping class.", null);
+                }
                 requestData.put("category_id", categoryIdInt);
-            } catch (NumberFormatException e) {
-                Log.e(TAG, "Invalid category_id: " + itemData.getCategoryId(), e);
-                return new ApiResponse(false, "Invalid category ID", null);
+            } catch (Exception e) {
+                Log.e(TAG, "Error mapping category_id: " + itemData.getCategoryId(), e);
+                return new ApiResponse(false, "Invalid category ID mapping", null);
             }
             requestData.put("starting_price", itemData.getStartingPrice());
             requestData.put("reserve_price", itemData.getStartingPrice());
@@ -306,8 +333,7 @@ public class ItemApiClient {
             }
             
         } catch (Exception e) {
-            Log.e(TAG, "Error creating draft item via API", e);
-            return new ApiResponse(false, "Network error: " + e.getMessage(), null);
+            return handleNetworkException(e, "Error creating draft item via API");
         }
     }
     
@@ -387,8 +413,7 @@ public class ItemApiClient {
             }
             
         } catch (Exception e) {
-            Log.e(TAG, "Error publishing draft item via API", e);
-            return new ApiResponse(false, "Network error: " + e.getMessage(), null);
+            return handleNetworkException(e, "Publishing draft item");
         }
     }
     
@@ -494,7 +519,7 @@ public class ItemApiClient {
                 return new ApiResponse(false, "Network error: " + e.getMessage(), null);
             } catch (Exception e) {
                 Log.e(TAG, "Error getting items from API (attempt " + (attempt + 1) + ")", e);
-                lastResponse = new ApiResponse(false, "Network error: " + e.getMessage(), null);
+                lastResponse = handleNetworkException(e, "Getting items");
 
                 if (attempt < MAX_RETRIES) {
                     // Retry on network errors too

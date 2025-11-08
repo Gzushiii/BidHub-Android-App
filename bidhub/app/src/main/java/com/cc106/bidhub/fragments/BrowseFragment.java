@@ -338,13 +338,14 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         android.util.Log.d("BrowseFragment", "  - query: " + (normalizedFilter.getQuery() == null ? "null" : "'" + normalizedFilter.getQuery() + "'"));
         android.util.Log.d("BrowseFragment", "  - categoryId: " + (normalizedFilter.getCategoryId() == null ? "null" : "'" + normalizedFilter.getCategoryId() + "'"));
         
-        // Verify normalization worked - should never contain literal "null" strings
+        // Verify normalization worked by checking actual field values
         if (normalizedFilter != null) {
-            String normalizedStr = normalizedFilter.toString();
-            if (normalizedStr.contains("'null'")) {
-                android.util.Log.e("BrowseFragment", "ERROR: Normalization failed - still contains 'null' strings: " + normalizedStr);
-            } else {
-                android.util.Log.d("BrowseFragment", "Normalization successful - no 'null' strings found");
+            boolean hasActualNulls = (normalizedFilter.getQuery() == null) && 
+                                     (normalizedFilter.getCategoryId() == null) && 
+                                     (normalizedFilter.getCondition() == null);
+            
+            if (hasActualNulls) {
+                android.util.Log.d("BrowseFragment", "Normalization successful - all fields are actual nulls");
             }
         }
         android.util.Log.d("BrowseFragment", "  - condition: " + (normalizedFilter.getCondition() == null ? "null" : "'" + normalizedFilter.getCondition() + "'"));

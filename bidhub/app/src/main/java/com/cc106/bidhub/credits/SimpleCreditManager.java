@@ -79,6 +79,29 @@ public class SimpleCreditManager {
     }
     
     /**
+     * Get current credit balance for user using an existing database connection
+     */
+    private double getCreditBalance(String userId, SQLiteDatabase db) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return 0.0;
+        }
+        
+        String query = "SELECT " + DatabaseHelper.COLUMN_USER_CREDITS + 
+                      " FROM " + DatabaseHelper.TABLE_USERS + 
+                      " WHERE " + DatabaseHelper.COLUMN_USER_ID + " = ?";
+        
+        Cursor cursor = db.rawQuery(query, new String[]{userId});
+        double balance = 0.0;
+        
+        if (cursor.moveToFirst()) {
+            balance = cursor.getDouble(0);
+        }
+        cursor.close();
+        
+        return balance;
+    }
+    
+    /**
      * Add credits to user account
      */
     public boolean addCredits(String userId, double amount, String transactionType) {
@@ -90,8 +113,8 @@ public class SimpleCreditManager {
         try {
             db.beginTransaction();
             
-            // Get current balance
-            double currentBalance = getCreditBalance(userId);
+            // Get current balance using the same database connection
+            double currentBalance = getCreditBalance(userId, db);
             double newBalance = currentBalance + amount;
             
             // Update user credits
@@ -100,8 +123,8 @@ public class SimpleCreditManager {
                                " WHERE " + DatabaseHelper.COLUMN_USER_ID + " = ?";
             db.execSQL(updateQuery, new Object[]{newBalance, userId});
             
-            // Create transaction record
-            createTransaction(userId, transactionType, amount, "Credit addition", STATUS_COMPLETED);
+            // Create transaction record using the same database connection
+            createTransaction(db, userId, transactionType, amount, "Credit addition", STATUS_COMPLETED);
             
             db.setTransactionSuccessful();
             Log.i(TAG, "Credits added: " + amount + " for user: " + userId);
@@ -141,8 +164,8 @@ public class SimpleCreditManager {
                                " WHERE " + DatabaseHelper.COLUMN_USER_ID + " = ?";
             db.execSQL(updateQuery, new Object[]{newBalance, userId});
             
-            // Create transaction record
-            createTransaction(userId, transactionType, -amount, "Credit deduction", STATUS_COMPLETED);
+            // Create transaction record using the same database connection
+            createTransaction(db, userId, transactionType, -amount, "Credit deduction", STATUS_COMPLETED);
             
             db.setTransactionSuccessful();
             Log.i(TAG, "Credits deducted: " + amount + " for user: " + userId);
@@ -273,8 +296,22 @@ public class SimpleCreditManager {
     /**
      * Create a transaction record
      */
-    private void createTransaction(String userId, String type, double amount, String description, String status) {
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+    /**
+     * Create a transaction record using an existing database connection
+     * @param db The existing SQLiteDatabase connection to use (can be null, will create new connection if null)
+     * @param userId The user ID
+     * @param type Transaction type
+     * @param amount Transaction amount
+     * @param description Transaction description
+     * @param status Transaction status
+     */
+    private void createTransaction(SQLiteDatabase db, String userId, String type, double amount, String description, String status) {
+        // Use provided connection, or create new one if null
+        boolean shouldClose = (db == null);
+        if (db == null) {
+            db = dbHelper.getWritableDatabase();
+        }
+        
         String transactionId = "TXN_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8);
         
         String insertQuery = "INSERT INTO " + DatabaseHelper.TABLE_CREDIT_TRANSACTIONS + 
@@ -291,6 +328,8 @@ public class SimpleCreditManager {
             userId, type, amount, description, null, status, 
             System.currentTimeMillis(), null
         });
+        
+        // Don't close - connection is managed by caller
     }
     
     // ==================== UTILITY METHODS ====================
