@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BidHub</string>
+    
+    <!-- Auth -->
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="username">Username</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="alias">Alias</string>
+    <string name="logout">Logout</string>
+    
+    <!-- Items -->
+    <string name="browse_items">Browse Items</string>
+    <string name="post_item">Post Item</string>
+    <string name="item_title">Title</string>
+    <string name="item_description">Description</string>
+    <string name="starting_price">Starting Price</string>
+    <string name="current_bid">Current Bid</string>
+    <string name="buy_now">Buy Now</string>
+    <string name="place_bid">Place Bid</string>
+    <string name="bid_amount">Bid Amount</string>
+    <string name="publish">Publish</string>
+    <string name="save_draft">Save Draft</string>
+    
+    <!-- Credits -->
+    <string name="credits">Credits</string>
+    <string name="balance">Balance</string>
+    <string name="top_up">Top Up</string>
+    <string name="transaction_history">Transaction History</string>
+    <string name="amount">Amount</string>
+    <string name="payment_method">Payment Method</string>
+    <string name="submit_receipt">Submit Receipt</string>
+    <string name="receipt_reference">Receipt Reference</string>
+    
+    <!-- Common -->
+    <string name="loading">Loading…</string>
+    <string name="error">Error</string>
+    <string name="success">Success</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="search">Search</string>
+    <string name="filter">Filter</string>
+    <string name="refresh">Refresh</string>
+    
+    <!-- Messages -->
+    <string name="login_success">Login successful</string>
+    <string name="login_failed">Login failed. Please check your credentials.</string>
+    <string name="register_success">Registration successful</string>
+    <string name="register_failed">Registration failed. Please try again.</string>
+    <string name="bid_placed">Bid placed successfully</string>
+    <string name="bid_failed">Failed to place bid</string>
+    <string name="item_created">Item created successfully</string>
+    <string name="item_creation_failed">Failed to create item</string>
+    <string name="network_error">Network error. Please check your connection.</string>
+    <string name="unknown_error">An unknown error occurred</string>
+    <string name="insufficient_credits">Insufficient credits</string>
+</resources>
+
