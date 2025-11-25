@@ -69,14 +69,20 @@ const createItemSchema = Joi.object({
       'any.required': 'Duration is required'
     }),
   
+  status: Joi.string()
+    .valid('active', 'draft')
+    .optional()
+    .default('active')
+    .messages({
+      'any.only': 'Status must be either active or draft'
+    }),
+  
   images: Joi.array()
     .items(
       Joi.string()
-        .uri()
         .max(500)
         .messages({
-          'string.uri': 'Image must be a valid URL',
-          'string.max': 'Image URL cannot exceed 500 characters'
+          'string.max': 'Image path/URL cannot exceed 500 characters'
         })
     )
     .max(10)
@@ -119,11 +125,9 @@ const updateItemSchema = Joi.object({
   images: Joi.array()
     .items(
       Joi.string()
-        .uri()
         .max(500)
         .messages({
-          'string.uri': 'Image must be a valid URL',
-          'string.max': 'Image URL cannot exceed 500 characters'
+          'string.max': 'Image path/URL cannot exceed 500 characters'
         })
     )
     .max(10)

@@ -99,6 +99,7 @@ public class ItemManager {
                 
                 if (response.isSuccess()) {
                     Log.i(TAG, "Item created successfully via backend API");
+                    Log.d(TAG, "Backend response: " + response.getData());
 
                     // Parse the backend response to get the UUID assigned by backend
                     String backendItemId = null;
@@ -111,11 +112,24 @@ public class ItemManager {
                                 if (itemJson.has("uuid_id")) {
                                     backendItemId = itemJson.getString("uuid_id");
                                     Log.i(TAG, "Extracted backend item UUID: " + backendItemId);
+                                } else if (itemJson.has("id")) {
+                                    // Fallback to id field if uuid_id not present
+                                    backendItemId = itemJson.getString("id");
+                                    Log.i(TAG, "Extracted backend item ID: " + backendItemId);
                                 }
+                            } else if (responseJson.has("uuid_id")) {
+                                // Response might have uuid_id at root level
+                                backendItemId = responseJson.getString("uuid_id");
+                                Log.i(TAG, "Extracted backend item UUID from root: " + backendItemId);
+                            } else if (responseJson.has("id")) {
+                                // Fallback to id at root level
+                                backendItemId = responseJson.getString("id");
+                                Log.i(TAG, "Extracted backend item ID from root: " + backendItemId);
                             }
                         }
                     } catch (org.json.JSONException e) {
                         Log.e(TAG, "Failed to parse backend response for UUID", e);
+                        Log.e(TAG, "Response data: " + response.getData());
                     }
 
                     // Also store locally for offline access
@@ -175,9 +189,10 @@ public class ItemManager {
                     return true;
                 } else {
                     Log.e(TAG, "Backend API error: " + response.getMessage());
-                    Log.i(TAG, "Falling back to local storage due to API error");
-                    // Fallback to local storage when API fails
-                    return createLocalItem(itemData, sellerEmail);
+                    Log.e(TAG, "Backend API error details: " + response.getData());
+                    // Do not fallback to local storage - item must be posted to backend
+                    // Return false to indicate failure
+                    return false;
                 }
             } catch (Exception apiException) {
                 Log.e(TAG, "Backend API call failed", apiException);

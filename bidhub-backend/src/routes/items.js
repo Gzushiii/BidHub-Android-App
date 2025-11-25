@@ -193,6 +193,7 @@ router.post('/', authenticateToken, async (req, res) => {
     // Validate input
     const { error, value } = createItemSchema.validate(req.body);
     if (error) {
+      connection.release();
       return res.status(400).json({ 
         error: 'Validation failed', 
         details: error.details.map(d => d.message) 
@@ -221,6 +222,8 @@ router.post('/', authenticateToken, async (req, res) => {
       if (users.length > 0) seller_id = users[0].id;
     }
     if (!seller_id) {
+      await connection.rollback();
+      connection.release();
       return res.status(401).json({ error: 'Unauthorized: seller id not resolved' });
     }
 

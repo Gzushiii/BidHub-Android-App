@@ -147,9 +147,34 @@ public class ItemApiClient {
                 Log.d(TAG, "API Response: " + response.toString());
                 return new ApiResponse(true, "Item created successfully", response.toString());
             } else {
+                // Parse error response for better error messages
+                String errorMessage = "API error: " + responseCode;
+                try {
+                    if (response.length() > 0) {
+                        org.json.JSONObject errorJson = new org.json.JSONObject(response.toString());
+                        if (errorJson.has("error")) {
+                            errorMessage = errorJson.getString("error");
+                        }
+                        if (errorJson.has("details")) {
+                            Object details = errorJson.get("details");
+                            if (details instanceof org.json.JSONArray) {
+                                org.json.JSONArray detailsArray = (org.json.JSONArray) details;
+                                if (detailsArray.length() > 0) {
+                                    errorMessage += ": " + detailsArray.getString(0);
+                                }
+                            } else if (details instanceof String) {
+                                errorMessage += ": " + details;
+                            }
+                        } else if (errorJson.has("message")) {
+                            errorMessage += ": " + errorJson.getString("message");
+                        }
+                    }
+                } catch (org.json.JSONException e) {
+                    Log.w(TAG, "Could not parse error response", e);
+                }
                 Log.e(TAG, "API error: " + responseCode + " - " + response.toString());
                 Log.e(TAG, "Request data was: " + requestData.toString());
-                return new ApiResponse(false, "API error: " + responseCode + " - " + response.toString(), response.toString());
+                return new ApiResponse(false, errorMessage, response.toString());
             }
             
         } catch (Exception e) {

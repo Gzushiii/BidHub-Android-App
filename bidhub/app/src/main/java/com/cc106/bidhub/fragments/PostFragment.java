@@ -1071,11 +1071,17 @@ public class PostFragment extends Fragment implements
             }
         }
         
-        // Validate at least one image
-        if (selectedImages == null || selectedImages.isEmpty()) {
-            ErrorHandler.showDetailedError(getContext(), "Please add at least one image");
-            android.util.Log.d("PostFragment", "Validation failed: No images selected");
-            return false;
+        // Note: Images are optional for backend (can be added later)
+        // But we still validate client-side if images are provided
+        if (selectedImages != null && !selectedImages.isEmpty()) {
+            // Validate image paths are not empty
+            for (String imagePath : selectedImages) {
+                if (imagePath == null || imagePath.trim().isEmpty()) {
+                    ErrorHandler.showDetailedError(getContext(), "Invalid image path detected");
+                    android.util.Log.d("PostFragment", "Validation failed: Empty image path");
+                    return false;
+                }
+            }
         }
         
         android.util.Log.d("PostFragment", "Client-side validation passed");
