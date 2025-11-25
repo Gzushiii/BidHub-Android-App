@@ -28,13 +28,13 @@
                 android:src="@drawable/ic_close"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:padding="4dp"
-                android:contentDescription="Back" />
+                android:contentDescription="@string/back" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Add details"
+                android:text="@string/add_details"
                 android:textAppearance="@style/TextAppearance.Title.Small"
                 android:gravity="center" />
 
@@ -61,7 +61,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Photos"
+                    android:text="@string/photos"
                     android:textAppearance="@style/TextAppearance.Subtitle.Bold"
                     android:layout_marginBottom="12dp" />
 
@@ -86,14 +86,15 @@
                         android:id="@+id/progress_image_upload"
                         android:layout_width="16dp"
                         android:layout_height="16dp"
-                        android:layout_marginEnd="8dp" />
+                        android:layout_marginEnd="8dp"
+                        android:contentDescription="@string/processing_images" />
 
                     <TextView
                         android:id="@+id/tv_image_progress"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Processing images..."
+                        android:text="@string/processing_images"
                         android:textSize="12sp"
                         android:textColor="@color/text_secondary" />
 
@@ -102,7 +103,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Tap to add photos. Drag to reorder. Maximum 10 photos."
+                    android:text="@string/tap_to_add_photos_hint"
                     android:textSize="12sp"
                     android:textColor="@color/text_secondary"
                     android:layout_marginTop="8dp" />
@@ -119,7 +120,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Category"
+                    android:text="@string/category"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -129,7 +130,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Choose Category"
+                    android:hint="@string/choose_category"
                     app:boxStrokeColor="@color/border_light"
                     app:hintTextColor="@color/text_secondary"
                     app:endIconMode="dropdown_menu"
@@ -150,7 +151,7 @@
                     android:id="@+id/layout_subcategory"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Choose Subcategory"
+                    android:hint="@string/choose_subcategory"
                     app:boxStrokeColor="@color/border_light"
                     app:hintTextColor="@color/text_secondary"
                     app:endIconMode="dropdown_menu"
@@ -178,7 +179,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                    android:text="Listing title"
+                    android:text="@string/listing_title"
                     android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
@@ -187,7 +188,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Name your listing"
+                    android:hint="@string/name_your_listing"
                     app:boxStrokeColor="@color/border_light"
                     app:hintTextColor="@color/text_secondary"
                     app:counterEnabled="true"
@@ -214,7 +215,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                    android:text="Price"
+                    android:text="@string/price"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -232,7 +233,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="For Sale"
+                        android:text="@string/for_sale"
                         android:textSize="14sp"
                         android:background="@drawable/button_primary"
                         android:textColor="@color/background"
@@ -243,7 +244,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Donation"
+                        android:text="@string/donation"
                 android:textSize="14sp"
                         android:background="@drawable/button_secondary"
                         android:textColor="@color/text_primary" />
@@ -254,7 +255,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Starting Price (PHP)"
+                    android:hint="@string/starting_price_php"
                     app:boxStrokeColor="@color/border_light"
                     app:hintTextColor="@color/text_secondary"
                     app:prefixText="₱">
@@ -271,7 +272,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Buy Now Price (Optional)"
+                    android:hint="@string/buy_now_price_optional"
                     app:boxStrokeColor="@color/border_light"
                     app:hintTextColor="@color/text_secondary"
                     app:prefixText="₱"
@@ -290,7 +291,7 @@
                     android:id="@+id/layout_donation_reason"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Donation Reason (Required)"
+                    android:hint="@string/donation_reason_required"
                     app:boxStrokeColor="@color/border_light"
                     app:hintTextColor="@color/text_secondary"
                     android:layout_marginTop="8dp"
@@ -319,7 +320,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Auction Duration"
+                    android:text="@string/auction_duration"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -328,7 +329,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Choose Duration"
+                    android:hint="@string/choose_duration"
                     app:boxStrokeColor="@color/border_light"
                     app:hintTextColor="@color/text_secondary"
                     app:endIconMode="dropdown_menu">
@@ -355,7 +356,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Condition"
+                    android:text="@string/condition"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -364,7 +365,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Choose Condition"
+                    android:hint="@string/choose_condition"
                     app:boxStrokeColor="@color/border_light"
                     app:hintTextColor="@color/text_secondary"
                     app:endIconMode="dropdown_menu">
@@ -391,7 +392,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Description (Optional)"
+                    android:text="@string/description_optional"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -400,7 +401,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Describe what you are selling and include any details a buyer might be interested in. People love items with stories!"
+                    android:hint="@string/description_hint"
                     app:boxStrokeColor="@color/border_light"
                     app:hintTextColor="@color/text_secondary"
                     app:counterEnabled="true"
@@ -433,7 +434,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Size"
+                    android:text="@string/size"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
@@ -442,7 +443,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Choose Size"
+                    android:hint="@string/choose_size"
                     app:boxStrokeColor="@color/border_light"
                     app:hintTextColor="@color/text_secondary"
                     app:endIconMode="dropdown_menu">
@@ -478,7 +479,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Optional details"
+                        android:text="@string/optional_details"
             android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary" />
@@ -487,7 +488,7 @@
                         android:id="@+id/btn_toggle_optional"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Hide ^"
+                        android:text="@string/hide"
                         android:textSize="12sp"
                         android:background="@android:color/transparent"
                         android:textColor="@color/primary_color" />
@@ -511,7 +512,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Origin of goods (Optional)"
+                            android:text="@string/origin_of_goods_optional"
                             android:textSize="14sp"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary"
@@ -520,7 +521,7 @@
                         <com.google.android.material.textfield.TextInputLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="Choose Origin"
+                            android:hint="@string/choose_origin"
                             app:boxStrokeColor="@color/border_light"
                             app:hintTextColor="@color/text_secondary"
                             app:endIconMode="dropdown_menu">
@@ -555,7 +556,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="I have more than one of the same item"
+                            android:text="@string/quantity_checkbox"
                             android:textSize="14sp"
                             android:textColor="@color/text_primary" />
 
@@ -586,7 +587,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Allow buyers to SMS/Call me on this listing"
+                                android:text="@string/allow_contact_checkbox"
                                 android:textSize="14sp"
                                 android:textColor="@color/text_primary" />
 
@@ -595,7 +596,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Your mobile number will be visible to buyers"
+                            android:text="@string/mobile_number_visible"
                             android:textSize="12sp"
             android:textColor="@color/text_secondary"
                             android:layout_marginStart="32dp" />
@@ -612,7 +613,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="COVID-19 Notice"
+                            android:text="@string/covid_19_notice"
                             android:textSize="14sp"
                             android:textStyle="bold"
                             android:textColor="@color/text_primary"
@@ -621,7 +622,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="We encourage contactless delivery. More info"
+                            android:text="@string/covid_19_message"
                             android:textSize="12sp"
                             android:textColor="@color/primary_color" />
 
@@ -646,7 +647,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Save as Draft"
+                    android:text="@string/save_as_draft"
                     android:textAppearance="@style/TextAppearance.Button.Secondary"
                     android:textColor="@color/primary"
                     android:background="@drawable/button_secondary"
@@ -657,7 +658,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Post Item"
+                    android:text="@string/post_item"
                     android:textAppearance="@style/TextAppearance.Button"
                     android:textColor="@color/on_primary"
                     android:background="@drawable/button_primary"
@@ -672,7 +673,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginTop="16dp"
-                android:visibility="gone" />
+                android:visibility="gone"
+                android:contentDescription="@string/processing_images" />
 
     </LinearLayout>
 
