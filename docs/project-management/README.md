@@ -27,7 +27,6 @@ Project planning, requirements, analysis, and management documents.
 - `project_structure.md` - Project structure documentation
 
 ### Feature Documentation
-- `PASSWORD_RECOVERY_README.md` - Password recovery feature
 - `PROFILE_MANAGEMENT_README.md` - Profile management feature
 - `listing-categories.md` - Listing categories documentation
 - `TESTING-TASKLIST.md` - Testing task list

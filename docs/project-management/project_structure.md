@@ -247,7 +247,6 @@ bidhub_db/
 ├── bids                          # Bid records
 ├── credit_transactions           # Credit transactions
 ├── redemption_codes              # Redemption codes
-├── password_recovery             # Password recovery
 └── audit_logs                    # System audit logs
 ```
 

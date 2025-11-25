@@ -105,7 +105,6 @@ sudo mysql_secure_installation
      - `item_images`
      - `items`
      - `notifications`
-     - `password_recovery`
      - `redemption_codes`
      - `user_sessions`
      - `users`

@@ -27,7 +27,6 @@ To create a secure and trusted mobile bidding environment where all participants
 - ✅ **User Registration**: Complete account creation with email and phone verification
 - ✅ **Secure Login**: Password-based authentication with security features
 - ✅ **Profile Management**: User data management and alias generation
-- ✅ **Password Recovery**: Complete password recovery system with email/SMS verification
 - ✅ **Alias System**: Automatic generation of unique bidding aliases for privacy
 - ✅ **Account Security**: Security settings and password change functionality
 
@@ -176,7 +175,6 @@ The application uses SQLite with the following main tables:
 - **categories** - Hierarchical category structure
 - **credit_transactions** - Credit purchase and usage history
 - **redemption_codes** - Redemption code tracking
-- **password_recovery** - Password recovery verification codes
 
 ---
 
