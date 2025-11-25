@@ -12,7 +12,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 // Import database configuration
-const { initializeDatabase } = require('./config/database');
+const { initializeDatabase, pool } = require('./config/database');
 
 // Import services
 const keepAliveService = require('./services/keepAlive');

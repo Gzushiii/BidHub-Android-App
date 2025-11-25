@@ -18,80 +18,7 @@ const { getItemWithErrorInfo } = require('../utils/itemResolver');
 
 const router = express.Router();
 
-// Get specific item by ID (for existence checking and 404 recovery)
-router.get('/:id', async (req, res) => {
-  const connection = await pool.getConnection();
-  const correlationId = `get_item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  
-  try {
-    const itemId = req.params.id;
-    
-    if (!itemId) {
-      return res.status(400).json({
-        error: 'invalid_request',
-        message: 'Item ID is required',
-        correlationId
-      });
-    }
-
-    // Use flexible item resolver to handle multiple ID formats
-    const { found, item, error: lookupError } = await getItemWithErrorInfo(
-      connection,
-      itemId
-    );
-
-    console.log('Item lookup result:', {
-      correlationId,
-      route: 'GET /api/items/:id',
-      itemId: itemId,
-      found: found,
-      lookupError: lookupError?.type
-    });
-
-    if (!found || !item) {
-      return res.status(404).json({
-        error: 'item_not_found',
-        message: 'Item not found',
-        requested_id: itemId,
-        correlationId
-      });
-    }
-
-    // Return item details
-    return res.json({
-      success: true,
-      item: {
-        id: item.id,
-        uuid_id: item.uuid_id,
-        title: item.title,
-        status: item.status,
-        seller_id: item.seller_id,
-        current_bid: item.current_bid,
-        buy_now_price: item.buy_now_price,
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      },
-      correlationId
-    });
-
-  } catch (error) {
-    console.error('Error in GET /api/items/:id:', {
-      correlationId,
-      error: error.message,
-      stack: error.stack
-    });
-    
-    return res.status(500).json({
-      error: 'internal_error',
-      message: 'Internal server error',
-      correlationId
-    });
-  } finally {
-    connection.release();
-  }
-});
-
-// Get all items with filtering and pagination
+// Get all items with filtering and pagination (must come before /:id route)
 router.get('/', async (req, res) => {
   try {
     const { 
@@ -183,77 +110,76 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get item by ID
+// Get specific item by ID (for existence checking and 404 recovery)
 router.get('/:id', async (req, res) => {
-  const correlationId = req.headers['x-correlation-id'] || require('crypto').randomUUID();
+  const connection = await pool.getConnection();
+  const correlationId = `get_item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
   try {
-    const { id } = req.params;
-
-    console.log('=== ITEM DETAILS REQUEST ===');
-    console.log('Correlation ID:', correlationId);
-    console.log('Route: GET /api/items/:id');
-    console.log('Item ID:', id);
-
-    // Log database connection info
-    const [dbInfo] = await pool.query('SELECT DATABASE() AS db, @@hostname AS host');
-    console.log('Database Info:', dbInfo[0]);
-
-    // Use unified lookup utility
-    const item = await fetchActiveItem(id);
-
-    console.log('Item lookup result:', { 
-      correlationId,
-      route: 'GET /api/items/:id',
-      itemId: id,
-      found: !!item,
-      itemStatus: item?.status 
-    });
-
-    if (!item) {
-      console.log('Item not found for ID:', id);
-      return res.status(404).json({ 
-        error: 'item_not_found',
-        details: 'item_does_not_exist',
-        message: 'Item not found',
+    const itemId = req.params.id;
+    
+    if (!itemId) {
+      return res.status(400).json({
+        error: 'invalid_request',
+        message: 'Item ID is required',
         correlationId
       });
     }
 
-    console.log('Item found:', { 
-      correlationId,
-      id: item.id, 
-      title: item.title, 
-      status: item.status 
-    });
-
-    // Get item images using unified utility
-    const images = await getItemImages(id);
-
-    // Get seller information
-    const [sellers] = await pool.query(
-      'SELECT id, username, alias, first_name, last_name, created_at FROM users WHERE id = ?',
-      [item.seller_id]
+    // Use flexible item resolver to handle multiple ID formats
+    const { found, item, error: lookupError } = await getItemWithErrorInfo(
+      connection,
+      itemId
     );
 
-    // Get recent bids using unified utility
-    const bids = await getItemBids(id);
-
-    res.json({
-      ...item,
-      images,
-      seller: sellers[0] || null,
-      recent_bids: bids
+    console.log('Item lookup result:', {
+      correlationId,
+      route: 'GET /api/items/:id',
+      itemId: itemId,
+      found: found,
+      lookupError: lookupError?.type
     });
-  } catch (err) {
-    console.error('Item fetch error:', err);
-    console.error('Correlation ID:', correlationId);
-    res.status(500).json({ 
-      error: 'server_error',
-      details: 'failed_to_fetch_item',
-      message: 'Failed to fetch item',
+
+    if (!found || !item) {
+      return res.status(404).json({
+        error: 'item_not_found',
+        message: 'Item not found',
+        requested_id: itemId,
+        correlationId
+      });
+    }
+
+    // Return item details
+    return res.json({
+      success: true,
+      item: {
+        id: item.id,
+        uuid_id: item.uuid_id,
+        title: item.title,
+        status: item.status,
+        seller_id: item.seller_id,
+        current_bid: item.current_bid,
+        buy_now_price: item.buy_now_price,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      },
       correlationId
     });
+
+  } catch (error) {
+    console.error('Error in GET /api/items/:id:', {
+      correlationId,
+      error: error.message,
+      stack: error.stack
+    });
+    
+    return res.status(500).json({
+      error: 'internal_error',
+      message: 'Internal server error',
+      correlationId
+    });
+  } finally {
+    connection.release();
   }
 });
 
@@ -424,12 +350,11 @@ router.put('/:id', authenticateToken, checkItemOwnership, async (req, res) => {
     }
 
     updateFields.push('updated_at = NOW()');
-    updateValues.push(itemId);
 
-    // Update the item
+    // Update the item - itemId is used in WHERE clause, not in SET
     await connection.query(
-      `UPDATE items SET ${updateFields.join(', ')} WHERE id = ?`,
-      updateValues
+      `UPDATE items SET ${updateFields.join(', ')} WHERE id = ? OR uuid_id = ?`,
+      [...updateValues, itemId, itemId]
     );
 
     // Update images if provided
@@ -744,7 +669,7 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
         item_id: item.id,
         uuid_id: item.uuid_id
       });
-      await connection.rollback();
+      connection.release();
       return res.status(500).json({
         error: 'internal_error',
         details: 'invalid_item_id',

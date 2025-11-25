@@ -125,6 +125,8 @@ router.post('/purchase', authenticateToken, async (req, res) => {
     // Validate input
     const { error, value } = purchaseCreditsSchema.validate(req.body);
     if (error) {
+      await connection.rollback();
+      connection.release();
       return res.status(400).json({ 
         error: 'Validation failed', 
         details: error.details.map(d => d.message) 
@@ -137,6 +139,8 @@ router.post('/purchase', authenticateToken, async (req, res) => {
     // Additional business logic validation
     const creditValidation = validateCreditPurchase(amount);
     if (!creditValidation.isValid) {
+      await connection.rollback();
+      connection.release();
       return res.status(400).json({ error: creditValidation.message });
     }
 
@@ -147,6 +151,8 @@ router.post('/purchase', authenticateToken, async (req, res) => {
     );
 
     if (users.length === 0) {
+      await connection.rollback();
+      connection.release();
       return res.status(404).json({ error: 'User not found' });
     }
 
@@ -159,6 +165,8 @@ router.post('/purchase', authenticateToken, async (req, res) => {
     );
 
     if (existingTransactions.length > 0) {
+      await connection.rollback();
+      connection.release();
       return res.status(400).json({ 
         error: 'Transaction already processed',
         transaction_id: transaction_id
