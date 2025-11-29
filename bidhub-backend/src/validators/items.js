@@ -15,11 +15,11 @@ const createItemSchema = Joi.object({
   description: Joi.string()
     .min(10)
     .max(2000)
-    .required()
+    .optional()
+    .allow('', null)
     .messages({
-      'string.min': 'Description must be at least 10 characters long',
-      'string.max': 'Description cannot exceed 2000 characters',
-      'any.required': 'Description is required'
+      'string.min': 'Description must be at least 10 characters long if provided',
+      'string.max': 'Description cannot exceed 2000 characters'
     }),
   
   category_id: Joi.number()
@@ -80,32 +80,11 @@ const createItemSchema = Joi.object({
   images: Joi.array()
     .items(
       Joi.string()
-        .max(10000000) // Allow up to ~10MB for base64 data URLs (data:image/jpeg;base64,...)
-        .custom((value, helpers) => {
-          // Validate that it's either a valid URL (http/https) or a base64 data URL
-          if (value.startsWith('http://') || value.startsWith('https://')) {
-            try {
-              new URL(value);
-              return value;
-            } catch (e) {
-              return helpers.error('string.uri');
-            }
-          } else if (value.startsWith('data:')) {
-            // Validate base64 data URL format: data:[<mediatype>][;base64],<data>
-            const dataUrlPattern = /^data:([a-zA-Z][a-zA-Z0-9]*\/[a-zA-Z0-9][a-zA-Z0-9]*)(;base64)?,(.+)$/;
-            if (dataUrlPattern.test(value)) {
-              return value;
-            } else {
-              return helpers.error('string.custom', { message: 'Image must be a valid URL or base64 data URL' });
-            }
-          } else {
-            return helpers.error('string.custom', { message: 'Image must be a valid URL' });
-          }
-        })
+        .uri()
+        .max(500) // URLs should be reasonable length
         .messages({
-          'string.max': 'Image URL cannot exceed 10MB',
           'string.uri': 'Image must be a valid URL',
-          'string.custom': 'Image must be a valid URL or base64 data URL'
+          'string.max': 'Image URL cannot exceed 500 characters'
         })
     )
     .max(10)
@@ -148,32 +127,11 @@ const updateItemSchema = Joi.object({
   images: Joi.array()
     .items(
       Joi.string()
-        .max(10000000) // Allow up to ~10MB for base64 data URLs (data:image/jpeg;base64,...)
-        .custom((value, helpers) => {
-          // Validate that it's either a valid URL (http/https) or a base64 data URL
-          if (value.startsWith('http://') || value.startsWith('https://')) {
-            try {
-              new URL(value);
-              return value;
-            } catch (e) {
-              return helpers.error('string.uri');
-            }
-          } else if (value.startsWith('data:')) {
-            // Validate base64 data URL format: data:[<mediatype>][;base64],<data>
-            const dataUrlPattern = /^data:([a-zA-Z][a-zA-Z0-9]*\/[a-zA-Z0-9][a-zA-Z0-9]*)(;base64)?,(.+)$/;
-            if (dataUrlPattern.test(value)) {
-              return value;
-            } else {
-              return helpers.error('string.custom', { message: 'Image must be a valid URL or base64 data URL' });
-            }
-          } else {
-            return helpers.error('string.custom', { message: 'Image must be a valid URL' });
-          }
-        })
+        .uri()
+        .max(500) // URLs should be reasonable length
         .messages({
-          'string.max': 'Image URL cannot exceed 10MB',
           'string.uri': 'Image must be a valid URL',
-          'string.custom': 'Image must be a valid URL or base64 data URL'
+          'string.max': 'Image URL cannot exceed 500 characters'
         })
     )
     .max(10)

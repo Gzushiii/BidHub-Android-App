@@ -42,6 +42,7 @@ import com.cc106.bidhub.items.ItemStatus;
 import com.cc106.bidhub.toast.ToastHelper;
 import com.cc106.bidhub.MainActivity;
 import com.cc106.bidhub.utils.ErrorHandler;
+import com.cc106.bidhub.api.ImageUploadClient;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
@@ -829,25 +830,13 @@ public class PostFragment extends Fragment implements
             if (itemData != null) {
                 // Show loading state
                 btnSaveDraft.setEnabled(false);
-                btnSaveDraft.setText("Saving...");
+                btnSaveDraft.setText("Uploading images...");
+                if (progressBar != null) {
+                    progressBar.setVisibility(View.VISIBLE);
+                }
                 
-                // Use async version to prevent NetworkOnMainThreadException
-                itemManager.saveDraftItemAsync(itemData, loggedInUserEmail, new ItemManager.ItemCreationCallback() {
-                    @Override
-                    public void onResult(boolean success) {
-                        // This callback runs on the main thread
-                        if (success) {
-                            ErrorHandler.showSuccess(getContext(), "Item saved as draft");
-                            clearForm();
-                        } else {
-                            ErrorHandler.showDetailedError(getContext(), "Failed to save draft");
-                        }
-                        
-                        // Reset button state
-                        btnSaveDraft.setEnabled(true);
-                        btnSaveDraft.setText("Save as Draft");
-                    }
-                });
+                // Upload images first, then save draft with URLs
+                uploadImagesAndCreateItem(itemData, loggedInUserEmail, true);
             } else {
                 ErrorHandler.showDetailedError(getContext(), "Please fill in all required fields correctly.");
             }
@@ -893,37 +882,13 @@ public class PostFragment extends Fragment implements
                 
                 // Show loading state
                 btnPostItem.setEnabled(false);
-                btnPostItem.setText("Posting...");
+                btnPostItem.setText("Uploading images...");
                 if (progressBar != null) {
                     progressBar.setVisibility(View.VISIBLE);
                 }
                 
-                // Use async version to prevent NetworkOnMainThreadException
-                itemManager.createItemAsync(itemData, loggedInUserEmail, new ItemManager.ItemCreationCallback() {
-                    @Override
-                    public void onResult(boolean success) {
-                        // This callback runs on the main thread
-                        if (success) {
-                            ErrorHandler.showSuccess(getContext(), "Item posted successfully!");
-                            clearForm();
-                            
-                            // Debug: Log item count after creation
-                            android.util.Log.d("PostFragment", "Item created successfully. Total items in manager: " + itemManager.getAllBrowsableItems().size());
-                            
-                            // User stays on Post tab to create more listings
-                        } else {
-                            android.util.Log.e("PostFragment", "ItemManager.createItemAsync returned false");
-                            ErrorHandler.showDetailedError(getContext(), "Failed to post item. Please check all required fields and try again.");
-                        }
-                        
-                        // Reset button state
-                        btnPostItem.setEnabled(true);
-                        btnPostItem.setText("Post Item");
-                        if (progressBar != null) {
-                            progressBar.setVisibility(View.GONE);
-                        }
-                    }
-                });
+                // Upload images first, then create item with URLs
+                uploadImagesAndCreateItem(itemData, loggedInUserEmail, false);
             } else {
                 android.util.Log.e("PostFragment", "createItemData returned null - validation failed");
                 ErrorHandler.showDetailedError(getContext(), "Please fill in all required fields correctly.");
@@ -956,17 +921,44 @@ public class PostFragment extends Fragment implements
         
         // Basic information
         itemData.setTitle(etItemTitle.getText().toString().trim());
-        itemData.setDescription(etItemDescription.getText().toString().trim());
+        
+        // Description is optional - only set if provided
+        String description = etItemDescription.getText().toString().trim();
+        if (!TextUtils.isEmpty(description)) {
+            itemData.setDescription(description);
+        }
+        // If description is empty, don't set it (backend will handle as optional)
+        
         itemData.setCategoryId(getSelectedCategoryId());
-        itemData.setCondition(actvCondition.getText().toString().trim());
+        
+        // Condition is optional - only set if provided and not "Choose"
+        String condition = actvCondition.getText().toString().trim();
+        if (!TextUtils.isEmpty(condition) && !condition.equals("Choose")) {
+            itemData.setCondition(condition);
+        }
+        // If condition is empty or "Choose", don't set it (backend will handle as optional)
         
         // Pricing
         if (isForSale) {
+            String priceText = etStartingPrice.getText().toString().trim();
+            if (TextUtils.isEmpty(priceText)) {
+                ToastHelper.showError(getContext(), "Starting price is required for items for sale");
+                return null;
+            }
             try {
-                double startingPrice = Double.parseDouble(etStartingPrice.getText().toString().trim());
+                double startingPrice = Double.parseDouble(priceText);
+                // Validate minimum price (must be at least 0.01 to match backend requirement)
+                if (startingPrice < 0.01) {
+                    ToastHelper.showError(getContext(), "Starting price must be at least ₱0.01");
+                    return null;
+                }
+                if (startingPrice > 1000000) {
+                    ToastHelper.showError(getContext(), "Price seems too high. Please verify the amount");
+                    return null;
+                }
                 itemData.setStartingPrice(startingPrice);
                 
-                // Handle Buy Now price
+                // Handle Buy Now price (optional)
                 String buyNowPriceText = etBuyNowPrice.getText().toString().trim();
                 if (!TextUtils.isEmpty(buyNowPriceText)) {
                     try {
@@ -982,12 +974,15 @@ public class PostFragment extends Fragment implements
                         return null;
                     }
                 }
+                // Buy Now price is optional, so no error if empty
             } catch (NumberFormatException e) {
                 ToastHelper.showError(getContext(), "Invalid price format");
                 return null;
             }
         } else {
-            itemData.setStartingPrice(0.0); // Donation item
+            // For donation items, set a minimum price that backend will accept
+            // Backend requires min 0.01, so we'll use that for donation items too
+            itemData.setStartingPrice(0.01); // Donation item - use minimum valid price
             // Store donation reason in metadata
             String donationReason = etDonationReason.getText().toString().trim();
             if (!TextUtils.isEmpty(donationReason)) {
@@ -1033,6 +1028,120 @@ public class PostFragment extends Fragment implements
     }
     
     /**
+     * Upload images first, then create item with URLs
+     */
+    private void uploadImagesAndCreateItem(ItemData itemData, String sellerEmail, boolean isDraft) {
+        // If no images, create item directly
+        if (selectedImages == null || selectedImages.isEmpty()) {
+            createItemWithUrls(itemData, sellerEmail, isDraft, new ArrayList<String>());
+            return;
+        }
+        
+        // Upload images on background thread
+        new Thread(() -> {
+            ImageUploadClient uploadClient = new ImageUploadClient(getContext());
+            List<String> uploadedUrls = new ArrayList<>();
+            int totalImages = selectedImages.size();
+            int uploadedCount = 0;
+            
+            // Update progress on main thread
+            android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+            
+            for (String imagePath : selectedImages) {
+                final int currentIndex = uploadedCount;
+                mainHandler.post(() -> {
+                    if (btnPostItem != null && !isDraft) {
+                        btnPostItem.setText("Uploading " + (currentIndex + 1) + "/" + totalImages + "...");
+                    } else if (btnSaveDraft != null && isDraft) {
+                        btnSaveDraft.setText("Uploading " + (currentIndex + 1) + "/" + totalImages + "...");
+                    }
+                });
+                
+                ImageUploadClient.UploadResponse response = uploadClient.uploadImage(imagePath);
+                if (response.isSuccess() && response.getUrl() != null) {
+                    uploadedUrls.add(response.getUrl());
+                    uploadedCount++;
+                } else {
+                    // Upload failed - show error and abort
+                    mainHandler.post(() -> {
+                        ErrorHandler.showDetailedError(getContext(), 
+                            "Failed to upload image: " + response.getMessage() + 
+                            "\nPlease try again.");
+                        resetButtonState(isDraft);
+                    });
+                    return;
+                }
+            }
+            
+            // All images uploaded successfully - create item with URLs
+            mainHandler.post(() -> {
+                if (btnPostItem != null && !isDraft) {
+                    btnPostItem.setText("Posting...");
+                } else if (btnSaveDraft != null && isDraft) {
+                    btnSaveDraft.setText("Saving...");
+                }
+                createItemWithUrls(itemData, sellerEmail, isDraft, uploadedUrls);
+            });
+        }).start();
+    }
+    
+    /**
+     * Create item with uploaded image URLs
+     */
+    private void createItemWithUrls(ItemData itemData, String sellerEmail, boolean isDraft, List<String> imageUrls) {
+        // Update itemData with uploaded URLs
+        itemData.setImagePaths(imageUrls);
+        
+        if (isDraft) {
+            itemManager.saveDraftItemAsync(itemData, sellerEmail, new ItemManager.ItemCreationCallback() {
+                @Override
+                public void onResult(boolean success) {
+                    if (success) {
+                        ErrorHandler.showSuccess(getContext(), "Draft saved successfully!");
+                        clearForm();
+                    } else {
+                        ErrorHandler.showDetailedError(getContext(), "Failed to save draft. Please try again.");
+                    }
+                    resetButtonState(true);
+                }
+            });
+        } else {
+            itemManager.createItemAsync(itemData, sellerEmail, new ItemManager.ItemCreationCallback() {
+                @Override
+                public void onResult(boolean success) {
+                    if (success) {
+                        ErrorHandler.showSuccess(getContext(), "Item posted successfully!");
+                        clearForm();
+                    } else {
+                        ErrorHandler.showDetailedError(getContext(), "Failed to post item. Please try again.");
+                    }
+                    resetButtonState(false);
+                }
+            });
+        }
+    }
+    
+    /**
+     * Reset button state after operation
+     */
+    private void resetButtonState(boolean isDraft) {
+        if (isDraft) {
+            if (btnSaveDraft != null) {
+                btnSaveDraft.setEnabled(true);
+                btnSaveDraft.setText("Save as Draft");
+            }
+        } else {
+            if (btnPostItem != null) {
+                btnPostItem.setEnabled(true);
+                btnPostItem.setText("Post Item");
+            }
+        }
+        if (progressBar != null) {
+            progressBar.setVisibility(View.GONE);
+        }
+    }
+    
+    /**
      * Additional client-side validation to prevent 400 errors from API
      */
     private boolean validateItemDataForAPI() {
@@ -1046,22 +1155,34 @@ public class PostFragment extends Fragment implements
             return false;
         }
         
-        // Validate description (matches server requirement: >= 10 chars)
+        // Validate description (optional - but if provided, must be at least 10 chars)
         String description = etItemDescription.getText().toString().trim();
-        if (description.length() < 10) {
-            ErrorHandler.showDetailedError(getContext(), "Description must be at least 10 characters long");
+        if (!TextUtils.isEmpty(description) && description.length() < 10) {
+            ErrorHandler.showDetailedError(getContext(), "Description must be at least 10 characters long if provided");
             android.util.Log.d("PostFragment", "Validation failed: Description too short (" + description.length() + " chars)");
             return false;
         }
+        // Description is optional, so no error if empty
         
-        // Validate starting price
-        String priceText = etStartingPrice.getText().toString().trim();
-        if (!priceText.isEmpty()) {
+        // Validate starting price (only for sale items)
+        if (isForSale) {
+            String priceText = etStartingPrice.getText().toString().trim();
+            if (TextUtils.isEmpty(priceText)) {
+                ErrorHandler.showDetailedError(getContext(), "Starting price is required for items for sale");
+                android.util.Log.d("PostFragment", "Validation failed: Starting price is empty");
+                return false;
+            }
             try {
                 double price = Double.parseDouble(priceText);
-                if (price <= 0) {
-                    ErrorHandler.showDetailedError(getContext(), "Starting price must be greater than 0");
+                // Backend requires minimum 0.01
+                if (price < 0.01) {
+                    ErrorHandler.showDetailedError(getContext(), "Starting price must be at least ₱0.01");
                     android.util.Log.d("PostFragment", "Validation failed: Invalid starting price (" + price + ")");
+                    return false;
+                }
+                if (price > 1000000) {
+                    ErrorHandler.showDetailedError(getContext(), "Price seems too high. Please verify the amount");
+                    android.util.Log.d("PostFragment", "Validation failed: Price too high (" + price + ")");
                     return false;
                 }
             } catch (NumberFormatException e) {
@@ -1107,23 +1228,22 @@ public class PostFragment extends Fragment implements
             return false;
         }
 
-        // Validate description
+        // Validate description (optional - but if provided, must meet requirements)
         String description = etItemDescription.getText().toString().trim();
-        if (TextUtils.isEmpty(description)) {
-            ToastHelper.showError(getContext(), "Description is required");
-            etItemDescription.requestFocus();
-            return false;
+        if (!TextUtils.isEmpty(description)) {
+            // Only validate length if description is provided
+            if (description.length() < 10) {
+                ToastHelper.showError(getContext(), "Description must be at least 10 characters long if provided");
+                etItemDescription.requestFocus();
+                return false;
+            }
+            if (description.length() > 2000) {
+                ToastHelper.showError(getContext(), "Description must be less than 2000 characters");
+                etItemDescription.requestFocus();
+                return false;
+            }
         }
-        if (description.length() < 10) {
-            ToastHelper.showError(getContext(), "Description must be at least 10 characters long");
-            etItemDescription.requestFocus();
-            return false;
-        }
-        if (description.length() > 1000) {
-            ToastHelper.showError(getContext(), "Description must be less than 1000 characters");
-            etItemDescription.requestFocus();
-            return false;
-        }
+        // Description is optional, so no error if empty
 
         // Validate category
         String category = actvCategory.getText().toString().trim();
@@ -1158,8 +1278,8 @@ public class PostFragment extends Fragment implements
             }
             try {
                 double price = Double.parseDouble(priceText);
-                if (price < 1) {
-                    ToastHelper.showError(getContext(), "Starting price must be at least ₱1");
+                if (price < 0.01) {
+                    ToastHelper.showError(getContext(), "Starting price must be at least ₱0.01");
                     etStartingPrice.requestFocus();
                     return false;
                 }
@@ -1197,23 +1317,21 @@ public class PostFragment extends Fragment implements
             }
         }
         
-        // Validate condition
+        // Validate condition (optional - backend doesn't require it)
+        // Only validate format if provided
         String condition = actvCondition.getText().toString().trim();
-        if (TextUtils.isEmpty(condition) || condition.equals("Choose")) {
-            ToastHelper.showError(getContext(), "Condition is required");
-            actvCondition.requestFocus();
-            return false;
+        if (!TextUtils.isEmpty(condition) && condition.equals("Choose")) {
+            // If user selected "Choose", treat as empty (optional)
+            condition = "";
         }
+        // Condition is optional, so no error if empty
         
-        // Validate images
-        if (selectedImages == null || selectedImages.isEmpty()) {
-            ToastHelper.showError(getContext(), "At least one image is required");
-            return false;
-        }
-        if (selectedImages.size() > MAX_IMAGES) {
+        // Validate images (optional - backend allows items without images)
+        if (selectedImages != null && selectedImages.size() > MAX_IMAGES) {
             ToastHelper.showError(getContext(), "Maximum " + MAX_IMAGES + " photos allowed");
             return false;
         }
+        // Images are optional, so no error if empty
 
         // Validate auction duration
         String duration = actvAuctionDuration.getText().toString().trim();
