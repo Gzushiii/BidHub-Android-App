@@ -25,6 +25,7 @@ const creditsRoutes = require('./routes/credits');
 const categoriesRoutes = require('./routes/categories');
 const topupsRoutes = require('./routes/topups');
 const uploadRoutes = require('./routes/upload');
+const auctionsRoutes = require('./routes/auctions');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -59,7 +60,7 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'Welcome to BidHub API!',
     version: '1.0.0',
-    endpoints: {
+      endpoints: {
       health: '/api/health',
       auth: '/api/auth',
       items: '/api/items',
@@ -67,7 +68,8 @@ app.get('/', (req, res) => {
       credits: '/api/credits',
       categories: '/api/categories',
       topups: '/api/topups',
-      upload: '/api/upload'
+      upload: '/api/upload',
+      auctions: '/api/auctions'
     },
     documentation: 'Visit /api/health for server status'
   });
@@ -103,6 +105,7 @@ app.use('/api/credits', creditsRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/topups', topupsRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/auctions', auctionsRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

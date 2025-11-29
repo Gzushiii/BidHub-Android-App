@@ -375,4 +375,18 @@
     
     <!-- Common Actions -->
     <string name="menu">Menu</string>
+    
+    <!-- GCash Payment -->
+    <string name="gcash_payment">GCash Payment</string>
+    <string name="amount_to_pay">Amount to Pay:</string>
+    <string name="payment_instructions">Payment Instructions</string>
+    <string name="send_payment_to">Send payment to:</string>
+    <string name="reference_code">Reference Code:</string>
+    <string name="after_payment_instructions">After sending payment via GCash, enter the reference number from your transaction receipt below.</string>
+    <string name="enter_gcash_reference">Enter GCash Reference Number</string>
+    <string name="reference_number_helper">Enter the reference number from your GCash transaction</string>
+    <string name="submit_reference">Submit Reference</string>
+    <string name="payment_pending">Payment pending review</string>
+    <string name="payment_submitted">Payment submitted successfully. Waiting for admin confirmation.</string>
+    <string name="invalid_reference">Please enter a valid reference number (at least 4 characters)</string>
 </resources>

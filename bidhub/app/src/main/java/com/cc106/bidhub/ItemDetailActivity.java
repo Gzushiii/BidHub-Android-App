@@ -17,6 +17,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.activity.OnBackPressedCallback;
 import androidx.viewpager2.widget.ViewPager2;
 import com.cc106.bidhub.adapters.ImageGalleryAdapter;
 import com.cc106.bidhub.credits.CreditManager;
@@ -173,6 +174,9 @@ public class ItemDetailActivity extends AppCompatActivity {
                 return;
             }
             
+            // Setup back button handling
+            setupBackButtonHandling();
+            
         } catch (Exception e) {
             android.widget.Toast.makeText(this, "Error initializing item details: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
             e.printStackTrace();
@@ -280,6 +284,18 @@ public class ItemDetailActivity extends AppCompatActivity {
         
         // Initialize countdown handler
         countdownHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    }
+    
+    /**
+     * Setup back button handling for consistent navigation
+     */
+    private void setupBackButtonHandling() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+            }
+        });
     }
 
     private void setupClickListeners() {

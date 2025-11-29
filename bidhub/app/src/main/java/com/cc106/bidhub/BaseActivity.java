@@ -7,11 +7,13 @@ import android.view.View;
 import com.cc106.bidhub.toast.ToastHelper;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityOptionsCompat;
+import androidx.activity.OnBackPressedCallback;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public abstract class BaseActivity extends AppCompatActivity implements BottomNavigationView.OnItemSelectedListener {
 
     protected BottomNavigationView bottomNavigationView;
+    private OnBackPressedCallback backPressedCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,6 +25,36 @@ public abstract class BaseActivity extends AppCompatActivity implements BottomNa
         
         // Set the current tab as selected
         setCurrentTabSelected();
+        
+        // Setup back button handling
+        setupBackButtonHandling();
+    }
+    
+    /**
+     * Setup back button handling for consistent navigation
+     */
+    private void setupBackButtonHandling() {
+        backPressedCallback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackPressed();
+            }
+        };
+        getOnBackPressedDispatcher().addCallback(this, backPressedCallback);
+    }
+    
+    /**
+     * Handle back button press - override in subclasses for custom behavior
+     * Default behavior: finish activity or navigate to MainActivity
+     */
+    protected void handleBackPressed() {
+        // If this is MainActivity, exit app on back press
+        if (this instanceof MainActivity) {
+            finishAffinity();
+        } else {
+            // For other activities, finish and return to previous
+            finish();
+        }
     }
     
     /**

@@ -7,6 +7,7 @@
  */
 
 const { pool } = require('../config/database');
+const AuctionEndService = require('./auctionEndService');
 
 /**
  * Internal keep-alive ping to maintain connection pool
@@ -15,8 +16,10 @@ const { pool } = require('../config/database');
 class KeepAliveService {
   constructor() {
     this.interval = null;
+    this.auctionCheckInterval = null;
     this.enabled = process.env.KEEP_ALIVE_ENABLED === 'true';
     this.intervalMs = parseInt(process.env.KEEP_ALIVE_INTERVAL_MS) || 5 * 60 * 1000; // 5 minutes
+    this.auctionCheckIntervalMs = parseInt(process.env.AUCTION_CHECK_INTERVAL_MS) || 60 * 1000; // 1 minute
   }
 
   /**
@@ -37,6 +40,35 @@ class KeepAliveService {
     this.interval = setInterval(() => {
       this.ping();
     }, this.intervalMs);
+    
+    // Start auction end checking
+    this.startAuctionEndChecking();
+  }
+  
+  /**
+   * Start checking for ended auctions periodically
+   */
+  startAuctionEndChecking() {
+    console.log(`Starting auction end checking (interval: ${this.auctionCheckIntervalMs / 1000}s)`);
+    
+    // Check immediately on start
+    this.checkEndedAuctions();
+    
+    // Set up interval
+    this.auctionCheckInterval = setInterval(() => {
+      this.checkEndedAuctions();
+    }, this.auctionCheckIntervalMs);
+  }
+  
+  /**
+   * Check for ended auctions and process them
+   */
+  async checkEndedAuctions() {
+    try {
+      await AuctionEndService.processEndedAuctions();
+    } catch (error) {
+      console.error('[Keep-Alive] Error checking ended auctions:', error.message);
+    }
   }
 
   /**
@@ -46,8 +78,12 @@ class KeepAliveService {
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = null;
-      console.log('Keep-alive service stopped');
     }
+    if (this.auctionCheckInterval) {
+      clearInterval(this.auctionCheckInterval);
+      this.auctionCheckInterval = null;
+    }
+    console.log('Keep-alive service stopped');
   }
 
   /**

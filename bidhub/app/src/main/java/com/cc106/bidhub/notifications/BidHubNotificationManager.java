@@ -183,7 +183,7 @@ public class BidHubNotificationManager {
     }
     
     /**
-     * Send auction won notification
+     * Send auction won notification with next steps
      */
     public void sendAuctionWonNotification(String userId, String itemTitle, double winningBid) {
         if (!isNotificationEnabled(userId, NotificationType.AUCTION_ALERTS)) {
@@ -191,16 +191,30 @@ public class BidHubNotificationManager {
         }
         
         String title = "Congratulations! You Won!";
-        String message = String.format("You won %s for ₱%.2f", itemTitle, winningBid);
+        String message = String.format("You won %s for ₱%.2f. Contact the seller to arrange payment and delivery.", itemTitle, winningBid);
         
-        sendNotification(
-            userId,
-            NOTIFICATION_ID_AUCTION_ENDING,
-            CHANNEL_AUCTION_ALERTS,
-            title,
-            message,
-            createItemDetailIntent(itemTitle)
-        );
+        // Create expanded notification with next steps
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_AUCTION_ALERTS)
+            .setSmallIcon(R.drawable.ic_notifications)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setStyle(new NotificationCompat.BigTextStyle()
+                .bigText(message + "\n\nNext steps:\n• Contact the seller\n• Complete payment within 48 hours\n• Confirm delivery address"))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(PendingIntent.getActivity(
+                context,
+                NOTIFICATION_ID_AUCTION_ENDING,
+                createItemDetailIntent(itemTitle),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            ))
+            .setAutoCancel(true)
+            .setDefaults(NotificationCompat.DEFAULT_ALL);
+        
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+        notificationManager.notify(NOTIFICATION_ID_AUCTION_ENDING, builder.build());
+        
+        // Log notification
+        logNotification(userId, title, message);
     }
     
     /**
