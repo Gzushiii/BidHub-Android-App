@@ -13,10 +13,22 @@ const createItemSchema = Joi.object({
     }),
   
   description: Joi.string()
-    .min(10)
-    .max(2000)
     .optional()
     .allow('', null)
+    .custom((value, helpers) => {
+      // If value is empty or null, allow it (bypass length validation)
+      if (!value || value.trim() === '') {
+        return value;
+      }
+      // If value exists, validate length
+      if (value.length < 10) {
+        return helpers.error('string.min');
+      }
+      if (value.length > 2000) {
+        return helpers.error('string.max');
+      }
+      return value;
+    })
     .messages({
       'string.min': 'Description must be at least 10 characters long if provided',
       'string.max': 'Description cannot exceed 2000 characters'
@@ -106,11 +118,24 @@ const updateItemSchema = Joi.object({
     }),
   
   description: Joi.string()
-    .min(10)
-    .max(2000)
     .optional()
+    .allow('', null)
+    .custom((value, helpers) => {
+      // If value is empty or null, allow it (bypass length validation)
+      if (!value || value.trim() === '') {
+        return value;
+      }
+      // If value exists, validate length
+      if (value.length < 10) {
+        return helpers.error('string.min');
+      }
+      if (value.length > 2000) {
+        return helpers.error('string.max');
+      }
+      return value;
+    })
     .messages({
-      'string.min': 'Description must be at least 10 characters long',
+      'string.min': 'Description must be at least 10 characters long if provided',
       'string.max': 'Description cannot exceed 2000 characters'
     }),
   

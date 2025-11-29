@@ -240,7 +240,7 @@ router.post('/', authenticateToken, async (req, res) => {
     const itemUuid = require('crypto').randomUUID();
     const [result] = await connection.query(
       `INSERT INTO items 
-       (uuid_id, title, description, category_id, seller_id, starting_bid, reserve_price,
+       (uuid_id, title, description, category_id, seller_id, starting_price, reserve_price,
         current_bid, end_date, status, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [itemUuid, title, itemDescription, category_id, seller_id, starting_price, reserve_price, starting_price, end_date, status]
