@@ -64,7 +64,13 @@ public class ItemApiClient {
             // Prepare request data
             JSONObject requestData = new JSONObject();
             requestData.put("title", itemData.getTitle());
-            requestData.put("description", itemData.getDescription());
+            // Send description if available, otherwise send empty string (backend will handle null)
+            String description = itemData.getDescription();
+            if (description == null || description.trim().isEmpty()) {
+                requestData.put("description", ""); // Send empty string instead of null
+            } else {
+                requestData.put("description", description);
+            }
             // Convert category_id from string to integer using mapping
             try {
                 Integer categoryIdInt = com.cc106.bidhub.utils.CategoryMapping.toBackendCategoryId(itemData.getCategoryId());
@@ -81,34 +87,26 @@ public class ItemApiClient {
             requestData.put("starting_price", itemData.getStartingPrice());
             requestData.put("reserve_price", itemData.getStartingPrice());
             requestData.put("duration_days", 7);
-            // Rely on backend auth; still send seller_email for compatibility if backend allows it
-            requestData.put("seller_email", sellerEmail);
+            // Don't send seller_email - backend gets seller from authenticated token
             // Set status based on whether this is a draft or active item
             requestData.put("status", "active");
             
-            // Add images if available
+            // Add images if available - should already be URLs from upload
             if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
                 JSONArray imagesArray = new JSONArray();
-                for (String imagePath : itemData.getImagePaths()) {
-                    imagesArray.put(imagePath);
+                for (String imageUrl : itemData.getImagePaths()) {
+                    if (imageUrl != null && !imageUrl.isEmpty()) {
+                        imagesArray.put(imageUrl);
                 }
+                }
+                if (imagesArray.length() > 0) {
                 requestData.put("images", imagesArray);
             }
-            
-            // Add metadata if available
-            if (itemData.getMetadata() != null && !itemData.getMetadata().isEmpty()) {
-                requestData.put("metadata", itemData.getMetadata());
             }
             
-            // Add condition if available
-            if (itemData.getCondition() != null && !itemData.getCondition().isEmpty()) {
-                requestData.put("item_condition", itemData.getCondition());
-            }
-            
-            // Add buy now price if available
-            if (itemData.getBuyNowPrice() > 0) {
-                requestData.put("buy_now_price", itemData.getBuyNowPrice());
-            }
+            // Note: metadata, item_condition, and buy_now_price are not in the backend validator schema
+            // These fields are not currently supported by the backend API
+            // If needed, they should be added to the backend validator first
             
             // Make API call
             URL url = new URL(ITEMS_ENDPOINT);
@@ -147,9 +145,34 @@ public class ItemApiClient {
                 Log.d(TAG, "API Response: " + response.toString());
                 return new ApiResponse(true, "Item created successfully", response.toString());
             } else {
+                // Parse error response for better error messages
+                String errorMessage = "API error: " + responseCode;
+                try {
+                    if (response.length() > 0) {
+                        org.json.JSONObject errorJson = new org.json.JSONObject(response.toString());
+                        if (errorJson.has("error")) {
+                            errorMessage = errorJson.getString("error");
+                        }
+                        if (errorJson.has("details")) {
+                            Object details = errorJson.get("details");
+                            if (details instanceof org.json.JSONArray) {
+                                org.json.JSONArray detailsArray = (org.json.JSONArray) details;
+                                if (detailsArray.length() > 0) {
+                                    errorMessage += ": " + detailsArray.getString(0);
+                                }
+                            } else if (details instanceof String) {
+                                errorMessage += ": " + details;
+                            }
+                        } else if (errorJson.has("message")) {
+                            errorMessage += ": " + errorJson.getString("message");
+                        }
+                    }
+                } catch (org.json.JSONException e) {
+                    Log.w(TAG, "Could not parse error response", e);
+                }
                 Log.e(TAG, "API error: " + responseCode + " - " + response.toString());
                 Log.e(TAG, "Request data was: " + requestData.toString());
-                return new ApiResponse(false, "API error: " + responseCode + " - " + response.toString(), response.toString());
+                return new ApiResponse(false, errorMessage, response.toString());
             }
             
         } catch (Exception e) {
@@ -246,7 +269,13 @@ public class ItemApiClient {
             // Prepare request data for draft
             JSONObject requestData = new JSONObject();
             requestData.put("title", itemData.getTitle());
-            requestData.put("description", itemData.getDescription());
+            // Send description if available, otherwise send empty string (backend will handle null)
+            String description = itemData.getDescription();
+            if (description == null || description.trim().isEmpty()) {
+                requestData.put("description", ""); // Send empty string instead of null
+            } else {
+                requestData.put("description", description);
+            }
             // Convert category_id from string to integer using mapping
             try {
                 Integer categoryIdInt = com.cc106.bidhub.utils.CategoryMapping.toBackendCategoryId(itemData.getCategoryId());
@@ -263,32 +292,25 @@ public class ItemApiClient {
             requestData.put("starting_price", itemData.getStartingPrice());
             requestData.put("reserve_price", itemData.getStartingPrice());
             requestData.put("duration_days", 7);
-            requestData.put("seller_email", sellerEmail);
+            // Don't send seller_email - backend gets seller from authenticated token
             requestData.put("status", "draft"); // Set as draft
             
-            // Add images if available
+            // Add images if available - should already be URLs from upload
             if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
                 JSONArray imagesArray = new JSONArray();
-                for (String imagePath : itemData.getImagePaths()) {
-                    imagesArray.put(imagePath);
+                for (String imageUrl : itemData.getImagePaths()) {
+                    if (imageUrl != null && !imageUrl.isEmpty()) {
+                        imagesArray.put(imageUrl);
                 }
+                }
+                if (imagesArray.length() > 0) {
                 requestData.put("images", imagesArray);
             }
-            
-            // Add metadata if available
-            if (itemData.getMetadata() != null && !itemData.getMetadata().isEmpty()) {
-                requestData.put("metadata", itemData.getMetadata());
             }
             
-            // Add condition if available
-            if (itemData.getCondition() != null && !itemData.getCondition().isEmpty()) {
-                requestData.put("item_condition", itemData.getCondition());
-            }
-            
-            // Add buy now price if available
-            if (itemData.getBuyNowPrice() > 0) {
-                requestData.put("buy_now_price", itemData.getBuyNowPrice());
-            }
+            // Note: metadata, item_condition, and buy_now_price are not in the backend validator schema
+            // These fields are not currently supported by the backend API
+            // If needed, they should be added to the backend validator first
             
             // Make API call
             URL url = new URL(ITEMS_ENDPOINT);

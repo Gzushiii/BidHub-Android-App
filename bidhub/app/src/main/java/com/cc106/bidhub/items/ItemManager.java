@@ -10,11 +10,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Comprehensive Item Management System
@@ -28,7 +26,7 @@ public class ItemManager {
     private static final int MAX_IMAGES_PER_ITEM = 10;
     private static final int MAX_TITLE_LENGTH = 100;
     private static final int MAX_DESCRIPTION_LENGTH = 1000;
-    private static final double MIN_PRICE = 1.0;
+    private static final double MIN_PRICE = 0.01; // Match backend requirement
     private static final double MAX_PRICE = 1000000.0;
     private static final int MAX_TAGS_PER_ITEM = 10;
     private static final int MAX_ITEMS_PER_PAGE = 50;
@@ -47,7 +45,7 @@ public class ItemManager {
     private final Map<String, Integer> itemBidCounts;
     
     // Context
-    private Context context;
+    private final Context context;
     
     private ItemManager(Context context) {
         this.context = context.getApplicationContext();
@@ -71,6 +69,19 @@ public class ItemManager {
             instance = new ItemManager(context);
         }
         return instance;
+    }
+    
+    /**
+     * Helper method to replace computeIfAbsent for API 21 compatibility
+     * Gets list from map or creates new list if not present
+     */
+    private List<String> getOrCreateList(Map<String, List<String>> map, String key) {
+        List<String> list = map.get(key);
+        if (list == null) {
+            list = new ArrayList<>();
+            map.put(key, list);
+        }
+        return list;
     }
     
     // ==================== ITEM OPERATIONS ====================
@@ -99,23 +110,56 @@ public class ItemManager {
                 
                 if (response.isSuccess()) {
                     Log.i(TAG, "Item created successfully via backend API");
+                    Log.d(TAG, "Backend response: " + response.getData());
 
-                    // Parse the backend response to get the UUID assigned by backend
+                    // Parse the backend response to get the UUID assigned by backend and images
                     String backendItemId = null;
+                    List<String> backendImageUrls = new ArrayList<>();
                     try {
                         if (response.getData() != null && !response.getData().isEmpty()) {
                             org.json.JSONObject responseJson = new org.json.JSONObject(response.getData());
+                            org.json.JSONObject itemJson = null;
+                            
                             if (responseJson.has("item")) {
-                                org.json.JSONObject itemJson = responseJson.getJSONObject("item");
+                                itemJson = responseJson.getJSONObject("item");
+                            } else {
+                                // Response might have item data at root level
+                                itemJson = responseJson;
+                            }
+                            
+                            if (itemJson != null) {
                                 // Backend returns uuid_id field
                                 if (itemJson.has("uuid_id")) {
                                     backendItemId = itemJson.getString("uuid_id");
                                     Log.i(TAG, "Extracted backend item UUID: " + backendItemId);
+                                } else if (itemJson.has("id")) {
+                                    // Fallback to id field if uuid_id not present
+                                    backendItemId = itemJson.getString("id");
+                                    Log.i(TAG, "Extracted backend item ID: " + backendItemId);
+                                }
+                                
+                                // Extract images from backend response
+                                if (itemJson.has("images")) {
+                                    org.json.JSONArray imagesArray = itemJson.getJSONArray("images");
+                                    for (int i = 0; i < imagesArray.length(); i++) {
+                                        Object imageObj = imagesArray.get(i);
+                                        if (imageObj instanceof org.json.JSONObject) {
+                                            org.json.JSONObject imageJson = (org.json.JSONObject) imageObj;
+                                            if (imageJson.has("image_url")) {
+                                                backendImageUrls.add(imageJson.getString("image_url"));
+                                            }
+                                        } else if (imageObj instanceof String) {
+                                            // Images might be returned as array of strings
+                                            backendImageUrls.add((String) imageObj);
+                                        }
+                                    }
+                                    Log.i(TAG, "Extracted " + backendImageUrls.size() + " image URLs from backend response");
                                 }
                             }
                         }
                     } catch (org.json.JSONException e) {
-                        Log.e(TAG, "Failed to parse backend response for UUID", e);
+                        Log.e(TAG, "Failed to parse backend response for UUID and images", e);
+                        Log.e(TAG, "Response data: " + response.getData());
                     }
 
                     // Also store locally for offline access
@@ -150,21 +194,42 @@ public class ItemManager {
                         item.setTags(new ArrayList<>(itemData.getTags()));
                     }
                     
-                    // Add image paths
-                    if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
-                        item.setImagePaths(new ArrayList<>(itemData.getImagePaths()));
-                        itemImages.put(item.getItemId(), new ArrayList<>(itemData.getImagePaths()));
+                    // Add image paths - prefer backend response images, fallback to itemData images
+                    List<String> finalImagePaths = new ArrayList<>();
+                    if (!backendImageUrls.isEmpty()) {
+                        // Use images from backend response (these are the actual URLs stored in database)
+                        finalImagePaths.addAll(backendImageUrls);
+                        Log.i(TAG, "Using " + finalImagePaths.size() + " image URLs from backend response");
+                    } else if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
+                        // Fallback to itemData images if backend didn't return them
+                        finalImagePaths.addAll(itemData.getImagePaths());
+                        Log.i(TAG, "Using " + finalImagePaths.size() + " image URLs from itemData (backend didn't return images)");
+                    }
+                    
+                    if (!finalImagePaths.isEmpty()) {
+                        item.setImagePaths(new ArrayList<>(finalImagePaths));
+                        itemImages.put(item.getItemId(), new ArrayList<>(finalImagePaths));
+                        Log.i(TAG, "Stored " + finalImagePaths.size() + " image URLs for item: " + item.getItemId());
+                        for (int i = 0; i < finalImagePaths.size(); i++) {
+                            Log.d(TAG, "  Image " + (i + 1) + ": " + finalImagePaths.get(i));
+                        }
+                    } else {
+                        Log.w(TAG, "No images to store for item: " + item.getItemId());
                     }
                     
                     // Store item locally
                     items.put(item.getItemId(), item);
+                    Log.i(TAG, "Stored item in local map with ID: " + item.getItemId());
+                    Log.d(TAG, "Item details - Title: " + item.getTitle() + ", Images: " + (item.getImagePaths() != null ? item.getImagePaths().size() : 0));
                     
                     // Update user items
-                    userItems.computeIfAbsent(sellerEmail, k -> new ArrayList<>()).add(item.getItemId());
+                    getOrCreateList(userItems, sellerEmail).add(item.getItemId());
+                    Log.d(TAG, "Added item to user items list for: " + sellerEmail);
                     
                     // Update category items
                     if (itemData.getCategoryId() != null) {
-                        categoryItems.computeIfAbsent(itemData.getCategoryId(), k -> new ArrayList<>()).add(item.getItemId());
+                        getOrCreateList(categoryItems, itemData.getCategoryId()).add(item.getItemId());
+                        Log.d(TAG, "Added item to category items list for: " + itemData.getCategoryId());
                     }
                     
                     // Initialize counters
@@ -172,12 +237,14 @@ public class ItemManager {
                     itemBidCounts.put(item.getItemId(), 0);
                     
                     Log.i(TAG, "Item created successfully: " + item.getItemId());
+                    Log.i(TAG, "Total items in local storage: " + items.size());
                     return true;
                 } else {
                     Log.e(TAG, "Backend API error: " + response.getMessage());
-                    Log.i(TAG, "Falling back to local storage due to API error");
-                    // Fallback to local storage when API fails
-                    return createLocalItem(itemData, sellerEmail);
+                    Log.e(TAG, "Backend API error details: " + response.getData());
+                    // Do not fallback to local storage - item must be posted to backend
+                    // Return false to indicate failure
+                    return false;
                 }
             } catch (Exception apiException) {
                 Log.e(TAG, "Backend API call failed", apiException);
@@ -337,11 +404,11 @@ public class ItemManager {
                     items.put(item.getItemId(), item);
                     
                     // Update user items
-                    userItems.computeIfAbsent(sellerEmail, k -> new ArrayList<>()).add(item.getItemId());
+                    getOrCreateList(userItems, sellerEmail).add(item.getItemId());
                     
                     // Update category items
                     if (itemData.getCategoryId() != null) {
-                        categoryItems.computeIfAbsent(itemData.getCategoryId(), k -> new ArrayList<>()).add(item.getItemId());
+                        getOrCreateList(categoryItems, itemData.getCategoryId()).add(item.getItemId());
                     }
                     
                     // Initialize counters
@@ -573,11 +640,20 @@ public class ItemManager {
      * Get item by ID
      */
     public Item getItemById(String itemId) {
+        Log.d(TAG, "getItemById called with ID: " + itemId);
+        Log.d(TAG, "Total items in local storage: " + items.size());
+        Log.d(TAG, "Available item IDs: " + items.keySet());
+        
         Item item = items.get(itemId);
         if (item != null) {
+            Log.i(TAG, "Item found: " + itemId + " - Title: " + item.getTitle());
+            Log.d(TAG, "Item images count: " + (item.getImagePaths() != null ? item.getImagePaths().size() : 0));
             // Increment view count
             item.incrementViewCount();
             itemViewCounts.put(itemId, item.getViewCount());
+        } else {
+            Log.w(TAG, "Item NOT found in local storage: " + itemId);
+            Log.w(TAG, "This might mean the item was created but ItemManager was recreated, or the ID doesn't match");
         }
         return item;
     }
@@ -591,10 +667,14 @@ public class ItemManager {
             return new ArrayList<>();
         }
         
-        return itemIds.stream()
-                .map(items::get)
-                .filter(item -> item != null)
-                .collect(Collectors.toList());
+        List<Item> result = new ArrayList<>();
+        for (String itemId : itemIds) {
+            Item item = items.get(itemId);
+            if (item != null) {
+                result.add(item);
+            }
+        }
+        return result;
     }
     
     // ==================== IMAGE MANAGEMENT ====================
@@ -722,10 +802,20 @@ public class ItemManager {
      * Get all categories
      */
     public List<Category> getAllCategories() {
-        return categories.values().stream()
-                .filter(Category::isActive)
-                .sorted(Comparator.comparing(Category::getSortOrder))
-                .collect(Collectors.toList());
+        List<Category> result = new ArrayList<>();
+        for (Category category : categories.values()) {
+            if (category.isActive()) {
+                result.add(category);
+            }
+        }
+        // Sort by sort order
+        java.util.Collections.sort(result, new Comparator<Category>() {
+            @Override
+            public int compare(Category c1, Category c2) {
+                return Integer.compare(c1.getSortOrder(), c2.getSortOrder());
+            }
+        });
+        return result;
     }
     
     /**
@@ -767,7 +857,7 @@ public class ItemManager {
             item.setCategoryName(category.getName());
             items.put(itemId, item);
             
-            categoryItems.computeIfAbsent(categoryId, k -> new ArrayList<>()).add(itemId);
+            getOrCreateList(categoryItems, categoryId).add(itemId);
             
             Log.i(TAG, "Category assigned successfully");
             return true;
@@ -787,10 +877,14 @@ public class ItemManager {
             return new ArrayList<>();
         }
         
-        return itemIds.stream()
-                .map(items::get)
-                .filter(item -> item != null)
-                .collect(Collectors.toList());
+        List<Item> result = new ArrayList<>();
+        for (String itemId : itemIds) {
+            Item item = items.get(itemId);
+            if (item != null) {
+                result.add(item);
+            }
+        }
+        return result;
     }
     
     // ==================== ITEM VALIDATION ====================
@@ -815,22 +909,28 @@ public class ItemManager {
             return false;
         }
         
-        // Validate description
-        if (itemData.getDescription() == null || itemData.getDescription().trim().isEmpty()) {
-            Log.e(TAG, "Description is required");
+        // Validate description (optional - but if provided, must meet requirements)
+        if (itemData.getDescription() != null && !itemData.getDescription().trim().isEmpty()) {
+            String description = itemData.getDescription().trim();
+            if (description.length() < 10) {
+                Log.e(TAG, "Description too short: " + description.length() + " (must be at least 10 characters if provided)");
             return false;
         }
-        
-        if (itemData.getDescription().length() > MAX_DESCRIPTION_LENGTH) {
-            Log.e(TAG, "Description too long: " + itemData.getDescription().length());
+            if (description.length() > MAX_DESCRIPTION_LENGTH) {
+                Log.e(TAG, "Description too long: " + description.length());
             return false;
         }
+        }
+        // Description is optional, so no error if null or empty
         
-        // Validate price
+        // Validate price (must be at least 0.01 to match backend requirement)
         if (itemData.getStartingPrice() < MIN_PRICE || itemData.getStartingPrice() > MAX_PRICE) {
-            Log.e(TAG, "Invalid starting price: " + itemData.getStartingPrice());
+            Log.e(TAG, "Invalid starting price: " + itemData.getStartingPrice() + " (must be between " + MIN_PRICE + " and " + MAX_PRICE + ")");
             return false;
         }
+        
+        // Special case: allow 0.01 for donation items (backend requires minimum 0.01)
+        // This is handled in PostFragment where donation items are set to 0.01
         
         if (itemData.getBuyNowPrice() != 0 && 
             (itemData.getBuyNowPrice() < itemData.getStartingPrice() || 
@@ -915,16 +1015,39 @@ public class ItemManager {
         
         String searchQuery = query.toLowerCase().trim();
         
-        return items.values().stream()
-                .filter(item -> item.getStatus() == ItemStatus.ACTIVE)
-                .filter(item -> 
-                    item.getTitle().toLowerCase().contains(searchQuery) ||
-                    item.getDescription().toLowerCase().contains(searchQuery) ||
-                    (item.getTags() != null && item.getTags().stream()
-                        .anyMatch(tag -> tag.toLowerCase().contains(searchQuery)))
-                )
-                .sorted(Comparator.comparing(Item::getCreatedAt).reversed())
-                .collect(Collectors.toList());
+        List<Item> result = new ArrayList<>();
+        for (Item item : items.values()) {
+            if (item.getStatus() == ItemStatus.ACTIVE) {
+                boolean matches = item.getTitle().toLowerCase().contains(searchQuery) ||
+                    (item.getDescription() != null && item.getDescription().toLowerCase().contains(searchQuery));
+                
+                if (!matches && item.getTags() != null) {
+                    for (String tag : item.getTags()) {
+                        if (tag.toLowerCase().contains(searchQuery)) {
+                            matches = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (matches) {
+                    result.add(item);
+                }
+            }
+        }
+        // Sort by created date (newest first)
+        java.util.Collections.sort(result, new Comparator<Item>() {
+            @Override
+            public int compare(Item i1, Item i2) {
+                Date d1 = i1.getCreatedAt();
+                Date d2 = i2.getCreatedAt();
+                if (d1 == null && d2 == null) return 0;
+                if (d1 == null) return 1;
+                if (d2 == null) return -1;
+                return d2.compareTo(d1); // Reversed for newest first
+            }
+        });
+        return result;
     }
     
     /**
@@ -943,21 +1066,34 @@ public class ItemManager {
         android.util.Log.d("ItemManager", "Filter criteria (normalized): " + fc.toString());
         
         // Start with all active/draft items
-        List<Item> filteredItems = items.values().stream()
-                .filter(item -> item.getStatus() == ItemStatus.ACTIVE || item.getStatus() == ItemStatus.DRAFT)
-                .collect(Collectors.toList());
+        List<Item> filteredItems = new ArrayList<>();
+        for (Item item : items.values()) {
+            if (item.getStatus() == ItemStatus.ACTIVE || item.getStatus() == ItemStatus.DRAFT) {
+                filteredItems.add(item);
+            }
+        }
         
         android.util.Log.d("ItemManager", "Starting with " + filteredItems.size() + " active/draft items");
         
         // Apply filters with proper no-op defaults
-        filteredItems = filteredItems.stream()
-                .filter(item -> {
+        List<Item> filteredResult = new ArrayList<>();
+        for (Item item : filteredItems) {
                     // Search filter (no-op if null)
-                    boolean matchesSearch = (fc.getQuery() == null) || 
-                        item.getTitle().toLowerCase().contains(fc.getQuery().toLowerCase()) ||
-                        item.getDescription().toLowerCase().contains(fc.getQuery().toLowerCase()) ||
-                        (item.getTags() != null && item.getTags().stream()
-                            .anyMatch(tag -> tag.toLowerCase().contains(fc.getQuery().toLowerCase())));
+            boolean matchesSearch = true;
+            if (fc.getQuery() != null) {
+                String queryLower = fc.getQuery().toLowerCase();
+                matchesSearch = item.getTitle().toLowerCase().contains(queryLower) ||
+                    (item.getDescription() != null && item.getDescription().toLowerCase().contains(queryLower));
+                
+                if (!matchesSearch && item.getTags() != null) {
+                    for (String tag : item.getTags()) {
+                        if (tag.toLowerCase().contains(queryLower)) {
+                            matchesSearch = true;
+                            break;
+                        }
+                    }
+                }
+            }
                     
                     // Category filter (no-op if null)
                     boolean matchesCategory = (fc.getCategoryId() == null) || 
@@ -985,17 +1121,19 @@ public class ItemManager {
                     boolean matchesTrending = (fc.getIsTrending() == null) || 
                         fc.getIsTrending() == item.isTrending();
                     
-                    return matchesSearch && matchesCategory && matchesCondition && 
+            if (matchesSearch && matchesCategory && matchesCondition && 
                            matchesMin && matchesMax && matchesStatus && 
-                           matchesFeatured && matchesTrending;
-                })
-                .collect(Collectors.toList());
+                matchesFeatured && matchesTrending) {
+                filteredResult.add(item);
+            }
+        }
+        filteredItems = filteredResult;
         
         android.util.Log.d("ItemManager", "After all filters: " + filteredItems.size() + " items");
         
         // Sort items
         Comparator<Item> comparator = getComparator(fc.getSortBy(), fc.getSortOrder());
-        filteredItems.sort(comparator);
+        java.util.Collections.sort(filteredItems, comparator);
         android.util.Log.d("ItemManager", "After sorting by " + fc.getSortBy() + " " + fc.getSortOrder() + ": " + filteredItems.size() + " items");
         
         // Apply pagination with safe bounds AFTER filtering and sorting
@@ -1035,45 +1173,101 @@ public class ItemManager {
      * Get featured items
      */
     public List<Item> getFeaturedItems() {
-        return items.values().stream()
-                .filter(item -> item.getStatus() == ItemStatus.ACTIVE)
-                .filter(Item::isFeatured)
-                .sorted(Comparator.comparing(Item::getCreatedAt).reversed())
-                .limit(20)
-                .collect(Collectors.toList());
+        List<Item> result = new ArrayList<>();
+        for (Item item : items.values()) {
+            if (item.getStatus() == ItemStatus.ACTIVE && item.isFeatured()) {
+                result.add(item);
+            }
+        }
+        // Sort by created date (newest first) and limit to 20
+        java.util.Collections.sort(result, new Comparator<Item>() {
+            @Override
+            public int compare(Item i1, Item i2) {
+                Date d1 = i1.getCreatedAt();
+                Date d2 = i2.getCreatedAt();
+                if (d1 == null && d2 == null) return 0;
+                if (d1 == null) return 1;
+                if (d2 == null) return -1;
+                return d2.compareTo(d1); // Reversed for newest first
+            }
+        });
+        if (result.size() > 20) {
+            result = result.subList(0, 20);
+        }
+        return result;
     }
     
     /**
      * Get trending items
      */
     public List<Item> getTrendingItems() {
-        return items.values().stream()
-                .filter(item -> item.getStatus() == ItemStatus.ACTIVE)
-                .filter(Item::isTrending)
-                .sorted(Comparator.comparing(Item::getViewCount).reversed())
-                .limit(20)
-                .collect(Collectors.toList());
+        List<Item> result = new ArrayList<>();
+        for (Item item : items.values()) {
+            if (item.getStatus() == ItemStatus.ACTIVE && item.isTrending()) {
+                result.add(item);
+            }
+        }
+        // Sort by view count (highest first) and limit to 20
+        java.util.Collections.sort(result, new Comparator<Item>() {
+            @Override
+            public int compare(Item i1, Item i2) {
+                return Integer.compare(i2.getViewCount(), i1.getViewCount()); // Reversed for highest first
+            }
+        });
+        if (result.size() > 20) {
+            result = result.subList(0, 20);
+        }
+        return result;
     }
     
     /**
      * Get all active items
      */
     public List<Item> getAllActiveItems() {
-        return items.values().stream()
-                .filter(item -> item.getStatus() == ItemStatus.ACTIVE)
-                .sorted(Comparator.comparing(Item::getCreatedAt).reversed())
-                .collect(Collectors.toList());
+        List<Item> result = new ArrayList<>();
+        for (Item item : items.values()) {
+            if (item.getStatus() == ItemStatus.ACTIVE) {
+                result.add(item);
+            }
+        }
+        // Sort by created date (newest first)
+        java.util.Collections.sort(result, new Comparator<Item>() {
+            @Override
+            public int compare(Item i1, Item i2) {
+                Date d1 = i1.getCreatedAt();
+                Date d2 = i2.getCreatedAt();
+                if (d1 == null && d2 == null) return 0;
+                if (d1 == null) return 1;
+                if (d2 == null) return -1;
+                return d2.compareTo(d1); // Reversed for newest first
+            }
+        });
+        return result;
     }
     
     /**
      * Get all browsable items (both ACTIVE and DRAFT)
      */
     public List<Item> getAllBrowsableItems() {
-        return items.values().stream()
-                .filter(item -> item.getStatus() == ItemStatus.ACTIVE || 
-                               item.getStatus() == ItemStatus.DRAFT)
-                .sorted(Comparator.comparing(Item::getCreatedAt).reversed())
-                .collect(Collectors.toList());
+        List<Item> result = new ArrayList<>();
+        for (Item item : items.values()) {
+            if (item.getStatus() == ItemStatus.ACTIVE || item.getStatus() == ItemStatus.DRAFT) {
+                result.add(item);
+            }
+        }
+        // Sort by created date (newest first)
+        java.util.Collections.sort(result, new Comparator<Item>() {
+            @Override
+            public int compare(Item i1, Item i2) {
+                Date d1 = i1.getCreatedAt();
+                Date d2 = i2.getCreatedAt();
+                if (d1 == null && d2 == null) return 0;
+                if (d1 == null) return 1;
+                if (d2 == null) return -1;
+                return d2.compareTo(d1); // Reversed for newest first
+            }
+        });
+        return result;
     }
     
     // ==================== UTILITY METHODS ====================
@@ -1125,41 +1319,62 @@ public class ItemManager {
      * Get comparator for sorting
      */
     private Comparator<Item> getComparator(String sortBy, String sortOrder) {
-        Comparator<Item> comparator;
+        final String sortField = sortBy != null ? sortBy : "createdAt";
+        final boolean ascending = "ASC".equalsIgnoreCase(sortOrder);
         
-        switch (sortBy != null ? sortBy : "createdAt") {
+        Comparator<Item> comparator = new Comparator<Item>() {
+            @Override
+            public int compare(Item i1, Item i2) {
+                int result = 0;
+                
+                switch (sortField) {
             case "title":
-                comparator = Comparator.comparing(Item::getTitle);
+                        String t1 = i1.getTitle();
+                        String t2 = i2.getTitle();
+                        if (t1 == null && t2 == null) result = 0;
+                        else if (t1 == null) result = 1;
+                        else if (t2 == null) result = -1;
+                        else result = t1.compareTo(t2);
                 break;
             case "price":
-                comparator = Comparator.comparing(Item::getCurrentPrice);
+                        result = Double.compare(i1.getCurrentPrice(), i2.getCurrentPrice());
                 break;
             case "viewCount":
-                comparator = Comparator.comparing(Item::getViewCount);
+                        result = Integer.compare(i1.getViewCount(), i2.getViewCount());
                 break;
             case "bidCount":
-                comparator = Comparator.comparing(Item::getBidCount);
+                        result = Integer.compare(i1.getBidCount(), i2.getBidCount());
                 break;
             case "endDate":
-                comparator = Comparator.comparing(Item::getEndDate, Comparator.nullsLast(Comparator.naturalOrder()));
+                        Date d1 = i1.getEndDate();
+                        Date d2 = i2.getEndDate();
+                        if (d1 == null && d2 == null) result = 0;
+                        else if (d1 == null) result = 1;
+                        else if (d2 == null) result = -1;
+                        else result = d1.compareTo(d2);
                 break;
-            default:
-                comparator = Comparator.comparing(Item::getCreatedAt);
+                    default: // createdAt
+                        Date c1 = i1.getCreatedAt();
+                        Date c2 = i2.getCreatedAt();
+                        if (c1 == null && c2 == null) result = 0;
+                        else if (c1 == null) result = 1;
+                        else if (c2 == null) result = -1;
+                        else result = c1.compareTo(c2);
                 break;
         }
         
-        if ("ASC".equalsIgnoreCase(sortOrder)) {
+                return ascending ? result : -result; // Reverse for descending
+            }
+        };
+        
             return comparator;
-        } else {
-            return comparator.reversed();
-        }
     }
     
     /**
      * Start cleanup task
      */
     private void startCleanupTask() {
-        scheduledExecutor.scheduleAtFixedRate(() -> {
+        scheduledExecutor.scheduleWithFixedDelay(() -> {
             try {
                 cleanupExpiredItems();
                 updateTrendingItems();
@@ -1197,11 +1412,22 @@ public class ItemManager {
         }
         
         // Set top 10 most viewed items as trending
-        List<Item> trendingItems = items.values().stream()
-                .filter(item -> item.getStatus() == ItemStatus.ACTIVE)
-                .sorted(Comparator.comparing(Item::getViewCount).reversed())
-                .limit(10)
-                .collect(Collectors.toList());
+        List<Item> trendingItems = new ArrayList<>();
+        for (Item item : items.values()) {
+            if (item.getStatus() == ItemStatus.ACTIVE) {
+                trendingItems.add(item);
+            }
+        }
+        // Sort by view count (highest first) and limit to 10
+        java.util.Collections.sort(trendingItems, new Comparator<Item>() {
+            @Override
+            public int compare(Item i1, Item i2) {
+                return Integer.compare(i2.getViewCount(), i1.getViewCount()); // Reversed for highest first
+            }
+        });
+        if (trendingItems.size() > 10) {
+            trendingItems = trendingItems.subList(0, 10);
+        }
         
         for (Item item : trendingItems) {
             item.setTrending(true);
@@ -1243,7 +1469,7 @@ public class ItemManager {
         vintageJacket.setViewCount(45);
         vintageJacket.setEndDate(new Date(System.currentTimeMillis() + 12 * 60 * 60 * 1000)); // 12 hours from now
         items.put(vintageJacket.getItemId(), vintageJacket);
-        userItems.computeIfAbsent(testUserEmail, k -> new ArrayList<>()).add(vintageJacket.getItemId());
+        getOrCreateList(userItems, testUserEmail).add(vintageJacket.getItemId());
         
         Item antiqueWatch = new Item("Antique Pocket Watch", "Beautiful antique pocket watch from the 1800s", 85.0, testUserEmail);
         antiqueWatch.setCategoryId("collectibles");

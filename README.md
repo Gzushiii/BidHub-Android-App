@@ -27,7 +27,6 @@ To create a secure and trusted mobile bidding environment where all participants
 - ✅ **User Registration**: Complete account creation with email and phone verification
 - ✅ **Secure Login**: Password-based authentication with security features
 - ✅ **Profile Management**: User data management and alias generation
-- ✅ **Password Recovery**: Complete password recovery system with email/SMS verification
 - ✅ **Alias System**: Automatic generation of unique bidding aliases for privacy
 
 #### **2. Credit System & Payment Integration**
@@ -394,14 +393,6 @@ CREATE TABLE redemption_codes (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Password recovery table
-CREATE TABLE password_recovery (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255),
-    phone VARCHAR(20),
-    verification_code VARCHAR(10) NOT NULL,
-    expires_at BIGINT NOT NULL,
-    is_email BOOLEAN NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

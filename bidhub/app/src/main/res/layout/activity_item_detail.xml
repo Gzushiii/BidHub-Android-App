@@ -16,19 +16,19 @@
         android:background="@color/background"
         android:elevation="4dp">
 
-        <ImageButton
-            android:id="@+id/btn_back"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_arrow_back_ios"
-            android:contentDescription="Back" />
+            <ImageButton
+                android:id="@+id/btn_back"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_arrow_back_ios"
+                android:contentDescription="@string/back" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Item Details"
+            android:text="@string/item_details"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary"
@@ -45,7 +45,7 @@
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_share"
-                android:contentDescription="Share"
+                android:contentDescription="@string/share"
                 android:layout_marginEnd="8dp" />
 
             <ImageButton
@@ -54,7 +54,7 @@
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_favorite_border"
-                android:contentDescription="Add to Favorites" />
+                android:contentDescription="@string/add_to_favorites" />
 
         </LinearLayout>
 
@@ -83,7 +83,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:src="@drawable/placeholder"
-                    android:scaleType="centerCrop" />
+                    android:scaleType="centerCrop"
+                    android:contentDescription="@string/item_details" />
 
                 <!-- Gradient overlay -->
                 <View
@@ -173,7 +174,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Starting Bid"
+                            android:text="@string/starting_bid"
                             android:textColor="@color/text_secondary"
                             android:textSize="14sp"
                             android:layout_marginBottom="4dp" />
@@ -198,7 +199,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Current Bid"
+                            android:text="@string/current_bid"
                             android:textColor="@color/text_secondary"
                             android:textSize="14sp"
                             android:layout_marginBottom="4dp" />
@@ -234,7 +235,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Time Left"
+                            android:text="@string/time_left"
                             android:textColor="@color/text_primary"
                             android:textSize="14sp"
                             android:textStyle="bold" />
@@ -279,7 +280,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Description"
+                    android:text="@string/description"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
@@ -312,7 +313,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Seller Information"
+                    android:text="@string/seller_information"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
@@ -330,7 +331,8 @@
                             android:layout_height="56dp"
                             android:src="@drawable/placeholder"
                             android:background="@drawable/circle_background"
-                            android:layout_marginEnd="16dp" />
+                            android:layout_marginEnd="16dp"
+                            android:contentDescription="@string/seller_information" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -359,7 +361,8 @@
                                 android:layout_height="16dp"
                                 android:src="@drawable/ic_star"
                                 android:tint="@color/primary"
-                                android:layout_marginEnd="4dp" />
+                                android:layout_marginEnd="4dp"
+                                android:contentDescription="@string/rate" />
 
                             <TextView
                                 android:id="@+id/tv_seller_rating"
@@ -393,7 +396,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Bid History"
+                    android:text="@string/bid_history"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold"
@@ -446,7 +449,7 @@
                 android:layout_height="56dp"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:hint="Enter your bid"
+                android:hint="@string/enter_your_bid"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
                 android:textSize="18sp"
@@ -466,7 +469,7 @@
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:layout_weight="1"
-                android:text="Place Bid"
+                android:text="@string/place_bid"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/text_white"
@@ -478,7 +481,7 @@
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:layout_weight="1"
-                android:text="Buy Now"
+                android:text="@string/buy_now"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary"

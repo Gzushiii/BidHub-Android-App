@@ -1,4 +1,4 @@
-const db = require('../config/database');
+const { pool } = require('../config/database');
 
 /**
  * Calculate auction end date based on duration in days
@@ -21,7 +21,7 @@ const calculateEndDate = (durationDays) => {
 const validateBidAmount = async (itemId, bidAmount, currentUserId) => {
   try {
     // Get item details
-    const [items] = await db.query(
+    const [items] = await pool.query(
       'SELECT * FROM items WHERE id = ? AND status = ?',
       [itemId, 'active']
     );
@@ -43,7 +43,7 @@ const validateBidAmount = async (itemId, bidAmount, currentUserId) => {
     }
 
     // Get current highest bid
-    const [currentBids] = await db.query(
+    const [currentBids] = await pool.query(
       'SELECT MAX(amount) as max_bid FROM bids WHERE item_id = ?',
       [itemId]
     );
@@ -84,7 +84,7 @@ const validateBidAmount = async (itemId, bidAmount, currentUserId) => {
 const canUpdateItem = async (itemId) => {
   try {
     // Check if item has any bids
-    const [bids] = await db.query(
+    const [bids] = await pool.query(
       'SELECT COUNT(*) as bid_count FROM bids WHERE item_id = ?',
       [itemId]
     );
@@ -100,7 +100,7 @@ const canUpdateItem = async (itemId) => {
     }
 
     // Check if auction has ended
-    const [items] = await db.query(
+    const [items] = await pool.query(
       'SELECT end_date, status FROM items WHERE id = ?',
       [itemId]
     );
@@ -138,7 +138,7 @@ const canUpdateItem = async (itemId) => {
 const canDeleteItem = async (itemId) => {
   try {
     // Check if item has any bids
-    const [bids] = await db.query(
+    const [bids] = await pool.query(
       'SELECT COUNT(*) as bid_count FROM bids WHERE item_id = ?',
       [itemId]
     );
@@ -154,7 +154,7 @@ const canDeleteItem = async (itemId) => {
     }
 
     // Check item status
-    const [items] = await db.query(
+    const [items] = await pool.query(
       'SELECT status FROM items WHERE id = ?',
       [itemId]
     );
@@ -186,7 +186,7 @@ const canDeleteItem = async (itemId) => {
 const canRetractBid = async (bidId, userId) => {
   try {
     // Get bid details
-    const [bids] = await db.query(
+    const [bids] = await pool.query(
       'SELECT * FROM bids WHERE id = ? AND bidder_id = ?',
       [bidId, userId]
     );
@@ -198,7 +198,7 @@ const canRetractBid = async (bidId, userId) => {
     const bid = bids[0];
 
     // Check if bid is the current highest bid
-    const [highestBids] = await db.query(
+    const [highestBids] = await pool.query(
       'SELECT MAX(amount) as max_bid, MAX(id) as max_bid_id FROM bids WHERE item_id = ?',
       [bid.item_id]
     );
@@ -213,7 +213,7 @@ const canRetractBid = async (bidId, userId) => {
     }
 
     // Check if auction has ended
-    const [items] = await db.query(
+    const [items] = await pool.query(
       'SELECT end_date FROM items WHERE id = ?',
       [bid.item_id]
     );

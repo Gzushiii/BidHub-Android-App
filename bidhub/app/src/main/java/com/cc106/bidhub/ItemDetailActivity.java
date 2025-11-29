@@ -673,11 +673,15 @@ public class ItemDetailActivity extends AppCompatActivity {
     }
 
     private void loadItemData(String itemId) {
+        android.util.Log.i("ItemDetailActivity", "loadItemData called with itemId: " + itemId);
         if (itemId != null) {
             try {
                 // Load real item data from database
+                android.util.Log.d("ItemDetailActivity", "Calling itemManager.getItemById(" + itemId + ")");
                 currentItem = itemManager.getItemById(itemId);
                 if (currentItem != null) {
+                    android.util.Log.i("ItemDetailActivity", "Item found! Title: " + currentItem.getTitle());
+                    android.util.Log.d("ItemDetailActivity", "Item images: " + (currentItem.getImagePaths() != null ? currentItem.getImagePaths().size() : 0));
                     populateItemDataFromDatabase();
                     loadItemImages();
                     com.cc106.bidhub.utils.ErrorHandler.logInfo(
@@ -687,6 +691,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                     );
                 } else {
                     // Item not found, show error and fallback to sample data
+                    android.util.Log.w("ItemDetailActivity", "Item NOT found in ItemManager for ID: " + itemId);
                     com.cc106.bidhub.utils.ErrorHandler.logWarning(
                         "ItemDetailActivity", 
                         "Item not found in database, showing sample data",

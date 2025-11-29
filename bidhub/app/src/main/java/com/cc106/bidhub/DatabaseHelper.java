@@ -16,7 +16,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TABLE_CREDIT_TRANSACTIONS = "credit_transactions";
     public static final String TABLE_REDEMPTION_CODES = "redemption_codes";
     public static final String TABLE_CATEGORIES = "categories";
-    public static final String TABLE_PASSWORD_RECOVERY = "password_recovery";
 
     // ==================== USERS TABLE COLUMNS ====================
     public static final String COLUMN_USER_ID = "id";
@@ -93,14 +92,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_CATEGORY_PARENT_ID = "parent_id";
     public static final String COLUMN_CATEGORY_IS_ACTIVE = "is_active";
 
-    // ==================== PASSWORD RECOVERY TABLE COLUMNS ====================
-    public static final String COLUMN_RECOVERY_ID = "id";
-    public static final String COLUMN_RECOVERY_EMAIL = "email";
-    public static final String COLUMN_RECOVERY_PHONE = "phone";
-    public static final String COLUMN_RECOVERY_CODE = "verification_code";
-    public static final String COLUMN_RECOVERY_EXPIRES_AT = "expires_at";
-    public static final String COLUMN_RECOVERY_IS_EMAIL = "is_email";
-    public static final String COLUMN_RECOVERY_CREATED_AT = "created_at";
 
     // ==================== CREATE TABLE STATEMENTS ====================
     
@@ -198,16 +189,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             + "FOREIGN KEY(" + COLUMN_CODE_USER_ID + ") REFERENCES " + TABLE_USERS + "(" + COLUMN_USER_ID + ")"
             + ")";
 
-    // Password recovery table for password reset verification
-    private static final String CREATE_TABLE_PASSWORD_RECOVERY = "CREATE TABLE " + TABLE_PASSWORD_RECOVERY + "("
-            + COLUMN_RECOVERY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-            + COLUMN_RECOVERY_EMAIL + " TEXT,"
-            + COLUMN_RECOVERY_PHONE + " TEXT,"
-            + COLUMN_RECOVERY_CODE + " TEXT NOT NULL,"
-            + COLUMN_RECOVERY_EXPIRES_AT + " INTEGER NOT NULL,"
-            + COLUMN_RECOVERY_IS_EMAIL + " INTEGER NOT NULL,"
-            + COLUMN_RECOVERY_CREATED_AT + " DATETIME DEFAULT CURRENT_TIMESTAMP"
-            + ")";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -222,7 +203,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_BIDS);
         db.execSQL(CREATE_TABLE_CREDIT_TRANSACTIONS);
         db.execSQL(CREATE_TABLE_REDEMPTION_CODES);
-        db.execSQL(CREATE_TABLE_PASSWORD_RECOVERY);
         
         // Insert default categories
         insertDefaultCategories(db);
@@ -239,11 +219,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_CATEGORIES);
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
             onCreate(db);
-        }
-        
-        // Add password recovery table for version 3
-        if (oldVersion < 3) {
-            db.execSQL(CREATE_TABLE_PASSWORD_RECOVERY);
         }
         
         // Add email columns and status column for version 4
@@ -270,7 +245,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 db.execSQL("DROP TABLE IF EXISTS " + TABLE_ITEMS);
                 db.execSQL("DROP TABLE IF EXISTS " + TABLE_CATEGORIES);
                 db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
-                db.execSQL("DROP TABLE IF EXISTS " + TABLE_PASSWORD_RECOVERY);
                 onCreate(db);
             }
         }

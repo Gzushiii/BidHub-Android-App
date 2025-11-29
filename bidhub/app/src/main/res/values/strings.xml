@@ -270,4 +270,63 @@
     <!-- App Store -->
     <string name="play_store_url">https://play.google.com/store/apps/details?id=%s</string>
     <string name="market_url">market://details?id=%s</string>
+    
+    <!-- Post Item Form -->
+    <string name="add_details">Add details</string>
+    <string name="photos">Photos</string>
+    <string name="processing_images">Processing images…</string>
+    <string name="tap_to_add_photos_hint">Tap to add photos. Drag to reorder. Maximum 10 photos.</string>
+    <string name="category">Category</string>
+    <string name="choose_category">Choose Category</string>
+    <string name="subcategory">Subcategory</string>
+    <string name="choose_subcategory">Choose Subcategory</string>
+    <string name="listing_title">Listing title</string>
+    <string name="name_your_listing">Name your listing</string>
+    <string name="price">Price</string>
+    <string name="for_sale">For Sale</string>
+    <string name="donation">Donation</string>
+    <string name="starting_price_php">Starting Price (PHP)</string>
+    <string name="buy_now_price_optional">Buy Now Price (Optional)</string>
+    <string name="donation_reason_required">Donation Reason (Required)</string>
+    <string name="auction_duration">Auction Duration</string>
+    <string name="choose_duration">Choose Duration</string>
+    <string name="condition">Condition</string>
+    <string name="choose_condition">Choose Condition</string>
+    <string name="description_optional">Description (Optional)</string>
+    <string name="description_hint">Describe what you are selling and include any details a buyer might be interested in. People love items with stories!</string>
+    <string name="size">Size</string>
+    <string name="choose_size">Choose Size</string>
+    <string name="optional_details">Optional details</string>
+    <string name="hide">Hide ^</string>
+    <string name="show">Show v</string>
+    <string name="origin_of_goods_optional">Origin of goods (Optional)</string>
+    <string name="choose_origin">Choose Origin</string>
+    <string name="quantity_checkbox">I have more than one of the same item</string>
+    <string name="allow_contact_checkbox">Allow buyers to SMS/Call me on this listing</string>
+    <string name="mobile_number_visible">Your mobile number will be visible to buyers</string>
+    <string name="covid_19_notice">COVID-19 Notice</string>
+    <string name="covid_19_message">We encourage contactless delivery. More info</string>
+    <string name="save_as_draft">Save as Draft</string>
+    <string name="post_item">Post Item</string>
+    
+    <!-- Item Detail -->
+    <string name="item_details">Item Details</string>
+    <string name="add_to_favorites">Add to Favorites</string>
+    <string name="remove_from_favorites">Remove from Favorites</string>
+    <string name="starting_bid">Starting Bid</string>
+    <string name="current_bid">Current Bid</string>
+    <string name="time_left">Time Left</string>
+    <string name="description">Description</string>
+    <string name="seller_information">Seller Information</string>
+    <string name="bid_history">Bid History</string>
+    <string name="enter_your_bid">Enter your bid</string>
+    <string name="place_bid">Place Bid</string>
+    <string name="buy_now">Buy Now</string>
+    
+    <!-- Common -->
+    <string name="back">Back</string>
+    <string name="notifications">Notifications</string>
+    <string name="no_items_found">No items found</string>
+    <string name="try_adjusting_search">Try adjusting your search or filters to find what you\'re looking for.</string>
+    <string name="clear_filters">Clear Filters</string>
 </resources>

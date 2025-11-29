@@ -43,24 +43,6 @@
             android:name=".RegisterActivity"
             android:exported="false" />
 
-        <!-- Password Recovery Activities -->
-        <activity
-            android:name=".PasswordRecoveryRequestActivity"
-            android:exported="false" />
-        
-        <activity
-            android:name=".PasswordRecoveryVerificationActivity"
-            android:exported="false" />
-        
-        <activity
-            android:name=".PasswordResetActivity"
-            android:exported="false" />
-        
-        <!-- Test Activity (can be removed in production) -->
-        <activity
-            android:name=".PasswordRecoveryTestActivity"
-            android:exported="false" />
-
         <!-- Bottom Navigation Activities -->
         <activity
             android:name=".BrowseActivity"

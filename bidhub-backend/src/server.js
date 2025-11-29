@@ -12,7 +12,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 
 // Import database configuration
-const { initializeDatabase } = require('./config/database');
+const { initializeDatabase, pool } = require('./config/database');
 
 // Import services
 const keepAliveService = require('./services/keepAlive');
@@ -24,6 +24,7 @@ const bidsRoutes = require('./routes/bids');
 const creditsRoutes = require('./routes/credits');
 const categoriesRoutes = require('./routes/categories');
 const topupsRoutes = require('./routes/topups');
+const uploadRoutes = require('./routes/upload');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -50,6 +51,9 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Serve uploaded images statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({ 
@@ -62,7 +66,8 @@ app.get('/', (req, res) => {
       bids: '/api/bids',
       credits: '/api/credits',
       categories: '/api/categories',
-      topups: '/api/topups'
+      topups: '/api/topups',
+      upload: '/api/upload'
     },
     documentation: 'Visit /api/health for server status'
   });
@@ -97,6 +102,7 @@ app.use('/api/bids', bidsRoutes);
 app.use('/api/credits', creditsRoutes);
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/topups', topupsRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

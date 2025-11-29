@@ -48,14 +48,16 @@ router.post('/', authenticateToken, async (req, res) => {
     const user_email = req.user.email;
 
     // Validate input
-    if (!amount || amount <= 0) {
+    if (!amount || amount <= 0 || !Number.isFinite(amount)) {
+      connection.release();
       return res.status(400).json({ 
         error: 'Invalid amount',
-        details: 'Amount must be greater than 0'
+        details: 'Amount must be a valid number greater than 0'
       });
     }
 
-    if (!payment_method) {
+    if (!payment_method || typeof payment_method !== 'string') {
+      connection.release();
       return res.status(400).json({ 
         error: 'Missing payment method',
         details: 'Payment method is required (gcash, maya, bank_transfer)'
@@ -64,7 +66,8 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // Validate payment method
     const validMethods = ['gcash', 'maya', 'bank_transfer', 'other'];
-    if (!validMethods.includes(payment_method)) {
+    if (!validMethods.includes(payment_method.toLowerCase())) {
+      connection.release();
       return res.status(400).json({ 
         error: 'Invalid payment method',
         details: `Payment method must be one of: ${validMethods.join(', ')}`
@@ -76,6 +79,7 @@ router.post('/', authenticateToken, async (req, res) => {
     const maxAmount = 50000.00;
 
     if (amount < minAmount) {
+      connection.release();
       return res.status(400).json({ 
         error: 'Amount too low',
         details: `Minimum top-up amount is ₱${minAmount}`
@@ -83,6 +87,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     if (amount > maxAmount) {
+      connection.release();
       return res.status(400).json({ 
         error: 'Amount too high',
         details: `Maximum top-up amount is ₱${maxAmount}`
@@ -111,6 +116,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     if (retries >= maxRetries) {
       console.error('Failed to generate unique reference code after retries');
+      connection.release();
       return res.status(500).json({ 
         error: 'Failed to generate reference code',
         details: 'Please try again'
