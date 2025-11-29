@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 import com.cc106.bidhub.items.ItemData;
 import com.cc106.bidhub.utils.SharedPreferencesHelper;
+import com.cc106.bidhub.utils.ImageUrlConverter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -86,13 +87,21 @@ public class ItemApiClient {
             // Set status based on whether this is a draft or active item
             requestData.put("status", "active");
             
-            // Add images if available
+            // Add images if available - convert local paths to base64 data URLs
             if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
                 JSONArray imagesArray = new JSONArray();
-                for (String imagePath : itemData.getImagePaths()) {
-                    imagesArray.put(imagePath);
+                // Convert local file paths to base64 data URLs for backend compatibility
+                java.util.List<String> imageUrls = ImageUrlConverter.convertToDataUrls(context, itemData.getImagePaths());
+                for (String imageUrl : imageUrls) {
+                    if (imageUrl != null && !imageUrl.isEmpty()) {
+                        imagesArray.put(imageUrl);
+                    }
                 }
-                requestData.put("images", imagesArray);
+                if (imagesArray.length() > 0) {
+                    requestData.put("images", imagesArray);
+                } else {
+                    Log.w(TAG, "No valid image URLs after conversion");
+                }
             }
             
             // Add metadata if available
@@ -291,13 +300,21 @@ public class ItemApiClient {
             requestData.put("seller_email", sellerEmail);
             requestData.put("status", "draft"); // Set as draft
             
-            // Add images if available
+            // Add images if available - convert local paths to base64 data URLs
             if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
                 JSONArray imagesArray = new JSONArray();
-                for (String imagePath : itemData.getImagePaths()) {
-                    imagesArray.put(imagePath);
+                // Convert local file paths to base64 data URLs for backend compatibility
+                java.util.List<String> imageUrls = ImageUrlConverter.convertToDataUrls(context, itemData.getImagePaths());
+                for (String imageUrl : imageUrls) {
+                    if (imageUrl != null && !imageUrl.isEmpty()) {
+                        imagesArray.put(imageUrl);
+                    }
                 }
-                requestData.put("images", imagesArray);
+                if (imagesArray.length() > 0) {
+                    requestData.put("images", imagesArray);
+                } else {
+                    Log.w(TAG, "No valid image URLs after conversion");
+                }
             }
             
             // Add metadata if available

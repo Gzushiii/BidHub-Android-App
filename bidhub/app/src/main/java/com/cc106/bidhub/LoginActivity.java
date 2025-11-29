@@ -1,19 +1,15 @@
 package com.cc106.bidhub;
 
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.util.Patterns;
-import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.cc106.bidhub.api.AuthApiClient;
 import com.cc106.bidhub.api.ApiResponse;
 import com.cc106.bidhub.toast.ToastHelper;
+import com.cc106.bidhub.utils.FormValidationHelper;
+import com.cc106.bidhub.utils.LoadingStateHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -26,15 +22,13 @@ public class LoginActivity extends AppCompatActivity {
     private TextView textViewRegisterLink;
     private TextInputLayout emailInputLayout, passwordInputLayout;
     private ProgressBar progressBar;
-    private DatabaseHelper dbHelper;
     private AuthApiClient authApiClient;
+    private LoadingStateHelper loadingHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
-        dbHelper = new DatabaseHelper(this);
 
         // Initialize UI components
         editTextEmail = findViewById(R.id.editTextEmail);
@@ -45,26 +39,17 @@ public class LoginActivity extends AppCompatActivity {
         passwordInputLayout = findViewById(R.id.passwordInputLayout);
         progressBar = findViewById(R.id.progressBar);
         
-        // Initialize API client
+        // Initialize helpers
+        loadingHelper = new LoadingStateHelper(progressBar, buttonLogin);
         authApiClient = new AuthApiClient(this);
 
         // Set up input validation
         setupInputValidation();
 
-        buttonLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                loginUser();
-            }
-        });
-
-        textViewRegisterLink.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Intent to open RegisterActivity
+        buttonLogin.setOnClickListener(v -> loginUser());
+        textViewRegisterLink.setOnClickListener(v -> {
                 Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
                 startActivity(intent);
-            }
         });
     }
 
@@ -86,46 +71,19 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     /**
-     * Validate email format
+     * Validate email format using helper
      */
     private boolean validateEmail() {
-        String email = editTextEmail.getText().toString().trim();
-        if (TextUtils.isEmpty(email)) {
-            emailInputLayout.setError("Email is required");
-            return false;
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            emailInputLayout.setError("Please enter a valid email address");
-            return false;
-        } else {
-            emailInputLayout.setError(null);
-            return true;
-        }
+        String email = editTextEmail.getText().toString();
+        return FormValidationHelper.validateEmail(email, emailInputLayout);
     }
 
     /**
-     * Validate password
+     * Validate password using helper
      */
     private boolean validatePassword() {
-        String password = editTextPassword.getText().toString().trim();
-        if (TextUtils.isEmpty(password)) {
-            passwordInputLayout.setError("Password is required");
-            return false;
-        } else if (password.length() < 6) {
-            passwordInputLayout.setError("Password must be at least 6 characters");
-            return false;
-        } else {
-            passwordInputLayout.setError(null);
-            return true;
-        }
-    }
-
-    /**
-     * Show loading state
-     */
-    private void showLoading(boolean show) {
-        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
-        buttonLogin.setEnabled(!show);
-        buttonLogin.setText(show ? "Signing In..." : "Sign In");
+        String password = editTextPassword.getText().toString();
+        return FormValidationHelper.validatePassword(password, passwordInputLayout, 6);
     }
 
     private void loginUser() {
@@ -141,7 +99,7 @@ public class LoginActivity extends AppCompatActivity {
         String password = editTextPassword.getText().toString().trim();
 
         // Show loading state
-        showLoading(true);
+        loadingHelper.setLoading(true, "Signing In...");
 
         // Use backend API for authentication
         new Thread(() -> {
@@ -158,17 +116,17 @@ public class LoginActivity extends AppCompatActivity {
                         finish();
                     } else {
                         // Login failed
-                        emailInputLayout.setError("Invalid credentials");
-                        passwordInputLayout.setError("Invalid credentials");
+                        FormValidationHelper.setError(emailInputLayout, "Invalid credentials");
+                        FormValidationHelper.setError(passwordInputLayout, "Invalid credentials");
                         ToastHelper.showError(this, response.getMessage());
                     }
-                    showLoading(false);
+                    loadingHelper.setLoading(false);
                 });
                 
             } catch (Exception e) {
                 runOnUiThread(() -> {
                     ToastHelper.showError(this, "Login failed. Please try again.");
-                    showLoading(false);
+                    loadingHelper.setLoading(false);
                 });
             }
         }).start();
