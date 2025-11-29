@@ -49,7 +49,7 @@
                 android:visibility="gone"
                 app:indicatorColor="@color/primary"
                 app:trackColor="@color/surface_variant"
-                app:layout_marginBottom="@dimen/spacing_4" />
+                android:layout_marginBottom="@dimen/spacing_4" />
 
             <!-- Photo Upload Section -->
             <com.google.android.material.card.MaterialCardView

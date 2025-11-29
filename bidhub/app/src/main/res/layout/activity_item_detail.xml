@@ -42,8 +42,7 @@
                 android:layout_gravity="bottom|center_horizontal"
                 android:layout_marginBottom="@dimen/spacing_4"
                 android:background="@drawable/rounded_background"
-                android:backgroundTint="@android:color/black"
-                android:backgroundTintAlpha="0.5"
+                android:backgroundTint="#80000000"
                 android:paddingHorizontal="@dimen/spacing_2"
                 android:paddingVertical="@dimen/spacing_1" />
 
@@ -426,12 +425,11 @@
                         android:textColor="@color/text_primary"
                         android:layout_marginBottom="@dimen/spacing_3" />
 
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rv_bid_history"
+                    <LinearLayout
+                        android:id="@+id/layout_bid_history"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:nestedScrollingEnabled="false"
-                        tools:listitem="@layout/item_bid_history" />
+                        android:orientation="vertical" />
 
                 </LinearLayout>
 

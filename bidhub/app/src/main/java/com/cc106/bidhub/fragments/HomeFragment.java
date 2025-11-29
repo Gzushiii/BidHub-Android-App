@@ -41,11 +41,11 @@ public class HomeFragment extends Fragment {
     // Quick action buttons
     private View cardBrowse, cardSell, cardMyListings;
     
-    // Featured auctions
-    private TextView textFeaturedAuctions;
+    // Featured auctions - now using RecyclerView
+    // private TextView textFeaturedAuctions;
     
-    // Active bids
-    private TextView textActiveBids;
+    // Active bids - now using RecyclerView
+    // private TextView textActiveBids;
     
     // Quick stats cards
     private View cardActiveBids, cardWatching, cardWonItems, cardSoldItems;
@@ -55,8 +55,8 @@ public class HomeFragment extends Fragment {
     private TextView textRecentActivity;
     private View layoutRecentActivity;
     
-    // Logout button
-    private Button buttonLogout;
+    // Logout button - removed from new layout
+    // private Button buttonLogout;
     
     private DatabaseHelper dbHelper;
     private String loggedInUserEmail;
@@ -116,23 +116,23 @@ public class HomeFragment extends Fragment {
         }
         
         // Header components
-        btnNotifications = view.findViewById(R.id.btnNotifications);
-        textViewAlias = view.findViewById(R.id.textViewAlias);
-        searchBar = view.findViewById(R.id.searchBar);
+        btnNotifications = view.findViewById(R.id.btn_notifications);
+        textViewAlias = view.findViewById(R.id.tv_user_alias);
+        searchBar = view.findViewById(R.id.search_card);
         
         // Quick action buttons
-        cardBrowse = view.findViewById(R.id.cardBrowse);
-        cardSell = view.findViewById(R.id.cardSell);
-        cardMyListings = view.findViewById(R.id.cardMyListings);
+        cardBrowse = view.findViewById(R.id.card_browse);
+        cardSell = view.findViewById(R.id.card_post);
+        cardMyListings = view.findViewById(R.id.card_my_listings);
         
-        // Featured auctions
-        textFeaturedAuctions = view.findViewById(R.id.textFeaturedAuctions);
+        // Featured auctions - now a RecyclerView, no text view needed
+        // textFeaturedAuctions removed - using RecyclerView with header
         
-        // Active bids
-        textActiveBids = view.findViewById(R.id.textActiveBids);
+        // Active bids - now a RecyclerView, no text view needed
+        // textActiveBids removed - using RecyclerView with header
         
-        // Logout button
-        buttonLogout = view.findViewById(R.id.buttonLogout);
+        // Logout button - removed from new layout
+        // buttonLogout = view.findViewById(R.id.buttonLogout);
     }
     
     /**
@@ -213,22 +213,22 @@ public class HomeFragment extends Fragment {
         }
         
         
-        // Logout button
-        if (buttonLogout != null) {
-            buttonLogout.setOnClickListener(v -> {
-                try {
-                    // Navigate back to LoginActivity
-                    if (getActivity() != null) {
-                        getActivity().finish();
-                    }
-                } catch (Exception e) {
-                    if (getContext() != null) {
-                        ToastHelper.showError(getContext(), "Error during logout: " + e.getMessage());
-                    }
-                    e.printStackTrace();
-                }
-            });
-        }
+        // Logout button - removed from new layout
+        // if (buttonLogout != null) {
+        //     buttonLogout.setOnClickListener(v -> {
+        //         try {
+        //             // Navigate back to LoginActivity
+        //             if (getActivity() != null) {
+        //                 getActivity().finish();
+        //             }
+        //         } catch (Exception e) {
+        //             if (getContext() != null) {
+        //                 ToastHelper.showError(getContext(), "Error during logout: " + e.getMessage());
+        //             }
+        //             e.printStackTrace();
+        //         }
+        //     });
+        // }
     }
     
     private void loadUserData() {
@@ -323,10 +323,10 @@ public class HomeFragment extends Fragment {
                 itemsPosted = itemsCursor.getInt(0);
             }
             
-            // Update UI
-            if (textActiveBids != null) {
-                textActiveBids.setText(String.valueOf(activeBids));
-            }
+            // Update UI - textActiveBids removed, using RecyclerView now
+            // if (textActiveBids != null) {
+            //     textActiveBids.setText(String.valueOf(activeBids));
+            // }
             
         } catch (Exception e) {
             if (getContext() != null) {

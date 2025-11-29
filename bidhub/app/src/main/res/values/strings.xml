@@ -329,6 +329,8 @@
     <string name="no_items_found">No items found</string>
     <string name="try_adjusting_search">Try adjusting your search or filters to find what you\'re looking for.</string>
     <string name="clear_filters">Clear Filters</string>
+    <string name="browse">Browse</string>
+    <string name="my_listings">My Listings</string>
     
     <!-- Homepage -->
     <string name="welcome_back">Welcome back</string>
