@@ -18,6 +18,7 @@ import com.cc106.bidhub.api.AuthApiClient;
 import com.cc106.bidhub.api.ApiResponse;
 import com.cc106.bidhub.toast.ToastHelper;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.activity.OnBackPressedCallback;
 import com.google.android.material.textfield.TextInputLayout;
 import java.util.Map;
 
@@ -78,6 +79,14 @@ public class RegisterActivity extends AppCompatActivity {
 
         // Set up real-time validation
         setupValidationListeners();
+        
+        // Setup back button handling - return to login
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+            }
+        });
         
         buttonRegister.setOnClickListener(v -> registerUser());
         textViewLoginLink.setOnClickListener(v -> finish());

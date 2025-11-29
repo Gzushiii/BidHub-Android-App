@@ -7,6 +7,7 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.cc106.bidhub.R;
+import com.cc106.bidhub.utils.ImageLoader;
 import java.util.List;
 
 public class ImageGalleryAdapter extends RecyclerView.Adapter<ImageGalleryAdapter.ImageViewHolder> {
@@ -32,11 +33,28 @@ public class ImageGalleryAdapter extends RecyclerView.Adapter<ImageGalleryAdapte
     
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
+        if (position < 0 || position >= images.size()) {
+            // Load placeholder if position is invalid
+            ImageLoader.loadPlaceholder(holder.imageView.getContext(), holder.imageView);
+            holder.imageView.setContentDescription("Item image placeholder");
+            return;
+        }
+        
         String imagePath = images.get(position);
         
-        // For now, just set a placeholder
-        // In production, this would load the actual image using Glide or Picasso
-        holder.imageView.setImageResource(R.drawable.ic_image_placeholder);
+        // Load actual image using ImageLoader
+        ImageLoader.loadImageWithErrorCallback(
+            holder.imageView.getContext(),
+            imagePath,
+            holder.imageView,
+            new ImageLoader.ImageLoadErrorCallback() {
+                @Override
+                public void onError(String errorMessage) {
+                    // Fallback to placeholder on error
+                    ImageLoader.loadPlaceholder(holder.imageView.getContext(), holder.imageView);
+                }
+            }
+        );
         
         // Set content description for accessibility
         holder.imageView.setContentDescription("Item image " + (position + 1));
@@ -44,7 +62,7 @@ public class ImageGalleryAdapter extends RecyclerView.Adapter<ImageGalleryAdapte
     
     @Override
     public int getItemCount() {
-        return images.size();
+        return images != null ? images.size() : 0;
     }
     
     static class ImageViewHolder extends RecyclerView.ViewHolder {

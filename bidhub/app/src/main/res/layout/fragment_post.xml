@@ -1,683 +1,679 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
-    android:fillViewport="true">
+    android:fitsSystemWindows="true">
 
-    <LinearLayout
+    <!-- App Bar -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:elevation="0dp">
 
-    <!-- Header -->
-    <LinearLayout
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/surface"
+            app:titleTextColor="@color/text_primary"
+            app:navigationIcon="@drawable/ic_close"
+            app:title="@string/post_item" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Main Content -->
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-            android:padding="16dp"
-        android:background="@color/background"
-            android:elevation="2dp"
-        android:gravity="center_vertical">
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-            <ImageView
-                android:id="@+id/btn_back"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_close"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="4dp"
-                android:contentDescription="@string/back" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/add_details"
-                android:textAppearance="@style/TextAppearance.Title.Small"
-                android:gravity="center" />
-
-            <View
-                android:layout_width="24dp"
-                android:layout_height="24dp" />
-
-        </LinearLayout>
-
-        <!-- Form Content -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/spacing_4">
+
+            <!-- Progress Indicator -->
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/progress_form"
+                android:layout_width="match_parent"
+                android:layout_height="4dp"
+                android:progress="0"
+                android:max="100"
+                android:visibility="gone"
+                app:indicatorColor="@color/primary"
+                app:trackColor="@color/surface_variant"
+                android:layout_marginBottom="@dimen/spacing_4" />
 
             <!-- Photo Upload Section -->
-            <LinearLayout
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="24dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/photos"
-                    android:textAppearance="@style/TextAppearance.Subtitle.Bold"
-                    android:layout_marginBottom="12dp" />
-
-                <!-- Photo Grid -->
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rv_item_images"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false" />
-
-                <!-- Image Upload Progress -->
-                <LinearLayout
-                    android:id="@+id/layout_image_progress"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="8dp"
-                    android:visibility="gone">
-
-                    <ProgressBar
-                        android:id="@+id/progress_image_upload"
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:layout_marginEnd="8dp"
-                        android:contentDescription="@string/processing_images" />
-
-                    <TextView
-                        android:id="@+id/tv_image_progress"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/processing_images"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary" />
-
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/tap_to_add_photos_hint"
-                    android:textSize="12sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginTop="8dp" />
-
-            </LinearLayout>
-
-            <!-- Category Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/category"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="8dp" />
-
-                <!-- Main Category Dropdown -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/choose_category"
-                    app:boxStrokeColor="@color/border_light"
-                    app:hintTextColor="@color/text_secondary"
-                    app:endIconMode="dropdown_menu"
-                    android:layout_marginBottom="8dp">
-
-                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/actv_category"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="none"
-                        android:focusable="true"
-                        android:clickable="true" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Subcategory Dropdown (initially hidden) -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/layout_subcategory"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/choose_subcategory"
-                    app:boxStrokeColor="@color/border_light"
-                    app:hintTextColor="@color/text_secondary"
-                    app:endIconMode="dropdown_menu"
-                    android:visibility="gone">
-
-                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/actv_subcategory"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="none"
-                        android:focusable="true"
-                        android:clickable="true" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
-
-            <!-- Listing Title Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                    android:text="@string/listing_title"
-                    android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="8dp" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/name_your_listing"
-                    app:boxStrokeColor="@color/border_light"
-                    app:hintTextColor="@color/text_secondary"
-                    app:counterEnabled="true"
-                    app:counterMaxLength="100">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_item_title"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textCapSentences"
-                        android:maxLength="100" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
-
-            <!-- Price Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                    android:text="@string/price"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="8dp" />
-
-                <!-- Price Toggle -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="12dp">
-
-                    <Button
-                        android:id="@+id/btn_for_sale"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/for_sale"
-                        android:textSize="14sp"
-                        android:background="@drawable/button_primary"
-                        android:textColor="@color/background"
-                        android:layout_marginEnd="8dp" />
-
-                    <Button
-                        android:id="@+id/btn_for_free"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/donation"
-                android:textSize="14sp"
-                        android:background="@drawable/button_secondary"
-                        android:textColor="@color/text_primary" />
-
-        </LinearLayout>
-
-                <!-- Price Input -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/starting_price_php"
-                    app:boxStrokeColor="@color/border_light"
-                    app:hintTextColor="@color/text_secondary"
-                    app:prefixText="₱">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_starting_price"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="numberDecimal" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Buy Now Price Input -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/buy_now_price_optional"
-                    app:boxStrokeColor="@color/border_light"
-                    app:hintTextColor="@color/text_secondary"
-                    app:prefixText="₱"
-                    android:layout_marginTop="8dp">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_buy_now_price"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="numberDecimal" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <!-- Donation Reason Input (initially hidden) -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/layout_donation_reason"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/donation_reason_required"
-                    app:boxStrokeColor="@color/border_light"
-                    app:hintTextColor="@color/text_secondary"
-                    android:layout_marginTop="8dp"
-                    android:visibility="gone">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_donation_reason"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textCapSentences|textMultiLine"
-                        android:maxLength="200"
-                        android:minLines="2"
-                        android:maxLines="3" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
-
-            <!-- Auction Duration Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/auction_duration"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="8dp" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/choose_duration"
-                    app:boxStrokeColor="@color/border_light"
-                    app:hintTextColor="@color/text_secondary"
-                    app:endIconMode="dropdown_menu">
-
-                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/actv_auction_duration"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="none"
-                        android:focusable="true"
-                        android:clickable="true" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
-
-            <!-- Condition Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/condition"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="8dp" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/choose_condition"
-                    app:boxStrokeColor="@color/border_light"
-                    app:hintTextColor="@color/text_secondary"
-                    app:endIconMode="dropdown_menu">
-
-                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/actv_condition"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="none"
-                        android:focusable="true"
-                        android:clickable="true" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
-
-            <!-- Description Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/description_optional"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="8dp" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/description_hint"
-                    app:boxStrokeColor="@color/border_light"
-                    app:hintTextColor="@color/text_secondary"
-                    app:counterEnabled="true"
-                    app:counterMaxLength="1000">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_item_description"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textCapSentences|textMultiLine"
-                        android:maxLength="1000"
-                        android:minLines="4"
-                        android:maxLines="6" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
-
-
-
-            <!-- Size Section (initially hidden, only shown for Fashion category) -->
-            <LinearLayout
-                android:id="@+id/layout_size"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp"
-                android:visibility="gone">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/size"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_marginBottom="8dp" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/choose_size"
-                    app:boxStrokeColor="@color/border_light"
-                    app:hintTextColor="@color/text_secondary"
-                    app:endIconMode="dropdown_menu">
-
-                    <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                        android:id="@+id/actv_size"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="none"
-                        android:focusable="true"
-                        android:clickable="true" />
-
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
-
-
-            <!-- Optional Details Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="@dimen/section_spacing"
+                app:cardCornerRadius="@dimen/card_corner_radius"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="8dp">
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_4">
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/optional_details"
-            android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary" />
-
-                    <Button
-                        android:id="@+id/btn_toggle_optional"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/hide"
-                        android:textSize="12sp"
-                        android:background="@android:color/transparent"
-                        android:textColor="@color/primary_color" />
-
-                </LinearLayout>
-
-                <!-- Optional Details Content (Initially Visible) -->
-                <LinearLayout
-                    android:id="@+id/layout_optional_details"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <!-- Origin of Goods -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginBottom="16dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/origin_of_goods_optional"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_primary"
-                            android:layout_marginBottom="8dp" />
-
-                        <com.google.android.material.textfield.TextInputLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="@string/choose_origin"
-                            app:boxStrokeColor="@color/border_light"
-                            app:hintTextColor="@color/text_secondary"
-                            app:endIconMode="dropdown_menu">
-
-                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                                android:id="@+id/actv_origin"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:inputType="none"
-                                android:focusable="true"
-                                android:clickable="true" />
-
-                        </com.google.android.material.textfield.TextInputLayout>
-
-                    </LinearLayout>
-
-                    <!-- Quantity -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="16dp">
-
-                        <CheckBox
-                            android:id="@+id/cb_quantity"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="12dp" />
+                        android:layout_marginBottom="@dimen/spacing_3">
 
                         <TextView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="@string/quantity_checkbox"
-                            android:textSize="14sp"
+                            android:textAppearance="@style/TextAppearance.BidHub.Headline"
+                            android:text="@string/photos"
                             android:textColor="@color/text_primary" />
 
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="@style/TextAppearance.BidHub.Caption"
+                            android:text="@string/optional"
+                            android:textColor="@color/text_hint" />
+
                     </LinearLayout>
 
-                    <!-- Contact -->
-                    <LinearLayout
+                    <!-- Image Grid -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rv_item_images"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginBottom="16dp">
+                        android:nestedScrollingEnabled="false"
+                        android:layout_marginBottom="@dimen/spacing_2" />
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginBottom="8dp">
-
-                            <CheckBox
-                                android:id="@+id/cb_contact"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:checked="true"
-                                android:layout_marginEnd="12dp" />
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="@string/allow_contact_checkbox"
-                                android:textSize="14sp"
-                                android:textColor="@color/text_primary" />
-
-                        </LinearLayout>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/mobile_number_visible"
-                            android:textSize="12sp"
-            android:textColor="@color/text_secondary"
-                            android:layout_marginStart="32dp" />
-
-                    </LinearLayout>
-
-                    <!-- COVID-19 Notice -->
+                    <!-- Upload Progress -->
                     <LinearLayout
+                        android:id="@+id/layout_image_progress"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginBottom="16dp">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="@dimen/spacing_2"
+                        android:visibility="gone"
+                        android:background="@color/surface_variant"
+                        android:backgroundTint="@color/info_light"
+                        android:paddingHorizontal="@dimen/spacing_3"
+                        android:paddingVertical="@dimen/spacing_2">
+
+                        <ProgressBar
+                            android:id="@+id/progress_image_upload"
+                            android:layout_width="@dimen/icon_size_medium"
+                            android:layout_height="@dimen/icon_size_medium"
+                            android:layout_marginEnd="@dimen/spacing_2"
+                            android:indeterminateTint="@color/info"
+                            android:contentDescription="@string/uploading" />
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:id="@+id/tv_image_progress"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="@string/covid_19_notice"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/text_primary"
-                            android:layout_marginBottom="8dp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/covid_19_message"
-                            android:textSize="12sp"
-                            android:textColor="@color/primary_color" />
+                            android:layout_weight="1"
+                            android:textAppearance="@style/TextAppearance.BidHub.Caption"
+                            android:text="@string/uploading_images"
+                            android:textColor="@color/on_info_light" />
 
                     </LinearLayout>
 
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.BidHub.Small"
+                        android:text="@string/tap_to_add_photos_hint"
+                        android:textColor="@color/text_hint"
+                        android:layout_marginTop="@dimen/spacing_1" />
 
                 </LinearLayout>
 
-            </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Basic Information Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/section_spacing"
+                app:cardCornerRadius="@dimen/card_corner_radius"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_4">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.BidHub.Headline"
+                        android:text="@string/basic_information"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="@dimen/spacing_4" />
+
+                    <!-- Category Selection -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/category"
+                        android:layout_marginBottom="@dimen/spacing_3"
+                        style="@style/Widget.BidHub.TextInputLayout"
+                        app:endIconMode="dropdown_menu"
+                        app:boxBackgroundMode="outline"
+                        app:helperText="@string/select_main_category"
+                        app:helperTextEnabled="true"
+                        app:helperTextTextColor="@color/text_hint">
+
+                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                            android:id="@+id/actv_category"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/text_input_height"
+                            android:inputType="none"
+                            android:focusable="true"
+                            android:clickable="true"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Subcategory (initially hidden) -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/layout_subcategory"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/subcategory"
+                        android:layout_marginBottom="@dimen/spacing_3"
+                        android:visibility="gone"
+                        style="@style/Widget.BidHub.TextInputLayout"
+                        app:endIconMode="dropdown_menu"
+                        app:boxBackgroundMode="outline">
+
+                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                            android:id="@+id/actv_subcategory"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/text_input_height"
+                            android:inputType="none"
+                            android:focusable="true"
+                            android:clickable="true"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Listing Title -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/listing_title"
+                        android:layout_marginBottom="@dimen/spacing_3"
+                        style="@style/Widget.BidHub.TextInputLayout"
+                        app:counterEnabled="true"
+                        app:counterMaxLength="100"
+                        app:boxBackgroundMode="outline"
+                        app:helperText="@string/title_helper_text"
+                        app:helperTextEnabled="true"
+                        app:helperTextTextColor="@color/text_hint">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_item_title"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/text_input_height"
+                            android:inputType="textCapSentences"
+                            android:maxLength="100"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Description -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/description_optional"
+                        style="@style/Widget.BidHub.TextInputLayout"
+                        app:counterEnabled="true"
+                        app:counterMaxLength="1000"
+                        app:boxBackgroundMode="outline"
+                        app:helperText="@string/description_helper_text"
+                        app:helperTextEnabled="true"
+                        app:helperTextTextColor="@color/text_hint">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_item_description"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapSentences|textMultiLine"
+                            android:maxLength="1000"
+                            android:minLines="4"
+                            android:maxLines="6"
+                            android:gravity="top"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body"
+                            android:paddingTop="@dimen/spacing_3" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Pricing Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/section_spacing"
+                app:cardCornerRadius="@dimen/card_corner_radius"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_4">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.BidHub.Headline"
+                        android:text="@string/pricing"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="@dimen/spacing_4" />
+
+                    <!-- Price Type Toggle -->
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/toggle_price_type"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="@dimen/spacing_4"
+                        app:singleSelection="true"
+                        app:checkedButton="@+id/btn_for_sale">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_for_sale"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/button_height_primary"
+                            android:layout_weight="1"
+                            android:text="@string/for_sale"
+                            style="@style/Widget.BidHub.Button.Primary" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_for_free"
+                            android:layout_width="0dp"
+                            android:layout_height="@dimen/button_height_primary"
+                            android:layout_weight="1"
+                            android:text="@string/donation"
+                            style="@style/Widget.BidHub.Button.Secondary" />
+
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                    <!-- Starting Price -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/layout_starting_price"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/starting_price_php"
+                        android:layout_marginBottom="@dimen/spacing_3"
+                        style="@style/Widget.BidHub.TextInputLayout"
+                        app:prefixText="₱"
+                        app:boxBackgroundMode="outline"
+                        app:helperText="@string/starting_price_helper"
+                        app:helperTextEnabled="true"
+                        app:helperTextTextColor="@color/text_hint">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_starting_price"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/text_input_height"
+                            android:inputType="numberDecimal"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Buy Now Price -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/buy_now_price_optional"
+                        android:layout_marginBottom="@dimen/spacing_3"
+                        style="@style/Widget.BidHub.TextInputLayout"
+                        app:prefixText="₱"
+                        app:boxBackgroundMode="outline"
+                        app:helperText="@string/buy_now_helper_text"
+                        app:helperTextEnabled="true"
+                        app:helperTextTextColor="@color/text_hint">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_buy_now_price"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/text_input_height"
+                            android:inputType="numberDecimal"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Donation Reason (initially hidden) -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/layout_donation_reason"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/donation_reason_required"
+                        android:visibility="gone"
+                        style="@style/Widget.BidHub.TextInputLayout"
+                        app:boxBackgroundMode="outline"
+                        app:helperText="@string/donation_reason_helper"
+                        app:helperTextEnabled="true"
+                        app:helperTextTextColor="@color/text_hint">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/et_donation_reason"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapSentences|textMultiLine"
+                            android:maxLength="200"
+                            android:minLines="2"
+                            android:maxLines="3"
+                            android:gravity="top"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body"
+                            android:paddingTop="@dimen/spacing_3" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Auction Settings Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/section_spacing"
+                app:cardCornerRadius="@dimen/card_corner_radius"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_4">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.BidHub.Headline"
+                        android:text="@string/auction_settings"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="@dimen/spacing_4" />
+
+                    <!-- Auction Duration -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/auction_duration"
+                        android:layout_marginBottom="@dimen/spacing_3"
+                        style="@style/Widget.BidHub.TextInputLayout"
+                        app:endIconMode="dropdown_menu"
+                        app:boxBackgroundMode="outline"
+                        app:helperText="@string/duration_helper_text"
+                        app:helperTextEnabled="true"
+                        app:helperTextTextColor="@color/text_hint">
+
+                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                            android:id="@+id/actv_auction_duration"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/text_input_height"
+                            android:inputType="none"
+                            android:focusable="true"
+                            android:clickable="true"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Condition -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/condition"
+                        style="@style/Widget.BidHub.TextInputLayout"
+                        app:endIconMode="dropdown_menu"
+                        app:boxBackgroundMode="outline"
+                        app:helperText="@string/condition_helper_text"
+                        app:helperTextEnabled="true"
+                        app:helperTextTextColor="@color/text_hint">
+
+                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                            android:id="@+id/actv_condition"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/text_input_height"
+                            android:inputType="none"
+                            android:focusable="true"
+                            android:clickable="true"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Optional Details Section (Collapsible) -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/section_spacing"
+                app:cardCornerRadius="@dimen/card_corner_radius"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_4">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="@dimen/spacing_3"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:textAppearance="@style/TextAppearance.BidHub.Headline"
+                            android:text="@string/optional_details"
+                            android:textColor="@color/text_primary" />
+
+                        <ImageView
+                            android:id="@+id/iv_toggle_optional"
+                            android:layout_width="@dimen/icon_size_medium"
+                            android:layout_height="@dimen/icon_size_medium"
+                            android:src="@drawable/ic_expand_less"
+                            android:tint="@color/text_secondary"
+                            android:contentDescription="@string/toggle_details" />
+
+                    </LinearLayout>
+
+                    <!-- Optional Details Content -->
+                    <LinearLayout
+                        android:id="@+id/layout_optional_details"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <!-- Size (for Fashion category) -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:id="@+id/layout_size"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/size"
+                            android:layout_marginBottom="@dimen/spacing_3"
+                            android:visibility="gone"
+                            style="@style/Widget.BidHub.TextInputLayout"
+                            app:endIconMode="dropdown_menu"
+                            app:boxBackgroundMode="outline">
+
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:id="@+id/actv_size"
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/text_input_height"
+                                android:inputType="none"
+                                android:focusable="true"
+                                android:clickable="true"
+                                android:textAppearance="@style/TextAppearance.BidHub.Body" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- Origin of Goods -->
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/origin_of_goods_optional"
+                            android:layout_marginBottom="@dimen/spacing_3"
+                            style="@style/Widget.BidHub.TextInputLayout"
+                            app:endIconMode="dropdown_menu"
+                            app:boxBackgroundMode="outline">
+
+                            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                                android:id="@+id/actv_origin"
+                                android:layout_width="match_parent"
+                                android:layout_height="@dimen/text_input_height"
+                                android:inputType="none"
+                                android:focusable="true"
+                                android:clickable="true"
+                                android:textAppearance="@style/TextAppearance.BidHub.Body" />
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <!-- Quantity Checkbox -->
+                        <com.google.android.material.checkbox.MaterialCheckBox
+                            android:id="@+id/cb_quantity"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/quantity_checkbox"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body"
+                            android:textColor="@color/text_primary"
+                            android:layout_marginBottom="@dimen/spacing_3" />
+
+                        <!-- Contact Checkbox -->
+                        <com.google.android.material.checkbox.MaterialCheckBox
+                            android:id="@+id/cb_contact"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/allow_contact_checkbox"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body"
+                            android:textColor="@color/text_primary"
+                            android:checked="true"
+                            android:layout_marginBottom="@dimen/spacing_2" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="@style/TextAppearance.BidHub.Small"
+                            android:text="@string/mobile_number_visible"
+                            android:textColor="@color/text_hint"
+                            android:layout_marginStart="@dimen/spacing_8"
+                            android:layout_marginBottom="@dimen/spacing_3" />
+
+                        <!-- COVID-19 Notice -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            app:cardCornerRadius="@dimen/card_corner_radius"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="@color/info_light"
+                            app:strokeWidth="0dp">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="@dimen/spacing_3">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textAppearance="@style/TextAppearance.BidHub.Body"
+                                    android:textStyle="bold"
+                                    android:text="@string/covid_19_notice"
+                                    android:textColor="@color/on_info_light"
+                                    android:layout_marginBottom="@dimen/spacing_1" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textAppearance="@style/TextAppearance.BidHub.Caption"
+                                    android:text="@string/covid_19_message"
+                                    android:textColor="@color/on_info_light" />
+
+                            </LinearLayout>
+
+                        </com.google.android.material.card.MaterialCardView>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Action Buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="24dp"
-                android:weightSum="2">
+                android:layout_marginTop="@dimen/spacing_2"
+                android:layout_marginBottom="@dimen/spacing_4">
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_save_draft"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="@dimen/button_height_primary"
                     android:layout_weight="1"
                     android:text="@string/save_as_draft"
-                    android:textAppearance="@style/TextAppearance.Button.Secondary"
-                    android:textColor="@color/primary"
-                    android:background="@drawable/button_secondary"
-                    android:layout_marginEnd="8dp" />
+                    style="@style/Widget.BidHub.Button.Secondary"
+                    android:layout_marginEnd="@dimen/spacing_2" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_post_item"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="@dimen/button_height_primary"
                     android:layout_weight="1"
                     android:text="@string/post_item"
-                    android:textAppearance="@style/TextAppearance.Button"
-                    android:textColor="@color/on_primary"
-                    android:background="@drawable/button_primary"
-                    android:layout_marginStart="8dp" />
+                    style="@style/Widget.BidHub.Button.Primary"
+                    android:layout_marginStart="@dimen/spacing_2" />
 
             </LinearLayout>
-                
-            <!-- Progress Bar (initially hidden) -->
+
+            <!-- Progress Bar -->
             <ProgressBar
                 android:id="@+id/progress_bar"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/spacing_4"
+                android:layout_marginBottom="@dimen/spacing_4"
                 android:visibility="gone"
-                android:contentDescription="@string/processing_images" />
+                android:contentDescription="@string/processing" />
 
-    </LinearLayout>
+        </LinearLayout>
 
-</LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
-</ScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

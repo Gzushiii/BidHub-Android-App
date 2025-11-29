@@ -659,6 +659,34 @@ public class ItemManager {
     }
     
     /**
+     * Store an item in the local cache (useful when fetching from API)
+     * @param item The item to store
+     */
+    public void storeItem(Item item) {
+        if (item != null && item.getItemId() != null) {
+            items.put(item.getItemId(), item);
+            Log.i(TAG, "Stored item in local cache: " + item.getItemId() + " - " + item.getTitle());
+            
+            // Also store images if available
+            if (item.getImagePaths() != null && !item.getImagePaths().isEmpty()) {
+                itemImages.put(item.getItemId(), new ArrayList<>(item.getImagePaths()));
+            }
+            
+            // Update user items mapping
+            if (item.getSellerId() != null) {
+                getOrCreateList(userItems, item.getSellerId()).add(item.getItemId());
+            }
+            
+            // Update category items mapping
+            if (item.getCategoryId() != null) {
+                getOrCreateList(categoryItems, item.getCategoryId()).add(item.getItemId());
+            }
+        } else {
+            Log.w(TAG, "Attempted to store null item or item with null ID");
+        }
+    }
+    
+    /**
      * Get items by seller
      */
     public List<Item> getItemsBySeller(String sellerId) {

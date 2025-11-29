@@ -18,3 +18,4 @@
         android:contentDescription="Item image" />
 
 </androidx.cardview.widget.CardView>
+

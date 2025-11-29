@@ -254,6 +254,84 @@ public class ItemApiClient {
     }
     
     /**
+     * Get a single item by ID with full details from the backend API
+     * This method fetches the item from the API and returns the full response
+     * @param itemId Item ID to fetch
+     * @return ApiResponse with success/failure and full item details if found
+     */
+    public ApiResponse getItemById(String itemId) {
+        Log.i(TAG, "Fetching item by ID from API: " + itemId);
+        
+        try {
+            String authToken = prefsHelper.getAuthToken();
+            if (authToken == null || authToken.isEmpty()) {
+                return new ApiResponse(false, "Authentication token not found", null);
+            }
+            
+            // Use getItems endpoint with high limit and search for the specific item
+            // This is not ideal but works until backend provides a full single-item endpoint
+            URL url = new URL(ITEMS_ENDPOINT + "?limit=1000&offset=0");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Authorization", "Bearer " + authToken);
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(30000);
+            
+            int responseCode = connection.getResponseCode();
+            BufferedReader reader;
+            
+            if (responseCode >= 200 && responseCode < 300) {
+                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            } else {
+                reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+            }
+            
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+            
+            if (responseCode >= 200 && responseCode < 300) {
+                // Parse response and find the item with matching ID
+                try {
+                    org.json.JSONObject jsonResponse = new org.json.JSONObject(response.toString());
+                    org.json.JSONArray itemsArray = jsonResponse.getJSONArray("items");
+                    
+                    for (int i = 0; i < itemsArray.length(); i++) {
+                        org.json.JSONObject itemJson = itemsArray.getJSONObject(i);
+                        String itemIdFromJson = itemJson.optString("id", "");
+                        String uuidIdFromJson = itemJson.optString("uuid_id", "");
+                        
+                        // Check if this is the item we're looking for
+                        if (itemId.equals(itemIdFromJson) || itemId.equals(uuidIdFromJson)) {
+                            Log.i(TAG, "Item found in API response: " + itemId);
+                            // Return the item as a JSON object wrapped in a response
+                            org.json.JSONObject itemResponse = new org.json.JSONObject();
+                            itemResponse.put("success", true);
+                            itemResponse.put("item", itemJson);
+                            return new ApiResponse(true, "Item found", itemResponse.toString());
+                        }
+                    }
+                    
+                    Log.w(TAG, "Item not found in API response: " + itemId);
+                    return new ApiResponse(false, "Item not found in API response", null);
+                } catch (org.json.JSONException e) {
+                    Log.e(TAG, "Error parsing API response", e);
+                    return new ApiResponse(false, "Error parsing API response: " + e.getMessage(), null);
+                }
+            } else {
+                Log.w(TAG, "API error fetching items: " + responseCode);
+                return new ApiResponse(false, "API error: " + responseCode, response.toString());
+            }
+            
+        } catch (Exception e) {
+            return handleNetworkException(e, "Error fetching item by ID: " + itemId);
+        }
+    }
+    
+    /**
      * Create a draft item via backend API (synchronous version for backward compatibility)
      */
     public ApiResponse createDraftItem(ItemData itemData, String sellerEmail) {

@@ -17,10 +17,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.activity.OnBackPressedCallback;
+import androidx.viewpager2.widget.ViewPager2;
+import com.cc106.bidhub.adapters.ImageGalleryAdapter;
 import com.cc106.bidhub.credits.CreditManager;
 import com.cc106.bidhub.items.Item;
 import com.cc106.bidhub.items.ItemManager;
 import com.cc106.bidhub.toast.ToastHelper;
+import com.cc106.bidhub.utils.ImageLoader;
 import com.cc106.bidhub.utils.SharedPreferencesHelper;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -50,6 +54,8 @@ public class ItemDetailActivity extends AppCompatActivity {
     private Dialog bidConfirmationDialog;
     
     // New fields for enhanced functionality
+    private ViewPager2 viewPagerImages;
+    private ImageGalleryAdapter imageGalleryAdapter;
     private LinearLayout layoutImageIndicators;
     private List<View> imageIndicators;
     private Item currentItem;
@@ -168,6 +174,9 @@ public class ItemDetailActivity extends AppCompatActivity {
                 return;
             }
             
+            // Setup back button handling
+            setupBackButtonHandling();
+            
         } catch (Exception e) {
             android.widget.Toast.makeText(this, "Error initializing item details: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
             e.printStackTrace();
@@ -234,6 +243,16 @@ public class ItemDetailActivity extends AppCompatActivity {
             layoutBidHistory = findViewById(R.id.layout_bid_history);
             android.util.Log.d("ItemDetailActivity", "layoutBidHistory initialized");
             
+            // Initialize ViewPager2 for image gallery
+            viewPagerImages = findViewById(R.id.viewpager_images);
+            android.util.Log.d("ItemDetailActivity", "viewPagerImages initialized");
+            
+            // Initialize image gallery adapter
+            imageGalleryAdapter = new ImageGalleryAdapter();
+            if (viewPagerImages != null) {
+                viewPagerImages.setAdapter(imageGalleryAdapter);
+            }
+            
             // Initialize new views
             layoutImageIndicators = findViewById(R.id.layout_image_indicators);
             android.util.Log.d("ItemDetailActivity", "layoutImageIndicators initialized");
@@ -265,6 +284,18 @@ public class ItemDetailActivity extends AppCompatActivity {
         
         // Initialize countdown handler
         countdownHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    }
+    
+    /**
+     * Setup back button handling for consistent navigation
+     */
+    private void setupBackButtonHandling() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+            }
+        });
     }
 
     private void setupClickListeners() {
@@ -588,31 +619,47 @@ public class ItemDetailActivity extends AppCompatActivity {
     }
     
     private void setupImageIndicators() {
-        if (layoutImageIndicators != null) {
-            // Get all indicator views
-            for (int i = 0; i < layoutImageIndicators.getChildCount(); i++) {
-                View indicator = layoutImageIndicators.getChildAt(i);
-                imageIndicators.add(indicator);
-            }
-            
-            // Set up image carousel functionality
-            ivItemImage.setOnClickListener(v -> {
-                if (itemImages != null && itemImages.size() > 1) {
-                    currentImageIndex = (currentImageIndex + 1) % itemImages.size();
-                    updateImageDisplay();
-                    // Show toast to indicate image change
-                    android.widget.Toast.makeText(ItemDetailActivity.this, 
-                        "Image " + (currentImageIndex + 1) + " of " + itemImages.size(), 
-                        android.widget.Toast.LENGTH_SHORT).show();
-                } else if (itemImages != null && itemImages.size() == 1) {
-                    // Only one image, no need to cycle
-                    currentImageIndex = 0;
-                    updateImageDisplay();
-                } else {
-                    // No images available - show placeholder
-                    android.widget.Toast.makeText(ItemDetailActivity.this, 
-                        "No images uploaded for this item", 
-                        android.widget.Toast.LENGTH_SHORT).show();
+        if (layoutImageIndicators == null || itemImages == null) {
+            return;
+        }
+        
+        // Clear existing indicators
+        layoutImageIndicators.removeAllViews();
+        imageIndicators.clear();
+        
+        // Hide indicators if no images or only one image
+        if (itemImages.isEmpty() || itemImages.size() <= 1) {
+            layoutImageIndicators.setVisibility(View.GONE);
+            return;
+        }
+        
+        // Show indicators for multiple images
+        layoutImageIndicators.setVisibility(View.VISIBLE);
+        
+        // Create indicator views dynamically
+        for (int i = 0; i < itemImages.size(); i++) {
+            View indicator = new View(this);
+            int size = (int) (8 * getResources().getDisplayMetrics().density); // 8dp
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+            params.setMargins((int) (4 * getResources().getDisplayMetrics().density), 0, 
+                             (int) (4 * getResources().getDisplayMetrics().density), 0);
+            indicator.setLayoutParams(params);
+            indicator.setBackgroundResource(R.drawable.indicator_inactive);
+            layoutImageIndicators.addView(indicator);
+            imageIndicators.add(indicator);
+        }
+        
+        // Update initial indicator state
+        updateImageIndicators(0);
+        
+        // Connect ViewPager2 page change listener
+        if (viewPagerImages != null) {
+            viewPagerImages.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+                @Override
+                public void onPageSelected(int position) {
+                    super.onPageSelected(position);
+                    currentImageIndex = position;
+                    updateImageIndicators(position);
                 }
             });
         }
@@ -638,7 +685,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                     }
                 }
             );
-            updateImageIndicators();
+            updateImageIndicators(currentImageIndex);
         } else if (itemImages != null && !itemImages.isEmpty() && currentImageIndex >= itemImages.size()) {
             // Reset currentImageIndex if it's out of bounds
             currentImageIndex = 0;
@@ -653,20 +700,18 @@ public class ItemDetailActivity extends AppCompatActivity {
         }
     }
     
-    private void updateImageIndicators() {
+    private void updateImageIndicators(int position) {
         if (imageIndicators == null || imageIndicators.isEmpty()) {
             return;
         }
         
         for (int i = 0; i < imageIndicators.size(); i++) {
-            if (i < imageIndicators.size()) {
-                View indicator = imageIndicators.get(i);
-                if (indicator != null) {
-                    if (i == currentImageIndex) {
-                        indicator.setBackgroundResource(R.drawable.indicator_active);
-                    } else {
-                        indicator.setBackgroundResource(R.drawable.indicator_inactive);
-                    }
+            View indicator = imageIndicators.get(i);
+            if (indicator != null) {
+                if (i == position) {
+                    indicator.setBackgroundResource(R.drawable.indicator_active);
+                } else {
+                    indicator.setBackgroundResource(R.drawable.indicator_inactive);
                 }
             }
         }
@@ -690,16 +735,10 @@ public class ItemDetailActivity extends AppCompatActivity {
                         String.format("ItemID: %s, Title: %s", itemId, currentItem.getTitle())
                     );
                 } else {
-                    // Item not found, show error and fallback to sample data
+                    // Item not found in ItemManager, try fetching from API
                     android.util.Log.w("ItemDetailActivity", "Item NOT found in ItemManager for ID: " + itemId);
-                    com.cc106.bidhub.utils.ErrorHandler.logWarning(
-                        "ItemDetailActivity", 
-                        "Item not found in database, showing sample data",
-                        String.format("ItemID: %s", itemId)
-                    );
-                    android.widget.Toast.makeText(this, "Item not found. Showing sample data.", android.widget.Toast.LENGTH_SHORT).show();
-                    populateItemData();
-                    loadSampleImages();
+                    android.util.Log.i("ItemDetailActivity", "Attempting to fetch item from API...");
+                    fetchItemFromApi(itemId);
                 }
             } catch (Exception e) {
                 com.cc106.bidhub.utils.ErrorHandler.handleDatabaseError(
@@ -725,6 +764,151 @@ public class ItemDetailActivity extends AppCompatActivity {
         }
     }
     
+    /**
+     * Fetch item from backend API when not found in ItemManager
+     */
+    private void fetchItemFromApi(String itemId) {
+        // Run on background thread to avoid NetworkOnMainThreadException
+        new Thread(() -> {
+            try {
+                com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(this);
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItemById(itemId);
+                
+                if (response.isSuccess() && response.getData() != null) {
+                    // Parse the item from response
+                    Item item = parseItemFromApiResponse(response.getData());
+                    if (item != null) {
+                        // Store in ItemManager for future lookups
+                        itemManager.storeItem(item);
+                        android.util.Log.i("ItemDetailActivity", "Item fetched from API and stored in ItemManager: " + item.getTitle());
+                        
+                        // Update UI on main thread
+                        runOnUiThread(() -> {
+                            currentItem = item;
+                            populateItemDataFromDatabase();
+                            loadItemImages();
+                            com.cc106.bidhub.utils.ErrorHandler.logInfo(
+                                "ItemDetailActivity", 
+                                "Successfully loaded item data from API",
+                                String.format("ItemID: %s, Title: %s", itemId, item.getTitle())
+                            );
+                        });
+                    } else {
+                        android.util.Log.e("ItemDetailActivity", "Failed to parse item from API response");
+                        runOnUiThread(() -> {
+                            showItemNotFoundError(itemId);
+                        });
+                    }
+                } else {
+                    android.util.Log.w("ItemDetailActivity", "API returned error: " + response.getMessage());
+                    runOnUiThread(() -> {
+                        showItemNotFoundError(itemId);
+                    });
+                }
+            } catch (Exception e) {
+                android.util.Log.e("ItemDetailActivity", "Error fetching item from API", e);
+                runOnUiThread(() -> {
+                    showItemNotFoundError(itemId);
+                });
+            }
+        }).start();
+    }
+    
+    /**
+     * Parse Item object from API response JSON
+     */
+    private Item parseItemFromApiResponse(String responseData) {
+        try {
+            org.json.JSONObject jsonResponse = new org.json.JSONObject(responseData);
+            org.json.JSONObject itemJson = jsonResponse.getJSONObject("item");
+            
+            Item item = new Item();
+            
+            // Parse basic fields
+            item.setItemId(itemJson.optString("id", itemJson.optString("uuid_id", "")));
+            item.setTitle(itemJson.getString("title"));
+            item.setDescription(itemJson.optString("description", ""));
+            item.setStartingPrice(itemJson.optDouble("starting_bid", itemJson.optDouble("starting_price", 0.0)));
+            item.setCurrentPrice(itemJson.optDouble("current_bid", itemJson.optDouble("current_price", 0.0)));
+            item.setCategoryId(itemJson.optString("category_id", ""));
+            item.setSellerId(itemJson.optString("seller_email", itemJson.optString("seller_id", "")));
+            item.setCondition(itemJson.optString("item_condition", itemJson.optString("condition", "good")));
+            
+            // Parse status
+            String status = itemJson.optString("status", "active");
+            switch (status) {
+                case "active":
+                    item.setStatus(com.cc106.bidhub.items.ItemStatus.ACTIVE);
+                    break;
+                case "ended":
+                case "sold":
+                    item.setStatus(com.cc106.bidhub.items.ItemStatus.ENDED);
+                    break;
+                case "cancelled":
+                    item.setStatus(com.cc106.bidhub.items.ItemStatus.CANCELLED);
+                    break;
+                default:
+                    item.setStatus(com.cc106.bidhub.items.ItemStatus.DRAFT);
+                    break;
+            }
+            
+            // Parse images if available
+            if (itemJson.has("images")) {
+                try {
+                    Object imagesObj = itemJson.get("images");
+                    List<String> imagePaths = new ArrayList<>();
+                    
+                    if (imagesObj instanceof org.json.JSONArray) {
+                        org.json.JSONArray imagesArray = (org.json.JSONArray) imagesObj;
+                        for (int j = 0; j < imagesArray.length(); j++) {
+                            Object imageObj = imagesArray.get(j);
+                            if (imageObj instanceof org.json.JSONObject) {
+                                org.json.JSONObject imageJson = (org.json.JSONObject) imageObj;
+                                if (imageJson.has("image_url")) {
+                                    imagePaths.add(imageJson.getString("image_url"));
+                                }
+                            } else if (imageObj instanceof String) {
+                                imagePaths.add((String) imageObj);
+                            }
+                        }
+                    } else if (imagesObj instanceof String) {
+                        String imagesString = (String) imagesObj;
+                        if (!imagesString.isEmpty() && !imagesString.equals("null")) {
+                            org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
+                            for (int j = 0; j < imagesArray.length(); j++) {
+                                imagePaths.add(imagesArray.getString(j));
+                            }
+                        }
+                    }
+                    
+                    item.setImagePaths(imagePaths);
+                } catch (Exception e) {
+                    android.util.Log.w("ItemDetailActivity", "Error parsing images for item", e);
+                    item.setImagePaths(new ArrayList<>());
+                }
+            }
+            
+            return item;
+        } catch (Exception e) {
+            android.util.Log.e("ItemDetailActivity", "Error parsing item from API response", e);
+            return null;
+        }
+    }
+    
+    /**
+     * Show error when item is not found
+     */
+    private void showItemNotFoundError(String itemId) {
+        com.cc106.bidhub.utils.ErrorHandler.logWarning(
+            "ItemDetailActivity", 
+            "Item not found in database or API, showing sample data",
+            String.format("ItemID: %s", itemId)
+        );
+        android.widget.Toast.makeText(this, "Item not found. Showing sample data.", android.widget.Toast.LENGTH_SHORT).show();
+        populateItemData();
+        loadSampleImages();
+    }
+    
     private void loadItemImages() {
         try {
             if (currentItem != null && currentItem.getImagePaths() != null) {
@@ -746,8 +930,16 @@ public class ItemDetailActivity extends AppCompatActivity {
                         currentItem != null ? "not null" : "null")
                 );
             }
+            
+            // Load images into ViewPager2 adapter
+            if (imageGalleryAdapter != null) {
+                imageGalleryAdapter.setImages(itemImages);
+            }
+            
+            // Setup image indicators
+            setupImageIndicators();
+            
             currentImageIndex = 0;
-            updateImageDisplay();
         } catch (Exception e) {
             com.cc106.bidhub.utils.ErrorHandler.handleImageError(
                 this,
@@ -756,8 +948,11 @@ public class ItemDetailActivity extends AppCompatActivity {
                 "load item images"
             );
             itemImages = new ArrayList<>();
+            if (imageGalleryAdapter != null) {
+                imageGalleryAdapter.setImages(itemImages);
+            }
+            setupImageIndicators();
             currentImageIndex = 0;
-            updateImageDisplay();
         }
     }
     
@@ -768,8 +963,16 @@ public class ItemDetailActivity extends AppCompatActivity {
         itemImages.add("sample_watch_2");
         itemImages.add("sample_watch_3");
         itemImages.add("sample_watch_4");
+        
+        // Load images into ViewPager2 adapter
+        if (imageGalleryAdapter != null) {
+            imageGalleryAdapter.setImages(itemImages);
+        }
+        
+        // Setup image indicators
+        setupImageIndicators();
+        
         currentImageIndex = 0;
-        updateImageDisplay();
     }
     
     private String getCategoryDisplayName(String categoryId) {

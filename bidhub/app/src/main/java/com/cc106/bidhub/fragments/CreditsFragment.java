@@ -235,8 +235,245 @@ public class CreditsFragment extends Fragment {
     }
     
     private void showPurchaseConfirmation(CreditPackage pkg) {
-        // Trigger backend purchase directly; backend handles transactions and balance
-        purchaseCreditsBackend((int)pkg.getCredits(), "test");
+        // Show GCash payment dialog
+        showGCashPaymentDialog(pkg);
+    }
+    
+    /**
+     * Show GCash payment dialog with reference number input
+     */
+    private void showGCashPaymentDialog(CreditPackage pkg) {
+        android.app.Dialog dialog = new android.app.Dialog(requireContext());
+        dialog.setContentView(R.layout.dialog_gcash_payment);
+        dialog.setCancelable(true);
+        
+        // Initialize views
+        android.widget.TextView tvPackageName = dialog.findViewById(R.id.tv_package_name);
+        android.widget.TextView tvPackageCredits = dialog.findViewById(R.id.tv_package_credits);
+        android.widget.TextView tvPackagePrice = dialog.findViewById(R.id.tv_package_price);
+        android.widget.TextView tvGCashNumber = dialog.findViewById(R.id.tv_gcash_number);
+        android.widget.TextView tvReferenceCode = dialog.findViewById(R.id.tv_reference_code);
+        com.google.android.material.textfield.TextInputLayout tilReferenceNumber = dialog.findViewById(R.id.til_reference_number);
+        com.google.android.material.textfield.TextInputEditText etReferenceNumber = dialog.findViewById(R.id.et_reference_number);
+        android.widget.ProgressBar progressPayment = dialog.findViewById(R.id.progress_payment);
+        com.google.android.material.button.MaterialButton btnCancel = dialog.findViewById(R.id.btn_cancel_payment);
+        com.google.android.material.button.MaterialButton btnSubmit = dialog.findViewById(R.id.btn_submit_reference);
+        
+        // Set package details
+        tvPackageName.setText(pkg.getName());
+        tvPackageCredits.setText(creditManager.formatCurrency(pkg.getCredits()));
+        tvPackagePrice.setText(creditManager.formatCurrency(pkg.getPrice()));
+        
+        // Set GCash number (from backend or default)
+        tvGCashNumber.setText("+63 916 123 4567"); // TODO: Get from backend
+        
+        // Initialize top-up request
+        int[] topupId = {0};
+        String[] referenceCode = {""};
+        
+        // Start top-up request
+        initiateTopupRequest(pkg.getPrice(), new TopupInitCallback() {
+            @Override
+            public void onSuccess(int topupIdValue, String refCode) {
+                getActivity().runOnUiThread(() -> {
+                    topupId[0] = topupIdValue;
+                    referenceCode[0] = refCode;
+                    tvReferenceCode.setText(refCode);
+                    btnSubmit.setEnabled(true);
+                });
+            }
+            
+            @Override
+            public void onError(String error) {
+                getActivity().runOnUiThread(() -> {
+                    ToastHelper.showError(getContext(), "Failed to initiate payment: " + error);
+                    dialog.dismiss();
+                });
+            }
+        });
+        
+        // Enable submit button when reference number is entered
+        etReferenceNumber.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                boolean isValid = s != null && s.toString().trim().length() >= 4;
+                btnSubmit.setEnabled(isValid && topupId[0] > 0);
+                if (s != null && s.toString().trim().length() > 0 && s.toString().trim().length() < 4) {
+                    tilReferenceNumber.setError(getString(R.string.invalid_reference));
+                } else {
+                    tilReferenceNumber.setError(null);
+                }
+            }
+            
+            @Override
+            public void afterTextChanged(android.text.Editable s) {}
+        });
+        
+        // Cancel button
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        
+        // Submit button
+        btnSubmit.setOnClickListener(v -> {
+            String refNumber = etReferenceNumber.getText().toString().trim();
+            if (refNumber.length() < 4) {
+                tilReferenceNumber.setError(getString(R.string.invalid_reference));
+                return;
+            }
+            
+            // Show loading
+            progressPayment.setVisibility(android.view.View.VISIBLE);
+            btnSubmit.setEnabled(false);
+            btnCancel.setEnabled(false);
+            
+            // Submit reference number
+            submitTopupReference(topupId[0], refNumber, new TopupSubmitCallback() {
+                @Override
+                public void onSuccess() {
+                    getActivity().runOnUiThread(() -> {
+                        progressPayment.setVisibility(android.view.View.GONE);
+                        dialog.dismiss();
+                        ToastHelper.showSuccess(getContext(), getString(R.string.payment_submitted));
+                        // Refresh balance after a delay
+                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                            fetchBalanceFromBackend();
+                        }, 2000);
+                    });
+                }
+                
+                @Override
+                public void onError(String error) {
+                    getActivity().runOnUiThread(() -> {
+                        progressPayment.setVisibility(android.view.View.GONE);
+                        btnSubmit.setEnabled(true);
+                        btnCancel.setEnabled(true);
+                        ToastHelper.showError(getContext(), "Failed to submit reference: " + error);
+                    });
+                }
+            });
+        });
+        
+        dialog.show();
+    }
+    
+    /**
+     * Interface for top-up initiation callback
+     */
+    private interface TopupInitCallback {
+        void onSuccess(int topupId, String referenceCode);
+        void onError(String error);
+    }
+    
+    /**
+     * Interface for top-up submission callback
+     */
+    private interface TopupSubmitCallback {
+        void onSuccess();
+        void onError(String error);
+    }
+    
+    /**
+     * Initiate top-up request with backend
+     */
+    private void initiateTopupRequest(double amount, TopupInitCallback callback) {
+        new Thread(() -> {
+            try {
+                String token = prefsHelper.getAuthToken();
+                if (token == null || token.isEmpty()) {
+                    callback.onError("Please log in again");
+                    return;
+                }
+                
+                URL url = new URL(BASE_URL + "/topups");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Authorization", "Bearer " + token);
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+                
+                JSONObject body = new JSONObject();
+                body.put("amount", amount);
+                body.put("payment_method", "gcash");
+                
+                try (OutputStream os = conn.getOutputStream()) {
+                    os.write(body.toString().getBytes("UTF-8"));
+                }
+                
+                int code = conn.getResponseCode();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                    code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream()
+                ));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) sb.append(line);
+                reader.close();
+                
+                if (code >= 200 && code < 300) {
+                    JSONObject json = new JSONObject(sb.toString());
+                    int topupId = json.getInt("topup_id");
+                    String refCode = json.getString("generated_ref");
+                    callback.onSuccess(topupId, refCode);
+                } else {
+                    JSONObject errorJson = new JSONObject(sb.toString());
+                    callback.onError(errorJson.optString("error", "Failed to initiate payment"));
+                }
+            } catch (Exception e) {
+                callback.onError("Network error: " + e.getMessage());
+            }
+        }).start();
+    }
+    
+    /**
+     * Submit reference number for top-up
+     */
+    private void submitTopupReference(int topupId, String referenceNumber, TopupSubmitCallback callback) {
+        new Thread(() -> {
+            try {
+                String token = prefsHelper.getAuthToken();
+                if (token == null || token.isEmpty()) {
+                    callback.onError("Please log in again");
+                    return;
+                }
+                
+                URL url = new URL(BASE_URL + "/topups/" + topupId + "/submit");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                conn.setRequestProperty("Authorization", "Bearer " + token);
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+                
+                JSONObject body = new JSONObject();
+                body.put("user_receipt_ref", referenceNumber);
+                
+                try (OutputStream os = conn.getOutputStream()) {
+                    os.write(body.toString().getBytes("UTF-8"));
+                }
+                
+                int code = conn.getResponseCode();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                    code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream()
+                ));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) sb.append(line);
+                reader.close();
+                
+                if (code >= 200 && code < 300) {
+                    callback.onSuccess();
+                } else {
+                    JSONObject errorJson = new JSONObject(sb.toString());
+                    callback.onError(errorJson.optString("error", "Failed to submit reference"));
+                }
+            } catch (Exception e) {
+                callback.onError("Network error: " + e.getMessage());
+            }
+        }).start();
     }
     
     private void processPayment(CreditPackage pkg, String paymentMethod) {
