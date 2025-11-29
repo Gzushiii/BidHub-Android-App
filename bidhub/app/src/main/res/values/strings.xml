@@ -329,4 +329,46 @@
     <string name="no_items_found">No items found</string>
     <string name="try_adjusting_search">Try adjusting your search or filters to find what you\'re looking for.</string>
     <string name="clear_filters">Clear Filters</string>
+    
+    <!-- Homepage -->
+    <string name="welcome_back">Welcome back</string>
+    <string name="featured_auctions">Featured Auctions</string>
+    <string name="your_active_bids">Your Active Bids</string>
+    <string name="browse_categories">Browse Categories</string>
+    <string name="start_browsing_or_posting">Start browsing items or post your own to get started</string>
+    <string name="view_all">View All</string>
+    <string name="search">Search</string>
+    <string name="search_for_items">Search for items</string>
+    <string name="credits">Credits</string>
+    <string name="no_items">No items</string>
+    <string name="loading">Loading</string>
+    
+    <!-- Item Posting -->
+    <string name="basic_information">Basic Information</string>
+    <string name="pricing">Pricing</string>
+    <string name="auction_settings">Auction Settings</string>
+    <string name="toggle_details">Toggle details</string>
+    <string name="uploading">Uploading</string>
+    <string name="uploading_images">Uploading images…</string>
+    <string name="select_main_category">Select the main category for your item</string>
+    <string name="title_helper_text">Choose a clear, descriptive title (3-100 characters)</string>
+    <string name="description_helper_text">Describe your item in detail. Include condition, features, and any relevant information</string>
+    <string name="duration_helper_text">How long should the auction run? (1-30 days)</string>
+    <string name="condition_helper_text">Select the condition of your item</string>
+    <string name="starting_price_helper">Minimum bid amount buyers can place</string>
+    <string name="buy_now_helper_text">Optional: Set a price for immediate purchase</string>
+    <string name="donation_reason_helper">Explain why you\'re donating this item</string>
+    <string name="optional">Optional</string>
+    <string name="processing">Processing</string>
+    
+    <!-- Item Detail -->
+    <string name="item_image">Item Image</string>
+    <string name="images">Images</string>
+    <string name="seller">Seller</string>
+    <string name="bids">Bids</string>
+    <string name="seller_avatar">Seller Avatar</string>
+    <string name="rating">Rating</string>
+    
+    <!-- Common Actions -->
+    <string name="menu">Menu</string>
 </resources>

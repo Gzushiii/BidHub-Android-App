@@ -1,376 +1,399 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
-    android:orientation="vertical">
+    android:fitsSystemWindows="true">
 
-    <!-- Header with backdrop blur effect -->
-    <LinearLayout
+    <!-- App Bar -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:gravity="center_vertical"
-        android:background="@color/background"
-        android:elevation="4dp">
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:elevation="0dp">
 
-            <ImageButton
-                android:id="@+id/btn_back"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_arrow_back_ios"
-                android:contentDescription="@string/back" />
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            app:contentScrim="@color/surface"
+            app:expandedTitleTextAppearance="@style/TextAppearance.BidHub.LargeTitle"
+            app:collapsedTitleTextAppearance="@style/TextAppearance.BidHub.Headline"
+            app:scrimAnimationDuration="300"
+            app:expandedTitleMarginStart="@dimen/spacing_4"
+            app:expandedTitleMarginBottom="@dimen/spacing_4">
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/item_details"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
-            android:gravity="center" />
+            <!-- Image Gallery with ViewPager2 -->
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/viewpager_images"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/surface_variant" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            <!-- Image Indicators -->
+            <LinearLayout
+                android:id="@+id/layout_image_indicators"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginBottom="@dimen/spacing_4"
+                android:background="@drawable/rounded_background"
+                android:backgroundTint="@android:color/black"
+                android:backgroundTintAlpha="0.5"
+                android:paddingHorizontal="@dimen/spacing_2"
+                android:paddingVertical="@dimen/spacing_1" />
 
-            <ImageButton
-                android:id="@+id/btn_share"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_share"
-                android:contentDescription="@string/share"
-                android:layout_marginEnd="8dp" />
+            <!-- Toolbar -->
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+                app:layout_collapseMode="pin">
 
-            <ImageButton
-                android:id="@+id/btn_favorite"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_favorite_border"
-                android:contentDescription="@string/add_to_favorites" />
+                <ImageButton
+                    android:id="@+id/btn_back"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_arrow_back"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/back"
+                    android:tint="@color/text_white" />
 
-        </LinearLayout>
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
 
-    </LinearLayout>
+                <ImageButton
+                    android:id="@+id/btn_share"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_share"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/share"
+                    android:tint="@color/text_white"
+                    android:layout_marginEnd="@dimen/spacing_1" />
 
-    <!-- Main content -->
-    <ScrollView
+                <ImageButton
+                    android:id="@+id/btn_favorite"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_favorite_border"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/add_to_favorites"
+                    android:tint="@color/text_white" />
+
+            </com.google.android.material.appbar.MaterialToolbar>
+
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Main Content -->
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true">
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_4">
 
-            <!-- Item Image with gradient overlay -->
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="256dp"
-                android:background="@color/gray_200">
-
-                <ImageView
-                    android:id="@+id/iv_item_image"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/placeholder"
-                    android:scaleType="centerCrop"
-                    android:contentDescription="@string/item_details" />
-
-                <!-- Gradient overlay -->
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="64dp"
-                    android:layout_alignParentBottom="true"
-                    android:background="@drawable/gradient_overlay" />
-
-                <!-- Image indicators with better styling -->
-                <LinearLayout
-                    android:id="@+id/layout_image_indicators"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_centerHorizontal="true"
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginBottom="16dp"
-                    android:background="@drawable/indicator_background"
-                    android:padding="8dp">
-
-                    <View
-                        android:layout_width="8dp"
-                        android:layout_height="8dp"
-                        android:background="@drawable/indicator_active"
-                        android:layout_marginEnd="8dp" />
-
-                    <View
-                        android:layout_width="8dp"
-                        android:layout_height="8dp"
-                        android:background="@drawable/indicator_inactive"
-                        android:layout_marginEnd="8dp" />
-
-                    <View
-                        android:layout_width="8dp"
-                        android:layout_height="8dp"
-                        android:background="@drawable/indicator_inactive"
-                        android:layout_marginEnd="8dp" />
-
-                    <View
-                        android:layout_width="8dp"
-                        android:layout_height="8dp"
-                        android:background="@drawable/indicator_inactive" />
-
-                </LinearLayout>
-
-            </RelativeLayout>
-
-            <!-- Item Info with improved spacing -->
+            <!-- Item Title and Category -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginBottom="@dimen/section_spacing">
 
                 <TextView
                     android:id="@+id/tv_item_title"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Luxury Watch"
+                    android:textAppearance="@style/TextAppearance.BidHub.LargeTitle"
                     android:textColor="@color/text_primary"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="@dimen/spacing_1"
+                    tools:text="Luxury Watch Collection" />
 
                 <TextView
                     android:id="@+id/tv_item_category"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Watches · New"
+                    android:textAppearance="@style/TextAppearance.BidHub.Caption"
                     android:textColor="@color/text_secondary"
-                    android:textSize="16sp"
-                    android:layout_marginBottom="16dp" />
+                    tools:text="Watches · New" />
 
-                <!-- Bid Info Grid with better spacing -->
+            </LinearLayout>
+
+            <!-- Price Information Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/section_spacing"
+                app:cardCornerRadius="@dimen/card_corner_radius"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="16dp">
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_4">
 
+                    <!-- Bid Info Grid -->
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="@dimen/spacing_4">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="@string/starting_bid"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="14sp"
-                            android:layout_marginBottom="4dp" />
+                            android:layout_weight="1"
+                            android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/tv_starting_bid"
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.BidHub.Caption"
+                                android:text="@string/starting_bid"
+                                android:textColor="@color/text_secondary"
+                                android:layout_marginBottom="@dimen/spacing_1" />
+
+                            <TextView
+                                android:id="@+id/tv_starting_bid"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.BidHub.Headline"
+                                android:textColor="@color/text_primary"
+                                tools:text="₱500.00" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="match_parent"
+                            android:background="@color/outline_variant"
+                            android:layout_marginHorizontal="@dimen/spacing_3" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="$500"
-                            android:textColor="@color/text_primary"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.BidHub.Caption"
+                                android:text="@string/current_bid"
+                                android:textColor="@color/text_secondary"
+                                android:layout_marginBottom="@dimen/spacing_1" />
+
+                            <TextView
+                                android:id="@+id/tv_current_bid"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.BidHub.BidAmount"
+                                android:textColor="@color/primary"
+                                tools:text="₱750.00" />
+
+                        </LinearLayout>
 
                     </LinearLayout>
 
+                    <!-- Time Left with Progress -->
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:orientation="vertical">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="@string/current_bid"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="14sp"
-                            android:layout_marginBottom="4dp" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="@dimen/spacing_2">
 
-                        <TextView
-                            android:id="@+id/tv_current_bid"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="$750"
-                            android:textColor="@color/primary"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
+                            <ImageView
+                                android:layout_width="@dimen/icon_size_medium"
+                                android:layout_height="@dimen/icon_size_medium"
+                                android:src="@drawable/ic_timer"
+                                android:tint="@color/ending_orange"
+                                android:contentDescription="@string/time_left"
+                                android:layout_marginEnd="@dimen/spacing_2" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:textAppearance="@style/TextAppearance.BidHub.Body"
+                                android:textStyle="bold"
+                                android:text="@string/time_left"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:id="@+id/tv_time_left"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.BidHub.CountdownTimer"
+                                android:textColor="@color/ending_orange"
+                                tools:text="2d 12h 30m" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.progressindicator.LinearProgressIndicator
+                            android:id="@+id/progress_time_left"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/progress_bar_height_large"
+                            android:progress="50"
+                            android:max="100"
+                            app:indicatorColor="@color/ending_orange"
+                            app:trackColor="@color/surface_variant"
+                            app:trackCornerRadius="@dimen/progress_bar_corner_radius" />
 
                     </LinearLayout>
 
                 </LinearLayout>
 
-                <!-- Time Left with improved progress bar -->
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Description Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/section_spacing"
+                app:cardCornerRadius="@dimen/card_corner_radius"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginBottom="16dp">
+                    android:padding="@dimen/spacing_4">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.BidHub.Headline"
+                        android:text="@string/description"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="@dimen/spacing_3" />
+
+                    <TextView
+                        android:id="@+id/tv_description"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.BidHub.Body"
+                        android:textColor="@color/text_secondary"
+                        android:lineSpacingExtra="4dp"
+                        tools:text="This luxury watch features a stainless steel case, sapphire crystal, and automatic movement. It's water-resistant up to 100 meters and comes with a certificate of authenticity." />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Seller Information -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/section_spacing"
+                app:cardCornerRadius="@dimen/card_corner_radius"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_4">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.BidHub.Headline"
+                        android:text="@string/seller_information"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="@dimen/spacing_3" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="4dp">
+                        android:gravity="center_vertical">
 
-                        <TextView
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="@dimen/image_avatar_size_large"
+                            android:layout_height="@dimen/image_avatar_size_large"
+                            app:cardCornerRadius="@dimen/image_avatar_size_large"
+                            app:cardElevation="0dp"
+                            app:strokeWidth="2dp"
+                            app:strokeColor="@color/outline_variant">
+
+                            <ImageView
+                                android:id="@+id/iv_seller_avatar"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/ic_person"
+                                android:contentDescription="@string/seller_avatar"
+                                android:background="@color/surface_variant" />
+
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="@string/time_left"
-                            android:textColor="@color/text_primary"
-                            android:textSize="14sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tv_time_left"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="2d 12h 30m"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="14sp" />
-
-                    </LinearLayout>
-
-                    <ProgressBar
-                        android:id="@+id/progress_time_left"
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:progress="50"
-                        android:progressTint="@color/primary"
-                        android:progressBackgroundTint="@color/gray_200"
-                        android:max="100" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- Divider -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/gray_200" />
-
-            <!-- Description -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/description"
-                    android:textColor="@color/text_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />
-
-                <TextView
-                    android:id="@+id/tv_description"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="This luxury watch features a stainless steel case, sapphire crystal, and automatic movement. It's water-resistant up to 100 meters and comes with a certificate of authenticity."
-                    android:textColor="@color/text_secondary"
-                    android:textSize="16sp"
-                    android:lineSpacingExtra="4dp" />
-
-            </LinearLayout>
-
-            <!-- Divider -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/gray_200" />
-
-            <!-- Seller Information with improved layout -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/seller_information"
-                    android:textColor="@color/text_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="12dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                        <ImageView
-                            android:id="@+id/iv_seller_avatar"
-                            android:layout_width="56dp"
-                            android:layout_height="56dp"
-                            android:src="@drawable/placeholder"
-                            android:background="@drawable/circle_background"
-                            android:layout_marginEnd="16dp"
-                            android:contentDescription="@string/seller_information" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tv_seller_name"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Ethan Carter"
-                            android:textColor="@color/text_primary"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:layout_marginBottom="4dp" />
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <ImageView
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:src="@drawable/ic_star"
-                                android:tint="@color/primary"
-                                android:layout_marginEnd="4dp"
-                                android:contentDescription="@string/rate" />
+                            android:orientation="vertical"
+                            android:layout_marginStart="@dimen/spacing_4">
 
                             <TextView
-                                android:id="@+id/tv_seller_rating"
+                                android:id="@+id/tv_seller_name"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="4.8 (125 reviews)"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="14sp" />
+                                android:textAppearance="@style/TextAppearance.BidHub.Body"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_primary"
+                                android:layout_marginBottom="@dimen/spacing_1"
+                                tools:text="Ethan Carter" />
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical">
+
+                                <ImageView
+                                    android:layout_width="@dimen/icon_size_small"
+                                    android:layout_height="@dimen/icon_size_small"
+                                    android:src="@drawable/ic_star"
+                                    android:tint="@color/credit_gold"
+                                    android:contentDescription="@string/rating"
+                                    android:layout_marginEnd="@dimen/spacing_1" />
+
+                                <TextView
+                                    android:id="@+id/tv_seller_rating"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:textAppearance="@style/TextAppearance.BidHub.Caption"
+                                    android:textColor="@color/text_secondary"
+                                    tools:text="4.8 (125 reviews)" />
+
+                            </LinearLayout>
 
                         </LinearLayout>
 
@@ -378,118 +401,123 @@
 
                 </LinearLayout>
 
-            </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Divider -->
+            <!-- Bid History Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/section_spacing"
+                app:cardCornerRadius="@dimen/card_corner_radius"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_4">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.BidHub.Headline"
+                        android:text="@string/bid_history"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="@dimen/spacing_3" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rv_bid_history"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        tools:listitem="@layout/item_bid_history" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Spacer for bottom action bar -->
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/gray_200" />
+                android:layout_height="100dp" />
 
-            <!-- Bid History -->
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Bottom Action Bar -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        app:elevation="8dp"
+        android:background="@color/surface">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_4"
+            android:background="@color/surface">
+
+            <!-- Bid Amount Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/enter_your_bid"
+                android:layout_marginBottom="@dimen/spacing_3"
+                style="@style/Widget.BidHub.TextInputLayout"
+                app:prefixText="₱"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusTopStart="@dimen/input_corner_radius"
+                app:boxCornerRadiusTopEnd="@dimen/input_corner_radius"
+                app:boxCornerRadiusBottomStart="@dimen/input_corner_radius"
+                app:boxCornerRadiusBottomEnd="@dimen/input_corner_radius"
+                app:boxStrokeColor="@color/outline"
+                app:boxStrokeWidth="2dp"
+                app:hintTextColor="@color/text_secondary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_bid_amount"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/text_input_height"
+                    android:inputType="numberDecimal"
+                    android:textAppearance="@style/TextAppearance.BidHub.Body"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Action Buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/bid_history"
-                    android:textColor="@color/text_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="12dp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_place_bid"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/button_height_primary"
+                    android:layout_weight="1"
+                    android:text="@string/place_bid"
+                    style="@style/Widget.BidHub.Button.Primary"
+                    android:layout_marginEnd="@dimen/spacing_2" />
 
-                <!-- Simple LinearLayout for bid history instead of RecyclerView -->
-                <LinearLayout
-                    android:id="@+id/layout_bid_history"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_buy_now"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/button_height_primary"
+                    android:layout_weight="1"
+                    android:text="@string/buy_now"
+                    style="@style/Widget.BidHub.Button.Secondary"
+                    android:layout_marginStart="@dimen/spacing_2" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-    </ScrollView>
+    </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Footer with bid input and buttons - Fixed at bottom -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:background="@color/background"
-        android:elevation="8dp">
-
-        <!-- Bid Amount Input with improved styling -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:background="@drawable/input_background"
-            android:gravity="center_vertical"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:layout_marginBottom="12dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="$"
-                android:textColor="@color/text_secondary"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <EditText
-                android:id="@+id/et_bid_amount"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
-                android:layout_weight="1"
-                android:layout_marginStart="8dp"
-                android:hint="@string/enter_your_bid"
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary"
-                android:textSize="18sp"
-                android:background="@null"
-                android:inputType="numberDecimal" />
-
-        </LinearLayout>
-
-        <!-- Action Buttons with improved styling -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btn_place_bid"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:text="@string/place_bid"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/text_white"
-                android:background="@drawable/btn_primary"
-                android:layout_marginEnd="8dp" />
-
-            <Button
-                android:id="@+id/btn_buy_now"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:text="@string/buy_now"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@color/primary"
-                android:background="@drawable/btn_outline_primary"
-                android:layout_marginStart="8dp" />
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
