@@ -7,6 +7,14 @@ const crypto = require('crypto');
 
 const router = express.Router();
 
+// Test endpoint to verify upload route is working
+router.get('/test', (req, res) => {
+  res.json({ 
+    message: 'Upload endpoint is working',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Configure storage for multer
 // For production, you might want to use S3, Firebase Storage, or Cloudinary
 // For now, we'll use local storage with a public URL structure

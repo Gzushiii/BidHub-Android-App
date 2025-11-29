@@ -35,6 +35,7 @@ public class ImageUploadClient {
      */
     public UploadResponse uploadImage(String imagePath) {
         Log.i(TAG, "Uploading image: " + imagePath);
+        Log.d(TAG, "Upload endpoint: " + UPLOAD_ENDPOINT);
         
         try {
             File imageFile = new File(imagePath);
@@ -127,12 +128,27 @@ public class ImageUploadClient {
                 // Parse error response
                 String errorMessage = "Upload failed: " + responseCode;
                 try {
-                    JSONObject errorJson = new JSONObject(response.toString());
-                    errorMessage = errorJson.optString("error", errorMessage);
+                    if (response.length() > 0) {
+                        JSONObject errorJson = new JSONObject(response.toString());
+                        errorMessage = errorJson.optString("error", errorMessage);
+                        if (errorJson.has("message")) {
+                            errorMessage = errorJson.optString("message", errorMessage);
+                        }
+                    } else if (responseCode == 404) {
+                        errorMessage = "Upload endpoint not found. Please ensure the backend server is updated.";
+                    }
                 } catch (Exception e) {
-                    // Use default error message
+                    // Use default error message based on response code
+                    if (responseCode == 404) {
+                        errorMessage = "Upload endpoint not found. Please ensure the backend server is updated.";
+                    } else if (responseCode == 401) {
+                        errorMessage = "Authentication failed. Please log in again.";
+                    } else if (responseCode == 413) {
+                        errorMessage = "Image file too large. Maximum size is 5MB.";
+                    }
                 }
-                Log.e(TAG, "Upload error: " + errorMessage);
+                Log.e(TAG, "Upload error: " + errorMessage + " (Response code: " + responseCode + ")");
+                Log.e(TAG, "Response body: " + response.toString());
                 return new UploadResponse(false, errorMessage, null);
             }
             
