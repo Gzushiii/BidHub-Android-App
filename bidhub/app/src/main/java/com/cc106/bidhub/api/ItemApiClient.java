@@ -64,7 +64,13 @@ public class ItemApiClient {
             // Prepare request data
             JSONObject requestData = new JSONObject();
             requestData.put("title", itemData.getTitle());
-            requestData.put("description", itemData.getDescription());
+            // Send description if available, otherwise send empty string (backend will handle null)
+            String description = itemData.getDescription();
+            if (description == null || description.trim().isEmpty()) {
+                requestData.put("description", ""); // Send empty string instead of null
+            } else {
+                requestData.put("description", description);
+            }
             // Convert category_id from string to integer using mapping
             try {
                 Integer categoryIdInt = com.cc106.bidhub.utils.CategoryMapping.toBackendCategoryId(itemData.getCategoryId());
@@ -263,7 +269,13 @@ public class ItemApiClient {
             // Prepare request data for draft
             JSONObject requestData = new JSONObject();
             requestData.put("title", itemData.getTitle());
-            requestData.put("description", itemData.getDescription());
+            // Send description if available, otherwise send empty string (backend will handle null)
+            String description = itemData.getDescription();
+            if (description == null || description.trim().isEmpty()) {
+                requestData.put("description", ""); // Send empty string instead of null
+            } else {
+                requestData.put("description", description);
+            }
             // Convert category_id from string to integer using mapping
             try {
                 Integer categoryIdInt = com.cc106.bidhub.utils.CategoryMapping.toBackendCategoryId(itemData.getCategoryId());
