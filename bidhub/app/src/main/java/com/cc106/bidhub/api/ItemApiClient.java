@@ -81,8 +81,7 @@ public class ItemApiClient {
             requestData.put("starting_price", itemData.getStartingPrice());
             requestData.put("reserve_price", itemData.getStartingPrice());
             requestData.put("duration_days", 7);
-            // Rely on backend auth; still send seller_email for compatibility if backend allows it
-            requestData.put("seller_email", sellerEmail);
+            // Don't send seller_email - backend gets seller from authenticated token
             // Set status based on whether this is a draft or active item
             requestData.put("status", "active");
             
@@ -292,7 +291,7 @@ public class ItemApiClient {
             requestData.put("starting_price", itemData.getStartingPrice());
             requestData.put("reserve_price", itemData.getStartingPrice());
             requestData.put("duration_days", 7);
-            requestData.put("seller_email", sellerEmail);
+            // Don't send seller_email - backend gets seller from authenticated token
             requestData.put("status", "draft"); // Set as draft
             
             // Add images if available - should already be URLs from upload
