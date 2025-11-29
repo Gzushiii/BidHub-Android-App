@@ -211,6 +211,9 @@ router.post('/', authenticateToken, async (req, res) => {
       status = 'active' // Allow status to be specified
     } = value;
 
+    // Provide default description if null or empty (database requires NOT NULL)
+    const itemDescription = description && description.trim() !== '' ? description : 'No description provided';
+
     // Determine seller from authenticated user
     let seller_id = req.user?.id;
     if (!seller_id && req.body.seller_email) {
@@ -240,7 +243,7 @@ router.post('/', authenticateToken, async (req, res) => {
        (uuid_id, title, description, category_id, seller_id, starting_bid, reserve_price,
         current_bid, end_date, status, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      [itemUuid, title, description, category_id, seller_id, starting_price, reserve_price, starting_price, end_date, status]
+      [itemUuid, title, itemDescription, category_id, seller_id, starting_price, reserve_price, starting_price, end_date, status]
     );
 
     const itemIntegerId = result.insertId; // Integer ID for foreign keys
@@ -340,8 +343,10 @@ router.put('/:id', authenticateToken, checkItemOwnership, async (req, res) => {
       updateValues.push(title);
     }
     if (description !== undefined) {
+      // Provide default if description is null or empty (database requires NOT NULL)
+      const itemDescription = description && description.trim() !== '' ? description : 'No description provided';
       updateFields.push('description = ?');
-      updateValues.push(description);
+      updateValues.push(itemDescription);
     }
     if (category_id !== undefined) {
       updateFields.push('category_id = ?');
