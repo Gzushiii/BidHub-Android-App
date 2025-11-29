@@ -17,10 +17,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager2.widget.ViewPager2;
+import com.cc106.bidhub.adapters.ImageGalleryAdapter;
 import com.cc106.bidhub.credits.CreditManager;
 import com.cc106.bidhub.items.Item;
 import com.cc106.bidhub.items.ItemManager;
 import com.cc106.bidhub.toast.ToastHelper;
+import com.cc106.bidhub.utils.ImageLoader;
 import com.cc106.bidhub.utils.SharedPreferencesHelper;
 import org.json.JSONObject;
 import java.io.BufferedReader;
@@ -50,6 +53,8 @@ public class ItemDetailActivity extends AppCompatActivity {
     private Dialog bidConfirmationDialog;
     
     // New fields for enhanced functionality
+    private ViewPager2 viewPagerImages;
+    private ImageGalleryAdapter imageGalleryAdapter;
     private LinearLayout layoutImageIndicators;
     private List<View> imageIndicators;
     private Item currentItem;
@@ -233,6 +238,16 @@ public class ItemDetailActivity extends AppCompatActivity {
             
             layoutBidHistory = findViewById(R.id.layout_bid_history);
             android.util.Log.d("ItemDetailActivity", "layoutBidHistory initialized");
+            
+            // Initialize ViewPager2 for image gallery
+            viewPagerImages = findViewById(R.id.viewpager_images);
+            android.util.Log.d("ItemDetailActivity", "viewPagerImages initialized");
+            
+            // Initialize image gallery adapter
+            imageGalleryAdapter = new ImageGalleryAdapter();
+            if (viewPagerImages != null) {
+                viewPagerImages.setAdapter(imageGalleryAdapter);
+            }
             
             // Initialize new views
             layoutImageIndicators = findViewById(R.id.layout_image_indicators);
@@ -588,31 +603,47 @@ public class ItemDetailActivity extends AppCompatActivity {
     }
     
     private void setupImageIndicators() {
-        if (layoutImageIndicators != null) {
-            // Get all indicator views
-            for (int i = 0; i < layoutImageIndicators.getChildCount(); i++) {
-                View indicator = layoutImageIndicators.getChildAt(i);
-                imageIndicators.add(indicator);
-            }
-            
-            // Set up image carousel functionality
-            ivItemImage.setOnClickListener(v -> {
-                if (itemImages != null && itemImages.size() > 1) {
-                    currentImageIndex = (currentImageIndex + 1) % itemImages.size();
-                    updateImageDisplay();
-                    // Show toast to indicate image change
-                    android.widget.Toast.makeText(ItemDetailActivity.this, 
-                        "Image " + (currentImageIndex + 1) + " of " + itemImages.size(), 
-                        android.widget.Toast.LENGTH_SHORT).show();
-                } else if (itemImages != null && itemImages.size() == 1) {
-                    // Only one image, no need to cycle
-                    currentImageIndex = 0;
-                    updateImageDisplay();
-                } else {
-                    // No images available - show placeholder
-                    android.widget.Toast.makeText(ItemDetailActivity.this, 
-                        "No images uploaded for this item", 
-                        android.widget.Toast.LENGTH_SHORT).show();
+        if (layoutImageIndicators == null || itemImages == null) {
+            return;
+        }
+        
+        // Clear existing indicators
+        layoutImageIndicators.removeAllViews();
+        imageIndicators.clear();
+        
+        // Hide indicators if no images or only one image
+        if (itemImages.isEmpty() || itemImages.size() <= 1) {
+            layoutImageIndicators.setVisibility(View.GONE);
+            return;
+        }
+        
+        // Show indicators for multiple images
+        layoutImageIndicators.setVisibility(View.VISIBLE);
+        
+        // Create indicator views dynamically
+        for (int i = 0; i < itemImages.size(); i++) {
+            View indicator = new View(this);
+            int size = (int) (8 * getResources().getDisplayMetrics().density); // 8dp
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+            params.setMargins((int) (4 * getResources().getDisplayMetrics().density), 0, 
+                             (int) (4 * getResources().getDisplayMetrics().density), 0);
+            indicator.setLayoutParams(params);
+            indicator.setBackgroundResource(R.drawable.indicator_inactive);
+            layoutImageIndicators.addView(indicator);
+            imageIndicators.add(indicator);
+        }
+        
+        // Update initial indicator state
+        updateImageIndicators(0);
+        
+        // Connect ViewPager2 page change listener
+        if (viewPagerImages != null) {
+            viewPagerImages.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+                @Override
+                public void onPageSelected(int position) {
+                    super.onPageSelected(position);
+                    currentImageIndex = position;
+                    updateImageIndicators(position);
                 }
             });
         }
@@ -638,7 +669,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                     }
                 }
             );
-            updateImageIndicators();
+            updateImageIndicators(currentImageIndex);
         } else if (itemImages != null && !itemImages.isEmpty() && currentImageIndex >= itemImages.size()) {
             // Reset currentImageIndex if it's out of bounds
             currentImageIndex = 0;
@@ -653,20 +684,18 @@ public class ItemDetailActivity extends AppCompatActivity {
         }
     }
     
-    private void updateImageIndicators() {
+    private void updateImageIndicators(int position) {
         if (imageIndicators == null || imageIndicators.isEmpty()) {
             return;
         }
         
         for (int i = 0; i < imageIndicators.size(); i++) {
-            if (i < imageIndicators.size()) {
-                View indicator = imageIndicators.get(i);
-                if (indicator != null) {
-                    if (i == currentImageIndex) {
-                        indicator.setBackgroundResource(R.drawable.indicator_active);
-                    } else {
-                        indicator.setBackgroundResource(R.drawable.indicator_inactive);
-                    }
+            View indicator = imageIndicators.get(i);
+            if (indicator != null) {
+                if (i == position) {
+                    indicator.setBackgroundResource(R.drawable.indicator_active);
+                } else {
+                    indicator.setBackgroundResource(R.drawable.indicator_inactive);
                 }
             }
         }
@@ -885,8 +914,16 @@ public class ItemDetailActivity extends AppCompatActivity {
                         currentItem != null ? "not null" : "null")
                 );
             }
+            
+            // Load images into ViewPager2 adapter
+            if (imageGalleryAdapter != null) {
+                imageGalleryAdapter.setImages(itemImages);
+            }
+            
+            // Setup image indicators
+            setupImageIndicators();
+            
             currentImageIndex = 0;
-            updateImageDisplay();
         } catch (Exception e) {
             com.cc106.bidhub.utils.ErrorHandler.handleImageError(
                 this,
@@ -895,8 +932,11 @@ public class ItemDetailActivity extends AppCompatActivity {
                 "load item images"
             );
             itemImages = new ArrayList<>();
+            if (imageGalleryAdapter != null) {
+                imageGalleryAdapter.setImages(itemImages);
+            }
+            setupImageIndicators();
             currentImageIndex = 0;
-            updateImageDisplay();
         }
     }
     
@@ -907,8 +947,16 @@ public class ItemDetailActivity extends AppCompatActivity {
         itemImages.add("sample_watch_2");
         itemImages.add("sample_watch_3");
         itemImages.add("sample_watch_4");
+        
+        // Load images into ViewPager2 adapter
+        if (imageGalleryAdapter != null) {
+            imageGalleryAdapter.setImages(itemImages);
+        }
+        
+        // Setup image indicators
+        setupImageIndicators();
+        
         currentImageIndex = 0;
-        updateImageDisplay();
     }
     
     private String getCategoryDisplayName(String categoryId) {

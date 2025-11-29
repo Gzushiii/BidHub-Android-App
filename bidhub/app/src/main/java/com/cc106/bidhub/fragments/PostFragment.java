@@ -86,7 +86,7 @@ public class PostFragment extends Fragment implements
     private RecyclerView rvTags;
     private Button btnForSale;
     private Button btnForFree;
-    private Button btnToggleOptional;
+    private ImageView btnToggleOptional;
     private Button btnSaveDraft;
     private Button btnPostItem;
     private ProgressBar progressBar;
@@ -187,7 +187,7 @@ public class PostFragment extends Fragment implements
         rvItemImages = view.findViewById(R.id.rv_item_images);
         btnForSale = view.findViewById(R.id.btn_for_sale);
         btnForFree = view.findViewById(R.id.btn_for_free);
-        btnToggleOptional = view.findViewById(R.id.btn_toggle_optional);
+        btnToggleOptional = view.findViewById(R.id.iv_toggle_optional);
         btnSaveDraft = view.findViewById(R.id.btn_save_draft);
         btnPostItem = view.findViewById(R.id.btn_post_item);
         progressBar = view.findViewById(R.id.progress_bar);
@@ -602,10 +602,12 @@ public class PostFragment extends Fragment implements
             isOptionalDetailsVisible = !isOptionalDetailsVisible;
             if (isOptionalDetailsVisible) {
                 layoutOptionalDetails.setVisibility(View.VISIBLE);
-                btnToggleOptional.setText("Hide ^");
+                btnToggleOptional.setImageResource(R.drawable.ic_expand_less);
+                btnToggleOptional.setContentDescription(getContext() != null ? getContext().getString(R.string.hide_details) : "Hide details");
             } else {
                 layoutOptionalDetails.setVisibility(View.GONE);
-                btnToggleOptional.setText("Show v");
+                btnToggleOptional.setImageResource(R.drawable.ic_expand_more);
+                btnToggleOptional.setContentDescription(getContext() != null ? getContext().getString(R.string.show_details) : "Show details");
             }
         }
     }
@@ -1438,7 +1440,8 @@ public class PostFragment extends Fragment implements
             layoutOptionalDetails.setVisibility(View.VISIBLE);
         }
         if (btnToggleOptional != null) {
-            btnToggleOptional.setText("Hide ^");
+            btnToggleOptional.setImageResource(R.drawable.ic_expand_less);
+            btnToggleOptional.setContentDescription(getContext() != null ? getContext().getString(R.string.hide_details) : "Hide details");
         }
         
         selectedImages.clear();

@@ -350,6 +350,8 @@
     <string name="pricing">Pricing</string>
     <string name="auction_settings">Auction Settings</string>
     <string name="toggle_details">Toggle details</string>
+    <string name="show_details">Show details</string>
+    <string name="hide_details">Hide details</string>
     <string name="uploading">Uploading</string>
     <string name="uploading_images">Uploading images…</string>
     <string name="select_main_category">Select the main category for your item</string>
