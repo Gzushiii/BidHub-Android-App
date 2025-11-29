@@ -98,20 +98,9 @@ public class ItemApiClient {
                 }
             }
             
-            // Add metadata if available
-            if (itemData.getMetadata() != null && !itemData.getMetadata().isEmpty()) {
-                requestData.put("metadata", itemData.getMetadata());
-            }
-            
-            // Add condition if available
-            if (itemData.getCondition() != null && !itemData.getCondition().isEmpty()) {
-                requestData.put("item_condition", itemData.getCondition());
-            }
-            
-            // Add buy now price if available
-            if (itemData.getBuyNowPrice() > 0) {
-                requestData.put("buy_now_price", itemData.getBuyNowPrice());
-            }
+            // Note: metadata, item_condition, and buy_now_price are not in the backend validator schema
+            // These fields are not currently supported by the backend API
+            // If needed, they should be added to the backend validator first
             
             // Make API call
             URL url = new URL(ITEMS_ENDPOINT);
@@ -307,20 +296,9 @@ public class ItemApiClient {
                 }
             }
             
-            // Add metadata if available
-            if (itemData.getMetadata() != null && !itemData.getMetadata().isEmpty()) {
-                requestData.put("metadata", itemData.getMetadata());
-            }
-            
-            // Add condition if available
-            if (itemData.getCondition() != null && !itemData.getCondition().isEmpty()) {
-                requestData.put("item_condition", itemData.getCondition());
-            }
-            
-            // Add buy now price if available
-            if (itemData.getBuyNowPrice() > 0) {
-                requestData.put("buy_now_price", itemData.getBuyNowPrice());
-            }
+            // Note: metadata, item_condition, and buy_now_price are not in the backend validator schema
+            // These fields are not currently supported by the backend API
+            // If needed, they should be added to the backend validator first
             
             // Make API call
             URL url = new URL(ITEMS_ENDPOINT);
