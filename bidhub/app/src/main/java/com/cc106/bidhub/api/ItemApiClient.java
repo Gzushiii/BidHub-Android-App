@@ -97,11 +97,11 @@ public class ItemApiClient {
                 for (String imageUrl : itemData.getImagePaths()) {
                     if (imageUrl != null && !imageUrl.isEmpty()) {
                         imagesArray.put(imageUrl);
-                    }
+                }
                 }
                 if (imagesArray.length() > 0) {
-                    requestData.put("images", imagesArray);
-                }
+                requestData.put("images", imagesArray);
+            }
             }
             
             // Note: metadata, item_condition, and buy_now_price are not in the backend validator schema
@@ -301,11 +301,11 @@ public class ItemApiClient {
                 for (String imageUrl : itemData.getImagePaths()) {
                     if (imageUrl != null && !imageUrl.isEmpty()) {
                         imagesArray.put(imageUrl);
-                    }
+                }
                 }
                 if (imagesArray.length() > 0) {
-                    requestData.put("images", imagesArray);
-                }
+                requestData.put("images", imagesArray);
+            }
             }
             
             // Note: metadata, item_condition, and buy_now_price are not in the backend validator schema

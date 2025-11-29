@@ -112,13 +112,22 @@ public class ItemManager {
                     Log.i(TAG, "Item created successfully via backend API");
                     Log.d(TAG, "Backend response: " + response.getData());
 
-                    // Parse the backend response to get the UUID assigned by backend
+                    // Parse the backend response to get the UUID assigned by backend and images
                     String backendItemId = null;
+                    List<String> backendImageUrls = new ArrayList<>();
                     try {
                         if (response.getData() != null && !response.getData().isEmpty()) {
                             org.json.JSONObject responseJson = new org.json.JSONObject(response.getData());
+                            org.json.JSONObject itemJson = null;
+                            
                             if (responseJson.has("item")) {
-                                org.json.JSONObject itemJson = responseJson.getJSONObject("item");
+                                itemJson = responseJson.getJSONObject("item");
+                            } else {
+                                // Response might have item data at root level
+                                itemJson = responseJson;
+                            }
+                            
+                            if (itemJson != null) {
                                 // Backend returns uuid_id field
                                 if (itemJson.has("uuid_id")) {
                                     backendItemId = itemJson.getString("uuid_id");
@@ -128,18 +137,28 @@ public class ItemManager {
                                     backendItemId = itemJson.getString("id");
                                     Log.i(TAG, "Extracted backend item ID: " + backendItemId);
                                 }
-                            } else if (responseJson.has("uuid_id")) {
-                                // Response might have uuid_id at root level
-                                backendItemId = responseJson.getString("uuid_id");
-                                Log.i(TAG, "Extracted backend item UUID from root: " + backendItemId);
-                            } else if (responseJson.has("id")) {
-                                // Fallback to id at root level
-                                backendItemId = responseJson.getString("id");
-                                Log.i(TAG, "Extracted backend item ID from root: " + backendItemId);
+                                
+                                // Extract images from backend response
+                                if (itemJson.has("images")) {
+                                    org.json.JSONArray imagesArray = itemJson.getJSONArray("images");
+                                    for (int i = 0; i < imagesArray.length(); i++) {
+                                        Object imageObj = imagesArray.get(i);
+                                        if (imageObj instanceof org.json.JSONObject) {
+                                            org.json.JSONObject imageJson = (org.json.JSONObject) imageObj;
+                                            if (imageJson.has("image_url")) {
+                                                backendImageUrls.add(imageJson.getString("image_url"));
+                                            }
+                                        } else if (imageObj instanceof String) {
+                                            // Images might be returned as array of strings
+                                            backendImageUrls.add((String) imageObj);
+                                        }
+                                    }
+                                    Log.i(TAG, "Extracted " + backendImageUrls.size() + " image URLs from backend response");
+                                }
                             }
                         }
                     } catch (org.json.JSONException e) {
-                        Log.e(TAG, "Failed to parse backend response for UUID", e);
+                        Log.e(TAG, "Failed to parse backend response for UUID and images", e);
                         Log.e(TAG, "Response data: " + response.getData());
                     }
 
@@ -175,21 +194,42 @@ public class ItemManager {
                         item.setTags(new ArrayList<>(itemData.getTags()));
                     }
                     
-                    // Add image paths
-                    if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
-                        item.setImagePaths(new ArrayList<>(itemData.getImagePaths()));
-                        itemImages.put(item.getItemId(), new ArrayList<>(itemData.getImagePaths()));
+                    // Add image paths - prefer backend response images, fallback to itemData images
+                    List<String> finalImagePaths = new ArrayList<>();
+                    if (!backendImageUrls.isEmpty()) {
+                        // Use images from backend response (these are the actual URLs stored in database)
+                        finalImagePaths.addAll(backendImageUrls);
+                        Log.i(TAG, "Using " + finalImagePaths.size() + " image URLs from backend response");
+                    } else if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
+                        // Fallback to itemData images if backend didn't return them
+                        finalImagePaths.addAll(itemData.getImagePaths());
+                        Log.i(TAG, "Using " + finalImagePaths.size() + " image URLs from itemData (backend didn't return images)");
+                    }
+                    
+                    if (!finalImagePaths.isEmpty()) {
+                        item.setImagePaths(new ArrayList<>(finalImagePaths));
+                        itemImages.put(item.getItemId(), new ArrayList<>(finalImagePaths));
+                        Log.i(TAG, "Stored " + finalImagePaths.size() + " image URLs for item: " + item.getItemId());
+                        for (int i = 0; i < finalImagePaths.size(); i++) {
+                            Log.d(TAG, "  Image " + (i + 1) + ": " + finalImagePaths.get(i));
+                        }
+                    } else {
+                        Log.w(TAG, "No images to store for item: " + item.getItemId());
                     }
                     
                     // Store item locally
                     items.put(item.getItemId(), item);
+                    Log.i(TAG, "Stored item in local map with ID: " + item.getItemId());
+                    Log.d(TAG, "Item details - Title: " + item.getTitle() + ", Images: " + (item.getImagePaths() != null ? item.getImagePaths().size() : 0));
                     
                     // Update user items
                     getOrCreateList(userItems, sellerEmail).add(item.getItemId());
+                    Log.d(TAG, "Added item to user items list for: " + sellerEmail);
                     
                     // Update category items
                     if (itemData.getCategoryId() != null) {
                         getOrCreateList(categoryItems, itemData.getCategoryId()).add(item.getItemId());
+                        Log.d(TAG, "Added item to category items list for: " + itemData.getCategoryId());
                     }
                     
                     // Initialize counters
@@ -197,6 +237,7 @@ public class ItemManager {
                     itemBidCounts.put(item.getItemId(), 0);
                     
                     Log.i(TAG, "Item created successfully: " + item.getItemId());
+                    Log.i(TAG, "Total items in local storage: " + items.size());
                     return true;
                 } else {
                     Log.e(TAG, "Backend API error: " + response.getMessage());
@@ -599,11 +640,20 @@ public class ItemManager {
      * Get item by ID
      */
     public Item getItemById(String itemId) {
+        Log.d(TAG, "getItemById called with ID: " + itemId);
+        Log.d(TAG, "Total items in local storage: " + items.size());
+        Log.d(TAG, "Available item IDs: " + items.keySet());
+        
         Item item = items.get(itemId);
         if (item != null) {
+            Log.i(TAG, "Item found: " + itemId + " - Title: " + item.getTitle());
+            Log.d(TAG, "Item images count: " + (item.getImagePaths() != null ? item.getImagePaths().size() : 0));
             // Increment view count
             item.incrementViewCount();
             itemViewCounts.put(itemId, item.getViewCount());
+        } else {
+            Log.w(TAG, "Item NOT found in local storage: " + itemId);
+            Log.w(TAG, "This might mean the item was created but ItemManager was recreated, or the ID doesn't match");
         }
         return item;
     }
@@ -864,12 +914,12 @@ public class ItemManager {
             String description = itemData.getDescription().trim();
             if (description.length() < 10) {
                 Log.e(TAG, "Description too short: " + description.length() + " (must be at least 10 characters if provided)");
-                return false;
-            }
+            return false;
+        }
             if (description.length() > MAX_DESCRIPTION_LENGTH) {
                 Log.e(TAG, "Description too long: " + description.length());
-                return false;
-            }
+            return false;
+        }
         }
         // Description is optional, so no error if null or empty
         
@@ -1028,7 +1078,7 @@ public class ItemManager {
         // Apply filters with proper no-op defaults
         List<Item> filteredResult = new ArrayList<>();
         for (Item item : filteredItems) {
-            // Search filter (no-op if null)
+                    // Search filter (no-op if null)
             boolean matchesSearch = true;
             if (fc.getQuery() != null) {
                 String queryLower = fc.getQuery().toLowerCase();
@@ -1044,35 +1094,35 @@ public class ItemManager {
                     }
                 }
             }
-            
-            // Category filter (no-op if null)
-            boolean matchesCategory = (fc.getCategoryId() == null) || 
-                fc.getCategoryId().equals(item.getCategoryId());
-            
-            // Condition filter (no-op if null)
-            boolean matchesCondition = (fc.getCondition() == null) || 
-                fc.getCondition().equals(item.getCondition());
-            
-            // Price filters (no-op if null, use current price or starting bid)
-            double price = item.getCurrentPrice() > 0 ? item.getCurrentPrice() : 
-                          (item.getStartingPrice() > 0 ? item.getStartingPrice() : 0.0);
-            boolean matchesMin = (fc.getMinPrice() == null) || price >= fc.getMinPrice();
-            boolean matchesMax = (fc.getMaxPrice() == null) || price <= fc.getMaxPrice();
-            
-            // Status filter (no-op if null)
-            boolean matchesStatus = (fc.getStatus() == null) || 
-                fc.getStatus().equals(item.getStatus());
-            
-            // Featured filter (no-op if null)
-            boolean matchesFeatured = (fc.getIsFeatured() == null) || 
-                fc.getIsFeatured() == item.isFeatured();
-            
-            // Trending filter (no-op if null)
-            boolean matchesTrending = (fc.getIsTrending() == null) || 
-                fc.getIsTrending() == item.isTrending();
-            
+                    
+                    // Category filter (no-op if null)
+                    boolean matchesCategory = (fc.getCategoryId() == null) || 
+                        fc.getCategoryId().equals(item.getCategoryId());
+                    
+                    // Condition filter (no-op if null)
+                    boolean matchesCondition = (fc.getCondition() == null) || 
+                        fc.getCondition().equals(item.getCondition());
+                    
+                    // Price filters (no-op if null, use current price or starting bid)
+                    double price = item.getCurrentPrice() > 0 ? item.getCurrentPrice() : 
+                                  (item.getStartingPrice() > 0 ? item.getStartingPrice() : 0.0);
+                    boolean matchesMin = (fc.getMinPrice() == null) || price >= fc.getMinPrice();
+                    boolean matchesMax = (fc.getMaxPrice() == null) || price <= fc.getMaxPrice();
+                    
+                    // Status filter (no-op if null)
+                    boolean matchesStatus = (fc.getStatus() == null) || 
+                        fc.getStatus().equals(item.getStatus());
+                    
+                    // Featured filter (no-op if null)
+                    boolean matchesFeatured = (fc.getIsFeatured() == null) || 
+                        fc.getIsFeatured() == item.isFeatured();
+                    
+                    // Trending filter (no-op if null)
+                    boolean matchesTrending = (fc.getIsTrending() == null) || 
+                        fc.getIsTrending() == item.isTrending();
+                    
             if (matchesSearch && matchesCategory && matchesCondition && 
-                matchesMin && matchesMax && matchesStatus && 
+                           matchesMin && matchesMax && matchesStatus && 
                 matchesFeatured && matchesTrending) {
                 filteredResult.add(item);
             }
@@ -1278,31 +1328,31 @@ public class ItemManager {
                 int result = 0;
                 
                 switch (sortField) {
-                    case "title":
+            case "title":
                         String t1 = i1.getTitle();
                         String t2 = i2.getTitle();
                         if (t1 == null && t2 == null) result = 0;
                         else if (t1 == null) result = 1;
                         else if (t2 == null) result = -1;
                         else result = t1.compareTo(t2);
-                        break;
-                    case "price":
+                break;
+            case "price":
                         result = Double.compare(i1.getCurrentPrice(), i2.getCurrentPrice());
-                        break;
-                    case "viewCount":
+                break;
+            case "viewCount":
                         result = Integer.compare(i1.getViewCount(), i2.getViewCount());
-                        break;
-                    case "bidCount":
+                break;
+            case "bidCount":
                         result = Integer.compare(i1.getBidCount(), i2.getBidCount());
-                        break;
-                    case "endDate":
+                break;
+            case "endDate":
                         Date d1 = i1.getEndDate();
                         Date d2 = i2.getEndDate();
                         if (d1 == null && d2 == null) result = 0;
                         else if (d1 == null) result = 1;
                         else if (d2 == null) result = -1;
                         else result = d1.compareTo(d2);
-                        break;
+                break;
                     default: // createdAt
                         Date c1 = i1.getCreatedAt();
                         Date c2 = i2.getCreatedAt();
@@ -1310,14 +1360,14 @@ public class ItemManager {
                         else if (c1 == null) result = 1;
                         else if (c2 == null) result = -1;
                         else result = c1.compareTo(c2);
-                        break;
-                }
-                
+                break;
+        }
+        
                 return ascending ? result : -result; // Reverse for descending
             }
         };
         
-        return comparator;
+            return comparator;
     }
     
     /**

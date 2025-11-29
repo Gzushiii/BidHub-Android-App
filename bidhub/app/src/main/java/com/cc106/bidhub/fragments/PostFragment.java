@@ -1166,7 +1166,7 @@ public class PostFragment extends Fragment implements
         
         // Validate starting price (only for sale items)
         if (isForSale) {
-            String priceText = etStartingPrice.getText().toString().trim();
+        String priceText = etStartingPrice.getText().toString().trim();
             if (TextUtils.isEmpty(priceText)) {
                 ErrorHandler.showDetailedError(getContext(), "Starting price is required for items for sale");
                 android.util.Log.d("PostFragment", "Validation failed: Starting price is empty");
@@ -1232,16 +1232,16 @@ public class PostFragment extends Fragment implements
         String description = etItemDescription.getText().toString().trim();
         if (!TextUtils.isEmpty(description)) {
             // Only validate length if description is provided
-            if (description.length() < 10) {
+        if (description.length() < 10) {
                 ToastHelper.showError(getContext(), "Description must be at least 10 characters long if provided");
-                etItemDescription.requestFocus();
-                return false;
-            }
+            etItemDescription.requestFocus();
+            return false;
+        }
             if (description.length() > 2000) {
                 ToastHelper.showError(getContext(), "Description must be less than 2000 characters");
-                etItemDescription.requestFocus();
-                return false;
-            }
+            etItemDescription.requestFocus();
+            return false;
+        }
         }
         // Description is optional, so no error if empty
 
