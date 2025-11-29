@@ -690,16 +690,10 @@ public class ItemDetailActivity extends AppCompatActivity {
                         String.format("ItemID: %s, Title: %s", itemId, currentItem.getTitle())
                     );
                 } else {
-                    // Item not found, show error and fallback to sample data
+                    // Item not found in ItemManager, try fetching from API
                     android.util.Log.w("ItemDetailActivity", "Item NOT found in ItemManager for ID: " + itemId);
-                    com.cc106.bidhub.utils.ErrorHandler.logWarning(
-                        "ItemDetailActivity", 
-                        "Item not found in database, showing sample data",
-                        String.format("ItemID: %s", itemId)
-                    );
-                    android.widget.Toast.makeText(this, "Item not found. Showing sample data.", android.widget.Toast.LENGTH_SHORT).show();
-                    populateItemData();
-                    loadSampleImages();
+                    android.util.Log.i("ItemDetailActivity", "Attempting to fetch item from API...");
+                    fetchItemFromApi(itemId);
                 }
             } catch (Exception e) {
                 com.cc106.bidhub.utils.ErrorHandler.handleDatabaseError(
@@ -723,6 +717,151 @@ public class ItemDetailActivity extends AppCompatActivity {
             populateItemData();
             loadSampleImages();
         }
+    }
+    
+    /**
+     * Fetch item from backend API when not found in ItemManager
+     */
+    private void fetchItemFromApi(String itemId) {
+        // Run on background thread to avoid NetworkOnMainThreadException
+        new Thread(() -> {
+            try {
+                com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(this);
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItemById(itemId);
+                
+                if (response.isSuccess() && response.getData() != null) {
+                    // Parse the item from response
+                    Item item = parseItemFromApiResponse(response.getData());
+                    if (item != null) {
+                        // Store in ItemManager for future lookups
+                        itemManager.storeItem(item);
+                        android.util.Log.i("ItemDetailActivity", "Item fetched from API and stored in ItemManager: " + item.getTitle());
+                        
+                        // Update UI on main thread
+                        runOnUiThread(() -> {
+                            currentItem = item;
+                            populateItemDataFromDatabase();
+                            loadItemImages();
+                            com.cc106.bidhub.utils.ErrorHandler.logInfo(
+                                "ItemDetailActivity", 
+                                "Successfully loaded item data from API",
+                                String.format("ItemID: %s, Title: %s", itemId, item.getTitle())
+                            );
+                        });
+                    } else {
+                        android.util.Log.e("ItemDetailActivity", "Failed to parse item from API response");
+                        runOnUiThread(() -> {
+                            showItemNotFoundError(itemId);
+                        });
+                    }
+                } else {
+                    android.util.Log.w("ItemDetailActivity", "API returned error: " + response.getMessage());
+                    runOnUiThread(() -> {
+                        showItemNotFoundError(itemId);
+                    });
+                }
+            } catch (Exception e) {
+                android.util.Log.e("ItemDetailActivity", "Error fetching item from API", e);
+                runOnUiThread(() -> {
+                    showItemNotFoundError(itemId);
+                });
+            }
+        }).start();
+    }
+    
+    /**
+     * Parse Item object from API response JSON
+     */
+    private Item parseItemFromApiResponse(String responseData) {
+        try {
+            org.json.JSONObject jsonResponse = new org.json.JSONObject(responseData);
+            org.json.JSONObject itemJson = jsonResponse.getJSONObject("item");
+            
+            Item item = new Item();
+            
+            // Parse basic fields
+            item.setItemId(itemJson.optString("id", itemJson.optString("uuid_id", "")));
+            item.setTitle(itemJson.getString("title"));
+            item.setDescription(itemJson.optString("description", ""));
+            item.setStartingPrice(itemJson.optDouble("starting_bid", itemJson.optDouble("starting_price", 0.0)));
+            item.setCurrentPrice(itemJson.optDouble("current_bid", itemJson.optDouble("current_price", 0.0)));
+            item.setCategoryId(itemJson.optString("category_id", ""));
+            item.setSellerId(itemJson.optString("seller_email", itemJson.optString("seller_id", "")));
+            item.setCondition(itemJson.optString("item_condition", itemJson.optString("condition", "good")));
+            
+            // Parse status
+            String status = itemJson.optString("status", "active");
+            switch (status) {
+                case "active":
+                    item.setStatus(com.cc106.bidhub.items.ItemStatus.ACTIVE);
+                    break;
+                case "ended":
+                case "sold":
+                    item.setStatus(com.cc106.bidhub.items.ItemStatus.ENDED);
+                    break;
+                case "cancelled":
+                    item.setStatus(com.cc106.bidhub.items.ItemStatus.CANCELLED);
+                    break;
+                default:
+                    item.setStatus(com.cc106.bidhub.items.ItemStatus.DRAFT);
+                    break;
+            }
+            
+            // Parse images if available
+            if (itemJson.has("images")) {
+                try {
+                    Object imagesObj = itemJson.get("images");
+                    List<String> imagePaths = new ArrayList<>();
+                    
+                    if (imagesObj instanceof org.json.JSONArray) {
+                        org.json.JSONArray imagesArray = (org.json.JSONArray) imagesObj;
+                        for (int j = 0; j < imagesArray.length(); j++) {
+                            Object imageObj = imagesArray.get(j);
+                            if (imageObj instanceof org.json.JSONObject) {
+                                org.json.JSONObject imageJson = (org.json.JSONObject) imageObj;
+                                if (imageJson.has("image_url")) {
+                                    imagePaths.add(imageJson.getString("image_url"));
+                                }
+                            } else if (imageObj instanceof String) {
+                                imagePaths.add((String) imageObj);
+                            }
+                        }
+                    } else if (imagesObj instanceof String) {
+                        String imagesString = (String) imagesObj;
+                        if (!imagesString.isEmpty() && !imagesString.equals("null")) {
+                            org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
+                            for (int j = 0; j < imagesArray.length(); j++) {
+                                imagePaths.add(imagesArray.getString(j));
+                            }
+                        }
+                    }
+                    
+                    item.setImagePaths(imagePaths);
+                } catch (Exception e) {
+                    android.util.Log.w("ItemDetailActivity", "Error parsing images for item", e);
+                    item.setImagePaths(new ArrayList<>());
+                }
+            }
+            
+            return item;
+        } catch (Exception e) {
+            android.util.Log.e("ItemDetailActivity", "Error parsing item from API response", e);
+            return null;
+        }
+    }
+    
+    /**
+     * Show error when item is not found
+     */
+    private void showItemNotFoundError(String itemId) {
+        com.cc106.bidhub.utils.ErrorHandler.logWarning(
+            "ItemDetailActivity", 
+            "Item not found in database or API, showing sample data",
+            String.format("ItemID: %s", itemId)
+        );
+        android.widget.Toast.makeText(this, "Item not found. Showing sample data.", android.widget.Toast.LENGTH_SHORT).show();
+        populateItemData();
+        loadSampleImages();
     }
     
     private void loadItemImages() {
