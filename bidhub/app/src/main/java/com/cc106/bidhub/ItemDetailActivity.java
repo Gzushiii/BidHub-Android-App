@@ -978,29 +978,56 @@ public class ItemDetailActivity extends AppCompatActivity {
                     List<String> imagePaths = new ArrayList<>();
                     
                     if (imagesObj instanceof org.json.JSONArray) {
+                        // Images is a JSON array
                         org.json.JSONArray imagesArray = (org.json.JSONArray) imagesObj;
                         for (int j = 0; j < imagesArray.length(); j++) {
                             Object imageObj = imagesArray.get(j);
-                            if (imageObj instanceof org.json.JSONObject) {
-                                org.json.JSONObject imageJson = (org.json.JSONObject) imageObj;
-                                if (imageJson.has("image_url")) {
-                                    imagePaths.add(imageJson.getString("image_url"));
+                            if (imageObj instanceof String) {
+                                // Direct URL string
+                                String url = (String) imageObj;
+                                if (url != null && !url.isEmpty() && !url.equals("null")) {
+                                    imagePaths.add(url);
                                 }
-                            } else if (imageObj instanceof String) {
-                                imagePaths.add((String) imageObj);
+                            } else if (imageObj instanceof org.json.JSONObject) {
+                                // Image object with image_url field
+                                org.json.JSONObject imageJson = (org.json.JSONObject) imageObj;
+                                String imageUrl = imageJson.optString("image_url", imageJson.optString("url", ""));
+                                if (!imageUrl.isEmpty() && !imageUrl.equals("null")) {
+                                    imagePaths.add(imageUrl);
+                                }
                             }
                         }
                     } else if (imagesObj instanceof String) {
+                        // Images is a JSON string, parse it
                         String imagesString = (String) imagesObj;
                         if (!imagesString.isEmpty() && !imagesString.equals("null")) {
-                            org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
-                            for (int j = 0; j < imagesArray.length(); j++) {
-                                imagePaths.add(imagesArray.getString(j));
+                            try {
+                                org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
+                                for (int j = 0; j < imagesArray.length(); j++) {
+                                    Object imageObj = imagesArray.get(j);
+                                    if (imageObj instanceof String) {
+                                        imagePaths.add((String) imageObj);
+                                    } else if (imageObj instanceof org.json.JSONObject) {
+                                        org.json.JSONObject imageJson = (org.json.JSONObject) imageObj;
+                                        String imageUrl = imageJson.optString("image_url", imageJson.optString("url", ""));
+                                        if (!imageUrl.isEmpty()) {
+                                            imagePaths.add(imageUrl);
+                                        }
+                                    }
+                                }
+                            } catch (org.json.JSONException e) {
+                                android.util.Log.w("ItemDetailActivity", "Error parsing images string: " + imagesString, e);
                             }
                         }
                     }
                     
-                    item.setImagePaths(imagePaths);
+                    if (!imagePaths.isEmpty()) {
+                        item.setImagePaths(imagePaths);
+                        android.util.Log.d("ItemDetailActivity", "Parsed " + imagePaths.size() + " images for item: " + item.getTitle());
+                    } else {
+                        android.util.Log.d("ItemDetailActivity", "No images found for item: " + item.getTitle());
+                        item.setImagePaths(new ArrayList<>());
+                    }
                 } catch (Exception e) {
                     android.util.Log.w("ItemDetailActivity", "Error parsing images for item", e);
                     item.setImagePaths(new ArrayList<>());

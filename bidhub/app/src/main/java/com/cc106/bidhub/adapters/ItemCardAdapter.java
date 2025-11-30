@@ -137,25 +137,44 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
         if (item.getImagePaths() != null && !item.getImagePaths().isEmpty()) {
             // Load first image from user uploads using Glide
             String firstImagePath = item.getImagePaths().get(0);
-            com.cc106.bidhub.utils.ImageLoader.loadImageWithErrorCallback(
-                holder.itemImage.getContext(),
-                firstImagePath,
-                holder.itemImage,
-                new com.cc106.bidhub.utils.ImageLoader.ImageLoadErrorCallback() {
-                    @Override
-                    public void onError(String errorMessage) {
-                        com.cc106.bidhub.utils.ErrorHandler.handleImageError(
-                            holder.itemImage.getContext(),
-                            firstImagePath,
-                            null,
-                            "ItemCardAdapter image load"
-                        );
-                    }
+            
+            // Validate image URL before loading
+            if (firstImagePath != null && !firstImagePath.isEmpty() && !firstImagePath.equals("null")) {
+                // Show image count badge if multiple images
+                if (item.getImagePaths().size() > 1 && holder.imageCountCard != null && holder.imageCountText != null) {
+                    holder.imageCountCard.setVisibility(View.VISIBLE);
+                    holder.imageCountText.setText(String.valueOf(item.getImagePaths().size()));
+                } else if (holder.imageCountCard != null) {
+                    holder.imageCountCard.setVisibility(View.GONE);
                 }
-            );
+                
+                com.cc106.bidhub.utils.ImageLoader.loadImageWithErrorCallback(
+                    holder.itemImage.getContext(),
+                    firstImagePath,
+                    holder.itemImage,
+                    new com.cc106.bidhub.utils.ImageLoader.ImageLoadErrorCallback() {
+                        @Override
+                        public void onError(String errorMessage) {
+                            android.util.Log.w("ItemCardAdapter", "Failed to load image: " + firstImagePath + " - " + errorMessage);
+                            // Fallback to placeholder on error
+                            com.cc106.bidhub.utils.ImageLoader.loadPlaceholder(holder.itemImage.getContext(), holder.itemImage);
+                        }
+                    }
+                );
+            } else {
+                // Invalid image path, use placeholder
+                android.util.Log.w("ItemCardAdapter", "Invalid image path for item: " + item.getTitle());
+                com.cc106.bidhub.utils.ImageLoader.loadPlaceholder(holder.itemImage.getContext(), holder.itemImage);
+                if (holder.imageCountCard != null) {
+                    holder.imageCountCard.setVisibility(View.GONE);
+                }
+            }
         } else {
             // No images uploaded, use placeholder
             com.cc106.bidhub.utils.ImageLoader.loadPlaceholder(holder.itemImage.getContext(), holder.itemImage);
+            if (holder.imageCountCard != null) {
+                holder.imageCountCard.setVisibility(View.GONE);
+            }
         }
         
         
@@ -227,6 +246,8 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
         TextView bidCountText;
         TextView timeRemainingText;
         TextView endingSoonText;
+        com.google.android.material.card.MaterialCardView imageCountCard;
+        TextView imageCountText;
         
         ItemViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -237,6 +258,8 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             bidCountText = itemView.findViewById(R.id.tv_bid_count);
             timeRemainingText = itemView.findViewById(R.id.tv_time_remaining);
             endingSoonText = itemView.findViewById(R.id.tv_ending_soon);
+            imageCountCard = itemView.findViewById(R.id.card_image_count);
+            imageCountText = itemView.findViewById(R.id.tv_image_count);
         }
     }
 }

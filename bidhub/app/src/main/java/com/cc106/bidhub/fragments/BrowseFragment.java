@@ -153,7 +153,14 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         
         swipeRefreshLayout.setOnRefreshListener(() -> {
             // Refresh items when user pulls down
-            loadItems();
+            // Prevent duplicate refresh calls
+            if (!isLoading) {
+                android.util.Log.d("BrowseFragment", "Swipe refresh triggered");
+                loadItems();
+            } else {
+                android.util.Log.d("BrowseFragment", "Swipe refresh ignored - already loading");
+                swipeRefreshLayout.setRefreshing(false);
+            }
         });
     }
     
@@ -167,7 +174,29 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         
         // Set layout manager based on view type
         if (isGridView) {
+            // Use GridLayoutManager with 2 columns and proper spacing
             GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
+            // Add spacing between items
+            androidx.recyclerview.widget.RecyclerView.ItemDecoration spacingDecoration = 
+                new androidx.recyclerview.widget.RecyclerView.ItemDecoration() {
+                    @Override
+                    public void getItemOffsets(android.graphics.Rect outRect, View view, 
+                                             androidx.recyclerview.widget.RecyclerView parent, 
+                                             androidx.recyclerview.widget.RecyclerView.State state) {
+                        int spacing = (int) (8 * view.getContext().getResources().getDisplayMetrics().density);
+                        outRect.left = spacing / 2;
+                        outRect.right = spacing / 2;
+                        outRect.top = spacing / 2;
+                        outRect.bottom = spacing / 2;
+                    }
+                };
+            // Remove existing decorations to avoid duplicates
+            if (rvItems.getItemDecorationCount() > 0) {
+                for (int i = rvItems.getItemDecorationCount() - 1; i >= 0; i--) {
+                    rvItems.removeItemDecorationAt(i);
+                }
+            }
+            rvItems.addItemDecoration(spacingDecoration);
             rvItems.setLayoutManager(layoutManager);
         } else {
             LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
@@ -175,6 +204,9 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         }
         
         rvItems.setAdapter(itemAdapter);
+        // Ensure RecyclerView doesn't clip children
+        rvItems.setClipToPadding(false);
+        rvItems.setClipChildren(false);
     }
     
     private void setupSearch() {
@@ -437,27 +469,61 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                         .collect(java.util.stream.Collectors.toList());
                     android.util.Log.d("BrowseFragment", "Loaded " + activeItems.size() + " active items from database (filtered from " + dbItems.size() + " total)");
                     
-                    if (getActivity() != null && !getActivity().isFinishing()) {
-                        getActivity().runOnUiThread(() -> {
-                            if (isAdded() && !isDetached()) {
-                                allItems.clear();
-                                allItems.addAll(activeItems);
-                                isLoading = false; // Reset loading flag
-                                applyFilters();
-                            } else {
-                                isLoading = false;
-                            }
-                        });
+                    // CRITICAL: Only update items if we have valid data
+                    if (!activeItems.isEmpty() || dbItems.isEmpty()) {
+                        // Only clear if we have new data OR if API explicitly returned empty (not an error)
+                        if (getActivity() != null && !getActivity().isFinishing()) {
+                            getActivity().runOnUiThread(() -> {
+                                if (isAdded() && !isDetached()) {
+                                    // Preserve existing items if new data is empty (might be temporary)
+                                    if (!activeItems.isEmpty()) {
+                                        allItems.clear();
+                                        allItems.addAll(activeItems);
+                                        android.util.Log.d("BrowseFragment", "Updated allItems with " + activeItems.size() + " items from API");
+                                    } else {
+                                        android.util.Log.w("BrowseFragment", "API returned empty items list - preserving existing " + allItems.size() + " items");
+                                    }
+                                    isLoading = false;
+                                    swipeRefreshLayout.setRefreshing(false);
+                                    applyFilters();
+                                } else {
+                                    isLoading = false;
+                                    swipeRefreshLayout.setRefreshing(false);
+                                }
+                            });
+                        } else {
+                            isLoading = false;
+                        }
                     } else {
-                        isLoading = false;
+                        // API returned data but all items were filtered out - preserve existing
+                        android.util.Log.w("BrowseFragment", "All items filtered out, preserving existing items");
+                        if (getActivity() != null && !getActivity().isFinishing()) {
+                            getActivity().runOnUiThread(() -> {
+                                isLoading = false;
+                                swipeRefreshLayout.setRefreshing(false);
+                                // Don't clear items, just refresh filters
+                                applyFilters();
+                            });
+                        } else {
+                            isLoading = false;
+                        }
                     }
                 } else {
-                    // Fallback to local items
-                    android.util.Log.d("BrowseFragment", "Database fetch failed: " + (response.getMessage() != null ? response.getMessage() : "Unknown error") + ", using local items");
+                    // API call failed - preserve existing items, don't clear
+                    android.util.Log.w("BrowseFragment", "Database fetch failed: " + (response.getMessage() != null ? response.getMessage() : "Unknown error") + ", preserving existing items");
                     if (getActivity() != null && !getActivity().isFinishing()) {
                         getActivity().runOnUiThread(() -> {
                             isLoading = false;
-                            loadLocalItems();
+                            swipeRefreshLayout.setRefreshing(false);
+                            // Don't clear items on error - preserve what we have
+                            android.util.Log.d("BrowseFragment", "Preserving " + allItems.size() + " existing items after API failure");
+                            // Try local fallback only if we have no items
+                            if (allItems.isEmpty()) {
+                                loadLocalItems();
+                            } else {
+                                // Refresh display with existing items
+                                applyFilters();
+                            }
                         });
                     } else {
                         isLoading = false;
@@ -495,17 +561,22 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                 if (getActivity() != null && !getActivity().isFinishing()) {
                     getActivity().runOnUiThread(() -> {
                         if (isAdded() && !isDetached()) { // Check if fragment is still added to activity
-                            allItems.clear();
-                            allItems.addAll(activeItems);
+                            // Only update if we have items, otherwise preserve existing
+                            if (!activeItems.isEmpty()) {
+                                allItems.clear();
+                                allItems.addAll(activeItems);
+                                android.util.Log.d("BrowseFragment", "Updated allItems with " + allItems.size() + " active local items");
+                            } else {
+                                android.util.Log.w("BrowseFragment", "Local items list is empty - preserving existing " + allItems.size() + " items");
+                            }
                             isLoading = false; // Reset loading flag
-                            
-                            // Debug: Log after updating allItems
-                            android.util.Log.d("BrowseFragment", "Updated allItems with " + allItems.size() + " active items");
+                            swipeRefreshLayout.setRefreshing(false);
                             
                             // Apply current filters
                             applyFilters();
                         } else {
                             isLoading = false;
+                            swipeRefreshLayout.setRefreshing(false);
                         }
                     });
                 } else {
@@ -941,8 +1012,17 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     }
     
     @Override
+    @Override
     public void onResume() {
         super.onResume();
+        // Only refresh if items are empty or if explicitly needed
+        // Don't refresh on every resume to prevent items disappearing
+        if (allItems.isEmpty() && !isLoading) {
+            android.util.Log.d("BrowseFragment", "onResume: Items empty, loading...");
+            loadItems();
+        } else {
+            android.util.Log.d("BrowseFragment", "Skipping refresh on resume - items already loaded");
+        }
         // Only refresh if items list is empty or if explicitly needed
         // This prevents duplicate loads when fragment is already visible
         if (allItems.isEmpty() && !isLoading) {
