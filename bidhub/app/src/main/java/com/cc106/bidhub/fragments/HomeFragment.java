@@ -405,11 +405,6 @@ public class HomeFragment extends Fragment {
             String alias = prefsHelper.getAlias();
             double credits = prefsHelper.getCredits();
 
-            // Update the UI
-            if (textViewAlias != null) {
-                textViewAlias.setText(alias != null ? alias : "User");
-            }
-            
             // Update credit balance (header)
             if (tvHeaderCredits != null) {
                 tvHeaderCredits.setText(String.format(Locale.getDefault(), "%.0f", credits));
@@ -468,7 +463,7 @@ public class HomeFragment extends Fragment {
         }
         
         try {
-            List<Item> items = itemManager.getActiveItems();
+            List<Item> items = itemManager.getAllActiveItems();
             if (items == null) {
                 items = new ArrayList<>();
             }

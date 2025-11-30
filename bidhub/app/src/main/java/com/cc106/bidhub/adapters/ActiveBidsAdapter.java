@@ -144,11 +144,10 @@ public class ActiveBidsAdapter extends RecyclerView.Adapter<ActiveBidsAdapter.Ac
             
             // Load item image
             if (item != null && item.getImagePaths() != null && !item.getImagePaths().isEmpty()) {
-                com.cc106.bidhub.utils.ImageLoader.loadImageWithErrorCallback(
+                com.cc106.bidhub.utils.ImageLoader.loadImage(
                     context,
                     item.getImagePaths().get(0),
-                    ivItemImage,
-                    R.drawable.ic_image_placeholder
+                    ivItemImage
                 );
             } else {
                 ivItemImage.setImageResource(R.drawable.ic_image_placeholder);

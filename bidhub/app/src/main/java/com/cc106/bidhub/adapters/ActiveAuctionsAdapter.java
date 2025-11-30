@@ -138,11 +138,10 @@ public class ActiveAuctionsAdapter extends RecyclerView.Adapter<ActiveAuctionsAd
             
             // Load image
             if (item.getImagePaths() != null && !item.getImagePaths().isEmpty()) {
-                ImageLoader.loadImageWithErrorCallback(
+                ImageLoader.loadImage(
                     context,
                     item.getImagePaths().get(0),
-                    ivItemImage,
-                    R.drawable.ic_image_placeholder
+                    ivItemImage
                 );
             } else {
                 ivItemImage.setImageResource(R.drawable.ic_image_placeholder);
