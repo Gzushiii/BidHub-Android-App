@@ -42,7 +42,7 @@ import java.util.Locale;
 public class ItemDetailActivity extends AppCompatActivity {
 
     private ImageView ivItemImage, ivSellerAvatar;
-    private TextView tvItemTitle, tvItemCategory, tvStartingBid, tvCurrentBid, tvTimeLeft, tvDescription, tvSellerName, tvSellerRating;
+    private TextView tvItemTitle, tvItemCategory, tvStartingBid, tvCurrentBid, tvTimeLeft, tvDescription, tvSellerName, tvSellerRating, tvBidCount;
     private EditText etBidAmount;
     private Button btnPlaceBid, btnBuyNow;
     private ImageButton btnBack, btnShare, btnFavorite;
@@ -218,6 +218,9 @@ public class ItemDetailActivity extends AppCompatActivity {
             tvSellerRating = findViewById(R.id.tv_seller_rating);
             android.util.Log.d("ItemDetailActivity", "tvSellerRating initialized");
             
+            tvBidCount = findViewById(R.id.tv_bid_count);
+            android.util.Log.d("ItemDetailActivity", "tvBidCount initialized");
+            
             
             etBidAmount = findViewById(R.id.et_bid_amount);
             android.util.Log.d("ItemDetailActivity", "etBidAmount initialized");
@@ -383,6 +386,18 @@ public class ItemDetailActivity extends AppCompatActivity {
             tvStartingBid.setText(currencyFormat.format(currentItem.getStartingPrice()));
             tvCurrentBid.setText(currencyFormat.format(currentItem.getCurrentPrice()));
             tvDescription.setText(currentItem.getDescription());
+            
+            // Display bid count
+            if (tvBidCount != null) {
+                int bidCount = currentItem.getBidCount();
+                if (bidCount > 0) {
+                    tvBidCount.setText(bidCount + (bidCount == 1 ? " bid" : " bids"));
+                    tvBidCount.setVisibility(View.VISIBLE);
+                } else {
+                    tvBidCount.setText("No bids yet");
+                    tvBidCount.setVisibility(View.VISIBLE);
+                }
+            }
             
             // Calculate and display time left
             String timeLeft = calculateTimeLeft(currentItem.getEndDate());
@@ -889,7 +904,53 @@ public class ItemDetailActivity extends AppCompatActivity {
             item.setStartingPrice(itemJson.optDouble("starting_bid", itemJson.optDouble("starting_price", 0.0)));
             item.setCurrentPrice(itemJson.optDouble("current_bid", itemJson.optDouble("current_price", 0.0)));
             item.setCategoryId(itemJson.optString("category_id", ""));
+            item.setCategoryName(itemJson.optString("category_name", ""));
             item.setSellerId(itemJson.optString("seller_email", itemJson.optString("seller_id", "")));
+            
+            // Parse seller username
+            String sellerUsername = itemJson.optString("seller_username", null);
+            if (sellerUsername != null && !sellerUsername.isEmpty()) {
+                item.setSellerName(sellerUsername);
+            } else {
+                // Fallback: extract from email
+                String sellerEmail = itemJson.optString("seller_email", "");
+                if (!sellerEmail.isEmpty() && sellerEmail.contains("@")) {
+                    int atIndex = sellerEmail.indexOf('@');
+                    if (atIndex > 0) {
+                        item.setSellerName(sellerEmail.substring(0, atIndex));
+                    } else {
+                        item.setSellerName("Unknown Seller");
+                    }
+                } else {
+                    item.setSellerName("Unknown Seller");
+                }
+            }
+            
+            // Parse bid count
+            int bidCount = itemJson.optInt("bid_count", 0);
+            item.setBidCount(bidCount);
+            
+            // Parse end date
+            if (itemJson.has("end_date") && !itemJson.isNull("end_date")) {
+                try {
+                    String endDateStr = itemJson.getString("end_date");
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+                    sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                    item.setEndDate(sdf.parse(endDateStr));
+                } catch (Exception e) {
+                    android.util.Log.w("ItemDetailActivity", "Error parsing end_date: " + e.getMessage());
+                }
+            } else if (itemJson.has("bid_deadline") && !itemJson.isNull("bid_deadline")) {
+                try {
+                    String deadlineStr = itemJson.getString("bid_deadline");
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+                    sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                    item.setEndDate(sdf.parse(deadlineStr));
+                } catch (Exception e) {
+                    android.util.Log.w("ItemDetailActivity", "Error parsing bid_deadline: " + e.getMessage());
+                }
+            }
+            
             item.setCondition(itemJson.optString("item_condition", itemJson.optString("condition", "good")));
             
             // Parse status
@@ -1100,6 +1161,18 @@ public class ItemDetailActivity extends AppCompatActivity {
     
     private void loadSellerInformation(String sellerId) {
         try {
+            // Use seller name from item if available (from API)
+            if (currentItem != null && currentItem.getSellerName() != null && !currentItem.getSellerName().isEmpty()) {
+                tvSellerName.setText(currentItem.getSellerName());
+                tvSellerRating.setText("4.5 (50 reviews)");
+                com.cc106.bidhub.utils.ErrorHandler.logInfo(
+                    "ItemDetailActivity", 
+                    "Successfully loaded seller username from item",
+                    String.format("SellerID: %s, Username: %s", sellerId, currentItem.getSellerName())
+                );
+                return;
+            }
+            
             // Try to load seller information from database
             String username = getUsernameFromDatabase(sellerId);
             if (username != null && !username.isEmpty()) {
@@ -1108,7 +1181,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                 tvSellerRating.setText("4.5 (50 reviews)");
                 com.cc106.bidhub.utils.ErrorHandler.logInfo(
                     "ItemDetailActivity", 
-                    "Successfully loaded seller username",
+                    "Successfully loaded seller username from database",
                     String.format("SellerID: %s, Username: %s", sellerId, username)
                 );
             } else {
@@ -1373,12 +1446,37 @@ public class ItemDetailActivity extends AppCompatActivity {
                 );
                 
                 if (result.isSuccess()) {
+                    // Refresh credit balance after successful bid
+                    com.cc106.bidhub.utils.CreditBalanceManager.refreshBalance(
+                        ItemDetailActivity.this,
+                        new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
+                            @Override
+                            public void onBalanceUpdated(double newBalance) {
+                                // Balance updated, continue with UI updates
+                            }
+                            
+                            @Override
+                            public void onError(String errorMessage) {
+                                // Silent fail
+                            }
+                        }
+                    );
+                    
                     // Update UI on main thread
                     runOnUiThread(() -> {
                         android.widget.Toast.makeText(this, "Bid of " + currencyFormat.format(bidAmount) + " placed successfully!", android.widget.Toast.LENGTH_LONG).show();
                         
                         // Update current bid display
                         tvCurrentBid.setText(currencyFormat.format(bidAmount));
+                        
+                        // Update bid count
+                        if (currentItem != null) {
+                            currentItem.incrementBidCount();
+                            if (tvBidCount != null) {
+                                int bidCount = currentItem.getBidCount();
+                                tvBidCount.setText(bidCount + (bidCount == 1 ? " bid" : " bids"));
+                            }
+                        }
                         
                         // Clear bid input
                         etBidAmount.setText("");
@@ -1831,24 +1929,23 @@ public class ItemDetailActivity extends AppCompatActivity {
                 return;
             }
 
-            // Refresh credits from backend
-            try {
-                java.net.URL balUrl = new java.net.URL("https://bidhub-android-app.onrender.com/api/credits/balance");
-                java.net.HttpURLConnection balConn = (java.net.HttpURLConnection) balUrl.openConnection();
-                balConn.setRequestMethod("GET");
-                balConn.setRequestProperty("Authorization", "Bearer " + token);
-                balConn.setConnectTimeout(60000);
-                balConn.setReadTimeout(60000);
-                int balCode = balConn.getResponseCode();
-                if (balCode >= 200 && balCode < 300) {
-                    java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(balConn.getInputStream()));
-                    StringBuilder r = new StringBuilder();
-                    String l; while ((l = br.readLine()) != null) r.append(l); br.close();
-                    org.json.JSONObject balJson = new org.json.JSONObject(r.toString());
-                    double newBal = balJson.optDouble("credits", balJson.optDouble("balance", userBalance));
-                    prefsHelper.setCredits(newBal);
+            // Refresh credits from backend using CreditBalanceManager
+            com.cc106.bidhub.utils.CreditBalanceManager.refreshBalance(
+                this,
+                new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
+                    @Override
+                    public void onBalanceUpdated(double newBalance) {
+                        // Balance updated in SharedPreferences, UI will reflect on next refresh
+                        Log.i("ItemDetailActivity", "Balance refreshed after buy now: " + newBalance);
+                    }
+                    
+                    @Override
+                    public void onError(String errorMessage) {
+                        // Silent fail
+                        Log.w("ItemDetailActivity", "Failed to refresh balance: " + errorMessage);
+                    }
                 }
-            } catch (Exception ignored) {}
+            );
 
             {
                 // Update item status to sold

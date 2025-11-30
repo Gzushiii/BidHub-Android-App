@@ -177,35 +177,24 @@ public class ProfileFragment extends Fragment {
     private static final String BASE_URL = "https://bidhub-android-app.onrender.com/api";
 
     private void refreshCreditsFromBackend() {
-        new Thread(() -> {
-            try {
-                String token = prefsHelper.getAuthToken();
-                if (token == null || token.isEmpty()) {
-                    return;
-                }
-                URL url = new URL(BASE_URL + "/credits/balance");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Authorization", "Bearer " + token);
-                int code = conn.getResponseCode();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream()
-                ));
-                StringBuilder sb = new StringBuilder();
-                String line; while ((line = reader.readLine()) != null) sb.append(line);
-                reader.close();
-                if (code >= 200 && code < 300) {
-                    JSONObject json = new JSONObject(sb.toString());
-                    double credits = json.optDouble("credits", prefsHelper.getCredits());
-                    prefsHelper.setCredits(credits);
-                    if (getActivity() != null) {
-                        getActivity().runOnUiThread(() -> {
-                            if (textViewCredits != null) textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", credits));
-                        });
+        com.cc106.bidhub.utils.CreditBalanceManager.refreshBalance(
+            getContext(),
+            new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
+                @Override
+                public void onBalanceUpdated(double newBalance) {
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        if (textViewCredits != null) {
+                            textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", newBalance));
+                        }
                     }
                 }
-            } catch (Exception ignored) { }
-        }).start();
+                
+                @Override
+                public void onError(String errorMessage) {
+                    // Silent fail - use cached value
+                }
+            }
+        );
     }
 
     private void regenerateAlias() {

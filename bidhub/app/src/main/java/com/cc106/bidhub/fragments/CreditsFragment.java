@@ -162,8 +162,26 @@ public class CreditsFragment extends Fragment {
     }
     
     private void refreshBalance() {
-        // Fetch from backend and sync
-        fetchBalanceFromBackend();
+        // Fetch from backend and sync using CreditBalanceManager
+        com.cc106.bidhub.utils.CreditBalanceManager.refreshBalance(
+            getContext(),
+            new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
+                @Override
+                public void onBalanceUpdated(double newBalance) {
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        updateBalanceDisplay();
+                        ToastHelper.showInfo(getContext(), "Balance updated");
+                    }
+                }
+                
+                @Override
+                public void onError(String errorMessage) {
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        ToastHelper.showError(getContext(), "Failed to refresh balance: " + errorMessage);
+                    }
+                }
+            }
+        );
     }
     
     private void loadCreditPackages() {
@@ -362,7 +380,22 @@ public class CreditsFragment extends Fragment {
                             balanceAmount.setText(creditManager.formatCurrency(newBalance));
                         }
                         // Refresh balance from backend to ensure consistency
-                        fetchBalanceFromBackend();
+                        com.cc106.bidhub.utils.CreditBalanceManager.refreshBalance(
+                            getContext(),
+                            new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
+                                @Override
+                                public void onBalanceUpdated(double newBalance) {
+                                    if (getActivity() != null && !getActivity().isFinishing()) {
+                                        updateBalanceDisplay();
+                                    }
+                                }
+                                
+                                @Override
+                                public void onError(String errorMessage) {
+                                    // Silent fail - balance was already updated from callback
+                                }
+                            }
+                        );
                     });
                 }
                 
@@ -663,9 +696,26 @@ public class CreditsFragment extends Fragment {
                 @Override
                 public void onPaymentSuccess(String transactionId, String reference) {
                     getActivity().runOnUiThread(() -> {
-                        // Deprecated local add; we rely on backend now
-                        fetchBalanceFromBackend();
-                        ToastHelper.showSuccess(getContext(), "Purchase successful!");
+                        // Refresh balance from backend after successful payment
+                        com.cc106.bidhub.utils.CreditBalanceManager.refreshBalance(
+                            getContext(),
+                            new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
+                                @Override
+                                public void onBalanceUpdated(double newBalance) {
+                                    if (getActivity() != null && !getActivity().isFinishing()) {
+                                        updateBalanceDisplay();
+                                        ToastHelper.showSuccess(getContext(), "Purchase successful!");
+                                    }
+                                }
+                                
+                                @Override
+                                public void onError(String errorMessage) {
+                                    if (getActivity() != null && !getActivity().isFinishing()) {
+                                        ToastHelper.showSuccess(getContext(), "Purchase successful! Balance will update shortly.");
+                                    }
+                                }
+                            }
+                        );
                     });
                 }
                 
@@ -762,8 +812,25 @@ public class CreditsFragment extends Fragment {
 
                 if (code >= 200 && code < 300) {
                     // After successful purchase, refresh from backend to keep UI and cache in sync
-                    fetchBalanceFromBackend();
-                    getActivity().runOnUiThread(() -> ToastHelper.showSuccess(getContext(), "Purchase successful! ₱" + amount + " credits added."));
+                    com.cc106.bidhub.utils.CreditBalanceManager.refreshBalance(
+                        getContext(),
+                        new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
+                            @Override
+                            public void onBalanceUpdated(double newBalance) {
+                                if (getActivity() != null && !getActivity().isFinishing()) {
+                                    updateBalanceDisplay();
+                                    ToastHelper.showSuccess(getContext(), "Purchase successful! ₱" + amount + " credits added.");
+                                }
+                            }
+                            
+                            @Override
+                            public void onError(String errorMessage) {
+                                if (getActivity() != null && !getActivity().isFinishing()) {
+                                    ToastHelper.showSuccess(getContext(), "Purchase successful! Balance will update shortly.");
+                                }
+                            }
+                        }
+                    );
                 } else {
                     getActivity().runOnUiThread(() -> ToastHelper.showError(getContext(), "Purchase failed"));
                 }

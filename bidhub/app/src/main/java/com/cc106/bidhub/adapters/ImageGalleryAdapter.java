@@ -1,13 +1,16 @@
 package com.cc106.bidhub.adapters;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.cc106.bidhub.FullScreenImageActivity;
 import com.cc106.bidhub.R;
 import com.cc106.bidhub.utils.ImageLoader;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ImageGalleryAdapter extends RecyclerView.Adapter<ImageGalleryAdapter.ImageViewHolder> {
@@ -15,20 +18,22 @@ public class ImageGalleryAdapter extends RecyclerView.Adapter<ImageGalleryAdapte
     private List<String> images;
     
     public ImageGalleryAdapter() {
-        this.images = new java.util.ArrayList<>();
+        this.images = new ArrayList<>();
     }
     
     public void setImages(List<String> images) {
-        this.images = images != null ? images : new java.util.ArrayList<>();
+        this.images = images != null ? images : new ArrayList<>();
         notifyDataSetChanged();
     }
     
     @NonNull
     @Override
     public ImageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        // Use ViewPager layout for full-screen images (used in ItemDetailActivity)
+        // This adapter is primarily used with ViewPager2 for image galleries
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_image_gallery, parent, false);
-        return new ImageViewHolder(view);
+                .inflate(R.layout.item_viewpager_image, parent, false);
+        return new ImageViewHolder(view, images);
     }
     
     @Override
@@ -57,7 +62,18 @@ public class ImageGalleryAdapter extends RecyclerView.Adapter<ImageGalleryAdapte
         );
         
         // Set content description for accessibility
-        holder.imageView.setContentDescription("Item image " + (position + 1));
+        holder.imageView.setContentDescription("Item image " + (position + 1) + ". Tap to view full screen");
+        
+        // Set click listener to open full-screen viewer (only if not already in ViewPager2)
+        // ViewPager2 items should be clickable to open full-screen viewer
+        holder.imageView.setOnClickListener(v -> {
+            if (v.getContext() != null) {
+                Intent intent = new Intent(v.getContext(), FullScreenImageActivity.class);
+                intent.putStringArrayListExtra("IMAGES", new ArrayList<>(images));
+                intent.putExtra("POSITION", position);
+                v.getContext().startActivity(intent);
+            }
+        });
     }
     
     @Override
@@ -68,7 +84,7 @@ public class ImageGalleryAdapter extends RecyclerView.Adapter<ImageGalleryAdapte
     static class ImageViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
         
-        ImageViewHolder(@NonNull View itemView) {
+        ImageViewHolder(@NonNull View itemView, List<String> images) {
             super(itemView);
             imageView = itemView.findViewById(R.id.iv_gallery_image);
         }

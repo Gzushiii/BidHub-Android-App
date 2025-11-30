@@ -42,10 +42,12 @@ async function fetchActiveItem(itemId, connection = null) {
         i.status,
         i.created_at,
         i.updated_at,
+        i.end_date,
         u.username as seller_username,
         u.email as seller_user_email,
         c.name as category_name,
-        c.description as category_description
+        c.description as category_description,
+        (SELECT COUNT(*) FROM bids WHERE item_id = i.id OR item_uuid_id = i.uuid_id) as bid_count
       FROM items i
       LEFT JOIN users u ON i.seller_id = u.id
       LEFT JOIN categories c ON i.category_id = c.id
@@ -102,10 +104,12 @@ async function fetchItemById(itemId, connection = null) {
         i.status,
         i.created_at,
         i.updated_at,
+        i.end_date,
         u.username as seller_username,
         u.email as seller_user_email,
         c.name as category_name,
-        c.description as category_description
+        c.description as category_description,
+        (SELECT COUNT(*) FROM bids WHERE item_id = i.id OR item_uuid_id = i.uuid_id) as bid_count
       FROM items i
       LEFT JOIN users u ON i.seller_id = u.id
       LEFT JOIN categories c ON i.category_id = c.id

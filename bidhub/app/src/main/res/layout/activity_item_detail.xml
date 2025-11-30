@@ -205,6 +205,15 @@
                                 android:textAppearance="@style/TextAppearance.BidHub.BidAmount"
                                 android:textColor="@color/primary"
                                 tools:text="₱750.00" />
+                            
+                            <TextView
+                                android:id="@+id/tv_bid_count"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textAppearance="@style/TextAppearance.BidHub.Caption"
+                                android:textColor="@color/text_secondary"
+                                android:layout_marginTop="@dimen/spacing_1"
+                                tools:text="5 bids" />
 
                         </LinearLayout>
 

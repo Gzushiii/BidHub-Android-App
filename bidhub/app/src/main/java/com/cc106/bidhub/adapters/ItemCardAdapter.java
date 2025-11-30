@@ -61,30 +61,67 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             // Set item data with null safety
             holder.titleText.setText(item.getTitle() != null ? item.getTitle() : "Untitled Item");
             holder.priceText.setText(currencyFormat.format(item.getCurrentPrice()));
-            holder.sellerText.setText("by " + (item.getSellerName() != null ? item.getSellerName() : "Unknown"));
-            holder.bidCountText.setText(item.getBidCount() + " bids");
+            
+            // Display seller name - use sellerName if available, otherwise fallback
+            String sellerName = item.getSellerName();
+            if (sellerName == null || sellerName.isEmpty() || sellerName.equals("Unknown")) {
+                // Try to extract from sellerId (email)
+                String sellerId = item.getSellerId();
+                if (sellerId != null && sellerId.contains("@")) {
+                    int atIndex = sellerId.indexOf('@');
+                    if (atIndex > 0) {
+                        sellerName = sellerId.substring(0, atIndex);
+                    } else {
+                        sellerName = "Unknown";
+                    }
+                } else {
+                    sellerName = "Unknown";
+                }
+            }
+            holder.sellerText.setText("by " + sellerName);
+            
+            // Display bid count
+            int bidCount = item.getBidCount();
+            if (bidCount > 0) {
+                holder.bidCountText.setText(bidCount + (bidCount == 1 ? " bid" : " bids"));
+            } else {
+                holder.bidCountText.setText("No bids yet");
+            }
         
-        // Set time remaining
+        // Set time remaining with enhanced countdown
         boolean isEndingSoon = false;
         if (item.getEndDate() != null) {
             long timeRemaining = item.getEndDate().getTime() - System.currentTimeMillis();
             if (timeRemaining > 0) {
                 long days = timeRemaining / (1000 * 60 * 60 * 24);
                 long hours = (timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60);
+                long minutes = (timeRemaining % (1000 * 60 * 60)) / (1000 * 60);
                 
                 // Show "Ending Soon" if less than 24 hours remaining
                 isEndingSoon = days == 0 && hours < 24;
                 
+                // Format time remaining
                 if (days > 0) {
                     holder.timeRemainingText.setText(days + "d " + hours + "h left");
+                } else if (hours > 0) {
+                    holder.timeRemainingText.setText(hours + "h " + minutes + "m left");
                 } else {
-                    holder.timeRemainingText.setText(hours + "h left");
+                    holder.timeRemainingText.setText(minutes + "m left");
+                }
+                
+                // Set color based on urgency
+                if (isEndingSoon) {
+                    holder.timeRemainingText.setTextColor(holder.itemView.getContext().getColor(R.color.error_red));
+                } else {
+                    holder.timeRemainingText.setTextColor(holder.itemView.getContext().getColor(R.color.text_secondary));
                 }
             } else {
                 holder.timeRemainingText.setText("Ended");
+                holder.timeRemainingText.setTextColor(holder.itemView.getContext().getColor(R.color.text_secondary));
             }
         } else {
             holder.timeRemainingText.setText("No end date");
+            holder.timeRemainingText.setTextColor(holder.itemView.getContext().getColor(R.color.text_secondary));
         }
         
         // Show/hide "Ending Soon" badge

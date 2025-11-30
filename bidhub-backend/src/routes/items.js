@@ -65,6 +65,30 @@ router.get('/', async (req, res) => {
 
     const [items] = await pool.query(query, params);
 
+    // Enhance items with bid_count and ensure seller_username is present
+    const enhancedItems = await Promise.all(items.map(async (item) => {
+      // Get bid count for this item
+      const [bidCountResult] = await pool.query(
+        'SELECT COUNT(*) as bid_count FROM bids WHERE item_id = ? OR item_uuid_id = ?',
+        [item.integer_id || item.id, item.id || item.uuid_id]
+      );
+      
+      const bidCount = bidCountResult[0]?.bid_count || 0;
+      
+      // Get images for this item
+      const [images] = await pool.query(
+        'SELECT image_url FROM item_images WHERE item_id = ? OR item_uuid_id = ? ORDER BY display_order',
+        [item.integer_id || item.id, item.id || item.uuid_id]
+      );
+      
+      return {
+        ...item,
+        bid_count: bidCount,
+        images: images.map(img => img.image_url),
+        seller_username: item.seller_username || null
+      };
+    }));
+
     // Get total count for pagination
     let countQuery = 'SELECT COUNT(*) as total FROM v_active_items WHERE 1=1';
     const countParams = [];
@@ -98,8 +122,8 @@ router.get('/', async (req, res) => {
     const total = countResult[0].total;
 
     res.json({ 
-      items, 
-      count: items.length,
+      items: enhancedItems, 
+      count: enhancedItems.length,
       total,
       limit: parseInt(limit),
       offset: parseInt(offset)
@@ -149,19 +173,69 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    // Return item details
+    // Get complete item details with seller info, bid count, and images
+    const [itemDetails] = await connection.query(
+      `SELECT 
+        i.*,
+        u.username as seller_username,
+        u.email as seller_email,
+        u.alias as seller_alias,
+        c.name as category_name,
+        c.description as category_description,
+        (SELECT COUNT(*) FROM bids WHERE item_id = i.id OR item_uuid_id = i.uuid_id) as bid_count
+      FROM items i
+      LEFT JOIN users u ON i.seller_id = u.id
+      LEFT JOIN categories c ON i.category_id = c.id
+      WHERE i.id = ? OR i.uuid_id = ?
+      LIMIT 1`,
+      [item.id, item.uuid_id || item.id]
+    );
+
+    if (itemDetails.length === 0) {
+      return res.status(404).json({
+        error: 'item_not_found',
+        message: 'Item not found',
+        requested_id: itemId,
+        correlationId
+      });
+    }
+
+    const fullItem = itemDetails[0];
+
+    // Get images for this item
+    const [images] = await connection.query(
+      'SELECT image_url, display_order FROM item_images WHERE item_id = ? OR item_uuid_id = ? ORDER BY display_order',
+      [fullItem.id, fullItem.uuid_id]
+    );
+
+    // Get recent bids
+    const bids = await getItemBids(fullItem.uuid_id || fullItem.id, connection);
+
+    // Return complete item details
     return res.json({
       success: true,
       item: {
-        id: item.id,
-        uuid_id: item.uuid_id,
-        title: item.title,
-        status: item.status,
-        seller_id: item.seller_id,
-        current_bid: item.current_bid,
-        buy_now_price: item.buy_now_price,
-        created_at: item.created_at,
-        updated_at: item.updated_at
+        id: fullItem.uuid_id || fullItem.id,
+        uuid_id: fullItem.uuid_id,
+        title: fullItem.title,
+        description: fullItem.description,
+        category_id: fullItem.category_id,
+        category_name: fullItem.category_name,
+        seller_id: fullItem.seller_id,
+        seller_email: fullItem.seller_email,
+        seller_username: fullItem.seller_username,
+        seller_alias: fullItem.seller_alias,
+        starting_bid: fullItem.starting_bid || fullItem.starting_price,
+        current_bid: fullItem.current_bid || fullItem.current_price,
+        buy_now_price: fullItem.buy_now_price,
+        status: fullItem.status,
+        condition: fullItem.item_condition || fullItem.condition,
+        end_date: fullItem.end_date || fullItem.bid_deadline,
+        bid_count: fullItem.bid_count || 0,
+        images: images.map(img => img.image_url),
+        bids: bids,
+        created_at: fullItem.created_at,
+        updated_at: fullItem.updated_at
       },
       correlationId
     });

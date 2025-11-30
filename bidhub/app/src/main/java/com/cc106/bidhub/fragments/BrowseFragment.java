@@ -542,7 +542,52 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                 item.setStartingPrice(itemJson.getDouble("starting_bid"));
                 item.setCurrentPrice(itemJson.getDouble("current_bid"));
                 item.setCategoryId(itemJson.getString("category_id"));
-                item.setSellerId(itemJson.getString("seller_email"));
+                item.setSellerId(itemJson.optString("seller_email", itemJson.optString("seller_id", "")));
+                
+                // Set seller username from API response
+                String sellerUsername = itemJson.optString("seller_username", null);
+                if (sellerUsername != null && !sellerUsername.isEmpty()) {
+                    item.setSellerName(sellerUsername);
+                } else {
+                    // Fallback: extract from email if username not available
+                    String sellerEmail = itemJson.optString("seller_email", "");
+                    if (!sellerEmail.isEmpty()) {
+                        int atIndex = sellerEmail.indexOf('@');
+                        if (atIndex > 0) {
+                            item.setSellerName(sellerEmail.substring(0, atIndex));
+                        } else {
+                            item.setSellerName("Unknown");
+                        }
+                    } else {
+                        item.setSellerName("Unknown");
+                    }
+                }
+                
+                // Set bid count from API response
+                int bidCount = itemJson.optInt("bid_count", 0);
+                item.setBidCount(bidCount);
+                
+                // Set end date for countdown
+                if (itemJson.has("end_date") && !itemJson.isNull("end_date")) {
+                    try {
+                        String endDateStr = itemJson.getString("end_date");
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+                        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                        item.setEndDate(sdf.parse(endDateStr));
+                    } catch (Exception e) {
+                        android.util.Log.w("BrowseFragment", "Error parsing end_date: " + e.getMessage());
+                    }
+                } else if (itemJson.has("bid_deadline") && !itemJson.isNull("bid_deadline")) {
+                    try {
+                        String deadlineStr = itemJson.getString("bid_deadline");
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+                        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                        item.setEndDate(sdf.parse(deadlineStr));
+                    } catch (Exception e) {
+                        android.util.Log.w("BrowseFragment", "Error parsing bid_deadline: " + e.getMessage());
+                    }
+                }
+                
                 item.setCondition(itemJson.optString("item_condition", itemJson.optString("condition", "good")));
                 item.setStatus(ItemStatus.ACTIVE);
                 
