@@ -41,7 +41,7 @@
 
         <!-- Item Name -->
         <TextView
-            android:id="@+id/item_title_text"
+            android:id="@+id/tv_item_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="16sp"
@@ -54,7 +54,7 @@
 
         <!-- Time Left -->
         <TextView
-            android:id="@+id/time_remaining_text"
+            android:id="@+id/tv_time_left"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/time_left_label"
@@ -83,19 +83,6 @@
             style="@style/Widget.MaterialComponents.Button.TextButton"
             app:cornerRadius="8dp" />
 
-        <!-- Bid Status (optional, for user's bids) -->
-        <TextView
-            android:id="@+id/bid_status_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="WINNING"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:textColor="@color/success"
-            android:visibility="gone"
-            android:layout_marginTop="8dp"
-            tools:visibility="visible" />
-
     </LinearLayout>
 
     <!-- Right Section: Image -->
@@ -115,3 +102,4 @@
         tools:src="@drawable/ic_image_placeholder" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+

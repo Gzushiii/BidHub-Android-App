@@ -4,8 +4,6 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -80,28 +78,24 @@ public class ActiveBidsAdapter extends RecyclerView.Adapter<ActiveBidsAdapter.Ac
     }
     
     class ActiveBidViewHolder extends RecyclerView.ViewHolder {
+        private TextView tvCurrentBidLabel;
+        private TextView tvCurrentBidAmount;
         private TextView itemTitleText;
-        private TextView bidAmountText;
-        private TextView currentBidText;
         private TextView timeRemainingText;
         private TextView bidStatusText;
-        private ProgressBar bidProgressBar;
-        private TextView progressText;
-        private Button cancelBidButton;
-        private View progressLayout;
+        private com.google.android.material.button.MaterialButton btnBidNow;
+        private android.widget.ImageView ivItemImage;
         
         public ActiveBidViewHolder(@NonNull View itemView) {
             super(itemView);
             
+            tvCurrentBidLabel = itemView.findViewById(R.id.tv_current_bid_label);
+            tvCurrentBidAmount = itemView.findViewById(R.id.tv_current_bid_amount);
             itemTitleText = itemView.findViewById(R.id.item_title_text);
-            bidAmountText = itemView.findViewById(R.id.bid_amount_text);
-            currentBidText = itemView.findViewById(R.id.current_bid_text);
             timeRemainingText = itemView.findViewById(R.id.time_remaining_text);
             bidStatusText = itemView.findViewById(R.id.bid_status_text);
-            bidProgressBar = itemView.findViewById(R.id.bid_progress_bar);
-            progressText = itemView.findViewById(R.id.progress_text);
-            cancelBidButton = itemView.findViewById(R.id.cancel_bid_button);
-            progressLayout = itemView.findViewById(R.id.progress_layout);
+            btnBidNow = itemView.findViewById(R.id.btn_bid_now);
+            ivItemImage = itemView.findViewById(R.id.iv_item_image);
             
             // Set click listeners
             itemView.setOnClickListener(v -> {
@@ -113,11 +107,11 @@ public class ActiveBidsAdapter extends RecyclerView.Adapter<ActiveBidsAdapter.Ac
                 }
             });
             
-            cancelBidButton.setOnClickListener(v -> {
-                if (onCancelBidClickListener != null) {
+            btnBidNow.setOnClickListener(v -> {
+                if (onBidClickListener != null) {
                     int position = getAdapterPosition();
                     if (position != RecyclerView.NO_POSITION) {
-                        onCancelBidClickListener.onCancelBidClick(bids.get(position));
+                        onBidClickListener.onBidClick(bids.get(position));
                     }
                 }
             });
@@ -134,63 +128,57 @@ public class ActiveBidsAdapter extends RecyclerView.Adapter<ActiveBidsAdapter.Ac
                 itemTitleText.setText("Item not found");
             }
             
-            // Set bid amount
-            bidAmountText.setText(currencyFormat.format(bid.getAmount()));
-            
             // Set current bid (from item)
             if (item != null) {
-                currentBidText.setText(currencyFormat.format(item.getCurrentPrice()));
+                double currentBid = item.getCurrentPrice() > 0 ? item.getCurrentPrice() : item.getStartingPrice();
+                tvCurrentBidAmount.setText(currencyFormat.format(currentBid));
             } else {
-                currentBidText.setText("N/A");
+                tvCurrentBidAmount.setText("N/A");
             }
             
             // Set time remaining
             setTimeRemaining(item);
             
-            // Set bid status and progress
+            // Set bid status
             setBidStatus(bid, item);
+            
+            // Load item image
+            if (item != null && item.getImagePaths() != null && !item.getImagePaths().isEmpty()) {
+                com.cc106.bidhub.utils.ImageLoader.loadImageWithErrorCallback(
+                    context,
+                    item.getImagePaths().get(0),
+                    ivItemImage,
+                    R.drawable.ic_image_placeholder
+                );
+            } else {
+                ivItemImage.setImageResource(R.drawable.ic_image_placeholder);
+            }
         }
         
         private void setTimeRemaining(Item item) {
             if (item != null && item.getEndDate() != null) {
                 long timeRemaining = item.getTimeRemaining();
                 if (timeRemaining > 0) {
-                    int days = (int) (timeRemaining / (24 * 60 * 60 * 1000));
                     int hours = (int) ((timeRemaining % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
                     int minutes = (int) ((timeRemaining % (60 * 60 * 1000)) / (60 * 1000));
+                    int seconds = (int) ((timeRemaining % (60 * 1000)) / 1000);
                     
-                    if (days > 0) {
-                        timeRemainingText.setText(String.format("%dd %dh", days, hours));
-                    } else if (hours > 0) {
-                        timeRemainingText.setText(String.format("%dh %dm", hours, minutes));
-                    } else {
-                        timeRemainingText.setText(String.format("%dm", minutes));
-                    }
-                    
-                    // Set color based on urgency
-                    if (timeRemaining < 60 * 60 * 1000) { // Less than 1 hour
-                        timeRemainingText.setTextColor(context.getResources().getColor(R.color.error_red));
-                    } else if (timeRemaining < 24 * 60 * 60 * 1000) { // Less than 1 day
-                        timeRemainingText.setTextColor(context.getResources().getColor(R.color.warning_yellow));
-                    } else {
-                        timeRemainingText.setTextColor(context.getResources().getColor(R.color.text_primary));
-                    }
+                    String timeLeft = String.format("%02dh %02dm %02ds", hours, minutes, seconds);
+                    timeRemainingText.setText(context.getString(R.string.time_left_label) + " " + timeLeft);
+                    timeRemainingText.setTextColor(context.getResources().getColor(R.color.header_text_secondary));
                 } else {
-                    timeRemainingText.setText("Ended");
-                    timeRemainingText.setTextColor(context.getResources().getColor(R.color.text_secondary));
+                    timeRemainingText.setText(context.getString(R.string.time_left_label) + " Ended");
+                    timeRemainingText.setTextColor(context.getResources().getColor(R.color.header_text_secondary));
                 }
             } else {
-                timeRemainingText.setText("N/A");
-                timeRemainingText.setTextColor(context.getResources().getColor(R.color.text_secondary));
+                timeRemainingText.setText(context.getString(R.string.time_left_label) + " N/A");
+                timeRemainingText.setTextColor(context.getResources().getColor(R.color.header_text_secondary));
             }
         }
         
         private void setBidStatus(Bid bid, Item item) {
             if (item == null) {
-                bidStatusText.setText("UNKNOWN");
-                bidStatusText.setTextColor(context.getResources().getColor(R.color.text_secondary));
-                progressLayout.setVisibility(View.GONE);
-                cancelBidButton.setVisibility(View.GONE);
+                bidStatusText.setVisibility(View.GONE);
                 return;
             }
             
@@ -198,40 +186,18 @@ public class ActiveBidsAdapter extends RecyclerView.Adapter<ActiveBidsAdapter.Ac
             boolean isWinning = bid.getAmount() >= item.getCurrentPrice();
             boolean isHighest = bid.getAmount() == item.getCurrentPrice();
             
-            if (isWinning) {
-                if (isHighest) {
-                    bidStatusText.setText("WINNING");
-                    bidStatusText.setTextColor(context.getResources().getColor(R.color.accent_orange));
-                    progressText.setText("You are currently winning this auction");
-                    progressText.setTextColor(context.getResources().getColor(R.color.accent_orange));
-                } else {
-                    bidStatusText.setText("LEADING");
-                    bidStatusText.setTextColor(context.getResources().getColor(R.color.success_green));
-                    progressText.setText("You are leading this auction");
-                    progressText.setTextColor(context.getResources().getColor(R.color.success_green));
-                }
-                
-                // Set progress bar (simplified - in real app, this would be more sophisticated)
-                bidProgressBar.setProgress(100);
-                progressLayout.setVisibility(View.VISIBLE);
-                
+            if (isWinning && isHighest) {
+                bidStatusText.setText("WINNING");
+                bidStatusText.setTextColor(context.getResources().getColor(R.color.success));
+                bidStatusText.setVisibility(View.VISIBLE);
+            } else if (isWinning) {
+                bidStatusText.setText("LEADING");
+                bidStatusText.setTextColor(context.getResources().getColor(R.color.success));
+                bidStatusText.setVisibility(View.VISIBLE);
             } else {
                 bidStatusText.setText("OUTBID");
-                bidStatusText.setTextColor(context.getResources().getColor(R.color.error_red));
-                progressText.setText("You have been outbid");
-                progressText.setTextColor(context.getResources().getColor(R.color.error_red));
-                
-                // Set progress bar based on how close the bid is
-                double percentage = (bid.getAmount() / item.getCurrentPrice()) * 100;
-                bidProgressBar.setProgress((int) Math.min(percentage, 100));
-                progressLayout.setVisibility(View.VISIBLE);
-            }
-            
-            // Show cancel button only for active bids that can be cancelled
-            if (bid.getStatus() == BidStatus.ACTIVE && bid.getStatus().canBeEdited()) {
-                cancelBidButton.setVisibility(View.VISIBLE);
-            } else {
-                cancelBidButton.setVisibility(View.GONE);
+                bidStatusText.setTextColor(context.getResources().getColor(R.color.error));
+                bidStatusText.setVisibility(View.VISIBLE);
             }
         }
     }

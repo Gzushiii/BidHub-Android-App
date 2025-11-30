@@ -389,4 +389,18 @@
     <string name="payment_pending">Payment pending review</string>
     <string name="payment_submitted">Payment submitted successfully. Waiting for admin confirmation.</string>
     <string name="invalid_reference">Please enter a valid reference number (at least 4 characters)</string>
+    
+    <!-- Dashboard Redesign -->
+    <string name="ending_soon">Ending Soon</string>
+    <string name="bid_now">Bid Now</string>
+    <string name="active_auctions">Active Auctions</string>
+    <string name="current_bid_label">Current Bid:</string>
+    <string name="time_left_label">Time Left:</string>
+    
+    <!-- Categories -->
+    <string name="electronics">Electronics</string>
+    <string name="fashion">Fashion</string>
+    <string name="collectibles">Collectibles</string>
+    <string name="home_garden">Home &amp; Garden</string>
+    <string name="art">Art</string>
 </resources>

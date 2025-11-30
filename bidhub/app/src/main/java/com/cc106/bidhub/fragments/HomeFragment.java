@@ -49,20 +49,26 @@ import java.util.Locale;
 public class HomeFragment extends Fragment {
 
     // Header components
-    private ImageButton btnNotifications;
-    private TextView textViewAlias;
+    private ImageView ivProfile;
+    private TextView tvAppTitle;
+    private TextView tvHeaderCredits;
     private View searchBar;
+    
+    // Category chips
+    private ViewGroup layoutCategoryChips;
     
     // Quick action buttons
     private View cardBrowse, cardSell, cardMyListings;
     
     // RecyclerViews
     private RecyclerView rvFeaturedItems;
+    private RecyclerView rvActiveAuctions;
     private RecyclerView rvActiveBids;
     private RecyclerView rvCategories;
     
     // Adapters
     private ItemCardAdapter featuredItemsAdapter;
+    private com.cc106.bidhub.adapters.ActiveAuctionsAdapter activeAuctionsAdapter;
     private ActiveBidsAdapter activeBidsAdapter;
     private CategoryAdapter categoryAdapter;
     
@@ -94,6 +100,7 @@ public class HomeFragment extends Fragment {
     
     // Data lists
     private List<Item> featuredItems;
+    private List<Item> activeAuctions;
     private List<Bid> activeBids;
     private List<Category> categories;
     
@@ -130,6 +137,7 @@ public class HomeFragment extends Fragment {
             
             // Initialize data lists
             featuredItems = new ArrayList<>();
+            activeAuctions = new ArrayList<>();
             activeBids = new ArrayList<>();
             categories = new ArrayList<>();
             
@@ -144,8 +152,12 @@ public class HomeFragment extends Fragment {
             
             // Load RecyclerView data
             loadFeaturedItems();
+            loadActiveAuctions();
             loadActiveBids();
             loadCategories();
+            
+            // Initialize category chips
+            initializeCategoryChips();
             
             // Load quick stats
             loadQuickStats();
@@ -175,17 +187,22 @@ public class HomeFragment extends Fragment {
         }
         
         // Header components
-        btnNotifications = view.findViewById(R.id.btn_notifications);
-        textViewAlias = view.findViewById(R.id.tv_user_alias);
+        ivProfile = view.findViewById(R.id.iv_profile);
+        tvAppTitle = view.findViewById(R.id.tv_app_title);
+        tvHeaderCredits = view.findViewById(R.id.tv_header_credits);
         searchBar = view.findViewById(R.id.search_card);
         
-        // Quick action buttons
-        cardBrowse = view.findViewById(R.id.card_browse);
-        cardSell = view.findViewById(R.id.card_post);
-        cardMyListings = view.findViewById(R.id.card_my_listings);
+        // Category chips container
+        layoutCategoryChips = view.findViewById(R.id.layout_category_chips);
+        
+        // Quick action buttons (removed - not in new design)
+        // cardBrowse = view.findViewById(R.id.card_browse);
+        // cardSell = view.findViewById(R.id.card_post);
+        // cardMyListings = view.findViewById(R.id.card_my_listings);
         
         // RecyclerViews
         rvFeaturedItems = view.findViewById(R.id.rv_featured_items);
+        rvActiveAuctions = view.findViewById(R.id.rv_active_auctions);
         rvActiveBids = view.findViewById(R.id.rv_active_bids);
         rvCategories = view.findViewById(R.id.rv_categories);
         
@@ -196,11 +213,7 @@ public class HomeFragment extends Fragment {
         progressLoading = view.findViewById(R.id.progress_loading);
         
         // View All buttons
-        btnViewAllFeatured = view.findViewById(R.id.btn_view_all_featured);
         btnViewAllBids = view.findViewById(R.id.btn_view_all_bids);
-        
-        // Credit balance
-        tvCreditBalance = view.findViewById(R.id.tv_credit_balance);
     }
     
     /**
@@ -226,7 +239,24 @@ public class HomeFragment extends Fragment {
             rvFeaturedItems.setAdapter(featuredItemsAdapter);
         }
         
-        // Active Bids RecyclerView - horizontal scrolling
+        // Active Auctions RecyclerView - vertical scrolling
+        if (rvActiveAuctions != null) {
+            activeAuctionsAdapter = new com.cc106.bidhub.adapters.ActiveAuctionsAdapter(
+                activeAuctions,
+                item -> {
+                    // Navigate to item detail
+                    Intent intent = new Intent(getContext(), ItemDetailActivity.class);
+                    intent.putExtra("ITEM_ID", item.getItemId());
+                    intent.putExtra("USER_EMAIL", loggedInUserEmail);
+                    startActivity(intent);
+                }
+            );
+            LinearLayoutManager activeAuctionsLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+            rvActiveAuctions.setLayoutManager(activeAuctionsLayoutManager);
+            rvActiveAuctions.setAdapter(activeAuctionsAdapter);
+        }
+        
+        // Active Bids RecyclerView - vertical scrolling
         if (rvActiveBids != null) {
             activeBidsAdapter = new ActiveBidsAdapter(
                 activeBids,
@@ -245,7 +275,7 @@ public class HomeFragment extends Fragment {
                     ToastHelper.showInfo(getContext(), "Cancel bid functionality coming soon");
                 }
             );
-            LinearLayoutManager activeBidsLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+            LinearLayoutManager activeBidsLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
             rvActiveBids.setLayoutManager(activeBidsLayoutManager);
             rvActiveBids.setAdapter(activeBidsAdapter);
         }
@@ -270,11 +300,19 @@ public class HomeFragment extends Fragment {
      * Set up click listeners for all interactive elements
      */
     private void setupClickListeners() {
-        // Header buttons
-        if (btnNotifications != null) {
-            btnNotifications.setOnClickListener(v -> {
-                // TODO: Navigate to notifications
-                ToastHelper.showInfo(getContext(), "Notifications clicked");
+        // Profile image click listener
+        if (ivProfile != null) {
+            ivProfile.setOnClickListener(v -> {
+                try {
+                    Intent intent = new Intent(getContext(), ProfileActivity.class);
+                    intent.putExtra("USER_EMAIL", loggedInUserEmail);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    if (getContext() != null) {
+                        ToastHelper.showError(getContext(), "Error opening profile: " + e.getMessage());
+                    }
+                    e.printStackTrace();
+                }
             });
         }
         
@@ -295,70 +333,7 @@ public class HomeFragment extends Fragment {
             });
         }
         
-        
-        // Feature cards
-        if (cardBrowse != null) {
-            cardBrowse.setOnClickListener(v -> {
-                try {
-                    if (getActivity() instanceof MainActivity) {
-                        ((MainActivity) getActivity()).switchToBrowseTab();
-                    }
-                } catch (Exception e) {
-                    if (getContext() != null) {
-                        ToastHelper.showError(getContext(), "Error opening browse: " + e.getMessage());
-                    }
-                    e.printStackTrace();
-                }
-            });
-        }
-        
-        if (cardSell != null) {
-            cardSell.setOnClickListener(v -> {
-                try {
-                    Intent intent = new Intent(getContext(), PostActivity.class);
-                    intent.putExtra("USER_EMAIL", loggedInUserEmail);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    if (getContext() != null) {
-                        ToastHelper.showError(getContext(), "Error opening post: " + e.getMessage());
-                    }
-                    e.printStackTrace();
-                }
-            });
-        }
-        
-        
-        if (cardMyListings != null) {
-            cardMyListings.setOnClickListener(v -> {
-                try {
-                    Intent intent = new Intent(getContext(), MyListingsActivity.class);
-                    intent.putExtra("USER_EMAIL", loggedInUserEmail);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    if (getContext() != null) {
-                        ToastHelper.showError(getContext(), "Error opening my listings: " + e.getMessage());
-                    }
-                    e.printStackTrace();
-                }
-            });
-        }
-        
         // View All buttons
-        if (btnViewAllFeatured != null) {
-            btnViewAllFeatured.setOnClickListener(v -> {
-                try {
-                    // Navigate to browse tab
-                    if (getActivity() instanceof MainActivity) {
-                        ((MainActivity) getActivity()).switchToBrowseTab();
-                    }
-                } catch (Exception e) {
-                    if (getContext() != null) {
-                        ToastHelper.showError(getContext(), "Error opening browse: " + e.getMessage());
-                    }
-                    e.printStackTrace();
-                }
-            });
-        }
         
         if (btnViewAllBids != null) {
             btnViewAllBids.setOnClickListener(v -> {
@@ -435,9 +410,9 @@ public class HomeFragment extends Fragment {
                 textViewAlias.setText(alias != null ? alias : "User");
             }
             
-            // Update credit balance
-            if (tvCreditBalance != null) {
-                tvCreditBalance.setText(String.format(Locale.getDefault(), "₱%.2f", credits));
+            // Update credit balance (header)
+            if (tvHeaderCredits != null) {
+                tvHeaderCredits.setText(String.format(Locale.getDefault(), "%.0f", credits));
             }
         } catch (Exception e) {
             if (getContext() != null) {
@@ -484,6 +459,35 @@ public class HomeFragment extends Fragment {
     }
     
     /**
+     * Load all active auctions (not just user's bids)
+     */
+    private void loadActiveAuctions() {
+        if (itemManager == null || activeAuctionsAdapter == null) {
+            hideLoading();
+            return;
+        }
+        
+        try {
+            List<Item> items = itemManager.getActiveItems();
+            if (items == null) {
+                items = new ArrayList<>();
+            }
+            
+            activeAuctions.clear();
+            activeAuctions.addAll(items);
+            activeAuctionsAdapter.updateItems(activeAuctions);
+            
+            hideLoading();
+        } catch (Exception e) {
+            android.util.Log.e("HomeFragment", "Error loading active auctions: " + e.getMessage(), e);
+            if (getContext() != null) {
+                ToastHelper.showError(getContext(), "Error loading active auctions");
+            }
+            hideLoading();
+        }
+    }
+    
+    /**
      * Load active bids for current user
      */
     private void loadActiveBids() {
@@ -523,6 +527,42 @@ public class HomeFragment extends Fragment {
                 ToastHelper.showError(getContext(), "Error loading active bids");
             }
             hideLoading();
+        }
+    }
+    
+    /**
+     * Initialize category chips in HorizontalScrollView
+     */
+    private void initializeCategoryChips() {
+        if (layoutCategoryChips == null || getContext() == null) {
+            return;
+        }
+        
+        // Clear existing chips
+        layoutCategoryChips.removeAllViews();
+        
+        // Category names
+        String[] categoryNames = {
+            getString(R.string.electronics),
+            getString(R.string.fashion),
+            getString(R.string.collectibles),
+            getString(R.string.home_garden),
+            getString(R.string.art)
+        };
+        
+        // Create and add chips
+        for (String categoryName : categoryNames) {
+            TextView chip = (TextView) LayoutInflater.from(getContext())
+                    .inflate(R.layout.item_category_chip, layoutCategoryChips, false);
+            chip.setText(categoryName);
+            chip.setOnClickListener(v -> {
+                // Navigate to browse with category filter
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).switchToBrowseTab();
+                    // TODO: Pass category filter to BrowseActivity
+                }
+            });
+            layoutCategoryChips.addView(chip);
         }
     }
     
