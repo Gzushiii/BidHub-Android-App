@@ -451,12 +451,13 @@ public class HomeFragment extends Fragment {
                 if (items == null) {
                     items = new ArrayList<>();
                 }
+                final List<Item> finalItems = items; // Make final for lambda
                 
                 if (getActivity() != null && !getActivity().isFinishing()) {
                     getActivity().runOnUiThread(() -> {
                         if (isAdded() && !isDetached()) {
                             featuredItems.clear();
-                            featuredItems.addAll(items);
+                            featuredItems.addAll(finalItems);
                             if (featuredItemsAdapter != null) {
                                 featuredItemsAdapter.notifyDataSetChanged();
                             }
@@ -512,12 +513,13 @@ public class HomeFragment extends Fragment {
                 if (items == null) {
                     items = new ArrayList<>();
                 }
+                final List<Item> finalItems = items; // Make final for lambda
                 
                 if (getActivity() != null && !getActivity().isFinishing()) {
                     getActivity().runOnUiThread(() -> {
                         if (isAdded() && !isDetached()) {
                             activeAuctions.clear();
-                            activeAuctions.addAll(items);
+                            activeAuctions.addAll(finalItems);
                             if (activeAuctionsAdapter != null) {
                                 activeAuctionsAdapter.updateItems(activeAuctions);
                             }
@@ -593,12 +595,13 @@ public class HomeFragment extends Fragment {
                 if (bids == null) {
                     bids = new ArrayList<>();
                 }
+                final List<Bid> finalBids = bids; // Make final for lambda
                 
                 if (getActivity() != null && !getActivity().isFinishing()) {
                     getActivity().runOnUiThread(() -> {
                         if (isAdded() && !isDetached()) {
                             activeBids.clear();
-                            activeBids.addAll(bids);
+                            activeBids.addAll(finalBids);
                             if (activeBidsAdapter != null) {
                                 activeBidsAdapter.notifyDataSetChanged();
                             }

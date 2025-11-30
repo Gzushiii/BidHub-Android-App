@@ -1419,8 +1419,7 @@ public class PostFragment extends Fragment implements
         if (cbQuantity != null) cbQuantity.setChecked(false);
         if (cbContact != null) cbContact.setChecked(true);
         
-        // Reset price mode
-        togglePriceMode(true);
+        // Price mode removed - all items are for sale by default
         
         // Reset optional details visibility
         isOptionalDetailsVisible = true;
