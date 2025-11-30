@@ -1,10 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.BidHub.Card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="16dp">
+    android:layout_marginStart="@dimen/spacing_2"
+    android:layout_marginEnd="@dimen/spacing_2"
+    android:layout_marginTop="@dimen/spacing_2"
+    android:layout_marginBottom="@dimen/spacing_2"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackgroundBorderless"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="1dp"
+    app:cardBackgroundColor="@color/surface_container">
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/spacing_4">
 
     <!-- Left Section: Text Content -->
     <LinearLayout
@@ -19,14 +34,14 @@
         app:layout_constraintEnd_toStartOf="@id/iv_item_image"
         app:layout_constraintWidth_percent="0.66">
 
-        <!-- Current Bid -->
+        <!-- Current Bid - Material 3 -->
         <TextView
             android:id="@+id/tv_current_bid_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/current_bid_label"
-            android:textAppearance="@style/TextAppearance.BidHub.Body2"
-            android:textColor="@color/text_secondary"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            android:textColor="@color/on_surface_variant"
             android:layout_marginBottom="@dimen/spacing_1"
             tools:text="Current Bid:" />
 
@@ -34,54 +49,47 @@
             android:id="@+id/tv_current_bid_amount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.BidHub.Body2"
-            android:textColor="@color/text_secondary"
+            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+            android:textStyle="bold"
+            android:textColor="@color/primary"
             android:layout_marginBottom="@dimen/spacing_2"
             tools:text="$55" />
 
-        <!-- Item Name -->
+        <!-- Item Name - Material 3 -->
         <TextView
             android:id="@+id/tv_item_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.BidHub.Body1"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
+            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+            android:textColor="@color/on_surface"
             android:maxLines="2"
             android:ellipsize="end"
             android:layout_marginBottom="@dimen/spacing_1"
             tools:text="Vintage Camera" />
 
-        <!-- Time Left -->
+        <!-- Time Left - Material 3 -->
         <TextView
             android:id="@+id/tv_time_left"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/time_left_label"
-            android:textAppearance="@style/TextAppearance.BidHub.Body2"
-            android:textColor="@color/text_secondary"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            android:textColor="@color/on_surface_variant"
             android:layout_marginBottom="@dimen/spacing_3"
             tools:text="Time Left: 00h 55m 23s" />
 
-        <!-- Bid Now Button -->
+        <!-- Bid Now Button - Material 3 -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_bid_now"
+            style="@style/Widget.BidHub.Button.Text"
             android:layout_width="wrap_content"
-            android:layout_height="32dp"
-            android:minHeight="32dp"
+            android:layout_height="36dp"
+            android:minHeight="36dp"
             android:minWidth="0dp"
-            android:paddingHorizontal="@dimen/spacing_4"
             android:text="@string/bid_now"
-            android:textAppearance="@style/TextAppearance.BidHub.Button"
             android:textSize="14sp"
-            android:textColor="@color/text_primary"
-            android:backgroundTint="@color/neutral_100"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
             android:drawableEnd="@drawable/ic_arrow_right"
-            android:drawablePadding="@dimen/spacing_1"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            app:cornerRadius="8dp" />
+            android:drawablePadding="@dimen/spacing_1" />
 
     </LinearLayout>
 
@@ -102,4 +110,6 @@
         tools:src="@drawable/ic_image_placeholder" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>
 

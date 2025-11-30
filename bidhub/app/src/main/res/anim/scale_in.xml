@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<set xmlns:android="http://schemas.android.com/apk/res/android">
+<!-- Material 3 Motion: Scale In -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@interpolator/material_motion_emphasized">
     <scale
-        android:duration="200"
+        android:duration="300"
         android:fromXScale="0.8"
         android:fromYScale="0.8"
         android:pivotX="50%"
@@ -9,7 +11,7 @@
         android:toXScale="1.0"
         android:toYScale="1.0" />
     <alpha
-        android:duration="200"
+        android:duration="300"
         android:fromAlpha="0.0"
         android:toAlpha="1.0" />
 </set>

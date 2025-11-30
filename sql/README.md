@@ -7,9 +7,20 @@ This directory contains all SQL scripts and database-related files for the BidHu
 ## 📁 File Organization
 
 ### Core Schema Files
-- **`bidhub_schema.sql`** - Main comprehensive database schema with all tables, procedures, and views
-- **`add_manual_topup_tables.sql`** - Manual top-up support tables, procedures, and views (idempotent)
-- **`migrate_fix_generated_ref_size.sql`** - Migration to fix `generated_ref` column size (VARCHAR(16) → VARCHAR(50))
+- **`bidhub_complete_schema.sql`** ⭐ **RECOMMENDED** - Complete consolidated schema file that includes:
+  - All core tables (users, items, categories, bids, credit_transactions, etc.)
+  - All API compatibility columns and fixes
+  - All stored procedures (PlaceBid, BuyNow, EndAuction) with latest fixes including SQL mode compatibility
+  - Manual top-up support tables and procedures
+  - All views (v_active_items, v_user_bids, etc.)
+  - All performance indices
+  - Default categories
+  - **Use this for fresh installations or complete database rebuilds**
+
+### Legacy Schema Files (Kept for Reference)
+- **`bidhub_schema.sql`** - Original base schema (now merged into bidhub_complete_schema.sql)
+- **`add_manual_topup_tables.sql`** - Manual top-up support (now merged into bidhub_complete_schema.sql)
+- **`migrate_fix_generated_ref_size.sql`** - Migration to fix `generated_ref` column size (now included in bidhub_complete_schema.sql)
 
 ### Database Diagnostics
 - **`comprehensive_database_diagnostic.sql`** - Comprehensive diagnostic script that checks:
@@ -21,20 +32,10 @@ This directory contains all SQL scripts and database-related files for the BidHu
   - Index analysis
   - Recent errors and patterns
 
-### Database Fixes
-- **`fix_credit_system_comprehensive.sql`** - Comprehensive fix for credit system issues:
-  - PlaceBid procedure with proper locking and outbid refunds
-  - BuyNow procedure with proper locking
-  - EndAuction procedure
-  - Idempotency support
-  - Performance indices
-
-- **`fix_api_schema_compatibility.sql`** - Fixes API schema compatibility:
-  - Adds missing columns (uuid_id, starting_bid, reserve_price, end_date)
-  - Creates item_images table
-  - Creates credit_transactions table
-  - Creates/updates v_active_items view
-  - Updates stored procedures
+### Database Fixes (Now Merged into bidhub_complete_schema.sql)
+- **`fix_credit_system_comprehensive.sql`** - Comprehensive fix for credit system issues (now merged)
+- **`fix_api_schema_compatibility.sql`** - Fixes API schema compatibility (now merged)
+- **`fix_placebid_sql_mode_error.sql`** - Fixes PlaceBid SQL mode error (now merged)
 
 ### Utilities
 - **`add_missing_columns.sql`** - Utility to add missing columns to existing tables
@@ -52,31 +53,53 @@ This directory contains all SQL scripts and database-related files for the BidHu
 For a fresh database installation:
 
 ```bash
-# Option 1: Use the setup script
+# RECOMMENDED: Use the complete consolidated schema
+mysql -u username -p defaultdb < bidhub_complete_schema.sql
+
+# OR use the setup script
 cd sql
 ./setup_database.sh
-
-# Option 2: Manual setup
-mysql -u username -p defaultdb < bidhub_schema.sql
-mysql -u username -p defaultdb < add_manual_topup_tables.sql
 ```
+
+**Note:** The `bidhub_complete_schema.sql` file includes everything needed for a complete installation:
+- All tables with proper structure
+- All stored procedures with latest fixes
+- All views
+- Manual top-up support
+- Default categories
+- All performance indices
 
 ### Adding Top-Up Support
 
 If you need to add manual top-up support to an existing database:
 
 ```bash
+# Option 1: Use the complete schema (idempotent, safe to run)
+mysql -u username -p defaultdb < bidhub_complete_schema.sql
+
+# Option 2: Use the standalone topup script
 mysql -u username -p defaultdb < add_manual_topup_tables.sql
 ```
 
 ### Running Migrations
 
-For specific migrations:
+For specific migrations on existing databases:
 
 ```bash
-# Fix generated_ref column size
+# Fix generated_ref column size (if you have an old topups table)
 mysql -u username -p defaultdb < migrate_fix_generated_ref_size.sql
+
+# Fix credit system issues (if you have an old database)
+mysql -u username -p defaultdb < fix_credit_system_comprehensive.sql
+
+# Fix API schema compatibility (if you have an old database)
+mysql -u username -p defaultdb < fix_api_schema_compatibility.sql
+
+# Fix PlaceBid SQL mode error (if you have an old database)
+mysql -u username -p defaultdb < fix_placebid_sql_mode_error.sql
 ```
+
+**Note:** For fresh installations, use `bidhub_complete_schema.sql` which includes all fixes.
 
 ### Database Diagnostics
 
@@ -88,38 +111,46 @@ mysql -u username -p defaultdb < comprehensive_database_diagnostic.sql > diagnos
 
 ### Applying Fixes
 
-To fix database issues:
+To fix database issues on existing databases:
 
 ```bash
-# Fix credit system issues
-mysql -u username -p defaultdb < fix_credit_system_comprehensive.sql
+# Option 1: Use complete schema (recommended for major updates)
+mysql -u username -p defaultdb < bidhub_complete_schema.sql
 
-# Fix API schema compatibility
+# Option 2: Apply individual fixes
+mysql -u username -p defaultdb < fix_credit_system_comprehensive.sql
 mysql -u username -p defaultdb < fix_api_schema_compatibility.sql
+mysql -u username -p defaultdb < fix_placebid_sql_mode_error.sql
 ```
+
+**Note:** The complete schema file is idempotent where possible, but always backup your database first.
 
 ## 📝 File Descriptions
 
 ### Schema Files
 
-**bidhub_schema.sql**
-- Complete database schema
-- Creates all core tables (users, items, categories, bids, credit_transactions, etc.)
-- Includes stored procedures (PlaceBid, BuyNow, EndAuction)
-- Includes views (v_active_items, v_user_bids, v_credit_summary)
+**bidhub_complete_schema.sql** ⭐ **RECOMMENDED**
+- **Complete consolidated schema** that merges all setup and fix files
+- Creates all core tables (users, items, categories, bids, credit_transactions, redemption_codes, topups, credit_ledger, item_images)
+- Includes all stored procedures (PlaceBid, BuyNow, EndAuction, sp_confirm_topup, sp_reject_topup) with latest fixes
+- Includes all views (v_active_items, v_user_bids, v_credit_summary, v_pending_topups, v_user_topup_stats)
+- Includes all API compatibility columns (uuid_id, starting_bid, reserve_price, end_date, etc.)
+- Includes all performance indices
 - Includes default categories
+- **Idempotent** - safe to run multiple times (uses IF NOT EXISTS where possible)
+- **Use this for fresh installations or complete database rebuilds**
 
-**add_manual_topup_tables.sql**
-- Creates topups table for manual top-up requests
-- Creates credit_ledger table for audit trail
-- Creates supporting views (v_pending_topups, v_user_topup_stats, etc.)
-- Creates stored procedures (sp_confirm_topup, sp_reject_topup)
-- **Idempotent** - safe to run multiple times
+**bidhub_schema.sql** (Legacy - kept for reference)
+- Original base schema
+- Now merged into bidhub_complete_schema.sql
 
-**migrate_fix_generated_ref_size.sql**
-- Fixes the `generated_ref` column in `topups` table
-- Changes from VARCHAR(16) to VARCHAR(50) to accommodate 17-character reference codes
-- Includes verification queries
+**add_manual_topup_tables.sql** (Legacy - kept for reference)
+- Manual top-up support
+- Now merged into bidhub_complete_schema.sql
+
+**migrate_fix_generated_ref_size.sql** (Legacy - kept for reference)
+- Migration to fix `generated_ref` column size
+- Now included in bidhub_complete_schema.sql (topups table uses VARCHAR(50))
 
 ### Diagnostic Files
 

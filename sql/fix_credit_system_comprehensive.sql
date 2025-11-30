@@ -66,15 +66,18 @@ BEGIN
     FOR UPDATE;
 
     -- Check if item exists and is active
-    SELECT COUNT(*), seller_id, starting_price
-    INTO v_item_exists, v_seller_id, v_starting_price
+    SELECT seller_id, starting_price
+    INTO v_seller_id, v_starting_price
     FROM items
     WHERE id = p_item_id AND status = 'active'
     FOR UPDATE; -- Lock the item row too
 
-    IF v_item_exists = 0 THEN
+    -- Check if item was found (seller_id will be NULL if not found)
+    IF v_seller_id IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Item not found or not active';
     END IF;
+    
+    SET v_item_exists = 1; -- Item exists if we got here
 
     -- Check bidder is not the seller
     IF p_bidder_id = v_seller_id THEN
@@ -222,15 +225,18 @@ BEGIN
     FOR UPDATE;
 
     -- Check if item exists, is active, and lock it
-    SELECT COUNT(*), status, seller_id, buy_now_price
-    INTO v_item_exists, v_item_status, v_seller_id, v_actual_buy_now_price
+    SELECT status, seller_id, buy_now_price
+    INTO v_item_status, v_seller_id, v_actual_buy_now_price
     FROM items
     WHERE id = p_item_id
     FOR UPDATE;
 
-    IF v_item_exists = 0 THEN
+    -- Check if item was found (seller_id will be NULL if not found)
+    IF v_seller_id IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Item not found';
     END IF;
+    
+    SET v_item_exists = 1; -- Item exists if we got here
 
     IF v_item_status != 'active' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Item is not available for purchase';
@@ -349,14 +355,17 @@ BEGIN
     START TRANSACTION;
 
     -- Check if item exists and lock it
-    SELECT COUNT(*), seller_id INTO v_item_exists, v_seller_id
+    SELECT seller_id INTO v_seller_id
     FROM items
     WHERE id = p_item_id
     FOR UPDATE;
 
-    IF v_item_exists = 0 THEN
+    -- Check if item was found (seller_id will be NULL if not found)
+    IF v_seller_id IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Item not found';
     END IF;
+    
+    SET v_item_exists = 1; -- Item exists if we got here
 
     -- Get winning bidder and amount
     SELECT bidder_id, amount INTO v_winning_bidder_id, v_winning_amount

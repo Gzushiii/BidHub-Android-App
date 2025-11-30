@@ -3,58 +3,34 @@
     <!-- DESIGN SYSTEM TYPOGRAPHY SCALE -->
     <!-- Based on Material Design 3 and HCI best practices -->
     
-    <!-- Display / Hero -->
-    <style name="TextAppearance.BidHub.Display" parent="TextAppearance.Material3.HeadlineLarge">
-        <item name="android:textSize">34sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text_primary</item>
-        <item name="android:lineSpacingExtra">6sp</item>
-        <item name="android:lineSpacingMultiplier">1.18</item>
+    <!-- Display / Hero - Material 3 -->
+    <style name="TextAppearance.BidHub.Display" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="android:textColor">@color/on_surface</item>
     </style>
     
-    <!-- H1 - Page Titles -->
-    <style name="TextAppearance.BidHub.H1" parent="TextAppearance.Material3.HeadlineMedium">
-        <item name="android:textSize">28sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text_primary</item>
-        <item name="android:lineSpacingExtra">8sp</item>
-        <item name="android:lineSpacingMultiplier">1.29</item>
+    <!-- H1 - Page Titles - Material 3 -->
+    <style name="TextAppearance.BidHub.H1" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:textColor">@color/on_surface</item>
     </style>
     
-    <!-- H2 - Section Headings -->
+    <!-- H2 - Section Headings - Material 3 -->
     <style name="TextAppearance.BidHub.H2" parent="TextAppearance.Material3.HeadlineSmall">
-        <item name="android:textSize">24sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text_primary</item>
-        <item name="android:lineSpacingExtra">8sp</item>
-        <item name="android:lineSpacingMultiplier">1.33</item>
+        <item name="android:textColor">@color/on_surface</item>
     </style>
     
-    <!-- H3 - Subsection Headings -->
+    <!-- H3 - Subsection Headings - Material 3 -->
     <style name="TextAppearance.BidHub.H3" parent="TextAppearance.Material3.TitleLarge">
-        <item name="android:textSize">20sp</item>
-        <item name="android:textStyle">normal</item>
-        <item name="android:textColor">@color/text_primary</item>
-        <item name="android:lineSpacingExtra">8sp</item>
-        <item name="android:lineSpacingMultiplier">1.4</item>
+        <item name="android:textColor">@color/on_surface</item>
     </style>
     
-    <!-- Body 1 - Main Body Text -->
+    <!-- Body 1 - Main Body Text - Material 3 -->
     <style name="TextAppearance.BidHub.Body1" parent="TextAppearance.Material3.BodyLarge">
-        <item name="android:textSize">16sp</item>
-        <item name="android:textStyle">normal</item>
-        <item name="android:textColor">@color/text_primary</item>
-        <item name="android:lineSpacingExtra">8sp</item>
-        <item name="android:lineSpacingMultiplier">1.5</item>
+        <item name="android:textColor">@color/on_surface</item>
     </style>
     
-    <!-- Body 2 - Secondary Body -->
+    <!-- Body 2 - Secondary Body - Material 3 -->
     <style name="TextAppearance.BidHub.Body2" parent="TextAppearance.Material3.BodyMedium">
-        <item name="android:textSize">14sp</item>
-        <item name="android:textStyle">normal</item>
-        <item name="android:textColor">@color/text_secondary</item>
-        <item name="android:lineSpacingExtra">6sp</item>
-        <item name="android:lineSpacingMultiplier">1.43</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
     </style>
     
     <!-- Button Text -->
@@ -66,22 +42,14 @@
         <item name="android:lineSpacingMultiplier">1.43</item>
     </style>
     
-    <!-- Caption - Tertiary Info -->
+    <!-- Caption - Tertiary Info - Material 3 -->
     <style name="TextAppearance.BidHub.Caption" parent="TextAppearance.Material3.BodySmall">
-        <item name="android:textSize">12sp</item>
-        <item name="android:textStyle">normal</item>
-        <item name="android:textColor">@color/text_secondary</item>
-        <item name="android:lineSpacingExtra">4sp</item>
-        <item name="android:lineSpacingMultiplier">1.33</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
     </style>
     
-    <!-- Overline / Label - Small Labels, Chips -->
+    <!-- Overline / Label - Small Labels, Chips - Material 3 -->
     <style name="TextAppearance.BidHub.Overline" parent="TextAppearance.Material3.LabelSmall">
-        <item name="android:textSize">10sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text_secondary</item>
-        <item name="android:lineSpacingExtra">4sp</item>
-        <item name="android:lineSpacingMultiplier">1.4</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
     </style>
     
     <!-- LEGACY COMPATIBILITY (Maintain for existing code) -->
@@ -107,41 +75,44 @@
     <style name="TextAppearance.BidHub.Alias" parent="TextAppearance.BidHub.Body2"/>
     
     <!-- BUTTON STYLES -->
-    <!-- Primary Button (Filled) -->
+    <!-- Primary Button (Filled) - Material 3 -->
     <style name="Widget.BidHub.Button.Primary" parent="Widget.Material3.Button">
         <item name="android:layout_height">@dimen/button_height_primary</item>
         <item name="android:minHeight">@dimen/button_height_primary</item>
         <item name="android:backgroundTint">@color/primary</item>
         <item name="android:textColor">@color/on_primary</item>
         <item name="android:textAppearance">@style/TextAppearance.BidHub.Button</item>
-        <item name="android:paddingHorizontal">20dp</item>
+        <item name="android:paddingHorizontal">24dp</item>
         <item name="android:paddingVertical">12dp</item>
-        <item name="cornerRadius">12dp</item>
-        <item name="android:elevation">2dp</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:elevation">0dp</item>
         <item name="android:stateListAnimator">@null</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.BidHub.Button</item>
     </style>
     
-    <!-- Outlined Button -->
+    <!-- Outlined Button - Material 3 -->
     <style name="Widget.BidHub.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:layout_height">@dimen/button_height_primary</item>
         <item name="android:minHeight">@dimen/button_height_primary</item>
         <item name="android:textColor">@color/primary</item>
         <item name="android:textAppearance">@style/TextAppearance.BidHub.Button</item>
-        <item name="strokeColor">@color/primary</item>
+        <item name="strokeColor">@color/outline</item>
         <item name="strokeWidth">1dp</item>
-        <item name="android:paddingHorizontal">20dp</item>
+        <item name="android:paddingHorizontal">24dp</item>
         <item name="android:paddingVertical">12dp</item>
-        <item name="cornerRadius">12dp</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.BidHub.Button</item>
     </style>
     
-    <!-- Text Button -->
+    <!-- Text Button - Material 3 -->
     <style name="Widget.BidHub.Button.Text" parent="Widget.Material3.Button.TextButton">
         <item name="android:layout_height">@dimen/button_height_primary</item>
         <item name="android:minHeight">@dimen/button_height_primary</item>
         <item name="android:textColor">@color/primary</item>
         <item name="android:textAppearance">@style/TextAppearance.BidHub.Button</item>
-        <item name="android:paddingHorizontal">16dp</item>
+        <item name="android:paddingHorizontal">12dp</item>
         <item name="android:paddingVertical">12dp</item>
+        <item name="rippleColor">@color/primary_light</item>
     </style>
     
     <!-- Semantic Button Variants -->
@@ -160,57 +131,99 @@
         <item name="android:textColor">@color/on_primary</item>
     </style>
     
-    <!-- CARD STYLES -->
+    <!-- CARD STYLES - Material 3 -->
     <style name="Widget.BidHub.Card" parent="Widget.Material3.CardView.Elevated">
         <item name="cardCornerRadius">12dp</item>
         <item name="cardElevation">1dp</item>
-        <item name="cardBackgroundColor">@color/neutral_0</item>
+        <item name="cardBackgroundColor">@color/surface</item>
+        <item name="strokeColor">@color/outline</item>
+        <item name="strokeWidth">0dp</item>
         <item name="android:layout_margin">@dimen/spacing_2</item>
     </style>
     
     <style name="Widget.BidHub.Card.Item" parent="Widget.BidHub.Card">
-        <item name="cardElevation">2dp</item>
+        <item name="cardElevation">3dp</item>
+        <item name="cardBackgroundColor">@color/surface_container</item>
     </style>
     
     <style name="Widget.BidHub.Card.Bid" parent="Widget.BidHub.Card">
-        <item name="cardCornerRadius">12dp</item>
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">2dp</item>
     </style>
     
     <style name="Widget.BidHub.Card.Credit" parent="Widget.BidHub.Card">
-        <item name="cardCornerRadius">12dp</item>
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">2dp</item>
+        <item name="cardBackgroundColor">@color/surface_container_high</item>
     </style>
     
-    <!-- INPUT FIELD STYLES -->
+    <!-- Material 3 Filled Card -->
+    <style name="Widget.BidHub.Card.Filled" parent="Widget.Material3.CardView.Filled">
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardBackgroundColor">@color/surface_variant</item>
+        <item name="android:layout_margin">@dimen/spacing_2</item>
+    </style>
+    
+    <!-- Material 3 Outlined Card -->
+    <style name="Widget.BidHub.Card.Outlined" parent="Widget.Material3.CardView.Outlined">
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardBackgroundColor">@color/surface</item>
+        <item name="strokeColor">@color/outline</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:layout_margin">@dimen/spacing_2</item>
+    </style>
+    
+    <!-- INPUT FIELD STYLES - Material 3 -->
+    <!-- Outlined Text Field (Default) -->
     <style name="Widget.BidHub.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
-        <item name="boxCornerRadiusTopStart">8dp</item>
-        <item name="boxCornerRadiusTopEnd">8dp</item>
-        <item name="boxCornerRadiusBottomStart">8dp</item>
-        <item name="boxCornerRadiusBottomEnd">8dp</item>
+        <item name="boxCornerRadiusTopStart">4dp</item>
+        <item name="boxCornerRadiusTopEnd">4dp</item>
+        <item name="boxCornerRadiusBottomStart">4dp</item>
+        <item name="boxCornerRadiusBottomEnd">4dp</item>
         <item name="boxStrokeColor">@color/outline</item>
         <item name="boxStrokeWidth">1dp</item>
         <item name="boxStrokeWidthFocused">2dp</item>
-        <item name="hintTextColor">@color/text_hint</item>
-        <item name="android:textColorHint">@color/text_hint</item>
+        <item name="hintTextColor">@color/on_surface_variant</item>
+        <item name="android:textColorHint">@color/on_surface_variant</item>
+        <item name="errorTextColor">@color/error</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="boxBackgroundColor">@color/surface</item>
+    </style>
+    
+    <!-- Filled Text Field -->
+    <style name="Widget.BidHub.TextInputLayout.Filled" parent="Widget.Material3.TextInputLayout.FilledBox">
+        <item name="boxCornerRadiusTopStart">4dp</item>
+        <item name="boxCornerRadiusTopEnd">4dp</item>
+        <item name="boxCornerRadiusBottomStart">0dp</item>
+        <item name="boxCornerRadiusBottomEnd">0dp</item>
+        <item name="boxBackgroundColor">@color/surface_container_high</item>
+        <item name="boxStrokeColor">@color/outline</item>
+        <item name="boxStrokeWidth">0dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="hintTextColor">@color/on_surface_variant</item>
+        <item name="android:textColorHint">@color/on_surface_variant</item>
         <item name="errorTextColor">@color/error</item>
         <item name="android:minHeight">56dp</item>
     </style>
     
     <style name="Widget.BidHub.TextInputEditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">
         <item name="android:textSize">16sp</item>
-        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColor">@color/on_surface</item>
         <item name="android:paddingHorizontal">16dp</item>
         <item name="android:paddingVertical">12dp</item>
     </style>
     
-    <!-- CHIP STYLES -->
+    <!-- CHIP STYLES - Material 3 -->
     <style name="Widget.BidHub.Chip.Filter" parent="Widget.Material3.Chip.Filter">
         <item name="android:layout_height">32dp</item>
         <item name="android:minHeight">32dp</item>
         <item name="chipCornerRadius">8dp</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColor">@color/on_surface</item>
         <item name="chipStrokeColor">@color/outline</item>
-        <item name="chipBackgroundColor">@color/neutral_0</item>
+        <item name="chipBackgroundColor">@color/surface</item>
+        <item name="chipStrokeWidth">1dp</item>
+        <item name="rippleColor">@color/primary_light</item>
     </style>
     
     <style name="Widget.BidHub.Chip.Choice" parent="Widget.Material3.Chip.Assist">
@@ -220,6 +233,27 @@
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">@color/on_primary</item>
         <item name="chipBackgroundColor">@color/primary</item>
+        <item name="rippleColor">@color/primary_light</item>
+    </style>
+    
+    <!-- Material 3 Suggestion Chip -->
+    <style name="Widget.BidHub.Chip.Suggestion" parent="Widget.Material3.Chip.Suggestion">
+        <item name="android:layout_height">32dp</item>
+        <item name="android:minHeight">32dp</item>
+        <item name="chipCornerRadius">8dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/on_surface_variant</item>
+        <item name="chipBackgroundColor">@color/surface_container_high</item>
+    </style>
+    
+    <!-- Material 3 Input Chip -->
+    <style name="Widget.BidHub.Chip.Input" parent="Widget.Material3.Chip.Input">
+        <item name="android:layout_height">32dp</item>
+        <item name="android:minHeight">32dp</item>
+        <item name="chipCornerRadius">8dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/on_surface</item>
+        <item name="chipBackgroundColor">@color/surface_container</item>
     </style>
     
     <!-- PROGRESS BAR STYLES -->
@@ -273,3 +307,4 @@
         <item name="cardBackgroundColor">@color/neutral_100</item>
     </style>
 </resources>
+

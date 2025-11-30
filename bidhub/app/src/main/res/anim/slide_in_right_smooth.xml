@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Material 3 Motion: Slide In Right -->
 <set xmlns:android="http://schemas.android.com/apk/res/android"
-    android:duration="250"
-    android:interpolator="@android:anim/decelerate_interpolator">
+    android:duration="300"
+    android:interpolator="@interpolator/material_motion_emphasized">
     
     <translate
         android:fromXDelta="100%p"
@@ -10,12 +11,4 @@
     <alpha
         android:fromAlpha="0.0"
         android:toAlpha="1.0" />
-    
-    <scale
-        android:fromXScale="0.95"
-        android:toXScale="1.0"
-        android:fromYScale="0.95"
-        android:toYScale="1.0"
-        android:pivotX="50%"
-        android:pivotY="50%" />
 </set>

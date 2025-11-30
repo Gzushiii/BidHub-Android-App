@@ -30,10 +30,22 @@
         <item name="colorSurfaceVariant">@color/surface_variant</item>
         <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
         
+        <!-- Material 3 Surface Container Colors -->
+        <item name="colorSurfaceContainer">@color/surface_container</item>
+        <item name="colorSurfaceContainerLow">@color/surface_container_low</item>
+        <item name="colorSurfaceContainerLowest">@color/surface_container_lowest</item>
+        <item name="colorSurfaceContainerHigh">@color/surface_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/surface_container_highest</item>
+        
         <!-- Status bar and navigation bar -->
-        <item name="android:statusBarColor">@color/primary</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@color/surface</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        
+        <!-- Material 3 Window Attributes -->
+        <item name="android:windowSplashScreenBackground">@color/primary</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
         
         <!-- Text colors -->
         <item name="android:textColorPrimary">@color/text_primary</item>
@@ -121,11 +133,23 @@
         <item name="cornerRadius">16dp</item>
     </style>
     
-    <!-- Bottom Navigation Active Indicator -->
+    <!-- Bottom Navigation Active Indicator - Material 3 -->
     <style name="ActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
         <item name="android:width">64dp</item>
         <item name="android:height">32dp</item>
-        <item name="android:background">@drawable/active_indicator_background</item>
         <item name="cornerRadius">16dp</item>
+        <item name="color">@color/primary_container</item>
+    </style>
+    
+    <!-- Shape Appearance for Navigation Indicator -->
+    <style name="ShapeAppearance.BidHub.NavigationIndicator" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+    
+    <!-- Shape Appearance for Buttons -->
+    <style name="ShapeAppearance.BidHub.Button" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">20dp</item>
     </style>
 </resources>

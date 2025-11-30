@@ -30,22 +30,18 @@
             
     </FrameLayout>
 
-    <!-- Bottom Navigation -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
+    <!-- Bottom Navigation - Material 3 NavigationBar -->
+    <com.google.android.material.navigation.NavigationBarView
         android:id="@+id/bottomNavigationView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/bottom_nav_border"
-        android:elevation="8dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="12dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:background="@color/surface"
+        android:elevation="3dp"
         app:menu="@menu/bottom_navigation_menu"
         app:itemIconTint="@color/bottom_nav_color_state"
         app:itemTextColor="@color/bottom_nav_color_state"
         app:labelVisibilityMode="labeled"
-        app:itemRippleColor="@color/primaryLight"
+        app:itemRippleColor="@color/primary_light"
         app:itemActiveIndicatorStyle="@style/ActiveIndicator" />
 
 </LinearLayout>

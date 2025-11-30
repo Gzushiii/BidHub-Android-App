@@ -44,8 +44,8 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.okhttp)
     
-    // Material Design 3
-    implementation("com.google.android.material:material:1.11.0")
+    // Material Design 3 - Latest version
+    implementation("com.google.android.material:material:1.12.0")
     
     // Glide for image loading
     implementation("com.github.bumptech.glide:glide:4.16.0")

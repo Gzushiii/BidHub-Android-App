@@ -342,15 +342,18 @@ BEGIN
     FOR UPDATE;
 
     -- Check if item exists and is active (support both starting_bid and starting_price)
-    SELECT COUNT(*), seller_id, COALESCE(starting_bid, starting_price)
-    INTO v_item_exists, v_seller_id, v_starting_price
+    SELECT seller_id, COALESCE(starting_bid, starting_price)
+    INTO v_seller_id, v_starting_price
     FROM items
     WHERE id = p_item_id AND status = 'active'
     FOR UPDATE;
 
-    IF v_item_exists = 0 THEN
+    -- Check if item was found (seller_id will be NULL if not found)
+    IF v_seller_id IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Item not found or not active';
     END IF;
+    
+    SET v_item_exists = 1; -- Item exists if we got here
 
     -- Check bidder is not the seller
     IF p_bidder_id = v_seller_id THEN
@@ -462,15 +465,18 @@ BEGIN
     FOR UPDATE;
 
     -- Check if item exists and get buy now price
-    SELECT COUNT(*), seller_id, buy_now_price
-    INTO v_item_exists, v_seller_id, v_buy_now_price
+    SELECT seller_id, buy_now_price
+    INTO v_seller_id, v_buy_now_price
     FROM items
     WHERE id = p_item_id AND status = 'active'
     FOR UPDATE;
 
-    IF v_item_exists = 0 THEN
+    -- Check if item was found (seller_id will be NULL if not found)
+    IF v_seller_id IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Item not found or not active';
     END IF;
+    
+    SET v_item_exists = 1; -- Item exists if we got here
 
     IF v_buy_now_price IS NULL OR v_buy_now_price <= 0 THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Item does not have buy now option';

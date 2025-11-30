@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Material 3 Emphasized Easing Curve -->
+<!-- For emphasized motion (entering elements) -->
+<pathInterpolator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:controlX1="0.05"
+    android:controlY1="0.0"
+    android:controlX2="0.133"
+    android:controlY2="1.0" />
+

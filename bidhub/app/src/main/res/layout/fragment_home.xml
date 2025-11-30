@@ -19,85 +19,96 @@
             android:orientation="vertical"
             android:background="@color/background">
 
-            <!-- Simple Header: Profile, Title, Credits -->
+            <!-- Simple Header: Profile, Title, Credits - Material 3 -->
             <LinearLayout
                 android:id="@+id/header_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:padding="16dp"
-                android:paddingBottom="8dp"
-                android:background="@color/background">
+                android:paddingStart="@dimen/spacing_4"
+                android:paddingEnd="@dimen/spacing_4"
+                android:paddingTop="@dimen/spacing_4"
+                android:paddingBottom="@dimen/spacing_2"
+                android:background="@color/surface">
 
-                <!-- Profile Image (Left) -->
-                <ImageView
-                    android:id="@+id/iv_profile"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:scaleType="centerCrop"
-                    android:background="@drawable/rounded_background"
-                    android:backgroundTint="@color/surface_variant"
-                    android:contentDescription="@string/profile"
-                    android:layout_marginEnd="12dp"
-                    tools:src="@drawable/ic_person" />
+                <!-- Profile Image (Left) - Material 3 -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    app:cardCornerRadius="20dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/surface_container_high"
+                    app:strokeWidth="0dp"
+                    android:layout_marginEnd="@dimen/spacing_3">
+                    
+                    <ImageView
+                        android:id="@+id/iv_profile"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="@string/profile"
+                        tools:src="@drawable/ic_person" />
+                        
+                </com.google.android.material.card.MaterialCardView>
 
-                <!-- Title (Center) -->
+                <!-- Title (Center) - Material 3 -->
                 <TextView
                     android:id="@+id/tv_app_title"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/app_name"
-                    android:textAppearance="@style/TextAppearance.BidHub.H2"
-                    android:textColor="@color/text_primary"
+                    android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                    android:textColor="@color/on_surface"
                     android:gravity="center" />
 
-                <!-- Credits (Right) -->
+                <!-- Credits (Right) - Material 3 -->
                 <TextView
                     android:id="@+id/tv_header_credits"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="1200"
-                    android:textAppearance="@style/TextAppearance.BidHub.Body1"
+                    android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
                     android:textStyle="bold"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="@color/on_surface_variant"
                     android:minWidth="48dp"
                     android:gravity="end" />
 
             </LinearLayout>
 
-            <!-- Search Bar -->
+            <!-- Search Bar - Material 3 Styled -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/search_card"
+                style="@style/Widget.BidHub.Card.Filled"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/spacing_4"
                 android:layout_marginEnd="@dimen/spacing_4"
                 android:layout_marginTop="@dimen/spacing_3"
                 android:layout_marginBottom="@dimen/spacing_3"
-                app:cardCornerRadius="8dp"
+                app:cardCornerRadius="28dp"
                 app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/neutral_100"
+                app:cardBackgroundColor="@color/surface_container_high"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="56dp"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
                     android:focusable="true"
                     android:focusableInTouchMode="true"
                     android:clickable="true"
-                    android:background="?attr/selectableItemBackground">
+                    android:background="?attr/selectableItemBackgroundBorderless">
 
                     <ImageView
                         android:layout_width="@dimen/icon_size_medium"
                         android:layout_height="@dimen/icon_size_medium"
                         android:src="@drawable/ic_search"
-                        android:tint="@color/text_secondary"
+                        android:tint="@color/on_surface_variant"
                         android:contentDescription="@string/search"
                         android:layout_marginEnd="@dimen/spacing_3" />
 
@@ -106,47 +117,50 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/search_for_items"
-                        android:textAppearance="@style/TextAppearance.BidHub.Body1"
-                        android:textColor="@color/text_secondary"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                        android:textColor="@color/on_surface_variant"
                         android:maxLines="1" />
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Category Chips -->
+            <!-- Category Chips - Material 3 -->
             <HorizontalScrollView
                 android:id="@+id/hsv_categories"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:scrollbars="none"
                 android:fadeScrollbars="true"
-                android:layout_marginBottom="12dp">
+                android:layout_marginTop="@dimen/spacing_2"
+                android:layout_marginBottom="@dimen/spacing_4">
 
                 <LinearLayout
                     android:id="@+id/layout_category_chips"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
+                    android:paddingStart="@dimen/spacing_4"
+                    android:paddingEnd="@dimen/spacing_4"
+                    android:paddingTop="@dimen/spacing_2"
+                    android:paddingBottom="@dimen/spacing_2"
                     android:gravity="center_vertical">
 
-                    <!-- Categories will be added programmatically -->
+                    <!-- Categories will be added programmatically as Material 3 Chips -->
 
                 </LinearLayout>
 
             </HorizontalScrollView>
 
-            <!-- Featured Auctions Section -->
+            <!-- Featured Auctions Section - Material 3 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/featured_auctions"
-                android:textAppearance="@style/TextAppearance.BidHub.H2"
-                android:textColor="@color/text_primary"
+                android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                android:textColor="@color/on_surface"
                 android:layout_marginStart="@dimen/spacing_4"
-                android:layout_marginTop="@dimen/spacing_5"
+                android:layout_marginTop="@dimen/spacing_6"
                 android:layout_marginBottom="@dimen/spacing_3" />
 
             <androidx.recyclerview.widget.RecyclerView
@@ -155,18 +169,20 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:nestedScrollingEnabled="false"
-                android:layout_marginBottom="20dp"
+                android:paddingStart="@dimen/spacing_2"
+                android:paddingEnd="@dimen/spacing_2"
+                android:layout_marginBottom="@dimen/spacing_6"
                 tools:listitem="@layout/item_card" />
 
-            <!-- Active Auctions Section -->
+            <!-- Active Auctions Section - Material 3 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/active_auctions"
-                android:textAppearance="@style/TextAppearance.BidHub.H2"
-                android:textColor="@color/text_primary"
+                android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                android:textColor="@color/on_surface"
                 android:layout_marginStart="@dimen/spacing_4"
-                android:layout_marginTop="@dimen/spacing_5"
+                android:layout_marginTop="@dimen/spacing_6"
                 android:layout_marginBottom="@dimen/spacing_3" />
 
             <androidx.recyclerview.widget.RecyclerView
@@ -174,27 +190,29 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"
-                android:layout_marginBottom="20dp"
+                android:paddingStart="@dimen/spacing_2"
+                android:paddingEnd="@dimen/spacing_2"
+                android:layout_marginBottom="@dimen/spacing_6"
                 tools:listitem="@layout/item_active_auction" />
 
-            <!-- Your Active Bids Section (if keeping both) -->
+            <!-- Your Active Bids Section - Material 3 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="12dp">
+                android:layout_marginStart="@dimen/spacing_4"
+                android:layout_marginEnd="@dimen/spacing_4"
+                android:layout_marginTop="@dimen/spacing_6"
+                android:layout_marginBottom="@dimen/spacing_3">
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/your_active_bids"
-                    android:textAppearance="@style/TextAppearance.BidHub.H2"
-                    android:textColor="@color/text_primary" />
+                    android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                    android:textColor="@color/on_surface" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_view_all_bids"
@@ -214,18 +232,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"
-                android:layout_marginBottom="20dp"
+                android:paddingStart="@dimen/spacing_2"
+                android:paddingEnd="@dimen/spacing_2"
+                android:layout_marginBottom="@dimen/spacing_6"
                 tools:listitem="@layout/item_active_bid" />
 
-            <!-- Categories Section -->
+            <!-- Categories Section - Material 3 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/browse_categories"
-                android:textAppearance="@style/TextAppearance.BidHub.H2"
-                android:textColor="@color/text_primary"
+                android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                android:textColor="@color/on_surface"
                 android:layout_marginStart="@dimen/spacing_4"
-                android:layout_marginTop="@dimen/spacing_5"
+                android:layout_marginTop="@dimen/spacing_6"
                 android:layout_marginBottom="@dimen/spacing_3" />
 
             <androidx.recyclerview.widget.RecyclerView
@@ -233,7 +253,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:nestedScrollingEnabled="false"
-                android:layout_marginBottom="20dp"
+                android:paddingStart="@dimen/spacing_2"
+                android:paddingEnd="@dimen/spacing_2"
+                android:layout_marginBottom="@dimen/spacing_6"
                 tools:listitem="@layout/item_category" />
 
             <!-- Empty State (initially hidden) -->
@@ -276,13 +298,16 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Loading Indicator -->
-    <ProgressBar
+    <!-- Loading Indicator - Material 3 -->
+    <com.google.android.material.progressindicator.CircularProgressIndicator
         android:id="@+id/progress_loading"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/Widget.Material3.CircularProgressIndicator"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_gravity="center"
         android:visibility="gone"
+        app:indicatorColor="@color/primary"
+        app:trackColor="@color/surface_container_high"
         android:contentDescription="@string/loading" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

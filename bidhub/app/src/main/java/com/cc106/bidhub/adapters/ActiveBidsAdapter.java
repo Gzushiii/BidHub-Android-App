@@ -14,6 +14,7 @@ import com.cc106.bidhub.bidding.Bid;
 import com.cc106.bidhub.bidding.BidStatus;
 import com.cc106.bidhub.items.Item;
 import com.cc106.bidhub.items.ItemManager;
+import com.google.android.material.chip.Chip;
 
 import java.text.NumberFormat;
 import java.util.Currency;
@@ -82,7 +83,7 @@ public class ActiveBidsAdapter extends RecyclerView.Adapter<ActiveBidsAdapter.Ac
         private TextView tvCurrentBidAmount;
         private TextView itemTitleText;
         private TextView timeRemainingText;
-        private TextView bidStatusText;
+        private Chip bidStatusChip;
         private com.google.android.material.button.MaterialButton btnBidNow;
         private android.widget.ImageView ivItemImage;
         
@@ -93,7 +94,7 @@ public class ActiveBidsAdapter extends RecyclerView.Adapter<ActiveBidsAdapter.Ac
             tvCurrentBidAmount = itemView.findViewById(R.id.tv_current_bid_amount);
             itemTitleText = itemView.findViewById(R.id.item_title_text);
             timeRemainingText = itemView.findViewById(R.id.time_remaining_text);
-            bidStatusText = itemView.findViewById(R.id.bid_status_text);
+            bidStatusChip = itemView.findViewById(R.id.bid_status_chip);
             btnBidNow = itemView.findViewById(R.id.btn_bid_now);
             ivItemImage = itemView.findViewById(R.id.iv_item_image);
             
@@ -177,7 +178,7 @@ public class ActiveBidsAdapter extends RecyclerView.Adapter<ActiveBidsAdapter.Ac
         
         private void setBidStatus(Bid bid, Item item) {
             if (item == null) {
-                bidStatusText.setVisibility(View.GONE);
+                bidStatusChip.setVisibility(View.GONE);
                 return;
             }
             
@@ -186,17 +187,17 @@ public class ActiveBidsAdapter extends RecyclerView.Adapter<ActiveBidsAdapter.Ac
             boolean isHighest = bid.getAmount() == item.getCurrentPrice();
             
             if (isWinning && isHighest) {
-                bidStatusText.setText("WINNING");
-                bidStatusText.setTextColor(context.getResources().getColor(R.color.success));
-                bidStatusText.setVisibility(View.VISIBLE);
+                bidStatusChip.setText("WINNING");
+                bidStatusChip.setTextColor(context.getResources().getColor(R.color.success));
+                bidStatusChip.setVisibility(View.VISIBLE);
             } else if (isWinning) {
-                bidStatusText.setText("LEADING");
-                bidStatusText.setTextColor(context.getResources().getColor(R.color.success));
-                bidStatusText.setVisibility(View.VISIBLE);
+                bidStatusChip.setText("LEADING");
+                bidStatusChip.setTextColor(context.getResources().getColor(R.color.success));
+                bidStatusChip.setVisibility(View.VISIBLE);
             } else {
-                bidStatusText.setText("OUTBID");
-                bidStatusText.setTextColor(context.getResources().getColor(R.color.error));
-                bidStatusText.setVisibility(View.VISIBLE);
+                bidStatusChip.setText("OUTBID");
+                bidStatusChip.setTextColor(context.getResources().getColor(R.color.error));
+                bidStatusChip.setVisibility(View.VISIBLE);
             }
         }
     }
