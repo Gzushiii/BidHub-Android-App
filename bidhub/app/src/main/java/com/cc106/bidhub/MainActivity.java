@@ -19,7 +19,7 @@ import com.cc106.bidhub.fragments.CreditsFragment;
 import com.cc106.bidhub.fragments.HomeFragment;
 import com.cc106.bidhub.fragments.PostFragment;
 import com.cc106.bidhub.fragments.ProfileFragment;
-import com.google.android.material.navigation.NavigationBarView;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends BaseActivity {
 

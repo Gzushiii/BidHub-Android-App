@@ -30,8 +30,8 @@
             
     </FrameLayout>
 
-    <!-- Bottom Navigation - Material 3 NavigationBar -->
-    <com.google.android.material.navigation.NavigationBarView
+    <!-- Bottom Navigation - Material 3 -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

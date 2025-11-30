@@ -8,11 +8,11 @@ import com.cc106.bidhub.toast.ToastHelper;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityOptionsCompat;
 import androidx.activity.OnBackPressedCallback;
-import com.google.android.material.navigation.NavigationBarView;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-public abstract class BaseActivity extends AppCompatActivity implements NavigationBarView.OnItemSelectedListener {
+public abstract class BaseActivity extends AppCompatActivity implements BottomNavigationView.OnItemSelectedListener {
 
-    protected NavigationBarView bottomNavigationView;
+    protected BottomNavigationView bottomNavigationView;
     private OnBackPressedCallback backPressedCallback;
 
     @Override
