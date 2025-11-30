@@ -1267,104 +1267,6 @@ public class HomeFragment extends Fragment {
                             item.setSellerName("Unknown");
                         }
                     }
-<<<<<<< HEAD
-                }
-                
-                // Set bid count
-                int bidCount = itemJson.optInt("bid_count", 0);
-                item.setBidCount(bidCount);
-                
-                // Set end date
-                if (itemJson.has("end_date") && !itemJson.isNull("end_date")) {
-                    try {
-                        String endDateStr = itemJson.getString("end_date");
-                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
-                        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-                        item.setEndDate(sdf.parse(endDateStr));
-                    } catch (Exception e) {
-                        android.util.Log.w("HomeFragment", "Error parsing end_date: " + e.getMessage());
-                    }
-                } else if (itemJson.has("bid_deadline") && !itemJson.isNull("bid_deadline")) {
-                    try {
-                        String deadlineStr = itemJson.getString("bid_deadline");
-                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
-                        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-                        item.setEndDate(sdf.parse(deadlineStr));
-                    } catch (Exception e) {
-                        android.util.Log.w("HomeFragment", "Error parsing bid_deadline: " + e.getMessage());
-                    }
-                }
-                
-                // Set created date
-                if (itemJson.has("created_at") && !itemJson.isNull("created_at")) {
-                    try {
-                        String createdAtStr = itemJson.getString("created_at");
-                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
-                        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-                        item.setCreatedAt(sdf.parse(createdAtStr));
-                    } catch (Exception e) {
-                        android.util.Log.w("HomeFragment", "Error parsing created_at: " + e.getMessage());
-                    }
-                }
-                
-                item.setCondition(itemJson.optString("item_condition", itemJson.optString("condition", "good")));
-                item.setStatus(com.cc106.bidhub.items.ItemStatus.ACTIVE);
-                
-                // Parse images
-                if (itemJson.has("images")) {
-                    try {
-                        Object imagesObj = itemJson.get("images");
-                        List<String> imagePaths = new ArrayList<>();
-                        
-                        if (imagesObj instanceof org.json.JSONArray) {
-                            org.json.JSONArray imagesArray = (org.json.JSONArray) imagesObj;
-                            for (int j = 0; j < imagesArray.length(); j++) {
-                                Object imgObj = imagesArray.get(j);
-                                String imageUrl = null;
-                                
-                                if (imgObj instanceof org.json.JSONObject) {
-                                    org.json.JSONObject imgJson = (org.json.JSONObject) imgObj;
-                                    imageUrl = imgJson.optString("image_url", imgJson.optString("url", null));
-                                } else if (imgObj instanceof String) {
-                                    imageUrl = (String) imgObj;
-                                }
-                                
-                                // FIX: Convert relative URLs to absolute URLs
-                                if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
-                                    if (!imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
-                                        String baseUrl = "https://bidhub-android-app.onrender.com";
-                                        if (imageUrl.startsWith("/")) {
-                                            imageUrl = baseUrl + imageUrl;
-                                        } else {
-                                            imageUrl = baseUrl + "/" + imageUrl;
-                                        }
-                                        android.util.Log.d("HomeFragment", "Converted relative URL to absolute: " + imageUrl);
-                                    }
-                                    imagePaths.add(imageUrl);
-                                }
-                            }
-                        } else if (imagesObj instanceof String) {
-                            String imagesString = (String) imagesObj;
-                            if (!imagesString.isEmpty() && !imagesString.equals("null")) {
-                                org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
-                                for (int j = 0; j < imagesArray.length(); j++) {
-                                    String imageUrl = imagesArray.optString(j, null);
-                                    if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
-                                        // FIX: Convert relative URLs to absolute URLs
-                                        if (!imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
-                                            String baseUrl = "https://bidhub-android-app.onrender.com";
-                                            if (imageUrl.startsWith("/")) {
-                                                imageUrl = baseUrl + imageUrl;
-                                            } else {
-                                                imageUrl = baseUrl + "/" + imageUrl;
-                                            }
-                                            android.util.Log.d("HomeFragment", "Converted relative URL to absolute: " + imageUrl);
-                                        }
-                                        imagePaths.add(imageUrl);
-                                    }
-                                }
-                            }
-=======
                     
                     // Set bid count
                     int bidCount = itemJson.optInt("bid_count", 0);
@@ -1379,7 +1281,6 @@ public class HomeFragment extends Fragment {
                             item.setEndDate(sdf.parse(endDateStr));
                         } catch (Exception e) {
                             android.util.Log.w("HomeFragment", "Error parsing end_date: " + e.getMessage());
->>>>>>> d159ffbed0d35eebc23099a9a7a3f48359a01bae
                         }
                     } else if (itemJson.has("bid_deadline") && !itemJson.isNull("bid_deadline")) {
                         try {
@@ -1426,7 +1327,17 @@ public class HomeFragment extends Fragment {
                                         imageUrl = imgJson.optString("image_url", imgJson.optString("url", null));
                                     }
                                     
+                                    // FIX: Convert relative URLs to absolute URLs
                                     if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
+                                        if (!imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+                                            String baseUrl = "https://bidhub-android-app.onrender.com";
+                                            if (imageUrl.startsWith("/")) {
+                                                imageUrl = baseUrl + imageUrl;
+                                            } else {
+                                                imageUrl = baseUrl + "/" + imageUrl;
+                                            }
+                                            android.util.Log.d("HomeFragment", "Converted relative URL to absolute: " + imageUrl);
+                                        }
                                         imagePaths.add(imageUrl);
                                     }
                                 }
@@ -1437,7 +1348,17 @@ public class HomeFragment extends Fragment {
                                         org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
                                         for (int j = 0; j < imagesArray.length(); j++) {
                                             String imageUrl = imagesArray.optString(j, null);
+                                            // FIX: Convert relative URLs to absolute URLs
                                             if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
+                                                if (!imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+                                                    String baseUrl = "https://bidhub-android-app.onrender.com";
+                                                    if (imageUrl.startsWith("/")) {
+                                                        imageUrl = baseUrl + imageUrl;
+                                                    } else {
+                                                        imageUrl = baseUrl + "/" + imageUrl;
+                                                    }
+                                                    android.util.Log.d("HomeFragment", "Converted relative URL to absolute: " + imageUrl);
+                                                }
                                                 imagePaths.add(imageUrl);
                                             }
                                         }

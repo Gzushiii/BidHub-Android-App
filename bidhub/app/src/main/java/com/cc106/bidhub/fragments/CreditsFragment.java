@@ -321,6 +321,19 @@ public class CreditsFragment extends Fragment {
         int[] topupId = {0};
         String[] referenceCode = {""};
         
+        // Store package info and current balance for validation
+        final double packageAmount = pkg.getPrice();
+        final double packageCredits = pkg.getCredits();
+        com.cc106.bidhub.repository.UserRepository userRepo = 
+            com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+        final double currentBalanceBeforeTopup = userRepo.getCredits();
+        
+        android.util.Log.i("CreditsFragment", "=== TOP-UP INITIATED ===");
+        android.util.Log.i("CreditsFragment", String.format("Current balance: %.2f", currentBalanceBeforeTopup));
+        android.util.Log.i("CreditsFragment", String.format("Package amount: %.2f", packageAmount));
+        android.util.Log.i("CreditsFragment", String.format("Package credits: %.2f", packageCredits));
+        android.util.Log.i("CreditsFragment", String.format("Expected new balance: %.2f", currentBalanceBeforeTopup + packageCredits));
+        
         // Start top-up request
         initiateTopupRequest(pkg.getPrice(), new TopupInitCallback() {
             @Override
@@ -403,6 +416,19 @@ public class CreditsFragment extends Fragment {
                     getActivity().runOnUiThread(() -> {
                         android.util.Log.i("CreditsFragment", "=== TOP-UP SUCCESS CALLBACK ===");
                         android.util.Log.i("CreditsFragment", String.format("Balance value received: %.2f, Status: %s", newBalance, topupStatus));
+                        
+                        // Validate balance makes sense
+                        double expectedBalance = currentBalanceBeforeTopup + packageCredits;
+                        double balanceDifference = newBalance - currentBalanceBeforeTopup;
+                        android.util.Log.i("CreditsFragment", String.format("Balance validation - Expected: %.2f, Received: %.2f, Difference: %.2f", 
+                            expectedBalance, newBalance, balanceDifference));
+                        
+                        if (Math.abs(balanceDifference - packageCredits) > 0.01) {
+                            android.util.Log.w("CreditsFragment", String.format(
+                                "WARNING: Balance increment mismatch! Expected increment: %.2f, Actual increment: %.2f, Package credits: %.2f",
+                                packageCredits, balanceDifference, packageCredits));
+                            android.util.Log.w("CreditsFragment", "This may indicate a backend calculation issue. Frontend will display the value received from backend.");
+                        }
                         
                         progressPayment.setVisibility(android.view.View.GONE);
                         dialog.dismiss();
@@ -745,6 +771,13 @@ public class CreditsFragment extends Fragment {
                                 userRepo.updateCreditsImmediately(newBalance);
                                 android.util.Log.i("CreditsFragment", String.format("Balance updated immediately: %.2f -> %.2f (Delta: %.2f)", 
                                     oldBalance, newBalance, newBalance - oldBalance));
+                                
+                                // Log full transaction details for debugging
+                                android.util.Log.i("CreditsFragment", "=== TOP-UP TRANSACTION DETAILS ===");
+                                android.util.Log.i("CreditsFragment", String.format("Old balance: %.2f", oldBalance));
+                                android.util.Log.i("CreditsFragment", String.format("New balance (from API): %.2f", newBalance));
+                                android.util.Log.i("CreditsFragment", String.format("Balance change: %.2f", newBalance - oldBalance));
+                                android.util.Log.i("CreditsFragment", "Note: If balance change doesn't match package amount, this indicates a backend calculation issue.");
                             } else if (shouldUpdateBalance && !"CONFIRMED".equals(topupStatus[0])) {
                                 // Balance present but status is not CONFIRMED - log but don't update yet
                                 android.util.Log.i("CreditsFragment", String.format("Top-up status is %s with balance %.2f - will refresh from backend to confirm", topupStatus[0], newBalance));
