@@ -75,16 +75,41 @@ router.get('/', async (req, res) => {
       
       const bidCount = bidCountResult[0]?.bid_count || 0;
       
-      // Get images for this item
-      const [images] = await pool.query(
-        'SELECT image_url FROM item_images WHERE item_id = ? OR item_uuid_id = ? ORDER BY display_order',
-        [item.integer_id || item.id, item.id || item.uuid_id]
-      );
+      // Get images for this item - FIX: Ensure proper image URL retrieval
+      let imageUrls = [];
+      try {
+        // Try both integer_id and uuid_id to find images
+        const [images] = await pool.query(
+          `SELECT image_url FROM item_images 
+           WHERE item_id = ? OR item_uuid_id = ? 
+           ORDER BY display_order ASC`,
+          [item.integer_id || item.id, item.id || item.uuid_id]
+        );
+        
+        // Extract image URLs and filter out null/empty values
+        imageUrls = images
+          .map(img => img.image_url)
+          .filter(url => url != null && url.trim() !== '' && url !== 'null');
+        
+        // If no images found, try alternative lookup
+        if (imageUrls.length === 0 && item.id) {
+          const [altImages] = await pool.query(
+            'SELECT image_url FROM item_images WHERE item_id = ? ORDER BY display_order ASC',
+            [item.id]
+          );
+          imageUrls = altImages
+            .map(img => img.image_url)
+            .filter(url => url != null && url.trim() !== '' && url !== 'null');
+        }
+      } catch (imageError) {
+        console.error(`Error fetching images for item ${item.id}:`, imageError);
+        imageUrls = [];
+      }
       
       return {
         ...item,
         bid_count: bidCount,
-        images: images.map(img => img.image_url),
+        images: imageUrls, // Always return array, even if empty
         seller_username: item.seller_username || null
       };
     }));

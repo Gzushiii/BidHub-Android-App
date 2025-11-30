@@ -108,9 +108,27 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         setupRecyclerView();
         setupSearch();
         setupFilter();
-        loadItems();
+        
+        // FIX: Only load items if we don't have any cached, or always refresh from API
+        // This ensures items persist across configuration changes
+        if (savedInstanceState == null || allItems.isEmpty()) {
+            loadItems();
+        } else {
+            // Restore existing items and apply filters
+            applyFilters();
+        }
         
         return view;
+    }
+    
+    @Override
+    public void onResume() {
+        super.onResume();
+        // FIX: Refresh items on resume to ensure latest data, but preserve existing items during load
+        if (!isLoading) {
+            android.util.Log.d("BrowseFragment", "onResume - refreshing items");
+            loadItems();
+        }
     }
     
     private void initializeViews(View view) {
@@ -174,20 +192,44 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         
         // Set layout manager based on view type
         if (isGridView) {
-            // Use GridLayoutManager with 2 columns and proper spacing
-            GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
-            // Add spacing between items
+            // FIX: Use GridLayoutManager with 2 columns and proper spacing
+            // Calculate column count based on screen size for better responsiveness
+            int columnCount = 2;
+            android.content.res.Resources resources = getContext().getResources();
+            android.util.DisplayMetrics metrics = resources.getDisplayMetrics();
+            float screenWidthDp = metrics.widthPixels / metrics.density;
+            
+            // Adjust columns for larger screens
+            if (screenWidthDp >= 600) {
+                columnCount = 3; // Tablets and larger screens
+            }
+            
+            GridLayoutManager layoutManager = new GridLayoutManager(getContext(), columnCount);
+            
+            // FIX: Add proper spacing between items with consistent margins
             androidx.recyclerview.widget.RecyclerView.ItemDecoration spacingDecoration = 
                 new androidx.recyclerview.widget.RecyclerView.ItemDecoration() {
                     @Override
                     public void getItemOffsets(android.graphics.Rect outRect, View view, 
                                              androidx.recyclerview.widget.RecyclerView parent, 
                                              androidx.recyclerview.widget.RecyclerView.State state) {
+                        // Use consistent 8dp spacing
                         int spacing = (int) (8 * view.getContext().getResources().getDisplayMetrics().density);
-                        outRect.left = spacing / 2;
-                        outRect.right = spacing / 2;
-                        outRect.top = spacing / 2;
-                        outRect.bottom = spacing / 2;
+                        int position = parent.getChildAdapterPosition(view);
+                        int spanCount = ((GridLayoutManager) parent.getLayoutManager()).getSpanCount();
+                        
+                        // Calculate column index
+                        int column = position % spanCount;
+                        
+                        // Apply spacing evenly
+                        outRect.left = spacing - column * spacing / spanCount;
+                        outRect.right = (column + 1) * spacing / spanCount;
+                        
+                        // Vertical spacing
+                        if (position < spanCount) {
+                            outRect.top = spacing; // Top row
+                        }
+                        outRect.bottom = spacing; // All rows
                     }
                 };
             // Remove existing decorations to avoid duplicates
@@ -469,44 +511,32 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                         .collect(java.util.stream.Collectors.toList());
                     android.util.Log.d("BrowseFragment", "Loaded " + activeItems.size() + " active items from database (filtered from " + dbItems.size() + " total)");
                     
-                    // CRITICAL: Only update items if we have valid data
-                    if (!activeItems.isEmpty() || dbItems.isEmpty()) {
-                        // Only clear if we have new data OR if API explicitly returned empty (not an error)
-                        if (getActivity() != null && !getActivity().isFinishing()) {
-                            getActivity().runOnUiThread(() -> {
-                                if (isAdded() && !isDetached()) {
-                                    // Preserve existing items if new data is empty (might be temporary)
-                                    if (!activeItems.isEmpty()) {
-                                        allItems.clear();
-                                        allItems.addAll(activeItems);
-                                        android.util.Log.d("BrowseFragment", "Updated allItems with " + activeItems.size() + " items from API");
-                                    } else {
-                                        android.util.Log.w("BrowseFragment", "API returned empty items list - preserving existing " + allItems.size() + " items");
-                                    }
-                                    isLoading = false;
-                                    swipeRefreshLayout.setRefreshing(false);
-                                    applyFilters();
-                                } else {
-                                    isLoading = false;
-                                    swipeRefreshLayout.setRefreshing(false);
+                    // CRITICAL FIX: Always update items when API returns successfully, even if empty
+                    // This ensures consistency - if API says there are no items, we should show that
+                    // But only clear if we got a successful response with data
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        getActivity().runOnUiThread(() -> {
+                            if (isAdded() && !isDetached()) {
+                                // Always update with API response - this ensures items persist correctly
+                                allItems.clear();
+                                allItems.addAll(activeItems);
+                                android.util.Log.d("BrowseFragment", "Updated allItems with " + activeItems.size() + " items from API");
+                                
+                                // Also update ItemManager cache for consistency
+                                for (Item item : activeItems) {
+                                    itemManager.updateItem(item.getItemId(), item);
                                 }
-                            });
-                        } else {
-                            isLoading = false;
-                        }
-                    } else {
-                        // API returned data but all items were filtered out - preserve existing
-                        android.util.Log.w("BrowseFragment", "All items filtered out, preserving existing items");
-                        if (getActivity() != null && !getActivity().isFinishing()) {
-                            getActivity().runOnUiThread(() -> {
+                                
                                 isLoading = false;
                                 swipeRefreshLayout.setRefreshing(false);
-                                // Don't clear items, just refresh filters
                                 applyFilters();
-                            });
-                        } else {
-                            isLoading = false;
-                        }
+                            } else {
+                                isLoading = false;
+                                swipeRefreshLayout.setRefreshing(false);
+                            }
+                        });
+                    } else {
+                        isLoading = false;
                     }
                 } else {
                     // API call failed - preserve existing items, don't clear
@@ -662,7 +692,8 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                 item.setCondition(itemJson.optString("item_condition", itemJson.optString("condition", "good")));
                 item.setStatus(ItemStatus.ACTIVE);
                 
-                // Parse images if available - handle both JSON array and JSON string
+                // Parse images if available - handle multiple formats
+                // FIX: Enhanced image parsing to handle all possible formats from API
                 if (itemJson.has("images")) {
                     try {
                         Object imagesObj = itemJson.get("images");
@@ -672,25 +703,65 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                             // Images is already a JSON array
                             org.json.JSONArray imagesArray = (org.json.JSONArray) imagesObj;
                             for (int j = 0; j < imagesArray.length(); j++) {
-                                imagePaths.add(imagesArray.getString(j));
+                                Object imgObj = imagesArray.get(j);
+                                String imageUrl = null;
+                                
+                                // Handle different image object formats
+                                if (imgObj instanceof String) {
+                                    // Direct URL string
+                                    imageUrl = (String) imgObj;
+                                } else if (imgObj instanceof org.json.JSONObject) {
+                                    // Object with image_url field
+                                    org.json.JSONObject imgJson = (org.json.JSONObject) imgObj;
+                                    imageUrl = imgJson.optString("image_url", imgJson.optString("url", null));
+                                }
+                                
+                                // Validate and add image URL
+                                if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
+                                    // Ensure URL is properly formatted
+                                    if (!imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+                                        // If it's a relative path, might need to prepend base URL
+                                        // For now, log warning but still add it
+                                        android.util.Log.w("BrowseFragment", "Image URL is not absolute: " + imageUrl);
+                                    }
+                                    imagePaths.add(imageUrl);
+                                }
                             }
                         } else if (imagesObj instanceof String) {
                             // Images is a JSON string, parse it
                             String imagesString = (String) imagesObj;
                             if (!imagesString.isEmpty() && !imagesString.equals("null")) {
-                                org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
-                                for (int j = 0; j < imagesArray.length(); j++) {
-                                    imagePaths.add(imagesArray.getString(j));
+                                try {
+                                    org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
+                                    for (int j = 0; j < imagesArray.length(); j++) {
+                                        String imageUrl = imagesArray.optString(j, null);
+                                        if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
+                                            imagePaths.add(imageUrl);
+                                        }
+                                    }
+                                } catch (org.json.JSONException e) {
+                                    android.util.Log.w("BrowseFragment", "Failed to parse images string as JSON array: " + imagesString);
                                 }
                             }
                         }
                         
+                        // Log image parsing result for debugging
+                        if (!imagePaths.isEmpty()) {
+                            android.util.Log.d("BrowseFragment", "Parsed " + imagePaths.size() + " images for item: " + item.getTitle());
+                        } else {
+                            android.util.Log.w("BrowseFragment", "No valid images found for item: " + item.getTitle());
+                        }
+                        
                         item.setImagePaths(imagePaths);
                     } catch (Exception e) {
-                        android.util.Log.w("BrowseFragment", "Error parsing images for item: " + item.getTitle(), e);
+                        android.util.Log.e("BrowseFragment", "Error parsing images for item: " + item.getTitle(), e);
                         // Set empty list as fallback
                         item.setImagePaths(new ArrayList<>());
                     }
+                } else {
+                    // No images field - set empty list
+                    item.setImagePaths(new ArrayList<>());
+                    android.util.Log.d("BrowseFragment", "No images field for item: " + item.getTitle());
                 }
                 
                 items.add(item);
