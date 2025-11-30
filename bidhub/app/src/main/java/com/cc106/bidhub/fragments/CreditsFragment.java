@@ -126,7 +126,7 @@ public class CreditsFragment extends Fragment {
         addTestButton();
     }
     
-    private void loadCreditInformation() {
+    public void loadCreditInformation() {
         android.util.Log.d("CreditsFragment", "loadCreditInformation called");
         
         if (userId == null) {
@@ -373,10 +373,11 @@ public class CreditsFragment extends Fragment {
             // Submit reference number
             submitTopupReference(topupId[0], refNumber, new TopupSubmitCallback() {
                 @Override
-                public void onSuccess(double newBalance) {
+                public void onSuccess(double newBalance, String status) {
+                    final String topupStatus = status; // Make final for use in inner class
                     getActivity().runOnUiThread(() -> {
                         android.util.Log.i("CreditsFragment", "=== TOP-UP SUCCESS CALLBACK ===");
-                        android.util.Log.i("CreditsFragment", String.format("Balance value received: %.2f", newBalance));
+                        android.util.Log.i("CreditsFragment", String.format("Balance value received: %.2f, Status: %s", newBalance, topupStatus));
                         
                         progressPayment.setVisibility(android.view.View.GONE);
                         dialog.dismiss();
@@ -395,7 +396,21 @@ public class CreditsFragment extends Fragment {
                                         userRepo.updateCreditsImmediately(confirmedBalance);
                                         updateBalanceDisplay();
                                         android.util.Log.i("CreditsFragment", String.format("Balance confirmed from backend: %.2f", confirmedBalance));
-                                        ToastHelper.showSuccess(getContext(), getString(R.string.topup_processed_successfully));
+                                        
+                                        // Notify MainActivity to refresh credit displays in other fragments
+                                        if (getActivity() instanceof com.cc106.bidhub.MainActivity) {
+                                            ((com.cc106.bidhub.MainActivity) getActivity()).refreshCreditDisplays();
+                                        }
+                                        
+                                        // Show appropriate message based on top-up status
+                                        String message = getString(R.string.topup_processed_successfully);
+                                        if ("CONFIRMED".equals(topupStatus)) {
+                                            // Balance was updated immediately
+                                            message = String.format("Top-up confirmed! Your balance is now ₱%.2f", confirmedBalance);
+                                        } else if ("UNDER_REVIEW".equals(topupStatus)) {
+                                            message = "Top-up submitted for review. Your balance will update once confirmed.";
+                                        }
+                                        ToastHelper.showSuccess(getContext(), message);
                                     }
                                 }
                                 
@@ -404,7 +419,18 @@ public class CreditsFragment extends Fragment {
                                     // If refresh fails, still show success but use the value we have
                                     android.util.Log.w("CreditsFragment", "Backend refresh failed: " + errorMessage);
                                     updateBalanceDisplay();
-                                    ToastHelper.showSuccess(getContext(), getString(R.string.topup_processed_successfully));
+                                    
+                                    // Notify MainActivity to refresh credit displays even if backend refresh failed
+                                    if (getActivity() != null && !getActivity().isFinishing() && getActivity() instanceof com.cc106.bidhub.MainActivity) {
+                                        ((com.cc106.bidhub.MainActivity) getActivity()).refreshCreditDisplays();
+                                    }
+                                    
+                                    // Show appropriate message based on status
+                                    String message = getString(R.string.topup_processed_successfully);
+                                    if ("UNDER_REVIEW".equals(topupStatus)) {
+                                        message = "Top-up submitted for review. Your balance will update once confirmed.";
+                                    }
+                                    ToastHelper.showSuccess(getContext(), message);
                                 }
                             }
                         );
@@ -438,7 +464,7 @@ public class CreditsFragment extends Fragment {
      * Interface for top-up submission callback
      */
     private interface TopupSubmitCallback {
-        void onSuccess(double newBalance);
+        void onSuccess(double newBalance, String status);
         void onError(String error);
     }
     
@@ -660,15 +686,16 @@ public class CreditsFragment extends Fragment {
                     // Parse success response to get new balance
                     double newBalance = 0.0;
                     boolean shouldUpdateBalance = false;
+                    final String[] topupStatus = {""}; // Use array to make it effectively final for inner class
                     try {
                         JSONObject responseJson = new JSONObject(responseBody);
-                        String status = responseJson.optString("status", "");
+                        topupStatus[0] = responseJson.optString("status", "");
                         
-                        android.util.Log.i("CreditsFragment", "Top-up status: " + status);
+                        android.util.Log.i("CreditsFragment", "Top-up status: " + topupStatus[0]);
                         
-                        // Only update balance if status is CONFIRMED and new_balance is present
-                        if ("CONFIRMED".equals(status) && responseJson.has("new_balance")) {
-                            // Try multiple field names for compatibility
+                        // Check if new_balance is present in response (regardless of status)
+                        // This handles cases where backend returns balance even for UNDER_REVIEW
+                        if (responseJson.has("new_balance")) {
                             Object balanceObj = responseJson.get("new_balance");
                             if (balanceObj instanceof Number) {
                                 newBalance = ((Number) balanceObj).doubleValue();
@@ -682,20 +709,29 @@ public class CreditsFragment extends Fragment {
                                 }
                             }
                             
-                            if (shouldUpdateBalance) {
-                                android.util.Log.i("CreditsFragment", String.format("New balance from API: %.2f", newBalance));
+                            // Only update immediately if status is CONFIRMED
+                            if (shouldUpdateBalance && "CONFIRMED".equals(topupStatus[0])) {
+                                android.util.Log.i("CreditsFragment", String.format("Top-up CONFIRMED - New balance from API: %.2f", newBalance));
                                 
                                 // CRITICAL: Immediately update UserRepository and SharedPreferences
                                 com.cc106.bidhub.repository.UserRepository userRepo = 
                                     com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
                                 double oldBalance = userRepo.getCredits();
                                 userRepo.updateCreditsImmediately(newBalance);
-                                android.util.Log.i("CreditsFragment", String.format("Balance updated: %.2f -> %.2f (Delta: %.2f)", 
+                                android.util.Log.i("CreditsFragment", String.format("Balance updated immediately: %.2f -> %.2f (Delta: %.2f)", 
                                     oldBalance, newBalance, newBalance - oldBalance));
+                            } else if (shouldUpdateBalance && !"CONFIRMED".equals(topupStatus[0])) {
+                                // Balance present but status is not CONFIRMED - log but don't update yet
+                                android.util.Log.i("CreditsFragment", String.format("Top-up status is %s with balance %.2f - will refresh from backend to confirm", topupStatus[0], newBalance));
+                                // Get current balance to pass to callback (don't change it yet)
+                                com.cc106.bidhub.repository.UserRepository userRepo = 
+                                    com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+                                newBalance = userRepo.getCredits();
+                                shouldUpdateBalance = false;
                             }
                         } else {
-                            // Status is UNDER_REVIEW or other - don't update balance, refresh from backend instead
-                            android.util.Log.i("CreditsFragment", "Top-up status is " + status + " - not updating balance immediately, will refresh from backend");
+                            // No new_balance in response - status is UNDER_REVIEW or other
+                            android.util.Log.i("CreditsFragment", "Top-up status is " + topupStatus[0] + " - no balance update, will refresh from backend");
                             // Get current balance to pass to callback (don't change it)
                             com.cc106.bidhub.repository.UserRepository userRepo = 
                                 com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
@@ -710,9 +746,13 @@ public class CreditsFragment extends Fragment {
                         com.cc106.bidhub.repository.UserRepository userRepo = 
                             com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
                         newBalance = userRepo.getCredits();
+                        // Set status to empty string if parsing failed
+                        if (topupStatus[0].isEmpty()) {
+                            topupStatus[0] = "UNKNOWN";
+                        }
                     }
                     isSubmitRequestInProgress = false;
-                    callback.onSuccess(newBalance);
+                    callback.onSuccess(newBalance, topupStatus[0]);
                 } else {
                     // Parse error response
                     String errorMessage = "Failed to process top-up";
@@ -1049,6 +1089,15 @@ public class CreditsFragment extends Fragment {
         if (layoutPromotionalBanner != null) {
             // TODO: Implement promotional banner with special offers
             android.util.Log.d("CreditsFragment", "Showing promotional banner");
+        }
+    }
+    
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Refresh balance when fragment becomes visible to ensure latest data
+        if (userId != null) {
+            loadCreditInformation();
         }
     }
 }

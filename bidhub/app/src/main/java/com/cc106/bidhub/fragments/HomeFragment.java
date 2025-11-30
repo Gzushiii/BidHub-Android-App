@@ -153,14 +153,26 @@ public class HomeFragment extends Fragment {
             // Set up click listeners
             setupClickListeners();
             
-            // Sync items from API first, then load RecyclerView data
-            syncItemsFromApi();
-            
             // Initialize category chips
             initializeCategoryChips();
             
             // Load quick stats
             loadQuickStats();
+            
+            // Load initial data from local cache first (for immediate display)
+            // This prevents empty homepage on first load
+            if (getActivity() != null && !getActivity().isFinishing()) {
+                getActivity().runOnUiThread(() -> {
+                    loadFeaturedItems();
+                    loadActiveAuctions();
+                    loadActiveBids();
+                    loadCategories();
+                });
+            }
+            
+            // Then sync items from API to get latest data
+            // This ensures we have latest data from backend and updates the display
+            syncItemsFromApi();
             
             // Recent activity loading removed - not part of new dashboard design
             
@@ -411,7 +423,7 @@ public class HomeFragment extends Fragment {
         // }
     }
     
-    private void loadUserData() {
+    public void loadUserData() {
         // Try to get user email from arguments first
         if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
             if (getArguments() != null) {
@@ -501,11 +513,16 @@ public class HomeFragment extends Fragment {
             // Filter items by affordability: startingPrice OR currentPrice ≤ userCredits
             List<Item> affordableItems = new ArrayList<>();
             for (Item item : allActiveItems) {
+                if (item == null) {
+                    continue; // Skip null items
+                }
+                
                 double startingPrice = item.getStartingPrice();
                 double currentPrice = item.getCurrentPrice() > 0 ? item.getCurrentPrice() : startingPrice;
                 
                 // Item is affordable if starting price or current price is within user's credits
-                if (startingPrice <= userCredits || currentPrice <= userCredits) {
+                // If user has 0 credits, show empty state (no affordable items)
+                if (userCredits > 0 && (startingPrice <= userCredits || currentPrice <= userCredits)) {
                     affordableItems.add(item);
                 }
             }
@@ -600,8 +617,89 @@ public class HomeFragment extends Fragment {
      * Load active bids for current user
      * Fetches all listings where the user has submitted at least one bid
      * Shows item details, latest bid amount, auction end time, and bid status
+     * First syncs bids from API, then loads from local cache
      */
     private void loadActiveBids() {
+        if (biddingEngine == null || activeBidsAdapter == null || itemManager == null) {
+            hideLoading();
+            return;
+        }
+        
+        // Sync bids from API first, then load from local cache
+        syncBidsFromApi();
+    }
+    
+    /**
+     * Sync user bids from backend API
+     * Since there's no dedicated endpoint, we extract bid info from items the user has bid on
+     * by checking items that have bids from this user
+     */
+    private void syncBidsFromApi() {
+        if (getContext() == null) {
+            loadActiveBidsFromLocal();
+            return;
+        }
+        
+        // Run on background thread
+        new Thread(() -> {
+            try {
+                SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(getContext());
+                String userId = prefsHelper.getUserId();
+                String token = prefsHelper.getAuthToken();
+                
+                if (userId == null || userId.isEmpty() || token == null || token.isEmpty()) {
+                    android.util.Log.w("HomeFragment", "No user ID or token, loading bids from local only");
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        getActivity().runOnUiThread(() -> loadActiveBidsFromLocal());
+                    }
+                    return;
+                }
+                
+                // Fetch all items from API - items with bids will have bid_count > 0
+                // We'll filter items where the user has placed bids
+                com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(getContext());
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItems(null, null, null, null, null, 100, 0);
+                
+                if (response.isSuccess() && response.getData() != null) {
+                    // Parse items and extract bid information
+                    String responseData = response.getData();
+                    if (responseData != null && !responseData.isEmpty()) {
+                        List<Item> allItems = parseItemsFromResponse(responseData);
+                        
+                        // Store items in ItemManager so they're available for bid loading
+                        for (Item item : allItems) {
+                            if (item != null && item.getItemId() != null && !item.getItemId().isEmpty()) {
+                                itemManager.storeItem(item);
+                            }
+                        }
+                    }
+                    
+                    // For now, load bids from local database (they should be synced when bids are placed)
+                    // In the future, we could add a dedicated API endpoint for user bids
+                    android.util.Log.d("HomeFragment", "Items synced, now loading bids from local database");
+                    
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        getActivity().runOnUiThread(() -> loadActiveBidsFromLocal());
+                    }
+                } else {
+                    android.util.Log.w("HomeFragment", "API sync failed, loading bids from local");
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        getActivity().runOnUiThread(() -> loadActiveBidsFromLocal());
+                    }
+                }
+            } catch (Exception e) {
+                android.util.Log.e("HomeFragment", "Error syncing bids from API", e);
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> loadActiveBidsFromLocal());
+                }
+            }
+        }).start();
+    }
+    
+    /**
+     * Load active bids from local database/cache
+     */
+    private void loadActiveBidsFromLocal() {
         if (biddingEngine == null || activeBidsAdapter == null || itemManager == null) {
             hideLoading();
             return;
@@ -621,7 +719,7 @@ public class HomeFragment extends Fragment {
                 return;
             }
             
-            // Get all active bids for the user
+            // Get all active bids for the user from local database
             List<Bid> allUserBids = biddingEngine.getUserBids(userId);
             if (allUserBids == null) {
                 allUserBids = new ArrayList<>();
@@ -827,8 +925,10 @@ public class HomeFragment extends Fragment {
                 
                 if (token == null || token.isEmpty()) {
                     android.util.Log.w("HomeFragment", "No auth token available, using local items");
+                    // Still try to load from local data even without token
                     if (getActivity() != null && !getActivity().isFinishing()) {
                         getActivity().runOnUiThread(() -> {
+                            // Load from local ItemManager cache
                             loadFeaturedItems();
                             loadActiveAuctions();
                             loadActiveBids();
@@ -845,21 +945,34 @@ public class HomeFragment extends Fragment {
                 if (response.isSuccess() && response.getData() != null) {
                     // Parse items from response using same logic as BrowseFragment
                     try {
-                        String responseData = response.getData().toString();
+                        // getData() returns String, so we can use it directly
+                        String responseData = response.getData();
+                        if (responseData == null || responseData.isEmpty()) {
+                            android.util.Log.w("HomeFragment", "API response data is null or empty");
+                            // Fallback to local data
+                            if (getActivity() != null && !getActivity().isFinishing()) {
+                                getActivity().runOnUiThread(() -> {
+                                    loadFeaturedItems();
+                                    loadActiveAuctions();
+                                    loadActiveBids();
+                                    loadCategories();
+                                });
+                            }
+                            return;
+                        }
+                        
                         List<Item> apiItems = parseItemsFromResponse(responseData);
                         
-                        // Add items to ItemManager
+                        // Store items in ItemManager using storeItem() which is designed for API-synced items
                         for (Item item : apiItems) {
-                            // ItemManager stores items in a ConcurrentHashMap, so we need to use updateItem
-                            // or directly access the internal map. For now, we'll rely on ItemManager's
-                            // existing sync mechanism, but ensure items are available
-                            if (itemManager.getItemById(item.getItemId()) == null) {
-                                // Item not in manager, add it via updateItem
-                                itemManager.updateItem(item.getItemId(), item);
+                            // Always store items from API to ensure we have the latest data
+                            // storeItem() handles all the necessary mappings (user items, category items, etc.)
+                            if (item != null && item.getItemId() != null && !item.getItemId().isEmpty()) {
+                                itemManager.storeItem(item);
                             }
                         }
                         
-                        android.util.Log.d("HomeFragment", "Synced " + apiItems.size() + " items from API");
+                        android.util.Log.d("HomeFragment", "Synced " + apiItems.size() + " items from API and stored in ItemManager");
                         
                         // Now load UI with synced data
                         if (getActivity() != null && !getActivity().isFinishing()) {
@@ -1089,120 +1202,166 @@ public class HomeFragment extends Fragment {
     
     /**
      * Parse items from API response JSON (same logic as BrowseFragment)
+     * Enhanced with better error handling and null safety
      */
     private List<Item> parseItemsFromResponse(String responseData) {
         List<Item> items = new ArrayList<>();
         try {
+            if (responseData == null || responseData.isEmpty()) {
+                android.util.Log.w("HomeFragment", "parseItemsFromResponse: responseData is null or empty");
+                return items;
+            }
+            
             org.json.JSONObject jsonResponse = new org.json.JSONObject(responseData);
-            org.json.JSONArray itemsArray = jsonResponse.getJSONArray("items");
+            
+            // Handle both array and object responses
+            org.json.JSONArray itemsArray = null;
+            if (jsonResponse.has("items")) {
+                itemsArray = jsonResponse.getJSONArray("items");
+            } else if (jsonResponse.has("data") && jsonResponse.get("data") instanceof org.json.JSONArray) {
+                itemsArray = jsonResponse.getJSONArray("data");
+            } else {
+                android.util.Log.w("HomeFragment", "parseItemsFromResponse: No items array found in response");
+                return items;
+            }
+            
+            if (itemsArray == null) {
+                android.util.Log.w("HomeFragment", "parseItemsFromResponse: itemsArray is null");
+                return items;
+            }
             
             for (int i = 0; i < itemsArray.length(); i++) {
-                org.json.JSONObject itemJson = itemsArray.getJSONObject(i);
-                Item item = new Item();
-                
-                item.setItemId(itemJson.optString("id", itemJson.optString("uuid_id", "")));
-                item.setTitle(itemJson.getString("title"));
-                item.setDescription(itemJson.optString("description", ""));
-                item.setStartingPrice(itemJson.optDouble("starting_bid", itemJson.optDouble("starting_price", 0.0)));
-                item.setCurrentPrice(itemJson.optDouble("current_bid", itemJson.optDouble("current_price", 0.0)));
-                item.setCategoryId(itemJson.optString("category_id", ""));
-                item.setSellerId(itemJson.optString("seller_email", itemJson.optString("seller_id", "")));
-                
-                // Set seller username
-                String sellerUsername = itemJson.optString("seller_username", null);
-                if (sellerUsername != null && !sellerUsername.isEmpty()) {
-                    item.setSellerName(sellerUsername);
-                } else {
-                    String sellerEmail = itemJson.optString("seller_email", "");
-                    if (!sellerEmail.isEmpty()) {
-                        int atIndex = sellerEmail.indexOf('@');
-                        if (atIndex > 0) {
-                            item.setSellerName(sellerEmail.substring(0, atIndex));
+                try {
+                    org.json.JSONObject itemJson = itemsArray.getJSONObject(i);
+                    Item item = new Item();
+                    
+                    // Use optString/optDouble for safer parsing
+                    item.setItemId(itemJson.optString("id", itemJson.optString("uuid_id", "")));
+                    
+                    String title = itemJson.optString("title", "");
+                    if (title.isEmpty()) {
+                        android.util.Log.w("HomeFragment", "Skipping item with empty title at index " + i);
+                        continue; // Skip items without titles
+                    }
+                    item.setTitle(title);
+                    item.setDescription(itemJson.optString("description", ""));
+                    item.setStartingPrice(itemJson.optDouble("starting_bid", itemJson.optDouble("starting_price", 0.0)));
+                    item.setCurrentPrice(itemJson.optDouble("current_bid", itemJson.optDouble("current_price", 0.0)));
+                    item.setCategoryId(itemJson.optString("category_id", ""));
+                    item.setSellerId(itemJson.optString("seller_email", itemJson.optString("seller_id", "")));
+                    
+                    // Set seller username
+                    String sellerUsername = itemJson.optString("seller_username", null);
+                    if (sellerUsername != null && !sellerUsername.isEmpty()) {
+                        item.setSellerName(sellerUsername);
+                    } else {
+                        String sellerEmail = itemJson.optString("seller_email", "");
+                        if (!sellerEmail.isEmpty()) {
+                            int atIndex = sellerEmail.indexOf('@');
+                            if (atIndex > 0) {
+                                item.setSellerName(sellerEmail.substring(0, atIndex));
+                            } else {
+                                item.setSellerName("Unknown");
+                            }
                         } else {
                             item.setSellerName("Unknown");
                         }
-                    } else {
-                        item.setSellerName("Unknown");
                     }
-                }
-                
-                // Set bid count
-                int bidCount = itemJson.optInt("bid_count", 0);
-                item.setBidCount(bidCount);
-                
-                // Set end date
-                if (itemJson.has("end_date") && !itemJson.isNull("end_date")) {
-                    try {
-                        String endDateStr = itemJson.getString("end_date");
-                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
-                        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-                        item.setEndDate(sdf.parse(endDateStr));
-                    } catch (Exception e) {
-                        android.util.Log.w("HomeFragment", "Error parsing end_date: " + e.getMessage());
-                    }
-                } else if (itemJson.has("bid_deadline") && !itemJson.isNull("bid_deadline")) {
-                    try {
-                        String deadlineStr = itemJson.getString("bid_deadline");
-                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
-                        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-                        item.setEndDate(sdf.parse(deadlineStr));
-                    } catch (Exception e) {
-                        android.util.Log.w("HomeFragment", "Error parsing bid_deadline: " + e.getMessage());
-                    }
-                }
-                
-                // Set created date
-                if (itemJson.has("created_at") && !itemJson.isNull("created_at")) {
-                    try {
-                        String createdAtStr = itemJson.getString("created_at");
-                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
-                        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-                        item.setCreatedAt(sdf.parse(createdAtStr));
-                    } catch (Exception e) {
-                        android.util.Log.w("HomeFragment", "Error parsing created_at: " + e.getMessage());
-                    }
-                }
-                
-                item.setCondition(itemJson.optString("item_condition", itemJson.optString("condition", "good")));
-                item.setStatus(com.cc106.bidhub.items.ItemStatus.ACTIVE);
-                
-                // Parse images
-                if (itemJson.has("images")) {
-                    try {
-                        Object imagesObj = itemJson.get("images");
-                        List<String> imagePaths = new ArrayList<>();
-                        
-                        if (imagesObj instanceof org.json.JSONArray) {
-                            org.json.JSONArray imagesArray = (org.json.JSONArray) imagesObj;
-                            for (int j = 0; j < imagesArray.length(); j++) {
-                                Object imgObj = imagesArray.get(j);
-                                if (imgObj instanceof org.json.JSONObject) {
-                                    org.json.JSONObject imgJson = (org.json.JSONObject) imgObj;
-                                    if (imgJson.has("image_url")) {
-                                        imagePaths.add(imgJson.getString("image_url"));
-                                    }
-                                } else if (imgObj instanceof String) {
-                                    imagePaths.add((String) imgObj);
-                                }
-                            }
-                        } else if (imagesObj instanceof String) {
-                            String imagesString = (String) imagesObj;
-                            if (!imagesString.isEmpty() && !imagesString.equals("null")) {
-                                org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
-                                for (int j = 0; j < imagesArray.length(); j++) {
-                                    imagePaths.add(imagesArray.getString(j));
-                                }
-                            }
+                    
+                    // Set bid count
+                    int bidCount = itemJson.optInt("bid_count", 0);
+                    item.setBidCount(bidCount);
+                    
+                    // Set end date
+                    if (itemJson.has("end_date") && !itemJson.isNull("end_date")) {
+                        try {
+                            String endDateStr = itemJson.getString("end_date");
+                            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+                            sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                            item.setEndDate(sdf.parse(endDateStr));
+                        } catch (Exception e) {
+                            android.util.Log.w("HomeFragment", "Error parsing end_date: " + e.getMessage());
                         }
-                        
-                        item.setImagePaths(imagePaths);
-                    } catch (Exception e) {
-                        android.util.Log.w("HomeFragment", "Error parsing images", e);
+                    } else if (itemJson.has("bid_deadline") && !itemJson.isNull("bid_deadline")) {
+                        try {
+                            String deadlineStr = itemJson.getString("bid_deadline");
+                            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+                            sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                            item.setEndDate(sdf.parse(deadlineStr));
+                        } catch (Exception e) {
+                            android.util.Log.w("HomeFragment", "Error parsing bid_deadline: " + e.getMessage());
+                        }
+                    }
+                    
+                    // Set created date
+                    if (itemJson.has("created_at") && !itemJson.isNull("created_at")) {
+                        try {
+                            String createdAtStr = itemJson.getString("created_at");
+                            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+                            sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                            item.setCreatedAt(sdf.parse(createdAtStr));
+                        } catch (Exception e) {
+                            android.util.Log.w("HomeFragment", "Error parsing created_at: " + e.getMessage());
+                        }
+                    }
+                    
+                    item.setCondition(itemJson.optString("item_condition", itemJson.optString("condition", "good")));
+                    item.setStatus(com.cc106.bidhub.items.ItemStatus.ACTIVE);
+                    
+                    // Parse images - handle multiple formats
+                    if (itemJson.has("images")) {
+                        try {
+                            Object imagesObj = itemJson.get("images");
+                            List<String> imagePaths = new ArrayList<>();
+                            
+                            if (imagesObj instanceof org.json.JSONArray) {
+                                org.json.JSONArray imagesArray = (org.json.JSONArray) imagesObj;
+                                for (int j = 0; j < imagesArray.length(); j++) {
+                                    Object imgObj = imagesArray.get(j);
+                                    String imageUrl = null;
+                                    
+                                    if (imgObj instanceof String) {
+                                        imageUrl = (String) imgObj;
+                                    } else if (imgObj instanceof org.json.JSONObject) {
+                                        org.json.JSONObject imgJson = (org.json.JSONObject) imgObj;
+                                        imageUrl = imgJson.optString("image_url", imgJson.optString("url", null));
+                                    }
+                                    
+                                    if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
+                                        imagePaths.add(imageUrl);
+                                    }
+                                }
+                            } else if (imagesObj instanceof String) {
+                                String imagesString = (String) imagesObj;
+                                if (!imagesString.isEmpty() && !imagesString.equals("null")) {
+                                    try {
+                                        org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
+                                        for (int j = 0; j < imagesArray.length(); j++) {
+                                            String imageUrl = imagesArray.optString(j, null);
+                                            if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
+                                                imagePaths.add(imageUrl);
+                                            }
+                                        }
+                                    } catch (org.json.JSONException e) {
+                                        android.util.Log.w("HomeFragment", "Failed to parse images string as JSON array: " + imagesString);
+                                    }
+                                }
+                            }
+                            
+                            item.setImagePaths(imagePaths);
+                        } catch (Exception e) {
+                            android.util.Log.w("HomeFragment", "Error parsing images", e);
+                            item.setImagePaths(new ArrayList<>());
+                        }
+                    } else {
                         item.setImagePaths(new ArrayList<>());
                     }
+                    
+                    items.add(item);
+                } catch (Exception e) {
+                    // Log error for individual item but continue parsing others
+                    android.util.Log.e("HomeFragment", "Error parsing item at index " + i + ": " + e.getMessage(), e);
                 }
-                
-                items.add(item);
             }
         } catch (Exception e) {
             android.util.Log.e("HomeFragment", "Error parsing items from response", e);

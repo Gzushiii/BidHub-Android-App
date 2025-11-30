@@ -160,33 +160,22 @@ public class ItemImageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHold
     }
     
     /**
-     * Load image from file path into ImageView
+     * Load image from file path or URL into ImageView
+     * Uses ImageLoader utility to handle both local files and URLs
      */
     private void loadImageFromPath(ImageView imageView, String imagePath) {
-        try {
-            if (imagePath != null && !imagePath.isEmpty()) {
-                File imageFile = new File(imagePath);
-                if (imageFile.exists()) {
-                    // Load image from file
-                    Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
-                    if (bitmap != null) {
-                        imageView.setImageBitmap(bitmap);
-                    } else {
-                        // Fallback to placeholder if bitmap is null
-                        imageView.setImageResource(R.drawable.placeholder);
-                    }
-                } else {
-                    // File doesn't exist, use placeholder
-                    imageView.setImageResource(R.drawable.placeholder);
+        // Use ImageLoader utility which handles URLs, local files, and sample images
+        com.cc106.bidhub.utils.ImageLoader.loadImageWithErrorCallback(
+            imageView.getContext(),
+            imagePath,
+            imageView,
+            new com.cc106.bidhub.utils.ImageLoader.ImageLoadErrorCallback() {
+                @Override
+                public void onError(String errorMessage) {
+                    // Fallback to placeholder on error
+                    com.cc106.bidhub.utils.ImageLoader.loadPlaceholder(imageView.getContext(), imageView);
                 }
-            } else {
-                // No path provided, use placeholder
-                imageView.setImageResource(R.drawable.placeholder);
             }
-        } catch (Exception e) {
-            // Error loading image, use placeholder
-            imageView.setImageResource(R.drawable.placeholder);
-            e.printStackTrace();
-        }
+        );
     }
 }

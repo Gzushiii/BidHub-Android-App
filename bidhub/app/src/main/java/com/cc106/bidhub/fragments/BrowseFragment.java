@@ -513,8 +513,11 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                                 android.util.Log.d("BrowseFragment", "Updated allItems with " + activeItems.size() + " items from API");
                                 
                                 // Also update ItemManager cache for consistency
+                                // Use storeItem() which is designed for API-synced items
                                 for (Item item : activeItems) {
-                                    itemManager.updateItem(item.getItemId(), item);
+                                    if (item != null && item.getItemId() != null && !item.getItemId().isEmpty()) {
+                                        itemManager.storeItem(item);
+                                    }
                                 }
                                 
                                 isLoading = false;
@@ -620,20 +623,48 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     private List<Item> parseItemsFromResponse(String responseData) {
         List<Item> items = new ArrayList<>();
         try {
+            if (responseData == null || responseData.isEmpty()) {
+                android.util.Log.w("BrowseFragment", "parseItemsFromResponse: responseData is null or empty");
+                return items;
+            }
+            
             org.json.JSONObject jsonResponse = new org.json.JSONObject(responseData);
-            org.json.JSONArray itemsArray = jsonResponse.getJSONArray("items");
+            
+            // Handle both array and object responses
+            org.json.JSONArray itemsArray = null;
+            if (jsonResponse.has("items")) {
+                itemsArray = jsonResponse.getJSONArray("items");
+            } else if (jsonResponse.has("data") && jsonResponse.get("data") instanceof org.json.JSONArray) {
+                itemsArray = jsonResponse.getJSONArray("data");
+            } else {
+                android.util.Log.w("BrowseFragment", "parseItemsFromResponse: No items array found in response");
+                return items;
+            }
+            
+            if (itemsArray == null) {
+                android.util.Log.w("BrowseFragment", "parseItemsFromResponse: itemsArray is null");
+                return items;
+            }
             
             for (int i = 0; i < itemsArray.length(); i++) {
-                org.json.JSONObject itemJson = itemsArray.getJSONObject(i);
-                Item item = new Item();
-                
-                item.setItemId(itemJson.getString("id"));
-                item.setTitle(itemJson.getString("title"));
-                item.setDescription(itemJson.getString("description"));
-                item.setStartingPrice(itemJson.getDouble("starting_bid"));
-                item.setCurrentPrice(itemJson.getDouble("current_bid"));
-                item.setCategoryId(itemJson.getString("category_id"));
-                item.setSellerId(itemJson.optString("seller_email", itemJson.optString("seller_id", "")));
+                try {
+                    org.json.JSONObject itemJson = itemsArray.getJSONObject(i);
+                    Item item = new Item();
+                    
+                    // Use optString/optDouble for safer parsing
+                    item.setItemId(itemJson.optString("id", itemJson.optString("uuid_id", "")));
+                    
+                    String title = itemJson.optString("title", "");
+                    if (title.isEmpty()) {
+                        android.util.Log.w("BrowseFragment", "Skipping item with empty title at index " + i);
+                        continue; // Skip items without titles
+                    }
+                    item.setTitle(title);
+                    item.setDescription(itemJson.optString("description", ""));
+                    item.setStartingPrice(itemJson.optDouble("starting_bid", itemJson.optDouble("starting_price", 0.0)));
+                    item.setCurrentPrice(itemJson.optDouble("current_bid", itemJson.optDouble("current_price", 0.0)));
+                    item.setCategoryId(itemJson.optString("category_id", ""));
+                    item.setSellerId(itemJson.optString("seller_email", itemJson.optString("seller_id", "")));
                 
                 // Set seller username from API response
                 String sellerUsername = itemJson.optString("seller_username", null);
@@ -754,7 +785,11 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                     android.util.Log.d("BrowseFragment", "No images field for item: " + item.getTitle());
                 }
                 
-                items.add(item);
+                    items.add(item);
+                } catch (Exception e) {
+                    // Log error for individual item but continue parsing others
+                    android.util.Log.e("BrowseFragment", "Error parsing item at index " + i + ": " + e.getMessage(), e);
+                }
             }
         } catch (Exception e) {
             android.util.Log.e("BrowseFragment", "Error parsing items from response", e);
@@ -1078,9 +1113,12 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         // FIX: Refresh items on resume to ensure latest data, but preserve existing items during load
         // Only refresh if items are empty or if not currently loading
         // This prevents duplicate loads when fragment is already visible
-        if (allItems.isEmpty() && !isLoading) {
-            android.util.Log.d("BrowseFragment", "onResume: Items empty, loading...");
-            loadItems();
+        // Also refresh if swipe refresh was triggered (user manually refreshed)
+        if ((allItems.isEmpty() && !isLoading) || (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing())) {
+            android.util.Log.d("BrowseFragment", "onResume: Items empty or refresh triggered, loading...");
+            if (!isLoading) {
+                loadItems();
+            }
         } else {
             android.util.Log.d("BrowseFragment", "Skipping refresh on resume - items already loaded or currently loading");
         }

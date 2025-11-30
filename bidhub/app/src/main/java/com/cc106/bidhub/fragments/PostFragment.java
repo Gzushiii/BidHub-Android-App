@@ -1541,8 +1541,32 @@ public class PostFragment extends Fragment implements
     }
     
     @Override
+    public void onPause() {
+        super.onPause();
+        // Cancel auto-save timer when fragment is paused to prevent memory leaks
+        try {
+            if (autoSaveTimer != null) {
+                autoSaveTimer.cancel();
+                autoSaveTimer = null;
+            }
+        } catch (Exception e) {
+            // Ignore cleanup errors
+        }
+    }
+    
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Restart auto-save timer when fragment resumes
+        if (hasUnsavedChanges) {
+            scheduleAutoSave();
+        }
+    }
+    
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
+        // Final cleanup of timer
         try {
             if (autoSaveTimer != null) {
                 autoSaveTimer.cancel();
