@@ -269,29 +269,74 @@ public class ItemApiClient {
                 
                 // Get response
                 int responseCode = connection.getResponseCode();
-                BufferedReader reader;
                 
-                if (responseCode >= 200 && responseCode < 300) {
-                    reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                } else {
-                    reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-                }
+                // Log response headers for debugging
+                Log.d(TAG, "Response Code: " + responseCode);
+                Log.d(TAG, "Response Message: " + connection.getResponseMessage());
                 
+                // Read response body (success or error)
                 StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
+                BufferedReader reader = null;
+                
+                try {
+                    if (responseCode >= 200 && responseCode < 300) {
+                        reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                    } else {
+                        // Try to read error stream, but handle case where it might be null
+                        java.io.InputStream errorStream = connection.getErrorStream();
+                        if (errorStream != null) {
+                            reader = new BufferedReader(new InputStreamReader(errorStream, "UTF-8"));
+                        } else {
+                            // If error stream is null, try reading from input stream (some servers send errors there)
+                            try {
+                                reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                            } catch (Exception e) {
+                                Log.w(TAG, "Could not read error stream or input stream", e);
+                                // Use empty response
+                            }
+                        }
+                    }
+                    
+                    if (reader != null) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            response.append(line);
+                        }
+                        reader.close();
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error reading response body", e);
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (Exception closeEx) {
+                            // Ignore
+                        }
+                    }
                 }
-                reader.close();
+                
+                String responseBody = response.toString();
+                if (responseBody.isEmpty()) {
+                    Log.w(TAG, "Empty response body received");
+                }
             
             if (responseCode >= 200 && responseCode < 300) {
                 Log.i(TAG, "Item created successfully via API" + (attempt > 0 ? " (after " + attempt + " retries)" : ""));
-                Log.d(TAG, "API Response: " + response.toString());
-                return new ApiResponse(true, "Item created successfully", response.toString());
+                Log.d(TAG, "API Response: " + responseBody);
+                return new ApiResponse(true, "Item created successfully", responseBody);
             } else if (responseCode >= 500 && responseCode < 600) {
                 // Server error (500-599) - retry
-                String fullErrorDetails = response.toString();
-                Log.w(TAG, "Server error creating item: " + responseCode + " - " + fullErrorDetails);
+                String fullErrorDetails = responseBody;
+                
+                // Enhanced logging for server errors
+                Log.e(TAG, "=== SERVER ERROR (500) - ATTEMPT " + (attempt + 1) + "/" + (MAX_RETRIES + 1) + " ===");
+                Log.e(TAG, "HTTP Status Code: " + responseCode);
+                Log.e(TAG, "Response Message: " + connection.getResponseMessage());
+                Log.e(TAG, "Error Response Body: " + fullErrorDetails);
+                Log.e(TAG, "Request JSON: " + requestJson);
+                Log.e(TAG, "Request URL: " + ITEMS_ENDPOINT);
+                Log.e(TAG, "==========================================");
+                
                 lastResponse = new ApiResponse(false, "Server error: " + responseCode, fullErrorDetails);
                 
                 if (attempt < MAX_RETRIES) {
@@ -301,22 +346,27 @@ public class ItemApiClient {
                 } else {
                     // Max retries reached - parse error for better message
                     String errorMessage = parseServerError(fullErrorDetails, responseCode);
-                    Log.e(TAG, "Max retries reached for createItem, returning error");
+                    Log.e(TAG, "=== MAX RETRIES REACHED - FINAL ERROR ===");
+                    Log.e(TAG, "Final Error Message: " + errorMessage);
+                    Log.e(TAG, "All " + (MAX_RETRIES + 1) + " attempts failed with 500 error");
+                    Log.e(TAG, "This indicates a persistent backend server issue");
+                    Log.e(TAG, "==========================================");
                     return new ApiResponse(false, errorMessage, fullErrorDetails);
                 }
             } else {
                 // Client errors (4xx) - don't retry, parse error immediately
-                String fullErrorDetails = response.toString();
+                String fullErrorDetails = responseBody;
                 String errorMessage = parseClientError(fullErrorDetails, responseCode);
                 
                 // Enhanced logging for debugging
-                Log.e(TAG, "=== ITEM POSTING FAILED ===");
+                Log.e(TAG, "=== ITEM POSTING FAILED (CLIENT ERROR) ===");
                 Log.e(TAG, "HTTP Status Code: " + responseCode);
+                Log.e(TAG, "Response Message: " + connection.getResponseMessage());
                 Log.e(TAG, "Error Message: " + errorMessage);
                 Log.e(TAG, "Full Error Response: " + fullErrorDetails);
                 Log.e(TAG, "Request Data: " + requestData.toString());
                 Log.e(TAG, "Request URL: " + ITEMS_ENDPOINT);
-                Log.e(TAG, "===========================");
+                Log.e(TAG, "==========================================");
                 
                 return new ApiResponse(false, errorMessage, fullErrorDetails);
             }
@@ -354,29 +404,84 @@ public class ItemApiClient {
                 org.json.JSONObject errorJson = new org.json.JSONObject(errorResponse);
                 
                 // Check for detailed error message
+                String rawError = null;
                 if (errorJson.has("message")) {
-                    errorMessage = errorJson.getString("message");
+                    rawError = errorJson.getString("message");
                 } else if (errorJson.has("error")) {
-                    String error = errorJson.getString("error");
-                    // If error is generic, add more context
-                    if (error.equals("Failed to create item")) {
-                        errorMessage = "Server error while creating item. The server may be temporarily unavailable. Please try again in a moment.";
-                    } else {
-                        errorMessage = error;
+                    rawError = errorJson.getString("error");
+                }
+                
+                // Check for SQL/database errors in the error message or details
+                String errorText = rawError != null ? rawError.toLowerCase() : "";
+                String detailsText = "";
+                if (errorJson.has("details")) {
+                    Object details = errorJson.get("details");
+                    if (details instanceof String) {
+                        detailsText = ((String) details).toLowerCase();
                     }
                 }
                 
-                // Add details if available
-                if (errorJson.has("details")) {
+                // Detect database schema errors
+                if (errorText.contains("unknown column") || detailsText.contains("unknown column") ||
+                    errorText.contains("bad field") || detailsText.contains("bad field") ||
+                    errorText.contains("sqlstate") || detailsText.contains("sqlstate") ||
+                    errorText.contains("er_bad_field") || detailsText.contains("er_bad_field")) {
+                    errorMessage = "Database schema error detected. The server database is missing required columns. " +
+                                 "This is a backend configuration issue that needs to be fixed on the server.";
+                    Log.e(TAG, "=== DATABASE SCHEMA ERROR DETECTED ===");
+                    Log.e(TAG, "The backend database schema is missing required columns.");
+                    Log.e(TAG, "Error details: " + errorResponse);
+                    Log.e(TAG, "This requires a backend database migration to fix.");
+                    Log.e(TAG, "=====================================");
+                } else if (errorText.contains("failed to create item") || 
+                          (rawError != null && rawError.equals("Failed to create item"))) {
+                    // Generic "Failed to create item" - check if we can get more details
+                    if (errorJson.has("details")) {
+                        Object details = errorJson.get("details");
+                        if (details instanceof String && !((String) details).isEmpty()) {
+                            String detailsStr = (String) details;
+                            // Check if details contain SQL errors
+                            if (detailsStr.toLowerCase().contains("unknown column") ||
+                                detailsStr.toLowerCase().contains("bad field")) {
+                                errorMessage = "Database schema error: " + detailsStr;
+                            } else {
+                                errorMessage = "Server error while creating item: " + detailsStr;
+                            }
+                        } else {
+                            errorMessage = "Server error while creating item. The server may be temporarily unavailable. Please try again in a moment.";
+                        }
+                    } else {
+                        errorMessage = "Server error while creating item. The server may be temporarily unavailable. Please try again in a moment.";
+                    }
+                } else if (rawError != null) {
+                    errorMessage = rawError;
+                }
+                
+                // Add details if available and not already included
+                if (errorJson.has("details") && !errorMessage.contains("Database schema")) {
                     Object details = errorJson.get("details");
                     if (details instanceof String && !((String) details).isEmpty()) {
-                        errorMessage += ": " + details;
+                        String detailsStr = (String) details;
+                        // Only append if it's not a SQL error (already handled above)
+                        if (!detailsStr.toLowerCase().contains("unknown column") &&
+                            !detailsStr.toLowerCase().contains("bad field")) {
+                            errorMessage += ": " + detailsStr;
+                        }
                     }
                 }
             }
         } catch (org.json.JSONException e) {
             Log.w(TAG, "Could not parse server error response as JSON: " + errorResponse, e);
-            // Use default message
+            // Check if error response contains SQL error keywords even if not JSON
+            String errorLower = errorResponse.toLowerCase();
+            if (errorLower.contains("unknown column") || errorLower.contains("bad field") ||
+                errorLower.contains("sqlstate") || errorLower.contains("er_bad_field")) {
+                errorMessage = "Database schema error detected. The server database is missing required columns. " +
+                             "This is a backend configuration issue that needs to be fixed on the server.";
+                Log.e(TAG, "=== DATABASE SCHEMA ERROR DETECTED (non-JSON response) ===");
+                Log.e(TAG, "Error response: " + errorResponse);
+                Log.e(TAG, "=========================================================");
+            }
         }
         
         return errorMessage;
