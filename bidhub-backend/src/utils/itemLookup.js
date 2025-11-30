@@ -172,23 +172,49 @@ function validateItemForAction(item, userId) {
 }
 
 /**
- * Get item images by UUID ID
- * @param {string} itemId - The UUID of the item
+ * Get item images by UUID ID or integer ID
+ * @param {string|number} itemId - The UUID or integer ID of the item
  * @param {object} connection - Database connection (optional)
  * @returns {Promise<Array>} Array of image objects
  */
 async function getItemImages(itemId, connection = null) {
-  if (!itemId || typeof itemId !== 'string') {
+  if (!itemId) {
     return [];
   }
 
-  const id = itemId.trim();
   const db = connection || pool;
 
   try {
+    // First, try to resolve UUID to integer ID if needed
+    // The item_images table uses item_id (integer), not item_uuid_id
+    let integerItemId = null;
+    
+    // If itemId is a number, use it directly
+    if (typeof itemId === 'number' || /^\d+$/.test(String(itemId))) {
+      integerItemId = parseInt(itemId, 10);
+    } else {
+      // If it's a UUID, resolve it to integer ID via items table
+      const [itemRows] = await db.execute(
+        'SELECT id FROM items WHERE uuid_id = ? OR id = ? LIMIT 1',
+        [itemId, itemId]
+      );
+      
+      if (itemRows.length > 0) {
+        integerItemId = itemRows[0].id;
+      } else {
+        // Fallback: try direct lookup if itemId might be integer as string
+        integerItemId = parseInt(itemId, 10);
+        if (isNaN(integerItemId)) {
+          console.warn(`getItemImages: Could not resolve item ID: ${itemId}`);
+          return [];
+        }
+      }
+    }
+
+    // Query item_images using integer ID (the actual column in the table)
     const [rows] = await db.execute(
-      'SELECT * FROM item_images WHERE item_uuid_id = ? ORDER BY display_order',
-      [id]
+      'SELECT * FROM item_images WHERE item_id = ? ORDER BY display_order',
+      [integerItemId]
     );
 
     return rows;

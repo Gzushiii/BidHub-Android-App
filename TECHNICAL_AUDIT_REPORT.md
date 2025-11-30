@@ -1,6 +1,7 @@
 # BidHub Backend - Technical Audit Report
 
-**Generated:** 2025-01-27  
+**Generated:** 2025-01-30  
+**Last Updated:** 2025-01-30  
 **Scope:** JavaScript/Node.js Backend API and Related Scripts  
 **Focus:** Functional analysis, bug identification, API endpoints, and system health
 
@@ -29,7 +30,7 @@ bidhub-backend/
 │   ├── config/            # Database configuration
 │   ├── middleware/         # Authentication & authorization
 │   ├── routes/            # Express route handlers (PRIMARY)
-│   ├── services/          # Background services (keep-alive)
+│   ├── services/          # Background services (keep-alive, auction processing, notifications)
 │   ├── utils/             # Helper functions & utilities
 │   ├── validators/        # Joi validation schemas
 │   └── server.js          # Main entry point
@@ -164,10 +165,19 @@ bidhub-backend/
   - Correlation ID for debugging
 - **Issues:** Excessive logging (should be conditional)
 
-#### `src/utils/itemLookup.js` ⚠️ **PARTIALLY FUNCTIONAL**
-- **Purpose:** Item lookup utilities
-- **Status:** Referenced but implementation unclear
-- **Note:** File exists but may be redundant with `itemHelpers.js`
+#### `src/utils/itemLookup.js` ⚠️ **FUNCTIONAL WITH BUG**
+- **Purpose:** Item lookup utilities for active items and images
+- **Status:** Working but has schema inconsistency bug
+- **Functions:**
+  - `fetchActiveItem`: Fetch active items by UUID
+  - `fetchItemById`: Fetch items by UUID (all statuses)
+  - `validateItemForAction`: Item validation
+  - `getItemImages`: Get images for item (⚠️ **BUG**: Uses `item_uuid_id` but table has `item_id`)
+  - `getItemBids`: Get recent bids for item
+- **Issues:**
+  - `getItemImages()` queries `item_uuid_id` column but `item_images` table uses `item_id` (integer)
+  - This causes images not to load when using UUID lookup
+  - Routes in `items.js` handle this correctly with `item_id = ? OR item_uuid_id = ?` fallback
 
 ### 2.4 Bidding System
 
@@ -308,6 +318,38 @@ bidhub-backend/
   - Periodic database pings (5-minute intervals)
   - Configurable via environment variables
   - Graceful start/stop
+
+#### `src/services/auctionEndService.js` ✅ **FUNCTIONAL** (NEW)
+- **Purpose:** Process ended auctions and determine winners
+- **Status:** Working, requires manual/cron trigger
+- **Features:**
+  - Detects ended auctions (`end_date <= NOW()`)
+  - Determines winners based on highest bid
+  - Transfers credits to sellers
+  - Updates item status to 'ended'
+  - Marks winning/losing bids
+  - Sends notifications to winners, losers, and sellers
+- **Endpoints:**
+  - Called via `POST /api/auctions/process-ended` (manual trigger)
+  - Should be scheduled via cron job for automatic processing
+- **Issues:**
+  - Not automatically scheduled (requires manual trigger or cron setup)
+  - Uses `FOR UPDATE SKIP LOCKED` which requires MySQL 8.0.1+ or MariaDB 10.6+
+  - Notification service is placeholder (logs only, no real push notifications)
+
+#### `src/services/notificationService.js` ⚠️ **PLACEHOLDER** (NEW)
+- **Purpose:** Send push notifications for auction events
+- **Status:** Placeholder implementation (logs only)
+- **Features:**
+  - `sendAuctionWonNotification`: Logs winner notification
+  - `sendAuctionLostNotification`: Logs loser notification
+  - `sendAuctionEndedNoBidsNotification`: Logs no-bids notification
+  - `sendAuctionEndedWinnerNotification`: Logs seller notification
+- **Issues:**
+  - No FCM (Firebase Cloud Messaging) integration
+  - No email notifications
+  - Only console.log statements
+  - TODO comments indicate need for real implementation
 
 ### 2.11 Alternative API Structure (`/api` directory)
 
@@ -545,6 +587,20 @@ bidhub-backend/
   - **Output:** `{ topups, total, limit, offset }`
   - **Status:** ✅ Working (security issue)
 
+#### Auction Endpoints (NEW)
+- **`POST /api/auctions/process-ended`**
+  - **Purpose:** Process ended auctions and notify winners
+  - **Auth:** Not required (should be protected in production)
+  - **Output:** `{ success, message }`
+  - **Status:** ✅ Working (should be scheduled via cron)
+  - **Note:** This endpoint should be called periodically (e.g., every 5 minutes) to process ended auctions
+
+- **`GET /api/auctions/:itemId/winner`**
+  - **Purpose:** Get winner information for an ended auction
+  - **Auth:** Required
+  - **Output:** `{ success, winner: { user_id, email, alias, winning_bid } }`
+  - **Status:** ✅ Working
+
 #### Upload Endpoints
 - **`POST /api/upload`**
   - **Purpose:** Upload single image
@@ -663,6 +719,33 @@ These endpoints are **NOT registered** in the main server and appear to be legac
 - **Impact:** Difficult to debug when updates fail
 - **Fix:** Improve error logging and handling
 
+#### Bug #7: Item Images Query Uses Wrong Column Name ⚠️ **CRITICAL**
+- **Location:** `src/utils/itemLookup.js` (line 190)
+- **Severity:** **HIGH - Breaking Bug**
+- **Description:** `getItemImages()` function queries `item_images` table using `item_uuid_id`:
+  ```javascript
+  'SELECT * FROM item_images WHERE item_uuid_id = ? ORDER BY display_order'
+  ```
+  However, the `item_images` table schema uses `item_id` (integer), not `item_uuid_id`:
+  ```sql
+  CREATE TABLE item_images (
+      id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      item_id INT UNSIGNED NOT NULL,  -- Uses integer ID, not UUID
+      image_url VARCHAR(500) NOT NULL,
+      ...
+  )
+  ```
+- **Impact:** 
+  - Images fail to load when using UUID-based item lookup
+  - Item detail pages show no images
+  - Browse tab may show placeholder images
+- **Root Cause:** Schema inconsistency - `item_images` table uses integer `item_id` FK, but utility tries to query by UUID
+- **Fix:** Update `getItemImages()` to:
+  1. First resolve UUID to integer ID using items table
+  2. Or query using `item_id = ?` after JOIN with items table
+  3. Or add `item_uuid_id` column to `item_images` table (requires migration)
+- **Workaround:** Routes in `items.js` correctly use `item_id = ? OR item_uuid_id = ?` fallback, but `getItemImages()` utility is broken
+
 ### 4.2 Logic Errors
 
 #### Error #1: Bid Amount Validation Order
@@ -707,6 +790,20 @@ These endpoints are **NOT registered** in the main server and appear to be legac
 - **Description:** Code assumes `item_images` table exists but doesn't validate
 - **Impact:** Item creation may fail silently
 - **Fix:** Add table existence check or migration validation
+
+#### Issue #4: Schema Inconsistency in `item_images` Table
+- **Location:** `src/utils/itemLookup.js`, `src/routes/items.js`
+- **Severity:** **HIGH - Breaking Bug**
+- **Description:** 
+  - `item_images` table uses `item_id` (integer) as foreign key
+  - `getItemImages()` utility queries using `item_uuid_id` (doesn't exist)
+  - Routes in `items.js` handle this with fallback: `item_id = ? OR item_uuid_id = ?`
+  - This inconsistency causes images not to load via utility function
+- **Impact:** Images fail to load in item detail views when using UUID-based lookups
+- **Fix Options:**
+  1. **Recommended:** Update `getItemImages()` to resolve UUID to integer ID first
+  2. **Alternative:** Add `item_uuid_id` column to `item_images` table (requires migration)
+  3. **Workaround:** Always use integer ID when querying images (already done in routes)
 
 ### 4.4 Security Issues
 
@@ -833,19 +930,26 @@ These endpoints are **NOT registered** in the main server and appear to be legac
 - **Impact:** Not scalable, lost on server restart/redeploy
 - **Priority:** High (for production)
 
-#### Feature #6: Email Notifications
-- **Location:** Not implemented
-- **Status:** Missing
-- **Description:** No email notification system
+#### Feature #6: Email/Push Notifications
+- **Location:** `src/services/notificationService.js`
+- **Status:** ⚠️ **PLACEHOLDER** (logs only)
+- **Description:** Notification service exists but only logs to console
 - **Impact:** Users not notified of bid updates, auction endings, etc.
 - **Priority:** Medium
+- **Fix:** Integrate FCM for push notifications and email service (SendGrid, AWS SES, etc.)
 
 #### Feature #7: Auction End Processing
-- **Location:** Not implemented
-- **Status:** Missing
-- **Description:** No automated job to process ended auctions
-- **Impact:** Ended auctions not automatically closed, winners not determined
-- **Priority:** High
+- **Location:** `src/services/auctionEndService.js`
+- **Status:** ✅ **IMPLEMENTED** (requires scheduling)
+- **Description:** Service exists but requires manual trigger or cron job setup
+- **Features:**
+  - Detects ended auctions
+  - Determines winners
+  - Transfers credits to sellers
+  - Sends notifications
+- **Impact:** Service works but not automatically scheduled
+- **Priority:** High (needs cron job configuration)
+- **Fix:** Set up cron job to call `POST /api/auctions/process-ended` every 5 minutes
 
 #### Feature #8: Bid Retraction
 - **Location:** `src/utils/validators.js` (has `canRetractBid` but no route)
@@ -1004,27 +1108,32 @@ These endpoints are **NOT registered** in the main server and appear to be legac
 
 ### Critical Actions Required
 
-1. **Fix Admin Authorization Bypass** (Security Risk #1) - **IMMEDIATE**
-2. **Remove Deprecated Files** - Clean up codebase
-3. **Implement Real Payment Gateway** - For production readiness
-4. **Migrate Image Storage to Cloud** - For scalability
-5. **Add Automated Database Backups** - For data safety
+1. **Fix Item Images Query Bug** (Bug #7) - **IMMEDIATE** - Images not loading
+2. **Fix Admin Authorization Bypass** (Security Risk #1) - **IMMEDIATE**
+3. **Schedule Auction End Processing** - Set up cron job for `POST /api/auctions/process-ended`
+4. **Remove Deprecated Files** - Clean up codebase
+5. **Implement Real Payment Gateway** - For production readiness
+6. **Migrate Image Storage to Cloud** - For scalability
+7. **Add Automated Database Backups** - For data safety
 
 ### High Priority Improvements
 
-1. Standardize error response format
-2. Implement proper admin role system
-3. Add database index validation
-4. Set up structured logging
-5. Add unit/integration tests
+1. **Fix `getItemImages()` schema bug** - Update to use `item_id` or resolve UUID first
+2. Standardize error response format
+3. Implement proper admin role system
+4. Set up cron job for auction end processing
+5. Add database index validation
+6. Set up structured logging
+7. Add unit/integration tests
+8. Implement real push notifications (FCM integration)
 
 ### Medium Priority Improvements
 
 1. Fix N+1 queries in categories
 2. Standardize ID handling (UUID vs integer)
-3. Implement auction end processing job
-4. Add email notifications
-5. Improve CORS configuration
+3. Add email notifications (SendGrid/AWS SES integration)
+4. Improve CORS configuration
+5. Add `item_uuid_id` column to `item_images` table OR standardize on integer IDs
 
 ### Low Priority Improvements
 
@@ -1051,12 +1160,16 @@ These endpoints are **NOT registered** in the main server and appear to be legac
 | `src/routes/categories.js` | ✅ Active | Working |
 | `src/routes/topups.js` | ✅ Active | Security issue |
 | `src/routes/upload.js` | ✅ Active | Needs cloud storage |
+| `src/routes/auctions.js` | ✅ Active | NEW - Requires cron scheduling |
 | `api/*` | ⚠️ Inactive | Legacy, remove |
 | `src/utils/itemHelpers.js` | ✅ Active | Working |
 | `src/utils/itemResolver.js` | ✅ Active | Working |
+| `src/utils/itemLookup.js` | ⚠️ Active | **BUG**: Wrong column in getItemImages() |
 | `src/utils/validators.js` | ✅ Active | Working |
 | `src/middleware/auth.js` | ✅ Active | Too much logging |
 | `src/services/keepAlive.js` | ✅ Active | Optional |
+| `src/services/auctionEndService.js` | ✅ Active | NEW - Requires scheduling |
+| `src/services/notificationService.js` | ⚠️ Placeholder | NEW - Logs only, needs FCM |
 
 ---
 

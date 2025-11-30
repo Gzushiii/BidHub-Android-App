@@ -1012,7 +1012,6 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     }
     
     @Override
-    @Override
     public void onResume() {
         super.onResume();
         // Only refresh if items are empty or if explicitly needed
