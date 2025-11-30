@@ -107,8 +107,7 @@
                         android:gravity="center_vertical"
                         android:padding="@dimen/spacing_2"
                         android:visibility="gone"
-                        android:background="@color/surface_variant"
-                        android:backgroundTint="@color/info_light"
+                        android:background="@color/info_light"
                         android:paddingHorizontal="@dimen/spacing_3"
                         android:paddingVertical="@dimen/spacing_2">
 

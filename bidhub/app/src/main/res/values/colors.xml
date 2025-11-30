@@ -79,6 +79,12 @@
     <color name="error_container">#FFCDD2</color>
     <color name="on_error_container">#400E0E</color>
     
+    <!-- INFO COLORS -->
+    <color name="info_light">#E3F2FD</color>
+    <color name="info_dark">#01579B</color>
+    <color name="info_container">#E3F2FD</color>
+    <color name="on_info_container">#0D47A1</color>
+    
     <!-- LEGACY COMPATIBILITY (Maintain for existing code) -->
     <color name="primary_dark">#057F8D</color>
     <color name="primary_container">#E0F2F1</color>

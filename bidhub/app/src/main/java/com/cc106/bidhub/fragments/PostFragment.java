@@ -22,6 +22,9 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.textfield.TextInputLayout;
 import com.cc106.bidhub.utils.SharedPreferencesHelper;
 
@@ -84,12 +87,15 @@ public class PostFragment extends Fragment implements
     private AutoCompleteTextView actvOrigin;
     
     private RecyclerView rvItemImages;
-    private RecyclerView rvTags;
-    private Button btnForSale;
-    private Button btnForFree;
+    // Tags RecyclerView removed from new layout
+    // private RecyclerView rvTags;
+    private MaterialButtonToggleGroup togglePriceType;
+    private MaterialButton btnForSale;
+    private MaterialButton btnForFree;
     private ImageView btnToggleOptional;
-    private Button btnSaveDraft;
-    private Button btnPostItem;
+    private MaterialButton btnSaveDraft;
+    private MaterialButton btnPostItem;
+    private MaterialToolbar toolbar;
     private ProgressBar progressBar;
     private LinearLayout layoutImageProgress;
     private ProgressBar progressImageUpload;
@@ -101,8 +107,8 @@ public class PostFragment extends Fragment implements
     
     // Layouts
     private LinearLayout layoutOptionalDetails;
-    private LinearLayout layoutSubcategory;
-    private LinearLayout layoutSize;
+    private TextInputLayout layoutSubcategory;
+    private TextInputLayout layoutSize;
     
     // Adapters
     private ItemImageAdapter imageAdapter;
@@ -192,18 +198,17 @@ public class PostFragment extends Fragment implements
         actvOrigin = view.findViewById(R.id.actv_origin);
         
         rvItemImages = view.findViewById(R.id.rv_item_images);
+        togglePriceType = view.findViewById(R.id.toggle_price_type);
         btnForSale = view.findViewById(R.id.btn_for_sale);
         btnForFree = view.findViewById(R.id.btn_for_free);
         btnToggleOptional = view.findViewById(R.id.iv_toggle_optional);
         btnSaveDraft = view.findViewById(R.id.btn_save_draft);
         btnPostItem = view.findViewById(R.id.btn_post_item);
+        toolbar = view.findViewById(R.id.toolbar);
         progressBar = view.findViewById(R.id.progress_bar);
         layoutImageProgress = view.findViewById(R.id.layout_image_progress);
         progressImageUpload = view.findViewById(R.id.progress_image_upload);
         tvImageProgress = view.findViewById(R.id.tv_image_progress);
-        
-        // Back button
-        ImageView btnBack = view.findViewById(R.id.btn_back);
         
         // Checkboxes
         cbQuantity = view.findViewById(R.id.cb_quantity);
@@ -217,21 +222,31 @@ public class PostFragment extends Fragment implements
     
     private void setupAdapters() {
         try {
+            Context context = getContext();
+            if (context == null) {
+                context = requireContext();
+            }
+            
             // Image adapter
-            if (rvItemImages != null) {
+            if (rvItemImages != null && context != null) {
                 imageAdapter = new ItemImageAdapter(selectedImages);
                 imageAdapter.setOnImageClickListener(this);
                 imageAdapter.setOnImageRemoveListener(this);
                 imageAdapter.setOnAddPhotoClickListener(this);
-                rvItemImages.setLayoutManager(new GridLayoutManager(getContext(), 4));
+                rvItemImages.setLayoutManager(new GridLayoutManager(context, 4));
                 rvItemImages.setAdapter(imageAdapter);
             }
             
-            // Tags adapter - removed from new layout
-            tagsAdapter = new TagsAdapter(selectedTags);
-            tagsAdapter.setOnTagRemoveListener(this);
+            // Tags adapter - removed from new layout, but initialize to prevent null pointer
+            if (context != null) {
+                tagsAdapter = new TagsAdapter(selectedTags);
+                tagsAdapter.setOnTagRemoveListener(this);
+            }
         } catch (Exception e) {
-            ToastHelper.showError(getContext(), "Error setting up adapters: " + e.getMessage());
+            Context context = getContext();
+            if (context != null) {
+                ToastHelper.showError(context, "Error setting up adapters: " + e.getMessage());
+            }
             e.printStackTrace();
         }
     }
@@ -544,21 +559,26 @@ public class PostFragment extends Fragment implements
                 return;
             }
             
-            // Back button
-            ImageView btnBack = view.findViewById(R.id.btn_back);
-            if (btnBack != null) {
-                btnBack.setOnClickListener(v -> {
+            // Toolbar navigation icon (close button)
+            if (toolbar != null) {
+                toolbar.setNavigationOnClickListener(v -> {
                     if (getActivity() != null) {
                         getActivity().onBackPressed();
                     }
                 });
             }
             
-            if (btnForSale != null) {
-                btnForSale.setOnClickListener(v -> togglePriceMode(true));
-            }
-            if (btnForFree != null) {
-                btnForFree.setOnClickListener(v -> togglePriceMode(false));
+            // Price type toggle group
+            if (togglePriceType != null) {
+                togglePriceType.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+                    if (isChecked) {
+                        if (checkedId == R.id.btn_for_sale) {
+                            togglePriceMode(true);
+                        } else if (checkedId == R.id.btn_for_free) {
+                            togglePriceMode(false);
+                        }
+                    }
+                });
             }
             if (btnToggleOptional != null) {
                 btnToggleOptional.setOnClickListener(v -> toggleOptionalDetails());
@@ -583,24 +603,10 @@ public class PostFragment extends Fragment implements
     
     private void togglePriceMode(boolean forSale) {
         isForSale = forSale;
-        if (forSale) {
-            btnForSale.setBackgroundResource(R.drawable.button_primary);
-            btnForSale.setTextColor(getResources().getColor(R.color.white));
-            btnForFree.setBackgroundResource(R.drawable.button_secondary);
-            btnForFree.setTextColor(getResources().getColor(R.color.text_primary));
-            // Hide donation reason field for sale items
-            if (layoutDonationReason != null) {
-                layoutDonationReason.setVisibility(View.GONE);
-            }
-        } else {
-            btnForSale.setBackgroundResource(R.drawable.button_secondary);
-            btnForSale.setTextColor(getResources().getColor(R.color.text_primary));
-            btnForFree.setBackgroundResource(R.drawable.button_primary);
-            btnForFree.setTextColor(getResources().getColor(R.color.white));
-            // Show donation reason field for donation items
-            if (layoutDonationReason != null) {
-                layoutDonationReason.setVisibility(View.VISIBLE);
-            }
+        // MaterialButtonToggleGroup handles the visual state automatically
+        // We just need to update the donation reason field visibility
+        if (layoutDonationReason != null) {
+            layoutDonationReason.setVisibility(forSale ? View.GONE : View.VISIBLE);
         }
     }
     
