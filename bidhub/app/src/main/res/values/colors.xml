@@ -1,103 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- IMPROVED COLOR PALETTE - HIGH CONTRAST, SOLID COLORS ONLY -->
-    <!-- Based on accessibility guidelines and modern UI principles -->
+    <!-- DESIGN SYSTEM COLOR TOKENS -->
+    <!-- Primary hue: #068D9D -->
     
-    <!-- PRIMARY BRAND COLORS -->
-    <!-- Main brand color - Deep Teal for maximum contrast -->
-    <color name="primary">#00695C</color>
-    <color name="primary_light">#4DB6AC</color>
-    <color name="primary_dark">#004D40</color>
-    <color name="primary_container">#E0F2F1</color>
+    <!-- PRIMARY COLORS -->
+    <color name="primary">#068D9D</color>
+    <color name="primaryVariant">#057F8D</color>
+    <color name="primary_variant">#057F8D</color>
+    <color name="onPrimary">#FFFFFF</color>
     <color name="on_primary">#FFFFFF</color>
-    <color name="on_primary_container">#00201A</color>
+    <color name="primaryLight">#77D7DE</color>
+    <color name="primary_light">#77D7DE</color>
     
     <!-- SECONDARY COLORS -->
-    <color name="secondary">#26A69A</color>
-    <color name="secondary_light">#80CBC4</color>
-    <color name="secondary_dark">#00695C</color>
-    <color name="secondary_container">#E0F2F1</color>
-    <color name="on_secondary">#FFFFFF</color>
-    <color name="on_secondary_container">#00201A</color>
+    <color name="secondary">#FF7A59</color>
+    <color name="secondaryVariant">#E06145</color>
+    <color name="secondary_variant">#E06145</color>
+    <color name="onSecondary">#000000</color>
+    <color name="on_secondary">#000000</color>
     
-    <!-- ACCENT COLORS -->
-    <color name="accent">#FF6F00</color>
-    <color name="accent_light">#FFB74D</color>
-    <color name="accent_dark">#E65100</color>
+    <!-- TERTIARY COLORS -->
+    <color name="tertiary">#7C4DFF</color>
+    <color name="onTertiary">#FFFFFF</color>
+    <color name="on_tertiary">#FFFFFF</color>
     
-    <!-- NEUTRAL COLORS -->
-    <color name="white">#FFFFFF</color>
-    <color name="black">#000000</color>
-    <color name="charcoal">#212121</color>
-    <color name="dark_gray">#424242</color>
-    <color name="medium_gray">#757575</color>
-    <color name="light_gray">#BDBDBD</color>
-    <color name="very_light_gray">#F5F5F5</color>
-    
-    <!-- SEMANTIC COLORS WITH HIGH CONTRAST -->
+    <!-- SEMANTIC COLORS -->
     <color name="success">#2E7D32</color>
-    <color name="success_light">#C8E6C9</color>
-    <color name="success_dark">#1B5E20</color>
-    <color name="on_success">#FFFFFF</color>
-    
-    <color name="warning">#F57C00</color>
-    <color name="warning_light">#FFE0B2</color>
-    <color name="warning_dark">#E65100</color>
-    <color name="on_warning">#FFFFFF</color>
-    
+    <color name="warning">#F9A825</color>
     <color name="error">#D32F2F</color>
-    <color name="error_light">#FFCDD2</color>
-    <color name="error_dark">#B71C1C</color>
-    <color name="on_error">#FFFFFF</color>
+    <color name="info">#0288D1</color>
     
-    <color name="info">#1976D2</color>
-    <color name="info_light">#BBDEFB</color>
-    <color name="info_dark">#0D47A1</color>
-    <color name="on_info">#FFFFFF</color>
+    <!-- NEUTRAL SCALE (10-step) -->
+    <color name="neutral_0">#FFFFFF</color>
+    <color name="neutral_50">#FAFBFB</color>
+    <color name="neutral_100">#F2F6F6</color>
+    <color name="neutral_200">#E6EEEE</color>
+    <color name="neutral_300">#D1DEDE</color>
+    <color name="neutral_400">#9FB1B1</color>
+    <color name="neutral_500">#6D8A8A</color>
+    <color name="neutral_700">#3A5A5A</color>
+    <color name="neutral_900">#0B2222</color>
     
-    <!-- TEXT COLORS - HIGH CONTRAST -->
-    <color name="text_primary">#212121</color>
-    <color name="text_primary_dark">#FFFFFF</color>
-    <color name="text_secondary">#424242</color>
-    <color name="text_secondary_dark">#E0E0E0</color>
-    <color name="text_hint">#757575</color>
-    <color name="text_hint_dark">#BDBDBD</color>
-    <color name="text_disabled">#BDBDBD</color>
-    <color name="text_disabled_dark">#757575</color>
+    <!-- SURFACE COLORS (Light Theme) -->
+    <color name="background">#FFFFFF</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F2F6F6</color>
+    <color name="on_background">#3A5A5A</color>
+    <color name="on_surface">#3A5A5A</color>
+    <color name="on_surface_variant">#6D8A8A</color>
+    
+    <!-- TEXT COLORS -->
+    <color name="text_primary">#3A5A5A</color>
+    <color name="text_secondary">#6D8A8A</color>
+    <color name="text_hint">#9FB1B1</color>
+    <color name="text_disabled">#D1DEDE</color>
     <color name="text_white">#FFFFFF</color>
     <color name="text_black">#000000</color>
     
-    <!-- BACKGROUND COLORS -->
-    <color name="background">#FFFFFF</color>
-    <color name="background_light">#FFFFFF</color>
-    <color name="background_secondary">#F5F5F5</color>
-    <color name="background_tertiary">#FAFAFA</color>
-    <color name="surface">#FFFFFF</color>
-    <color name="surface_variant">#F5F5F5</color>
-    <color name="surface_container">#F0F0F0</color>
-    
-    <!-- BORDER AND OUTLINE COLORS -->
-    <color name="outline">#BDBDBD</color>
-    <color name="outline_variant">#E0E0E0</color>
-    <color name="outline_focus">#00695C</color>
-    <color name="border_light">#E0E0E0</color>
-    <color name="border_medium">#BDBDBD</color>
-    <color name="border_dark">#757575</color>
+    <!-- OUTLINE & BORDER COLORS -->
+    <color name="outline">#D1DEDE</color>
+    <color name="outline_variant">#E6EEEE</color>
+    <color name="outline_focus">#068D9D</color>
+    <color name="border_light">#E6EEEE</color>
+    <color name="border_medium">#D1DEDE</color>
+    <color name="border_dark">#9FB1B1</color>
     
     <!-- STATE COLORS -->
-    <color name="state_hover">#F5F5F5</color>
-    <color name="state_pressed">#E0E0E0</color>
-    <color name="state_focused">#E0F2F1</color>
-    <color name="state_disabled">#F5F5F5</color>
+    <color name="state_hover">#F2F6F6</color>
+    <color name="state_pressed">#E6EEEE</color>
+    <color name="state_focused">#77D7DE</color>
+    <color name="state_disabled">#F2F6F6</color>
     <color name="state_selected">#E0F2F1</color>
     
-    <!-- FUNCTIONAL COLORS -->
-    <!-- Credit system -->
+    <!-- ERROR COLORS -->
+    <color name="error_light">#FFCDD2</color>
+    <color name="error_dark">#B71C1C</color>
+    <color name="on_error">#FFFFFF</color>
+    <color name="error_container">#FFCDD2</color>
+    <color name="on_error_container">#400E0E</color>
+    
+    <!-- LEGACY COMPATIBILITY (Maintain for existing code) -->
+    <color name="primary_dark">#057F8D</color>
+    <color name="primary_container">#E0F2F1</color>
+    <color name="on_primary_container">#00201A</color>
+    <color name="secondary_light">#80CBC4</color>
+    <color name="secondary_dark">#00695C</color>
+    <color name="secondary_container">#E0F2F1</color>
+    <color name="on_secondary_container">#00201A</color>
+    <color name="tertiary_container">#C8E6C9</color>
+    <color name="on_tertiary_container">#002106</color>
+    <color name="surface_tint">#068D9D</color>
+    
+    <!-- FUNCTIONAL COLORS (Keep for app-specific features) -->
     <color name="credit_gold">#FF8F00</color>
     <color name="credit_gold_light">#FFE0B2</color>
     <color name="credit_gold_dark">#E65100</color>
-    
-    <!-- Auction-specific -->
     <color name="bid_green">#2E7D32</color>
     <color name="bid_green_light">#C8E6C9</color>
     <color name="outbid_red">#D32F2F</color>
@@ -106,23 +103,39 @@
     <color name="winning_gold_light">#FFE0B2</color>
     <color name="ending_orange">#FF8F00</color>
     <color name="ending_orange_light">#FFE0B2</color>
-    
-    <!-- Payment gateways -->
     <color name="gcash_color">#00D4AA</color>
     <color name="maya_color">#00A8E8</color>
     
-    <!-- Password strength -->
-    <color name="password_weak">#D32F2F</color>
-    <color name="password_fair">#F57C00</color>
-    <color name="password_good">#1976D2</color>
-    <color name="password_strong">#2E7D32</color>
+    <!-- DASHBOARD REDESIGN COLORS (Keep for compatibility) -->
+    <color name="header_text_primary">#181411</color>
+    <color name="header_text_secondary">#8a7560</color>
+    <color name="chip_background">#f5f2f0</color>
     
-    <!-- LEGACY COMPATIBILITY COLORS -->
-    <color name="primary_blue">#00695C</color>
-    <color name="primary_blue_dark">#004D40</color>
-    <color name="primary_blue_light">#4DB6AC</color>
-    <color name="accent_orange">#FF6F00</color>
-    <color name="accent_orange_dark">#E65100</color>
+    <!-- LEGACY GRAY SCALE (Map to neutrals) -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="charcoal">#3A5A5A</color>
+    <color name="dark_gray">#6D8A8A</color>
+    <color name="medium_gray">#9FB1B1</color>
+    <color name="light_gray">#D1DEDE</color>
+    <color name="very_light_gray">#F2F6F6</color>
+    <color name="gray_50">#FAFBFB</color>
+    <color name="gray_100">#F2F6F6</color>
+    <color name="gray_200">#E6EEEE</color>
+    <color name="gray_300">#D1DEDE</color>
+    <color name="gray_400">#9FB1B1</color>
+    <color name="gray_500">#6D8A8A</color>
+    <color name="gray_600">#757575</color>
+    <color name="gray_700">#3A5A5A</color>
+    <color name="gray_800">#424242</color>
+    <color name="gray_900">#0B2222</color>
+    
+    <!-- LEGACY COMPATIBILITY -->
+    <color name="primary_blue">#068D9D</color>
+    <color name="primary_blue_dark">#057F8D</color>
+    <color name="primary_blue_light">#77D7DE</color>
+    <color name="accent_orange">#FF7A59</color>
+    <color name="accent_orange_dark">#E06145</color>
     <color name="accent_orange_light">#FFB74D</color>
     <color name="success_green">#2E7D32</color>
     <color name="success_green_light">#C8E6C9</color>
@@ -131,60 +144,36 @@
     <color name="error_red_light">#FFCDD2</color>
     <color name="error_red_dark">#B71C1C</color>
     <color name="surface_light">#FFFFFF</color>
-    
-    <!-- ADDITIONAL UI COLORS -->
-    <color name="primary_color">#00695C</color>
+    <color name="primary_color">#068D9D</color>
     <color name="success_color">#2E7D32</color>
     <color name="error_color">#D32F2F</color>
-    <color name="warning_yellow">#F57C00</color>
-    <color name="info_blue">#1976D2</color>
+    <color name="warning_yellow">#F9A825</color>
+    <color name="info_blue">#0288D1</color>
     <color name="info_background">#E3F2FD</color>
-    
-    <!-- MISSING COLORS FOR COMPATIBILITY -->
-    <color name="accent_red">#E53935</color>
-    <color name="accent_green_light">#C8E6C9</color>
-    
-    <!-- ON COLORS FOR BADGE TEXT ON LIGHT BACKGROUNDS -->
+    <color name="semantic_success">#2E7D32</color>
+    <color name="semantic_warning">#F9A825</color>
+    <color name="semantic_error">#D32F2F</color>
+    <color name="semantic_info">#0288D1</color>
+    <color name="state_active">#068D9D</color>
+    <color name="state_inactive">#6D8A8A</color>
+    <color name="state_highlight">#E0F2F1</color>
+    <color name="on_success">#FFFFFF</color>
+    <color name="on_warning">#FFFFFF</color>
+    <color name="on_info">#FFFFFF</color>
     <color name="on_success_light">#1B5E20</color>
     <color name="on_error_light">#B71C1C</color>
     <color name="on_warning_light">#E65100</color>
     <color name="on_info_light">#0D47A1</color>
-    
-    <!-- SEMANTIC COLORS -->
-    <color name="semantic_success">#2E7D32</color>
-    <color name="semantic_warning">#F57C00</color>
-    <color name="semantic_error">#D32F2F</color>
-    <color name="semantic_info">#1976D2</color>
-    
-    <!-- UI STATE COLORS -->
-    <color name="state_active">#00695C</color>
-    <color name="state_inactive">#757575</color>
-    <color name="state_highlight">#E0F2F1</color>
-    
-    <!-- GRAY SCALE -->
-    <color name="gray_50">#FAFAFA</color>
-    <color name="gray_100">#F5F5F5</color>
-    <color name="gray_200">#EEEEEE</color>
-    <color name="gray_300">#E0E0E0</color>
-    <color name="gray_400">#BDBDBD</color>
-    <color name="gray_500">#9E9E9E</color>
-    <color name="gray_600">#757575</color>
-    <color name="gray_700">#616161</color>
-    <color name="gray_800">#424242</color>
-    <color name="gray_900">#212121</color>
-    
-    <!-- MATERIAL DESIGN 3 COLOR ROLES -->
-    <color name="tertiary">#2E7D32</color>
-    <color name="on_tertiary">#FFFFFF</color>
-    <color name="tertiary_container">#C8E6C9</color>
-    <color name="on_tertiary_container">#002106</color>
-    <color name="error_container">#FFCDD2</color>
-    <color name="on_error_container">#400E0E</color>
-    <color name="on_surface_variant">#424242</color>
-    <color name="surface_tint">#00695C</color>
-    
-    <!-- Dashboard Redesign Colors -->
-    <color name="header_text_primary">#181411</color>
-    <color name="header_text_secondary">#8a7560</color>
-    <color name="chip_background">#f5f2f0</color>
+    <color name="accent">#FF7A59</color>
+    <color name="accent_light">#FFB74D</color>
+    <color name="accent_dark">#E65100</color>
+    <color name="background_light">#FFFFFF</color>
+    <color name="background_secondary">#F2F6F6</color>
+    <color name="background_tertiary">#FAFBFB</color>
+    <color name="surface_container">#F0F0F0</color>
+    <color name="text_primary_dark">#FAFBFB</color>
+    <color name="text_secondary_dark">#E6EEEE</color>
+    <color name="text_hint_dark">#D1DEDE</color>
+    <color name="text_disabled_dark">#9FB1B1</color>
+    <color name="primary_light_old">#4DB6AC</color>
 </resources>

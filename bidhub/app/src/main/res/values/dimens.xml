@@ -25,14 +25,14 @@
     <dimen name="button_height_primary">48dp</dimen>
     <dimen name="button_height_secondary">40dp</dimen>
     <dimen name="button_height_small">32dp</dimen>
-    <dimen name="button_corner_radius">8dp</dimen>
+    <dimen name="button_corner_radius">12dp</dimen>
     <dimen name="button_padding_horizontal">16dp</dimen>
     <dimen name="button_padding_vertical">12dp</dimen>
     <dimen name="button_padding_small_horizontal">12dp</dimen>
     <dimen name="button_padding_small_vertical">8dp</dimen>
     
     <!-- Card Dimensions -->
-    <dimen name="card_elevation">4dp</dimen>
+    <dimen name="card_elevation">1dp</dimen>
     <dimen name="card_corner_radius">12dp</dimen>
     <dimen name="card_padding">16dp</dimen>
     <dimen name="card_margin">8dp</dimen>
