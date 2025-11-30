@@ -1262,49 +1262,48 @@ public class PostFragment extends Fragment implements
         // Validate price - all items are for sale
         String priceText = etStartingPrice.getText().toString().trim();
         if (TextUtils.isEmpty(priceText)) {
-                ToastHelper.showError(getContext(), "Starting price is required for items for sale");
+            ToastHelper.showError(getContext(), "Starting price is required for items for sale");
+            etStartingPrice.requestFocus();
+            return false;
+        }
+        try {
+            double price = Double.parseDouble(priceText);
+            if (price < 0.01) {
+                ToastHelper.showError(getContext(), "Starting price must be at least ₱0.01");
                 etStartingPrice.requestFocus();
                 return false;
             }
-            try {
-                double price = Double.parseDouble(priceText);
-                if (price < 0.01) {
-                    ToastHelper.showError(getContext(), "Starting price must be at least ₱0.01");
-                    etStartingPrice.requestFocus();
-                    return false;
-                }
-                if (price > 1000000) {
-                    ToastHelper.showError(getContext(), "Price seems too high. Please verify the amount");
-                    etStartingPrice.requestFocus();
-                    return false;
-                }
-                
-                // Validate Buy Now price if provided
-                String buyNowPriceText = etBuyNowPrice.getText().toString().trim();
-                if (!TextUtils.isEmpty(buyNowPriceText)) {
-                    try {
-                        double buyNowPrice = Double.parseDouble(buyNowPriceText);
-                        if (buyNowPrice <= price) {
-                            ToastHelper.showError(getContext(), "Buy Now price must be higher than starting price");
-                            etBuyNowPrice.requestFocus();
-                            return false;
-                        }
-                        if (buyNowPrice > 1000000) {
-                            ToastHelper.showError(getContext(), "Buy Now price seems too high. Please verify the amount");
-                            etBuyNowPrice.requestFocus();
-                            return false;
-                        }
-                    } catch (NumberFormatException e) {
-                        ToastHelper.showError(getContext(), "Please enter a valid Buy Now price");
+            if (price > 1000000) {
+                ToastHelper.showError(getContext(), "Price seems too high. Please verify the amount");
+                etStartingPrice.requestFocus();
+                return false;
+            }
+            
+            // Validate Buy Now price if provided
+            String buyNowPriceText = etBuyNowPrice.getText().toString().trim();
+            if (!TextUtils.isEmpty(buyNowPriceText)) {
+                try {
+                    double buyNowPrice = Double.parseDouble(buyNowPriceText);
+                    if (buyNowPrice <= price) {
+                        ToastHelper.showError(getContext(), "Buy Now price must be higher than starting price");
                         etBuyNowPrice.requestFocus();
                         return false;
                     }
+                    if (buyNowPrice > 1000000) {
+                        ToastHelper.showError(getContext(), "Buy Now price seems too high. Please verify the amount");
+                        etBuyNowPrice.requestFocus();
+                        return false;
+                    }
+                } catch (NumberFormatException e) {
+                    ToastHelper.showError(getContext(), "Please enter a valid Buy Now price");
+                    etBuyNowPrice.requestFocus();
+                    return false;
                 }
-            } catch (NumberFormatException e) {
-                ToastHelper.showError(getContext(), "Please enter a valid starting price");
-                etStartingPrice.requestFocus();
-                return false;
             }
+        } catch (NumberFormatException e) {
+            ToastHelper.showError(getContext(), "Please enter a valid starting price");
+            etStartingPrice.requestFocus();
+            return false;
         }
         
         // Validate condition (optional - backend doesn't require it)
