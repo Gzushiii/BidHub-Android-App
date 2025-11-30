@@ -156,6 +156,7 @@ public class BiddingEngine {
                 return new BidResult(true, "Bid placed successfully", bid);
             } else {
                 Log.e(TAG, "Backend bid placement failed: " + apiResponse.getMessage());
+                // Backend returns detailed error messages, use them directly
                 return new BidResult(false, apiResponse.getMessage(), null);
             }
             
@@ -207,9 +208,18 @@ public class BiddingEngine {
         }
         
         // Check minimum bid increment
+        // Minimum bid is either: current highest bid + 1, or starting price (whichever is higher)
         double currentBid = item.getCurrentPrice();
-        if (amount < currentBid + MIN_BID_INCREMENT) {
-            return new BidValidationResult(false, "Bid must be at least " + MIN_BID_INCREMENT + " higher than current bid");
+        double startingPrice = item.getStartingPrice();
+        double minimumBid = currentBid > 0 
+            ? currentBid + MIN_BID_INCREMENT  // Must be at least MIN_BID_INCREMENT higher than current bid
+            : startingPrice;                   // Must be at least the starting price
+        
+        if (amount < minimumBid) {
+            String errorMsg = currentBid > 0
+                ? String.format("Bid must be at least ₱%.2f (current bid: ₱%.2f)", minimumBid, currentBid)
+                : String.format("Bid must be at least the starting price (₱%.2f)", startingPrice);
+            return new BidValidationResult(false, errorMsg);
         }
         
         // Credit balance validation is handled by the backend

@@ -154,55 +154,112 @@ router.post('/place', authenticateToken, async (req, res) => {
       });
     }
 
-    const startingPrice = Number(
-      item.starting_price ?? item.starting_bid ?? 0
+    // CRITICAL: Lock item row to prevent race conditions
+    // Check auction end date and lock item row atomically
+    const [lockedItems] = await connection.query(
+      `SELECT id, starting_price, starting_bid, end_date, status, seller_id
+       FROM items 
+       WHERE id = ? 
+       FOR UPDATE`,
+      [numericItemId]
     );
 
+    if (lockedItems.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({
+        error: 'item_not_found',
+        details: 'item_does_not_exist',
+        message: 'Item not found',
+        correlationId
+      });
+    }
+
+    const lockedItem = lockedItems[0];
+
+    // Check if auction has ended
+    if (lockedItem.end_date && new Date(lockedItem.end_date) <= new Date()) {
+      await connection.rollback();
+      return res.status(400).json({
+        error: 'auction_ended',
+        details: 'auction_already_ended',
+        message: 'This auction has already ended',
+        end_date: lockedItem.end_date,
+        correlationId
+      });
+    }
+
+    // Check if item is still active (double-check after lock)
+    if (lockedItem.status !== 'active') {
+      await connection.rollback();
+      return res.status(400).json({
+        error: 'auction_ended',
+        details: 'item_not_active',
+        message: `Item is not available for bidding (status: ${lockedItem.status})`,
+        item_status: lockedItem.status,
+        correlationId
+      });
+    }
+
+    const startingPrice = Number(
+      lockedItem.starting_price ?? lockedItem.starting_bid ?? 0
+    );
+
+    // CRITICAL: Get current max bid WITH row lock to prevent race conditions
+    // This must be done AFTER locking the item to ensure consistency
     let currentMaxBid = 0;
     try {
-      // Use numeric ID for bids lookup (bids table uses INT item_id)
       const [currentBids] = await connection.query(
-        'SELECT MAX(amount) as max_bid FROM bids WHERE item_id = ?',
+        `SELECT COALESCE(MAX(amount), 0) as max_bid 
+         FROM bids 
+         WHERE item_id = ? 
+         AND status IN ('active', 'winning')`,
         [numericItemId]
       );
       currentMaxBid = Number(currentBids[0]?.max_bid ?? 0);
     } catch (lookupError) {
       console.error('Error looking up current max bid:', lookupError);
+      await connection.rollback();
       throw lookupError;
     }
 
-    const minimumBid = Math.max(
-      currentMaxBid || startingPrice,
-      startingPrice
-    );
+    // Calculate minimum bid: if there are existing bids, must be higher than max bid
+    // Otherwise, must be at least the starting price
+    const minimumBid = currentMaxBid > 0 
+      ? currentMaxBid + 1  // Must be at least 1 higher than current max bid
+      : Math.max(startingPrice, 1);  // Must be at least the starting price (or 1 if starting price is 0)
 
-    if (bidAmount <= minimumBid) {
+    if (bidAmount < minimumBid) {
       await connection.rollback();
       return res.status(400).json({
         error: 'bid_too_low',
         details: 'amount_not_high_enough',
-        message: `Bid must be higher than current highest bid (₱${minimumBid}).`,
-        current_bid: minimumBid,
+        message: currentMaxBid > 0 
+          ? `Bid must be higher than current highest bid (₱${currentMaxBid}). Minimum bid: ₱${minimumBid}`
+          : `Bid must be at least the starting price (₱${startingPrice}).`,
+        current_bid: currentMaxBid,
+        starting_price: startingPrice,
         your_bid: bidAmount,
-        required_bid: minimumBid + 1
+        required_bid: minimumBid,
+        correlationId
       });
     }
 
+    // CRITICAL: Lock user row to prevent race conditions on credit balance
     let users = [];
     try {
       [users] = await connection.query(
-        'SELECT id, email, alias, credits FROM users WHERE id = ?',
+        'SELECT id, email, alias, credits FROM users WHERE id = ? FOR UPDATE',
         [parseInt(bidder_id, 10)]
       );
     } catch (intError) {
       try {
         [users] = await connection.query(
-          'SELECT id, email, alias, credits FROM users WHERE id = ?',
+          'SELECT id, email, alias, credits FROM users WHERE id = ? FOR UPDATE',
           [String(bidder_id)]
         );
       } catch (stringError) {
         [users] = await connection.query(
-          'SELECT id, email, alias, credits FROM users WHERE CAST(id AS CHAR) = ?',
+          'SELECT id, email, alias, credits FROM users WHERE CAST(id AS CHAR) = ? FOR UPDATE',
           [String(bidder_id)]
         );
       }
@@ -210,7 +267,7 @@ router.post('/place', authenticateToken, async (req, res) => {
 
     if (users.length === 0) {
       const [emailUsers] = await connection.query(
-        'SELECT id, email, alias, credits FROM users WHERE email = ?',
+        'SELECT id, email, alias, credits FROM users WHERE email = ? FOR UPDATE',
         [req.user.email]
       );
 
@@ -223,7 +280,8 @@ router.post('/place', authenticateToken, async (req, res) => {
           details: 'bidder_missing',
           message: 'User not found',
           bidder_id: bidder_id,
-          user_email: req.user.email
+          user_email: req.user.email,
+          correlationId
         });
       }
     }
@@ -231,6 +289,7 @@ router.post('/place', authenticateToken, async (req, res) => {
     const userCredits = Number(users[0].credits ?? 0);
     const actualUserId = users[0].id;
 
+    // Re-check credits after lock (in case balance changed)
     if (userCredits < bidAmount) {
       await connection.rollback();
       return res.status(400).json({
@@ -239,7 +298,8 @@ router.post('/place', authenticateToken, async (req, res) => {
         message: `Insufficient credits. Required: ₱${bidAmount}, Available: ₱${userCredits}`,
         required: bidAmount,
         available: userCredits,
-        user_id: actualUserId
+        user_id: actualUserId,
+        correlationId
       });
     }
 

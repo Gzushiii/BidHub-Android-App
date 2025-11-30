@@ -500,6 +500,8 @@
                     android:layout_height="@dimen/button_height_primary"
                     android:layout_weight="1"
                     android:text="@string/place_bid"
+                    android:visibility="visible"
+                    android:enabled="true"
                     style="@style/Widget.BidHub.Button.Primary"
                     android:layout_marginEnd="@dimen/spacing_2" />
 

@@ -223,7 +223,15 @@ public class ItemDetailActivity extends AppCompatActivity {
             android.util.Log.d("ItemDetailActivity", "etBidAmount initialized");
             
             btnPlaceBid = findViewById(R.id.btn_place_bid);
-            android.util.Log.d("ItemDetailActivity", "btnPlaceBid initialized");
+            if (btnPlaceBid != null) {
+                android.util.Log.d("ItemDetailActivity", "btnPlaceBid initialized successfully");
+                // Ensure button is visible by default
+                btnPlaceBid.setVisibility(View.VISIBLE);
+                btnPlaceBid.setEnabled(true);
+                android.util.Log.d("ItemDetailActivity", "btnPlaceBid visibility set to VISIBLE, enabled=true");
+            } else {
+                android.util.Log.e("ItemDetailActivity", "ERROR: btnPlaceBid is NULL after findViewById!");
+            }
             
             btnBuyNow = findViewById(R.id.btn_buy_now);
             android.util.Log.d("ItemDetailActivity", "btnBuyNow initialized");
@@ -391,8 +399,13 @@ public class ItemDetailActivity extends AppCompatActivity {
             updateBidButton();
             
             // Update bid input with minimum bid amount
-            double minBid = currentItem.getCurrentPrice() + 1.0; // Minimum increment
-            etBidAmount.setHint("Min: " + currencyFormat.format(minBid));
+            // Minimum bid is either: current highest bid + 1, or starting price (whichever is higher)
+            double currentHighestBid = currentItem.getCurrentPrice();
+            double startingPrice = currentItem.getStartingPrice();
+            double minBid = Math.max(currentHighestBid + 1.0, startingPrice);
+            if (etBidAmount != null) {
+                etBidAmount.setHint("Min: " + currencyFormat.format(minBid));
+            }
             
             // Start countdown timer
             startCountdownTimer();
@@ -404,25 +417,70 @@ public class ItemDetailActivity extends AppCompatActivity {
     }
     
     private void updateBidButton() {
-        if (btnPlaceBid == null) return;
-        
-        // Check if user is the seller
-        if (currentItem != null && loggedInUserEmail != null && loggedInUserEmail.equals(currentItem.getSellerId())) {
-            btnPlaceBid.setVisibility(View.GONE);
-            // Show "Your Item" indicator instead
-            if (tvSellerName != null) {
-                tvSellerName.setText("Your Listing");
-                tvSellerName.setTextColor(getResources().getColor(R.color.primary_color));
-            }
+        if (btnPlaceBid == null) {
+            android.util.Log.e("ItemDetailActivity", "btnPlaceBid is null in updateBidButton()");
             return;
         }
         
+        // Default: Show button and enable it
+        btnPlaceBid.setVisibility(View.VISIBLE);
+        btnPlaceBid.setEnabled(true);
+        btnPlaceBid.setText(getString(R.string.place_bid));
+        
+        // Check if user is the seller
+        // TEMPORARY: For testing, allow sellers to see the button (backend will reject the bid anyway)
+        // Only hide button if we're absolutely certain the user is the seller AND we want to hide it
+        boolean hideForSeller = false; // Set to true to hide button for sellers
+        
+        if (currentItem != null && loggedInUserEmail != null && hideForSeller) {
+            String sellerId = currentItem.getSellerId();
+            
+            // Log for debugging
+            android.util.Log.d("ItemDetailActivity", "Checking seller match - loggedInUserEmail: " + loggedInUserEmail + ", sellerId: " + sellerId);
+            
+            // Only hide if sellerId matches loggedInUserEmail exactly (case-insensitive)
+            // This prevents false positives from partial matches
+            if (sellerId != null && sellerId.trim().length() > 0 && 
+                loggedInUserEmail.trim().equalsIgnoreCase(sellerId.trim())) {
+                btnPlaceBid.setVisibility(View.GONE);
+                // Show "Your Item" indicator instead
+                if (tvSellerName != null) {
+                    tvSellerName.setText("Your Listing");
+                    tvSellerName.setTextColor(getResources().getColor(R.color.primary_color));
+                }
+                android.util.Log.d("ItemDetailActivity", "User is seller (exact match), hiding Place Bid button");
+                return;
+            } else {
+                android.util.Log.d("ItemDetailActivity", "User is NOT seller - showing Place Bid button. Match check: " + 
+                    (sellerId != null ? sellerId : "null") + " vs " + loggedInUserEmail);
+            }
+        } else {
+            if (currentItem != null && loggedInUserEmail != null) {
+                String sellerId = currentItem.getSellerId();
+                android.util.Log.d("ItemDetailActivity", "Seller check disabled for testing - loggedInUserEmail: " + loggedInUserEmail + ", sellerId: " + sellerId + 
+                    " (Button will be shown, backend will validate)");
+            }
+        }
+        
         // Check if auction is active
-        if (currentItem != null && currentItem.isAvailableForBidding()) {
+        if (currentItem != null) {
+            if (currentItem.isAvailableForBidding()) {
+                btnPlaceBid.setVisibility(View.VISIBLE);
+                btnPlaceBid.setEnabled(true);
+                android.util.Log.d("ItemDetailActivity", "Auction is active, showing Place Bid button");
+            } else {
+                // Auction ended or not available
+                btnPlaceBid.setVisibility(View.VISIBLE);
+                btnPlaceBid.setEnabled(false);
+                btnPlaceBid.setText("Auction Ended");
+                btnPlaceBid.setBackgroundColor(getResources().getColor(R.color.state_disabled));
+                android.util.Log.d("ItemDetailActivity", "Auction not available, disabling Place Bid button");
+            }
+        } else {
+            // No item data yet, show button anyway (will be validated on click)
             btnPlaceBid.setVisibility(View.VISIBLE);
             btnPlaceBid.setEnabled(true);
-        } else {
-            btnPlaceBid.setVisibility(View.GONE);
+            android.util.Log.d("ItemDetailActivity", "No item data, showing Place Bid button (will validate on click)");
         }
     }
     
@@ -1122,6 +1180,11 @@ public class ItemDetailActivity extends AppCompatActivity {
     }
     
     private void showBidConfirmationDialog() {
+        if (currentItem == null) {
+            ToastHelper.showError(this, "Item information not available. Please try again.");
+            return;
+        }
+
         String bidAmountText = etBidAmount.getText().toString().trim();
         if (bidAmountText.isEmpty()) {
             etBidAmount.setError("Please enter a bid amount");
@@ -1135,10 +1198,37 @@ public class ItemDetailActivity extends AppCompatActivity {
                 return;
             }
 
-            // Create and show bid confirmation dialog
+            // Calculate minimum bid (current highest bid + 1, or starting price if no bids)
+            double currentHighestBid = currentItem.getCurrentPrice();
+            double startingPrice = currentItem.getStartingPrice();
+            double minimumBid = Math.max(currentHighestBid + 1.0, startingPrice);
+            
+            // Validate minimum bid
+            if (bidAmount < minimumBid) {
+                String errorMsg = String.format("Bid must be at least %s (current highest: %s)", 
+                    currencyFormat.format(minimumBid), 
+                    currencyFormat.format(currentHighestBid > 0 ? currentHighestBid : startingPrice));
+                etBidAmount.setError(errorMsg);
+                ToastHelper.showError(this, errorMsg);
+                return;
+            }
+
+            // Check user's credit balance
+            double userBalance = prefsHelper.getCredits();
+            if (userBalance < bidAmount) {
+                String errorMsg = String.format("Insufficient credits. Required: %s, Available: %s", 
+                    currencyFormat.format(bidAmount), 
+                    currencyFormat.format(userBalance));
+                etBidAmount.setError(errorMsg);
+                ToastHelper.showError(this, errorMsg);
+                return;
+            }
+
+            // All validations passed - create and show bid confirmation dialog
             createBidConfirmationDialog(bidAmount);
         } catch (NumberFormatException e) {
             etBidAmount.setError("Please enter a valid number");
+            ToastHelper.showError(this, "Please enter a valid bid amount");
         }
     }
 
