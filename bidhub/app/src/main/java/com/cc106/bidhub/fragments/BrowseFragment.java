@@ -708,11 +708,16 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                                 
                                 // Validate and add image URL
                                 if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
-                                    // Ensure URL is properly formatted
+                                    // FIX: Convert relative URLs to absolute URLs
                                     if (!imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
-                                        // If it's a relative path, might need to prepend base URL
-                                        // For now, log warning but still add it
-                                        android.util.Log.w("BrowseFragment", "Image URL is not absolute: " + imageUrl);
+                                        // If it's a relative path, prepend base URL
+                                        String baseUrl = "https://bidhub-android-app.onrender.com";
+                                        if (imageUrl.startsWith("/")) {
+                                            imageUrl = baseUrl + imageUrl;
+                                        } else {
+                                            imageUrl = baseUrl + "/" + imageUrl;
+                                        }
+                                        android.util.Log.d("BrowseFragment", "Converted relative URL to absolute: " + imageUrl);
                                     }
                                     imagePaths.add(imageUrl);
                                 }
@@ -724,10 +729,20 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                                 try {
                                     org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
                                     for (int j = 0; j < imagesArray.length(); j++) {
-                                        String imageUrl = imagesArray.optString(j, null);
-                                        if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
-                                            imagePaths.add(imageUrl);
+                                    String imageUrl = imagesArray.optString(j, null);
+                                    if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
+                                        // FIX: Convert relative URLs to absolute URLs
+                                        if (!imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+                                            String baseUrl = "https://bidhub-android-app.onrender.com";
+                                            if (imageUrl.startsWith("/")) {
+                                                imageUrl = baseUrl + imageUrl;
+                                            } else {
+                                                imageUrl = baseUrl + "/" + imageUrl;
+                                            }
+                                            android.util.Log.d("BrowseFragment", "Converted relative URL to absolute: " + imageUrl);
                                         }
+                                        imagePaths.add(imageUrl);
+                                    }
                                     }
                                 } catch (org.json.JSONException e) {
                                     android.util.Log.w("BrowseFragment", "Failed to parse images string as JSON array: " + imagesString);

@@ -1176,13 +1176,27 @@ public class HomeFragment extends Fragment {
                             org.json.JSONArray imagesArray = (org.json.JSONArray) imagesObj;
                             for (int j = 0; j < imagesArray.length(); j++) {
                                 Object imgObj = imagesArray.get(j);
+                                String imageUrl = null;
+                                
                                 if (imgObj instanceof org.json.JSONObject) {
                                     org.json.JSONObject imgJson = (org.json.JSONObject) imgObj;
-                                    if (imgJson.has("image_url")) {
-                                        imagePaths.add(imgJson.getString("image_url"));
-                                    }
+                                    imageUrl = imgJson.optString("image_url", imgJson.optString("url", null));
                                 } else if (imgObj instanceof String) {
-                                    imagePaths.add((String) imgObj);
+                                    imageUrl = (String) imgObj;
+                                }
+                                
+                                // FIX: Convert relative URLs to absolute URLs
+                                if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
+                                    if (!imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+                                        String baseUrl = "https://bidhub-android-app.onrender.com";
+                                        if (imageUrl.startsWith("/")) {
+                                            imageUrl = baseUrl + imageUrl;
+                                        } else {
+                                            imageUrl = baseUrl + "/" + imageUrl;
+                                        }
+                                        android.util.Log.d("HomeFragment", "Converted relative URL to absolute: " + imageUrl);
+                                    }
+                                    imagePaths.add(imageUrl);
                                 }
                             }
                         } else if (imagesObj instanceof String) {
@@ -1190,7 +1204,20 @@ public class HomeFragment extends Fragment {
                             if (!imagesString.isEmpty() && !imagesString.equals("null")) {
                                 org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
                                 for (int j = 0; j < imagesArray.length(); j++) {
-                                    imagePaths.add(imagesArray.getString(j));
+                                    String imageUrl = imagesArray.optString(j, null);
+                                    if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
+                                        // FIX: Convert relative URLs to absolute URLs
+                                        if (!imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+                                            String baseUrl = "https://bidhub-android-app.onrender.com";
+                                            if (imageUrl.startsWith("/")) {
+                                                imageUrl = baseUrl + imageUrl;
+                                            } else {
+                                                imageUrl = baseUrl + "/" + imageUrl;
+                                            }
+                                            android.util.Log.d("HomeFragment", "Converted relative URL to absolute: " + imageUrl);
+                                        }
+                                        imagePaths.add(imageUrl);
+                                    }
                                 }
                             }
                         }

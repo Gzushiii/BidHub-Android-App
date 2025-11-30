@@ -138,11 +138,36 @@ public class CreditsFragment extends Fragment {
         android.util.Log.d("CreditsFragment", "userId: " + userId);
         
         try {
-            // Update balance display
+            // FIX: Show cached balance immediately for better UX, then refresh from server
             updateBalanceDisplay();
             
             // Load and display credit packages
             loadCreditPackages();
+            
+            // FIX: Refresh balance from server to ensure accuracy (async, updates UI when complete)
+            // This ensures the displayed balance is always up-to-date after server response
+            com.cc106.bidhub.utils.CreditBalanceManager.refreshBalance(
+                getContext(),
+                new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
+                    @Override
+                    public void onBalanceUpdated(double newBalance) {
+                        if (getActivity() != null && !getActivity().isFinishing()) {
+                            // Update UserRepository with confirmed value from backend
+                            com.cc106.bidhub.repository.UserRepository userRepo = 
+                                com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+                            userRepo.updateCreditsImmediately(newBalance);
+                            updateBalanceDisplay();
+                            android.util.Log.d("CreditsFragment", String.format("Balance refreshed from server: %.2f", newBalance));
+                        }
+                    }
+                    
+                    @Override
+                    public void onError(String errorMessage) {
+                        // Silent fail - already showing cached value
+                        android.util.Log.w("CreditsFragment", "Failed to refresh balance from server: " + errorMessage);
+                    }
+                }
+            );
             
             android.util.Log.d("CreditsFragment", "Credit information loaded successfully");
             
