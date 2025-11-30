@@ -189,7 +189,6 @@
         <item name="boxStrokeColor">@color/outline</item>
         <item name="boxStrokeWidth">1dp</item>
         <item name="boxStrokeWidthFocused">2dp</item>
-        <item name="boxStrokeColorFocused">@color/primary</item>
         <item name="hintTextColor">@color/text_hint</item>
         <item name="android:textColorHint">@color/text_hint</item>
         <item name="errorTextColor">@color/error</item>
