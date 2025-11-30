@@ -19,6 +19,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
 import com.cc106.bidhub.toast.ToastHelper;
+import com.cc106.bidhub.utils.SharedPreferencesHelper;
 import com.cc106.bidhub.adapters.ItemCardAdapter;
 import com.cc106.bidhub.items.Item;
 import com.cc106.bidhub.items.ItemManager;
@@ -408,6 +409,22 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         // Try to fetch from backend API first
         new Thread(() -> {
             try {
+                // Verify authentication token before making request
+                SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(getContext());
+                String token = prefsHelper.getAuthToken();
+                if (token == null || token.isEmpty()) {
+                    android.util.Log.w("BrowseFragment", "No auth token available, using local items");
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        getActivity().runOnUiThread(() -> {
+                            isLoading = false;
+                            loadLocalItems();
+                        });
+                    } else {
+                        isLoading = false;
+                    }
+                    return;
+                }
+                
                 com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(getContext());
                 com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItems(null, null, null, null, null, 100, 0);
                 
@@ -420,26 +437,43 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                         .collect(java.util.stream.Collectors.toList());
                     android.util.Log.d("BrowseFragment", "Loaded " + activeItems.size() + " active items from database (filtered from " + dbItems.size() + " total)");
                     
-                    getActivity().runOnUiThread(() -> {
-                        if (isAdded()) {
-                            allItems.clear();
-                            allItems.addAll(activeItems);
-                            isLoading = false; // Reset loading flag
-                            applyFilters();
-                        }
-                    });
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        getActivity().runOnUiThread(() -> {
+                            if (isAdded() && !isDetached()) {
+                                allItems.clear();
+                                allItems.addAll(activeItems);
+                                isLoading = false; // Reset loading flag
+                                applyFilters();
+                            } else {
+                                isLoading = false;
+                            }
+                        });
+                    } else {
+                        isLoading = false;
+                    }
                 } else {
                     // Fallback to local items
-                    android.util.Log.d("BrowseFragment", "Database fetch failed, using local items");
-                    loadLocalItems();
+                    android.util.Log.d("BrowseFragment", "Database fetch failed: " + (response.getMessage() != null ? response.getMessage() : "Unknown error") + ", using local items");
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        getActivity().runOnUiThread(() -> {
+                            isLoading = false;
+                            loadLocalItems();
+                        });
+                    } else {
+                        isLoading = false;
+                    }
                 }
             } catch (Exception e) {
                 // Fallback to local items
                 android.util.Log.e("BrowseFragment", "Error fetching from database", e);
-                getActivity().runOnUiThread(() -> {
-                    isLoading = false; // Reset loading flag
-                    loadLocalItems();
-                });
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        isLoading = false; // Reset loading flag
+                        loadLocalItems();
+                    });
+                } else {
+                    isLoading = false;
+                }
             }
         }).start();
     }
@@ -447,33 +481,47 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     private void loadLocalItems() {
         // Load items on background thread
         new Thread(() -> {
-            List<Item> items = itemManager.getAllBrowsableItems();
-            // Filter to only show ACTIVE items
-            List<Item> activeItems = items.stream()
-                .filter(item -> item.getStatus() == com.cc106.bidhub.items.ItemStatus.ACTIVE)
-                .collect(java.util.stream.Collectors.toList());
-            
-            // Debug: Log item count
-            android.util.Log.d("BrowseFragment", "Loaded " + activeItems.size() + " active local items (filtered from " + items.size() + " total)");
-            for (Item item : activeItems) {
-                android.util.Log.d("BrowseFragment", "Item: " + item.getTitle() + " Status: " + item.getStatus());
-            }
-            
-            // Update UI on main thread - check if fragment is still attached
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(() -> {
-                    if (isAdded()) { // Check if fragment is still added to activity
-                        allItems.clear();
-                        allItems.addAll(activeItems);
-                        isLoading = false; // Reset loading flag
-                        
-                        // Debug: Log after updating allItems
-                        android.util.Log.d("BrowseFragment", "Updated allItems with " + allItems.size() + " active items");
-                        
-                        // Apply current filters
-                        applyFilters();
-                    }
-                });
+            try {
+                List<Item> items = itemManager.getAllBrowsableItems();
+                // Filter to only show ACTIVE items
+                List<Item> activeItems = items.stream()
+                    .filter(item -> item.getStatus() == com.cc106.bidhub.items.ItemStatus.ACTIVE)
+                    .collect(java.util.stream.Collectors.toList());
+                
+                // Debug: Log item count
+                android.util.Log.d("BrowseFragment", "Loaded " + activeItems.size() + " active local items (filtered from " + items.size() + " total)");
+                
+                // Update UI on main thread - check if fragment is still attached
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        if (isAdded() && !isDetached()) { // Check if fragment is still added to activity
+                            allItems.clear();
+                            allItems.addAll(activeItems);
+                            isLoading = false; // Reset loading flag
+                            
+                            // Debug: Log after updating allItems
+                            android.util.Log.d("BrowseFragment", "Updated allItems with " + allItems.size() + " active items");
+                            
+                            // Apply current filters
+                            applyFilters();
+                        } else {
+                            isLoading = false;
+                        }
+                    });
+                } else {
+                    isLoading = false;
+                }
+            } catch (Exception e) {
+                android.util.Log.e("BrowseFragment", "Error loading local items", e);
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        isLoading = false;
+                        showLoading(false);
+                        updateEmptyState();
+                    });
+                } else {
+                    isLoading = false;
+                }
             }
         }).start();
     }
@@ -850,8 +898,14 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     @Override
     public void onResume() {
         super.onResume();
-        // Refresh items when returning to this fragment
-        loadItems();
+        // Only refresh if items list is empty or if explicitly needed
+        // This prevents duplicate loads when fragment is already visible
+        if (allItems.isEmpty() && !isLoading) {
+            android.util.Log.d("BrowseFragment", "Items list is empty, refreshing on resume");
+            loadItems();
+        } else {
+            android.util.Log.d("BrowseFragment", "Skipping refresh on resume - items already loaded");
+        }
     }
     
     @Override

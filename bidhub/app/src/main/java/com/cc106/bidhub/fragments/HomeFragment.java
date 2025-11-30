@@ -106,6 +106,12 @@ public class HomeFragment extends Fragment {
     
     private DatabaseHelper dbHelper;
     private String loggedInUserEmail;
+    
+    // Loading state flags to prevent duplicate requests
+    private boolean isLoadingFeatured = false;
+    private boolean isLoadingAuctions = false;
+    private boolean isLoadingBids = false;
+    private boolean isLoadingCategories = false;
 
     @Nullable
     @Override
@@ -424,105 +430,203 @@ public class HomeFragment extends Fragment {
      * Load featured items from ItemManager
      */
     private void loadFeaturedItems() {
+        // Prevent duplicate loading
+        if (isLoadingFeatured) {
+            android.util.Log.d("HomeFragment", "Featured items already loading, skipping");
+            return;
+        }
+        
         if (itemManager == null || featuredItemsAdapter == null) {
             hideLoading();
             return;
         }
         
+        isLoadingFeatured = true;
         showLoading();
         
-        try {
-            List<Item> items = itemManager.getFeaturedItems();
-            if (items == null) {
-                items = new ArrayList<>();
+        // Load on background thread to avoid blocking UI
+        new Thread(() -> {
+            try {
+                List<Item> items = itemManager.getFeaturedItems();
+                if (items == null) {
+                    items = new ArrayList<>();
+                }
+                
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        if (isAdded() && !isDetached()) {
+                            featuredItems.clear();
+                            featuredItems.addAll(items);
+                            if (featuredItemsAdapter != null) {
+                                featuredItemsAdapter.notifyDataSetChanged();
+                            }
+                            
+                            // Show/hide empty state
+                            updateEmptyStateVisibility();
+                        }
+                        isLoadingFeatured = false;
+                        hideLoading();
+                    });
+                } else {
+                    isLoadingFeatured = false;
+                }
+            } catch (Exception e) {
+                android.util.Log.e("HomeFragment", "Error loading featured items: " + e.getMessage(), e);
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        if (getContext() != null) {
+                            ToastHelper.showError(getContext(), "Error loading featured items");
+                        }
+                        isLoadingFeatured = false;
+                        hideLoading();
+                    });
+                } else {
+                    isLoadingFeatured = false;
+                }
             }
-            
-            featuredItems.clear();
-            featuredItems.addAll(items);
-            featuredItemsAdapter.notifyDataSetChanged();
-            
-            // Show/hide empty state
-            updateEmptyStateVisibility();
-            hideLoading();
-        } catch (Exception e) {
-            android.util.Log.e("HomeFragment", "Error loading featured items: " + e.getMessage(), e);
-            if (getContext() != null) {
-                ToastHelper.showError(getContext(), "Error loading featured items");
-            }
-            hideLoading();
-        }
+        }).start();
     }
     
     /**
      * Load all active auctions (not just user's bids)
      */
     private void loadActiveAuctions() {
+        // Prevent duplicate loading
+        if (isLoadingAuctions) {
+            android.util.Log.d("HomeFragment", "Active auctions already loading, skipping");
+            return;
+        }
+        
         if (itemManager == null || activeAuctionsAdapter == null) {
             hideLoading();
             return;
         }
         
-        try {
-            List<Item> items = itemManager.getAllActiveItems();
-            if (items == null) {
-                items = new ArrayList<>();
+        isLoadingAuctions = true;
+        showLoading();
+        
+        // Load on background thread to avoid blocking UI
+        new Thread(() -> {
+            try {
+                List<Item> items = itemManager.getAllActiveItems();
+                if (items == null) {
+                    items = new ArrayList<>();
+                }
+                
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        if (isAdded() && !isDetached()) {
+                            activeAuctions.clear();
+                            activeAuctions.addAll(items);
+                            if (activeAuctionsAdapter != null) {
+                                activeAuctionsAdapter.updateItems(activeAuctions);
+                            }
+                        }
+                        isLoadingAuctions = false;
+                        hideLoading();
+                    });
+                } else {
+                    isLoadingAuctions = false;
+                }
+            } catch (Exception e) {
+                android.util.Log.e("HomeFragment", "Error loading active auctions: " + e.getMessage(), e);
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        if (getContext() != null) {
+                            ToastHelper.showError(getContext(), "Error loading active auctions");
+                        }
+                        isLoadingAuctions = false;
+                        hideLoading();
+                    });
+                } else {
+                    isLoadingAuctions = false;
+                }
             }
-            
-            activeAuctions.clear();
-            activeAuctions.addAll(items);
-            activeAuctionsAdapter.updateItems(activeAuctions);
-            
-            hideLoading();
-        } catch (Exception e) {
-            android.util.Log.e("HomeFragment", "Error loading active auctions: " + e.getMessage(), e);
-            if (getContext() != null) {
-                ToastHelper.showError(getContext(), "Error loading active auctions");
-            }
-            hideLoading();
-        }
+        }).start();
     }
     
     /**
      * Load active bids for current user
      */
     private void loadActiveBids() {
+        // Prevent duplicate loading
+        if (isLoadingBids) {
+            android.util.Log.d("HomeFragment", "Active bids already loading, skipping");
+            return;
+        }
+        
         if (biddingEngine == null || activeBidsAdapter == null) {
             hideLoading();
             return;
         }
         
-        try {
-            // Get user ID from SharedPreferences
-            SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(getContext());
-            String userId = prefsHelper.getUserId();
-            
-            if (userId == null || userId.isEmpty()) {
-                activeBids.clear();
-                activeBidsAdapter.notifyDataSetChanged();
-                updateEmptyStateVisibility();
-                hideLoading();
-                return;
+        isLoadingBids = true;
+        showLoading();
+        
+        // Load on background thread to avoid blocking UI
+        new Thread(() -> {
+            try {
+                // Get user ID from SharedPreferences
+                SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(getContext());
+                String userId = prefsHelper.getUserId();
+                
+                if (userId == null || userId.isEmpty()) {
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        getActivity().runOnUiThread(() -> {
+                            if (isAdded() && !isDetached()) {
+                                activeBids.clear();
+                                if (activeBidsAdapter != null) {
+                                    activeBidsAdapter.notifyDataSetChanged();
+                                }
+                                updateEmptyStateVisibility();
+                            }
+                            isLoadingBids = false;
+                            hideLoading();
+                        });
+                    } else {
+                        isLoadingBids = false;
+                    }
+                    return;
+                }
+                
+                List<Bid> bids = biddingEngine.getUserActiveBids(userId);
+                if (bids == null) {
+                    bids = new ArrayList<>();
+                }
+                
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        if (isAdded() && !isDetached()) {
+                            activeBids.clear();
+                            activeBids.addAll(bids);
+                            if (activeBidsAdapter != null) {
+                                activeBidsAdapter.notifyDataSetChanged();
+                            }
+                            
+                            // Show/hide empty state
+                            updateEmptyStateVisibility();
+                        }
+                        isLoadingBids = false;
+                        hideLoading();
+                    });
+                } else {
+                    isLoadingBids = false;
+                }
+            } catch (Exception e) {
+                android.util.Log.e("HomeFragment", "Error loading active bids: " + e.getMessage(), e);
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        if (getContext() != null) {
+                            ToastHelper.showError(getContext(), "Error loading active bids");
+                        }
+                        isLoadingBids = false;
+                        hideLoading();
+                    });
+                } else {
+                    isLoadingBids = false;
+                }
             }
-            
-            List<Bid> bids = biddingEngine.getUserActiveBids(userId);
-            if (bids == null) {
-                bids = new ArrayList<>();
-            }
-            
-            activeBids.clear();
-            activeBids.addAll(bids);
-            activeBidsAdapter.notifyDataSetChanged();
-            
-            // Show/hide empty state
-            updateEmptyStateVisibility();
-            hideLoading();
-        } catch (Exception e) {
-            android.util.Log.e("HomeFragment", "Error loading active bids: " + e.getMessage(), e);
-            if (getContext() != null) {
-                ToastHelper.showError(getContext(), "Error loading active bids");
-            }
-            hideLoading();
-        }
+        }).start();
     }
     
     /**

@@ -183,6 +183,9 @@ router.post('/', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Top-up initiation error:', err);
     console.error('Error stack:', err.stack);
+    console.error('Error code:', err.code);
+    console.error('Error sqlState:', err.sqlState);
+    console.error('Error sqlMessage:', err.sqlMessage);
     
     // Always include error details for better debugging
     const errorDetails = {
@@ -193,18 +196,32 @@ router.post('/', authenticateToken, async (req, res) => {
     // Include stack trace in development
     if (process.env.NODE_ENV === 'development') {
       errorDetails.stack = err.stack;
+      errorDetails.code = err.code;
+      errorDetails.sqlState = err.sqlState;
+      errorDetails.sqlMessage = err.sqlMessage;
     }
     
     // Check for specific error types
     if (err.code === 'ER_NO_SUCH_TABLE') {
-      errorDetails.details = 'Database table not found. Please contact support.';
+      errorDetails.details = 'Database table "topups" not found. Please run the database migration script.';
       errorDetails.error = 'Database configuration error';
+      errorDetails.fix = 'Create the topups table using the schema in database/topups_table.sql';
     } else if (err.code === 'ECONNREFUSED') {
       errorDetails.details = 'Cannot connect to database. Please try again later.';
       errorDetails.error = 'Database connection error';
     } else if (err.code === 'ER_BAD_FIELD_ERROR') {
-      errorDetails.details = 'Database schema mismatch. Please contact support.';
+      errorDetails.details = 'Database schema mismatch. The topups table structure does not match the expected schema.';
       errorDetails.error = 'Database schema error';
+      errorDetails.fix = 'Please verify the topups table schema matches database/topups_table.sql';
+    } else if (err.code === 'ER_DUP_ENTRY') {
+      errorDetails.details = 'Duplicate reference code generated. Please try again.';
+      errorDetails.error = 'Reference generation conflict';
+    } else if (err.code === 'ER_LOCK_WAIT_TIMEOUT' || err.code === 'ER_LOCK_DEADLOCK') {
+      errorDetails.details = 'Database lock timeout. Please try again.';
+      errorDetails.error = 'Database lock error';
+    } else if (err.code === 'PROTOCOL_CONNECTION_LOST' || err.code === 'ECONNRESET') {
+      errorDetails.details = 'Database connection lost. Please try again.';
+      errorDetails.error = 'Database connection error';
     }
     
     res.status(500).json(errorDetails);
