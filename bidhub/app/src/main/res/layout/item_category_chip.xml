@@ -6,7 +6,6 @@
     android:paddingHorizontal="@dimen/spacing_4"
     android:gravity="center_vertical"
     android:textAppearance="@style/TextAppearance.BidHub.Body2"
-    android:textStyle="medium"
     android:textColor="@color/text_primary"
     android:minHeight="32dp"
     android:clickable="true"
