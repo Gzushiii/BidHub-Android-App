@@ -40,9 +40,11 @@ function getPaymentNumber(paymentMethod) {
  * Initiate a new manual top-up request
  */
 router.post('/', authenticateToken, async (req, res) => {
-  const connection = await pool.getConnection();
+  let connection;
   
   try {
+    connection = await pool.getConnection();
+    
     const { amount, payment_method } = req.body;
     const user_id = req.user.id;
     const user_email = req.user.email;
@@ -116,7 +118,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     if (retries >= maxRetries) {
       console.error('Failed to generate unique reference code after retries');
-      connection.release();
+      if (connection) connection.release();
       return res.status(500).json({ 
         error: 'Failed to generate reference code',
         details: 'Please try again'
@@ -180,12 +182,36 @@ router.post('/', authenticateToken, async (req, res) => {
 
   } catch (err) {
     console.error('Top-up initiation error:', err);
-    res.status(500).json({ 
+    console.error('Error stack:', err.stack);
+    
+    // Always include error details for better debugging
+    const errorDetails = {
       error: 'Failed to initiate top-up',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
+      details: err.message || 'An unexpected error occurred'
+    };
+    
+    // Include stack trace in development
+    if (process.env.NODE_ENV === 'development') {
+      errorDetails.stack = err.stack;
+    }
+    
+    // Check for specific error types
+    if (err.code === 'ER_NO_SUCH_TABLE') {
+      errorDetails.details = 'Database table not found. Please contact support.';
+      errorDetails.error = 'Database configuration error';
+    } else if (err.code === 'ECONNREFUSED') {
+      errorDetails.details = 'Cannot connect to database. Please try again later.';
+      errorDetails.error = 'Database connection error';
+    } else if (err.code === 'ER_BAD_FIELD_ERROR') {
+      errorDetails.details = 'Database schema mismatch. Please contact support.';
+      errorDetails.error = 'Database schema error';
+    }
+    
+    res.status(500).json(errorDetails);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 });
 
@@ -194,15 +220,18 @@ router.post('/', authenticateToken, async (req, res) => {
  * User submits receipt reference number
  */
 router.post('/:id/submit', authenticateToken, async (req, res) => {
-  const connection = await pool.getConnection();
+  let connection;
   
   try {
+    connection = await pool.getConnection();
+    
     const topup_id = parseInt(req.params.id);
     const { user_receipt_ref } = req.body;
     const user_id = req.user.id;
 
     // Validate input
     if (!user_receipt_ref || user_receipt_ref.trim().length < 4) {
+      if (connection) connection.release();
       return res.status(400).json({ 
         error: 'Invalid receipt reference',
         details: 'Receipt reference must be at least 4 characters'
@@ -216,6 +245,7 @@ router.post('/:id/submit', authenticateToken, async (req, res) => {
     );
 
     if (topups.length === 0) {
+      if (connection) connection.release();
       return res.status(404).json({ 
         error: 'Top-up not found',
         details: 'Invalid top-up ID or you do not own this top-up'
@@ -226,6 +256,7 @@ router.post('/:id/submit', authenticateToken, async (req, res) => {
 
     // Check status
     if (topup.status !== 'PENDING') {
+      if (connection) connection.release();
       return res.status(400).json({ 
         error: 'Invalid status transition',
         details: `Cannot submit receipt for top-up in ${topup.status} status`
@@ -250,12 +281,22 @@ router.post('/:id/submit', authenticateToken, async (req, res) => {
 
   } catch (err) {
     console.error('Top-up submission error:', err);
-    res.status(500).json({ 
+    console.error('Error stack:', err.stack);
+    
+    const errorDetails = {
       error: 'Failed to submit receipt',
-      details: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
+      details: err.message || 'An unexpected error occurred'
+    };
+    
+    if (process.env.NODE_ENV === 'development') {
+      errorDetails.stack = err.stack;
+    }
+    
+    res.status(500).json(errorDetails);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 });
 

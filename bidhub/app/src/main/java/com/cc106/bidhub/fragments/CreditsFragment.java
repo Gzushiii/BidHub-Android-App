@@ -380,11 +380,23 @@ public class CreditsFragment extends Fragment {
     private void initiateTopupRequest(double amount, TopupInitCallback callback) {
         new Thread(() -> {
             try {
+                // Validate amount before sending
+                if (amount < 100.0) {
+                    callback.onError("Amount too low. Minimum top-up is ₱100.00");
+                    return;
+                }
+                if (amount > 50000.0) {
+                    callback.onError("Amount too high. Maximum top-up is ₱50,000.00");
+                    return;
+                }
+                
                 String token = prefsHelper.getAuthToken();
                 if (token == null || token.isEmpty()) {
                     callback.onError("Please log in again");
                     return;
                 }
+                
+                android.util.Log.d("CreditsFragment", "Initiating top-up request: amount=" + amount);
                 
                 URL url = new URL(BASE_URL + "/topups");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -392,18 +404,22 @@ public class CreditsFragment extends Fragment {
                 conn.setRequestProperty("Content-Type", "application/json");
                 conn.setRequestProperty("Authorization", "Bearer " + token);
                 conn.setDoOutput(true);
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(15000);
                 
                 JSONObject body = new JSONObject();
                 body.put("amount", amount);
                 body.put("payment_method", "gcash");
+                
+                android.util.Log.d("CreditsFragment", "Request body: " + body.toString());
                 
                 try (OutputStream os = conn.getOutputStream()) {
                     os.write(body.toString().getBytes("UTF-8"));
                 }
                 
                 int code = conn.getResponseCode();
+                android.util.Log.d("CreditsFragment", "Response code: " + code);
+                
                 BufferedReader reader = new BufferedReader(new InputStreamReader(
                     code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream()
                 ));
@@ -412,17 +428,59 @@ public class CreditsFragment extends Fragment {
                 while ((line = reader.readLine()) != null) sb.append(line);
                 reader.close();
                 
+                String responseBody = sb.toString();
+                android.util.Log.d("CreditsFragment", "Response body: " + responseBody);
+                
                 if (code >= 200 && code < 300) {
-                    JSONObject json = new JSONObject(sb.toString());
-                    int topupId = json.getInt("topup_id");
-                    String refCode = json.getString("generated_ref");
-                    callback.onSuccess(topupId, refCode);
+                    try {
+                        JSONObject json = new JSONObject(responseBody);
+                        if (json.has("topup_id") && json.has("generated_ref")) {
+                            int topupId = json.getInt("topup_id");
+                            String refCode = json.getString("generated_ref");
+                            android.util.Log.d("CreditsFragment", "Top-up initiated successfully: id=" + topupId + ", ref=" + refCode);
+                            callback.onSuccess(topupId, refCode);
+                        } else {
+                            android.util.Log.e("CreditsFragment", "Missing fields in response: " + responseBody);
+                            callback.onError("Invalid response from server. Please try again.");
+                        }
+                    } catch (org.json.JSONException e) {
+                        android.util.Log.e("CreditsFragment", "JSON parsing error: " + e.getMessage(), e);
+                        callback.onError("Invalid response format. Please try again.");
+                    }
                 } else {
-                    JSONObject errorJson = new JSONObject(sb.toString());
-                    callback.onError(errorJson.optString("error", "Failed to initiate payment"));
+                    // Parse error response
+                    String errorMessage = "Failed to initiate payment";
+                    try {
+                        JSONObject errorJson = new JSONObject(responseBody);
+                        errorMessage = errorJson.optString("error", "Failed to initiate payment");
+                        String details = errorJson.optString("details", "");
+                        if (!details.isEmpty()) {
+                            errorMessage += ": " + details;
+                        }
+                    } catch (org.json.JSONException e) {
+                        android.util.Log.e("CreditsFragment", "Error parsing error response: " + responseBody, e);
+                        // Try to extract error from non-JSON response
+                        if (responseBody != null && !responseBody.isEmpty()) {
+                            errorMessage += ": " + responseBody;
+                        } else {
+                            errorMessage += " (HTTP " + code + ")";
+                        }
+                    }
+                    android.util.Log.e("CreditsFragment", "Top-up initiation failed: " + errorMessage);
+                    callback.onError(errorMessage);
                 }
+            } catch (java.net.SocketTimeoutException e) {
+                android.util.Log.e("CreditsFragment", "Request timeout", e);
+                callback.onError("Request timed out. Please check your connection and try again.");
+            } catch (java.net.UnknownHostException e) {
+                android.util.Log.e("CreditsFragment", "Unknown host", e);
+                callback.onError("Cannot connect to server. Please check your internet connection.");
+            } catch (java.io.IOException e) {
+                android.util.Log.e("CreditsFragment", "Network error", e);
+                callback.onError("Network error: " + e.getMessage() + ". Please check your connection.");
             } catch (Exception e) {
-                callback.onError("Network error: " + e.getMessage());
+                android.util.Log.e("CreditsFragment", "Unexpected error", e);
+                callback.onError("Unexpected error: " + e.getMessage());
             }
         }).start();
     }
@@ -433,11 +491,19 @@ public class CreditsFragment extends Fragment {
     private void submitTopupReference(int topupId, String referenceNumber, TopupSubmitCallback callback) {
         new Thread(() -> {
             try {
+                // Validate reference number
+                if (referenceNumber == null || referenceNumber.trim().length() < 4) {
+                    callback.onError("Reference number must be at least 4 characters");
+                    return;
+                }
+                
                 String token = prefsHelper.getAuthToken();
                 if (token == null || token.isEmpty()) {
                     callback.onError("Please log in again");
                     return;
                 }
+                
+                android.util.Log.d("CreditsFragment", "Submitting top-up reference: topupId=" + topupId + ", ref=" + referenceNumber);
                 
                 URL url = new URL(BASE_URL + "/topups/" + topupId + "/submit");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -445,17 +511,21 @@ public class CreditsFragment extends Fragment {
                 conn.setRequestProperty("Content-Type", "application/json");
                 conn.setRequestProperty("Authorization", "Bearer " + token);
                 conn.setDoOutput(true);
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
+                conn.setConnectTimeout(15000);
+                conn.setReadTimeout(15000);
                 
                 JSONObject body = new JSONObject();
-                body.put("user_receipt_ref", referenceNumber);
+                body.put("user_receipt_ref", referenceNumber.trim());
+                
+                android.util.Log.d("CreditsFragment", "Submit request body: " + body.toString());
                 
                 try (OutputStream os = conn.getOutputStream()) {
                     os.write(body.toString().getBytes("UTF-8"));
                 }
                 
                 int code = conn.getResponseCode();
+                android.util.Log.d("CreditsFragment", "Submit response code: " + code);
+                
                 BufferedReader reader = new BufferedReader(new InputStreamReader(
                     code >= 200 && code < 300 ? conn.getInputStream() : conn.getErrorStream()
                 ));
@@ -464,14 +534,45 @@ public class CreditsFragment extends Fragment {
                 while ((line = reader.readLine()) != null) sb.append(line);
                 reader.close();
                 
+                String responseBody = sb.toString();
+                android.util.Log.d("CreditsFragment", "Submit response body: " + responseBody);
+                
                 if (code >= 200 && code < 300) {
+                    android.util.Log.d("CreditsFragment", "Reference submitted successfully");
                     callback.onSuccess();
                 } else {
-                    JSONObject errorJson = new JSONObject(sb.toString());
-                    callback.onError(errorJson.optString("error", "Failed to submit reference"));
+                    // Parse error response
+                    String errorMessage = "Failed to submit reference";
+                    try {
+                        JSONObject errorJson = new JSONObject(responseBody);
+                        errorMessage = errorJson.optString("error", "Failed to submit reference");
+                        String details = errorJson.optString("details", "");
+                        if (!details.isEmpty()) {
+                            errorMessage += ": " + details;
+                        }
+                    } catch (org.json.JSONException e) {
+                        android.util.Log.e("CreditsFragment", "Error parsing error response: " + responseBody, e);
+                        if (responseBody != null && !responseBody.isEmpty()) {
+                            errorMessage += ": " + responseBody;
+                        } else {
+                            errorMessage += " (HTTP " + code + ")";
+                        }
+                    }
+                    android.util.Log.e("CreditsFragment", "Reference submission failed: " + errorMessage);
+                    callback.onError(errorMessage);
                 }
+            } catch (java.net.SocketTimeoutException e) {
+                android.util.Log.e("CreditsFragment", "Submit request timeout", e);
+                callback.onError("Request timed out. Please check your connection and try again.");
+            } catch (java.net.UnknownHostException e) {
+                android.util.Log.e("CreditsFragment", "Unknown host", e);
+                callback.onError("Cannot connect to server. Please check your internet connection.");
+            } catch (java.io.IOException e) {
+                android.util.Log.e("CreditsFragment", "Network error", e);
+                callback.onError("Network error: " + e.getMessage() + ". Please check your connection.");
             } catch (Exception e) {
-                callback.onError("Network error: " + e.getMessage());
+                android.util.Log.e("CreditsFragment", "Unexpected error", e);
+                callback.onError("Unexpected error: " + e.getMessage());
             }
         }).start();
     }
