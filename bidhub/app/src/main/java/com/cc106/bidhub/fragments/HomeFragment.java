@@ -89,9 +89,9 @@ public class HomeFragment extends Fragment {
     private View cardActiveBids, cardWatching, cardWonItems, cardSoldItems;
     private TextView tvActiveBidsCount, tvWatchingCount, tvWonItemsCount, tvSoldItemsCount;
     
-    // Recent activity
-    private TextView textRecentActivity;
-    private View layoutRecentActivity;
+    // Recent activity (removed from new design - keeping for potential future use)
+    // private TextView textRecentActivity;
+    // private View layoutRecentActivity;
     
     // Managers
     private ItemManager itemManager;
@@ -162,8 +162,8 @@ public class HomeFragment extends Fragment {
             // Load quick stats
             loadQuickStats();
             
-            // Load recent activity
-            loadRecentActivity();
+            // Recent activity loading removed - not part of new dashboard design
+            // loadRecentActivity();
             
             // Set up click listeners
             setupClickListeners();
@@ -285,9 +285,9 @@ public class HomeFragment extends Fragment {
             categoryAdapter = new CategoryAdapter(categories);
             categoryAdapter.setOnCategoryClickListener(category -> {
                 // Navigate to browse with category filter
-                if (getActivity() instanceof MainActivity) {
-                    ((MainActivity) getActivity()).switchToBrowseTab();
-                    // TODO: Pass category filter to BrowseActivity
+                if (getActivity() instanceof MainActivity && category != null) {
+                    String categoryName = category.getName();
+                    ((MainActivity) getActivity()).switchToBrowseTab(categoryName);
                 }
             });
             GridLayoutManager categoryLayoutManager = new GridLayoutManager(getContext(), 2);
@@ -553,8 +553,7 @@ public class HomeFragment extends Fragment {
             chip.setOnClickListener(v -> {
                 // Navigate to browse with category filter
                 if (getActivity() instanceof MainActivity) {
-                    ((MainActivity) getActivity()).switchToBrowseTab();
-                    // TODO: Pass category filter to BrowseActivity
+                    ((MainActivity) getActivity()).switchToBrowseTab(categoryName);
                 }
             });
             layoutCategoryChips.addView(chip);
@@ -792,7 +791,8 @@ public class HomeFragment extends Fragment {
                 new String[]{userId}
             );
             
-            // TODO: Display recent activity in layoutRecentActivity
+            // Recent activity display removed from new dashboard design
+            // If needed in future, can be re-implemented as a separate section
             // This would show recent bids, won items, etc.
             
             recentBidsCursor.close();
