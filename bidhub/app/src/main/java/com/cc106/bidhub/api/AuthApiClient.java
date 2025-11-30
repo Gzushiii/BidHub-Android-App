@@ -85,13 +85,31 @@ public class AuthApiClient {
                 JSONObject user = jsonResponse.optJSONObject("user");
                 
                 if (!token.isEmpty() && user != null) {
-                    // Store token and user info
+                    Log.i(TAG, "=== LOGIN SUCCESS - PARSING USER DATA ===");
+                    
+                    // Extract user data with defensive type handling
+                    String userId = String.valueOf(user.optInt("id", 0));
+                    String username = user.optString("username", "");
+                    String alias = user.optString("alias", "");
+                    // Ensure credits is always parsed as double, not string
+                    double credits = parseCreditsSafely(user);
+                    
+                    Log.i(TAG, "User ID: " + userId);
+                    Log.i(TAG, "Username: " + username);
+                    Log.i(TAG, "Email: " + email);
+                    Log.i(TAG, String.format("Credits from response: %.2f", credits));
+                    
+                    // Store token first
                     prefsHelper.saveAuthToken(token);
-                    prefsHelper.saveUserEmail(email);
-                    prefsHelper.saveUsername(user.optString("username", ""));
-                    prefsHelper.setUserId(String.valueOf(user.optInt("id", 0)));
-                    prefsHelper.setAlias(user.optString("alias", ""));
-                    // Immediately refresh credits from backend to avoid stale cache
+                    Log.i(TAG, "Auth token saved");
+                    
+                    // Use UserRepository to update user data (centralized management)
+                    com.cc106.bidhub.repository.UserRepository userRepo = 
+                        com.cc106.bidhub.repository.UserRepository.getInstance(context);
+                    userRepo.updateUserData(userId, email, username, alias, credits);
+                    
+                    // Immediately refresh credits from backend to ensure accuracy
+                    // This runs in background, but we've already saved the value from login response
                     try {
                         URL balUrl = new URL(BASE_URL + "/credits/balance");
                         HttpURLConnection balConn = (HttpURLConnection) balUrl.openConnection();
@@ -105,17 +123,24 @@ public class AuthApiClient {
                             StringBuilder sb = new StringBuilder();
                             String ln; while ((ln = br.readLine()) != null) sb.append(ln); br.close();
                             JSONObject balJson = new JSONObject(sb.toString());
-                            double credits = balJson.optDouble("credits", balJson.optDouble("balance", 0.0));
-                            prefsHelper.setCredits(credits);
+                            double backendCredits = parseCreditsSafely(balJson);
+                            Log.i(TAG, String.format("Backend credits: %.2f (updating if different)", backendCredits));
+                            // Update if different (backend is authoritative)
+                            if (Math.abs(backendCredits - credits) > 0.01) {
+                                userRepo.updateCreditsImmediately(backendCredits);
+                                Log.i(TAG, "Credits updated from backend (was different from login response)");
+                            }
                         } else {
-                            prefsHelper.setCredits(user.optDouble("credits", 0.0));
+                            Log.w(TAG, "Failed to fetch balance from backend, using login response value");
                         }
-                    } catch (Exception ignore) {
-                        prefsHelper.setCredits(user.optDouble("credits", 0.0));
+                    } catch (Exception e) {
+                        Log.w(TAG, "Error fetching balance from backend: " + e.getMessage() + ", using login response value");
                     }
                     
+                    Log.i(TAG, "=== LOGIN COMPLETE - USER DATA SAVED ===");
                     return new ApiResponse(true, "Login successful", jsonResponse);
                 } else {
+                    Log.e(TAG, "Invalid response format: token or user object missing");
                     return new ApiResponse(false, "Invalid response format", null);
                 }
             } else {
@@ -206,16 +231,31 @@ public class AuthApiClient {
                 JSONObject user = jsonResponse.optJSONObject("user");
                 
                 if (!token.isEmpty() && user != null) {
-                    // Store token and user info
-                    prefsHelper.saveAuthToken(token);
-                    prefsHelper.saveUserEmail(email);
-                    prefsHelper.saveUsername(username);
-                    prefsHelper.setUserId(String.valueOf(user.optInt("id", 0)));
-                    prefsHelper.setAlias(user.optString("alias", ""));
-                    prefsHelper.setCredits(user.optDouble("credits", 0.0));
+                    Log.i(TAG, "=== REGISTRATION SUCCESS - PARSING USER DATA ===");
                     
+                    // Extract user data with defensive type handling
+                    String userId = String.valueOf(user.optInt("id", 0));
+                    String userAlias = user.optString("alias", "");
+                    double credits = parseCreditsSafely(user);
+                    
+                    Log.i(TAG, "User ID: " + userId);
+                    Log.i(TAG, "Username: " + username);
+                    Log.i(TAG, "Email: " + email);
+                    Log.i(TAG, String.format("Credits: %.2f", credits));
+                    
+                    // Store token first
+                    prefsHelper.saveAuthToken(token);
+                    Log.i(TAG, "Auth token saved");
+                    
+                    // Use UserRepository to update user data
+                    com.cc106.bidhub.repository.UserRepository userRepo = 
+                        com.cc106.bidhub.repository.UserRepository.getInstance(context);
+                    userRepo.updateUserData(userId, email, username, userAlias, credits);
+                    
+                    Log.i(TAG, "=== REGISTRATION COMPLETE - USER DATA SAVED ===");
                     return new ApiResponse(true, "Registration successful", jsonResponse);
                 } else {
+                    Log.e(TAG, "Invalid response format: token or user object missing");
                     return new ApiResponse(false, "Invalid response format", null);
                 }
             } else {
@@ -236,6 +276,54 @@ public class AuthApiClient {
         } catch (Exception e) {
             Log.e(TAG, "Register error: Unexpected error - " + e.getMessage(), e);
             return new ApiResponse(false, "An unexpected error occurred during registration. Please try again.", null);
+        }
+    }
+    
+    /**
+     * Safely parse credits from JSON object
+     * Handles both numeric and string values, ensures always returns double
+     * @param json JSON object containing credits field
+     * @return Credits as double, or 0.0 if not found or invalid
+     */
+    private double parseCreditsSafely(JSONObject json) {
+        try {
+            // Try to get as double first (preferred)
+            if (json.has("credits")) {
+                Object creditsObj = json.get("credits");
+                if (creditsObj instanceof Number) {
+                    return ((Number) creditsObj).doubleValue();
+                } else if (creditsObj instanceof String) {
+                    // Handle string values like "100.00"
+                    try {
+                        return Double.parseDouble((String) creditsObj);
+                    } catch (NumberFormatException e) {
+                        Log.w(TAG, "Failed to parse credits string: " + creditsObj);
+                    }
+                }
+            }
+            
+            // Try balance field as fallback
+            if (json.has("balance")) {
+                Object balanceObj = json.get("balance");
+                if (balanceObj instanceof Number) {
+                    return ((Number) balanceObj).doubleValue();
+                } else if (balanceObj instanceof String) {
+                    try {
+                        return Double.parseDouble((String) balanceObj);
+                    } catch (NumberFormatException e) {
+                        Log.w(TAG, "Failed to parse balance string: " + balanceObj);
+                    }
+                }
+            }
+            
+            // Try optDouble as last resort
+            double credits = json.optDouble("credits", json.optDouble("balance", 0.0));
+            Log.d(TAG, String.format("Parsed credits using optDouble: %.2f", credits));
+            return credits;
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing credits: " + e.getMessage(), e);
+            return 0.0;
         }
     }
 }

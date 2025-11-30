@@ -68,12 +68,47 @@ public class SharedPreferencesHelper {
         return prefs.getString(KEY_ALIAS, null);
     }
     
+    /**
+     * Save user credits to SharedPreferences
+     * Ensures credits are always stored as double (converted to float for storage)
+     * @param credits The credit balance to save (must be numeric)
+     */
     public void setCredits(double credits) {
-        prefs.edit().putFloat(KEY_CREDITS, (float) credits).apply();
+        double oldCredits = getCredits();
+        float creditsFloat = (float) credits;
+        prefs.edit().putFloat(KEY_CREDITS, creditsFloat).apply();
+        Log.i("SharedPreferencesHelper", String.format("=== CREDITS UPDATED ==="));
+        Log.i("SharedPreferencesHelper", String.format("Old balance: %.2f", oldCredits));
+        Log.i("SharedPreferencesHelper", String.format("New balance: %.2f", credits));
+        Log.i("SharedPreferencesHelper", String.format("Difference: %.2f", credits - oldCredits));
     }
     
+    /**
+     * Get user credits from SharedPreferences
+     * Always returns a double value (converted from stored float)
+     * @return The current credit balance, or 0.0 if not set
+     */
     public double getCredits() {
-        return prefs.getFloat(KEY_CREDITS, 0.0f);
+        double credits = prefs.getFloat(KEY_CREDITS, 0.0f);
+        Log.d("SharedPreferencesHelper", String.format("=== CREDITS RETRIEVED ==="));
+        Log.d("SharedPreferencesHelper", String.format("Current balance: %.2f", credits));
+        return credits;
+    }
+    
+    /**
+     * Alias method for setCredits - saves user credits
+     * @param credits The credit balance to save
+     */
+    public void saveUserCredits(double credits) {
+        setCredits(credits);
+    }
+    
+    /**
+     * Alias method for getCredits - gets user credits
+     * @return The current credit balance
+     */
+    public double getUserCredits() {
+        return getCredits();
     }
     
     // Alias methods for compatibility with AuthApiClient

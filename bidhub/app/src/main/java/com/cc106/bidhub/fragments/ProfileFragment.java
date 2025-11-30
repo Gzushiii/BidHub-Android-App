@@ -144,11 +144,22 @@ public class ProfileFragment extends Fragment {
 
     private void loadUserData() {
         try {
-            // Get user data from SharedPreferences (stored during login)
-            String email = prefsHelper.getUserEmail();
-            String username = prefsHelper.getUsername();
-            String alias = prefsHelper.getAlias();
-            double credits = prefsHelper.getCredits();
+            // Use UserRepository as single source of truth
+            com.cc106.bidhub.repository.UserRepository userRepo = 
+                com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+            
+            // Reload data from SharedPreferences to ensure latest values
+            userRepo.reloadUserData();
+            
+            String email = userRepo.getUserEmail();
+            String username = userRepo.getUsername();
+            String alias = userRepo.getAlias();
+            double credits = userRepo.getCredits();
+            
+            android.util.Log.d("ProfileFragment", "=== LOADING USER DATA ===");
+            android.util.Log.d("ProfileFragment", "Email: " + email);
+            android.util.Log.d("ProfileFragment", "Username: " + username);
+            android.util.Log.d("ProfileFragment", String.format("Credits: %.2f", credits));
             
             if (email == null || email.isEmpty()) {
                 ToastHelper.showError(getContext(), "No user data found. Please log in again.");
@@ -163,6 +174,7 @@ public class ProfileFragment extends Fragment {
             if (textViewCredits != null) textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", credits));
             
         } catch (Exception e) {
+            android.util.Log.e("ProfileFragment", "Error loading user data", e);
             ToastHelper.showError(getContext(), "Error loading user data: " + e.getMessage());
             e.printStackTrace();
         }
@@ -171,38 +183,45 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        android.util.Log.d("ProfileFragment", "=== ON RESUME - REFRESHING USER DATA ===");
+        // Reload user data (including credits) from SharedPreferences
+        loadUserData();
+        // Then refresh from backend to get latest value
         refreshCreditsFromBackend();
     }
 
     private static final String BASE_URL = "https://bidhub-android-app.onrender.com/api";
 
     private void refreshCreditsFromBackend() {
-        // First, update UI with cached value from SharedPreferences (in case it was updated elsewhere)
-        double cachedBalance = prefsHelper.getCredits();
-        if (textViewCredits != null && cachedBalance > 0) {
+        // Use UserRepository for centralized management
+        com.cc106.bidhub.repository.UserRepository userRepo = 
+            com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+        
+        // First, update UI with cached value from UserRepository
+        double cachedBalance = userRepo.getCredits();
+        if (textViewCredits != null) {
             textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", cachedBalance));
+            android.util.Log.d("ProfileFragment", String.format("Displaying cached balance: %.2f", cachedBalance));
         }
         
         // Then refresh from backend to get latest value
-        com.cc106.bidhub.utils.CreditBalanceManager.refreshBalance(
-            getContext(),
-            new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
-                @Override
-                public void onBalanceUpdated(double newBalance) {
-                    if (getActivity() != null && !getActivity().isFinishing()) {
-                        if (textViewCredits != null) {
-                            textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", newBalance));
-                        }
+        userRepo.refreshCreditsFromBackend(new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
+            @Override
+            public void onBalanceUpdated(double newBalance) {
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    if (textViewCredits != null) {
+                        textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", newBalance));
+                        android.util.Log.d("ProfileFragment", String.format("Balance updated from backend: %.2f", newBalance));
                     }
                 }
-                
-                @Override
-                public void onError(String errorMessage) {
-                    // Silent fail - use cached value from SharedPreferences (already displayed above)
-                    // This ensures UI shows updated balance even if network refresh fails
-                }
             }
-        );
+            
+            @Override
+            public void onError(String errorMessage) {
+                // Silent fail - cached value already displayed
+                android.util.Log.w("ProfileFragment", "Backend refresh failed: " + errorMessage);
+            }
+        });
     }
 
     private void regenerateAlias() {

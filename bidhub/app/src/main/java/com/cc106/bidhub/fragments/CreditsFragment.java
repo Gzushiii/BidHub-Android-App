@@ -155,10 +155,13 @@ public class CreditsFragment extends Fragment {
     private void updateBalanceDisplay() {
         if (balanceAmount == null) return;
 
-        // Prefer server value stored in SharedPreferences, fallback to local manager
-        double serverCredits = prefsHelper.getCredits();
-        double display = serverCredits > 0 ? serverCredits : creditManager.getCreditBalance(userId);
-        balanceAmount.setText(creditManager.formatCurrency(display));
+        // Use UserRepository as single source of truth
+        com.cc106.bidhub.repository.UserRepository userRepo = 
+            com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+        double credits = userRepo.getCredits();
+        
+        android.util.Log.d("CreditsFragment", String.format("Updating balance display: %.2f", credits));
+        balanceAmount.setText(creditManager.formatCurrency(credits));
     }
     
     private void refreshBalance() {
@@ -372,39 +375,37 @@ public class CreditsFragment extends Fragment {
                 @Override
                 public void onSuccess(double newBalance) {
                     getActivity().runOnUiThread(() -> {
+                        android.util.Log.i("CreditsFragment", "=== TOP-UP SUCCESS CALLBACK ===");
+                        android.util.Log.i("CreditsFragment", String.format("New balance received: %.2f", newBalance));
+                        
                         progressPayment.setVisibility(android.view.View.GONE);
                         dialog.dismiss();
                         ToastHelper.showSuccess(getContext(), getString(R.string.topup_processed_successfully));
                         
-                        // CRITICAL: Update SharedPreferences immediately with new balance from API response
-                        // This ensures all parts of the app see the updated balance immediately
-                        prefsHelper.setCredits(newBalance);
-                        android.util.Log.d("CreditsFragment", "Updated SharedPreferences with new balance: " + newBalance);
+                        // Balance already updated in UserRepository by submitTopupReference
+                        // Just refresh UI to show updated balance
+                        updateBalanceDisplay();
                         
-                        // Update UI immediately with the new balance
-                        if (balanceAmount != null) {
-                            balanceAmount.setText(creditManager.formatCurrency(newBalance));
-                        }
-                        
-                        // Refresh balance from backend to confirm consistency (runs in background)
-                        // This ensures we have the latest value even if there were any edge cases
+                        // Optional: Refresh from backend to confirm (runs in background)
+                        // This is redundant but ensures consistency
                         com.cc106.bidhub.utils.CreditBalanceManager.refreshBalance(
                             getContext(),
                             new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
                                 @Override
                                 public void onBalanceUpdated(double confirmedBalance) {
                                     if (getActivity() != null && !getActivity().isFinishing()) {
-                                        // Update SharedPreferences again with confirmed value from backend
-                                        prefsHelper.setCredits(confirmedBalance);
+                                        // Update UserRepository with confirmed value
+                                        com.cc106.bidhub.repository.UserRepository userRepo = 
+                                            com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+                                        userRepo.updateCreditsImmediately(confirmedBalance);
                                         updateBalanceDisplay();
-                                        android.util.Log.d("CreditsFragment", "Balance confirmed from backend: " + confirmedBalance);
+                                        android.util.Log.d("CreditsFragment", String.format("Balance confirmed from backend: %.2f", confirmedBalance));
                                     }
                                 }
                                 
                                 @Override
                                 public void onError(String errorMessage) {
                                     // Silent fail - balance was already updated from API response
-                                    // UI already shows correct value, backend refresh is just for confirmation
                                     android.util.Log.w("CreditsFragment", "Backend refresh failed, but balance already updated: " + errorMessage);
                                 }
                             }
@@ -610,12 +611,17 @@ public class CreditsFragment extends Fragment {
                 
                 String token = prefsHelper.getAuthToken();
                 if (token == null || token.isEmpty()) {
+                    android.util.Log.e("CreditsFragment", "=== TOP-UP SUBMIT FAILED: NO AUTH TOKEN ===");
                     isSubmitRequestInProgress = false;
                     callback.onError("Please log in again");
                     return;
                 }
                 
-                android.util.Log.d("CreditsFragment", "Submitting top-up reference: topupId=" + topupId + ", ref=" + referenceNumber);
+                android.util.Log.i("CreditsFragment", "=== SUBMITTING TOP-UP REFERENCE ===");
+                android.util.Log.i("CreditsFragment", "Top-up ID: " + topupId);
+                android.util.Log.i("CreditsFragment", "Reference: " + referenceNumber);
+                android.util.Log.d("CreditsFragment", "Auth token present: " + (token != null && !token.isEmpty()));
+                android.util.Log.d("CreditsFragment", "Token preview: " + (token != null ? token.substring(0, Math.min(20, token.length())) + "..." : "NULL"));
                 
                 URL url = new URL(BASE_URL + "/topups/" + topupId + "/submit");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -650,14 +656,43 @@ public class CreditsFragment extends Fragment {
                 android.util.Log.d("CreditsFragment", "Submit response body: " + responseBody);
                 
                 if (code >= 200 && code < 300) {
+                    android.util.Log.i("CreditsFragment", "=== TOP-UP SUBMIT SUCCESS ===");
+                    android.util.Log.d("CreditsFragment", "Response body: " + responseBody);
+                    
                     // Parse success response to get new balance
                     double newBalance = 0.0;
                     try {
                         JSONObject responseJson = new JSONObject(responseBody);
-                        newBalance = responseJson.optDouble("new_balance", 0.0);
-                        android.util.Log.d("CreditsFragment", "Top-up processed successfully. New balance: " + newBalance);
+                        
+                        // Try multiple field names for compatibility
+                        if (responseJson.has("new_balance")) {
+                            Object balanceObj = responseJson.get("new_balance");
+                            if (balanceObj instanceof Number) {
+                                newBalance = ((Number) balanceObj).doubleValue();
+                            } else if (balanceObj instanceof String) {
+                                try {
+                                    newBalance = Double.parseDouble((String) balanceObj);
+                                } catch (NumberFormatException e) {
+                                    android.util.Log.w("CreditsFragment", "Failed to parse new_balance string: " + balanceObj);
+                                }
+                            }
+                        } else {
+                            newBalance = responseJson.optDouble("new_balance", responseJson.optDouble("balance", 0.0));
+                        }
+                        
+                        android.util.Log.i("CreditsFragment", String.format("New balance from API: %.2f", newBalance));
+                        
+                        // CRITICAL: Immediately update UserRepository and SharedPreferences
+                        com.cc106.bidhub.repository.UserRepository userRepo = 
+                            com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+                        double oldBalance = userRepo.getCredits();
+                        userRepo.updateCreditsImmediately(newBalance);
+                        android.util.Log.i("CreditsFragment", String.format("Balance updated: %.2f -> %.2f (Delta: %.2f)", 
+                            oldBalance, newBalance, newBalance - oldBalance));
+                        
                     } catch (org.json.JSONException e) {
-                        android.util.Log.w("CreditsFragment", "Could not parse new_balance from response", e);
+                        android.util.Log.e("CreditsFragment", "Could not parse new_balance from response", e);
+                        android.util.Log.e("CreditsFragment", "Response body: " + responseBody);
                     }
                     isSubmitRequestInProgress = false;
                     callback.onSuccess(newBalance);

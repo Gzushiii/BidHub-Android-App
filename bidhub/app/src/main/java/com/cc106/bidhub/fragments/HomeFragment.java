@@ -163,19 +163,21 @@ public class HomeFragment extends Fragment {
             loadQuickStats();
             
             // Recent activity loading removed - not part of new dashboard design
-            // loadRecentActivity();
-            
-            // Set up click listeners
-            setupClickListeners();
             
             return view;
         } catch (Exception e) {
-            if (getContext() != null) {
-                ToastHelper.showError(getContext(), "Error creating home view: " + e.getMessage());
-            }
+            ToastHelper.showError(getContext(), "Error initializing home fragment: " + e.getMessage());
             e.printStackTrace();
             return null;
         }
+    }
+    
+    @Override
+    public void onResume() {
+        super.onResume();
+        android.util.Log.d("HomeFragment", "=== ON RESUME - REFRESHING USER DATA ===");
+        // Reload user data to ensure credits are up to date
+        loadUserData();
     }
     
     /**
@@ -399,17 +401,25 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        // Load user data from SharedPreferences (synced with backend)
+        // Load user data from UserRepository (single source of truth)
         try {
-            SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(getContext());
-            String alias = prefsHelper.getAlias();
-            double credits = prefsHelper.getCredits();
+            com.cc106.bidhub.repository.UserRepository userRepo = 
+                com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+            
+            // Reload to ensure latest values
+            userRepo.reloadUserData();
+            
+            String alias = userRepo.getAlias();
+            double credits = userRepo.getCredits();
+
+            android.util.Log.d("HomeFragment", String.format("Loading user data - Credits: %.2f", credits));
 
             // Update credit balance (header)
             if (tvHeaderCredits != null) {
                 tvHeaderCredits.setText(String.format(Locale.getDefault(), "%.0f", credits));
             }
         } catch (Exception e) {
+            android.util.Log.e("HomeFragment", "Error loading user data", e);
             if (getContext() != null) {
                 ToastHelper.showError(getContext(), "Error loading user data: " + e.getMessage());
             }
