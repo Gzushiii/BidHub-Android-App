@@ -40,6 +40,9 @@ public class BrowseActivity extends BaseActivity {
     private List<BrowseItem> filteredItems;
     private String currentCategory = "Electronics";
     private String currentSearchQuery = "";
+    
+    // Intent extra key for category filter
+    public static final String EXTRA_CATEGORY_FILTER = "category_filter";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +53,12 @@ public class BrowseActivity extends BaseActivity {
         
         // Get the logged-in user's email from the Intent
         loggedInUserEmail = getIntent().getStringExtra("USER_EMAIL");
+        
+        // Get category filter from Intent if provided
+        String categoryFilter = getIntent().getStringExtra(EXTRA_CATEGORY_FILTER);
+        if (categoryFilter != null && !categoryFilter.isEmpty()) {
+            currentCategory = categoryFilter;
+        }
         
         // Initialize UI components
         initializeViews();
@@ -62,6 +71,11 @@ public class BrowseActivity extends BaseActivity {
         
         // Setup click listeners
         setupClickListeners();
+        
+        // Apply category filter if provided
+        if (categoryFilter != null && !categoryFilter.isEmpty()) {
+            selectCategory(categoryFilter);
+        }
         
         // Animate content in after inflation
         animateContentIn();

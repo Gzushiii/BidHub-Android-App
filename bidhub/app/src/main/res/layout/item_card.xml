@@ -19,12 +19,12 @@
         android:orientation="vertical"
         android:padding="@dimen/card_padding">
 
-        <!-- Image Container with Aspect Ratio -->
+        <!-- Image Container with Aspect Ratio (16:9 for featured items) -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginBottom="@dimen/spacing_3"
-            app:layout_constraintDimensionRatio="4:3">
+            app:layout_constraintDimensionRatio="16:9">
 
             <ImageView
                 android:id="@+id/iv_item_image"
@@ -119,14 +119,25 @@
                 android:id="@+id/tv_item_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.BidHub.Body"
+                android:textAppearance="@style/TextAppearance.BidHub.Body1"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:maxLines="2"
                 android:ellipsize="end"
-                android:lineSpacingExtra="2dp"
                 android:layout_marginBottom="@dimen/spacing_1"
                 tools:text="Sample Item Title That Can Be Very Long" />
+            
+            <!-- Ending Soon Badge -->
+            <TextView
+                android:id="@+id/tv_ending_soon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ending_soon"
+                android:textAppearance="@style/TextAppearance.BidHub.Body2"
+                android:textColor="@color/text_secondary"
+                android:visibility="gone"
+                android:layout_marginBottom="@dimen/spacing_2"
+                tools:visibility="visible" />
 
             <!-- Price -->
             <TextView

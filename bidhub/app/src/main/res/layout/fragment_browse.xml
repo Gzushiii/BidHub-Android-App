@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="@dimen/spacing_4">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -32,15 +32,17 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Browse Items"
-                    android:textAppearance="@style/TextAppearance.Title.Large"
-                    android:layout_marginBottom="4dp" />
+                    android:textAppearance="@style/TextAppearance.BidHub.H2"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="@dimen/spacing_1" />
 
                 <TextView
                     android:id="@+id/tv_item_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Discover amazing items to bid on"
-                    android:textAppearance="@style/TextAppearance.Body" />
+                    android:textAppearance="@style/TextAppearance.BidHub.Body2"
+                    android:textColor="@color/text_secondary" />
 
             </LinearLayout>
 
@@ -57,11 +59,11 @@
                     android:layout_height="48dp"
                     android:src="@drawable/ic_grid_view"
                     android:background="@drawable/card_background"
-                    android:backgroundTint="@color/surface_variant"
+                    android:backgroundTint="@color/neutral_100"
                     android:tint="@color/text_primary"
                     android:contentDescription="Toggle View"
-                    android:padding="12dp"
-                    android:layout_marginEnd="8dp" />
+                    android:padding="@dimen/spacing_3"
+                    android:layout_marginEnd="@dimen/spacing_2" />
 
                 <!-- Sort Button -->
                 <ImageButton
@@ -70,11 +72,11 @@
                     android:layout_height="48dp"
                     android:src="@drawable/ic_sort"
                     android:background="@drawable/card_background"
-                    android:backgroundTint="@color/surface_variant"
+                    android:backgroundTint="@color/neutral_100"
                     android:tint="@color/text_primary"
                     android:contentDescription="Sort Items"
-                    android:padding="12dp"
-                    android:layout_marginEnd="8dp" />
+                    android:padding="@dimen/spacing_3"
+                    android:layout_marginEnd="@dimen/spacing_2" />
 
 
             </LinearLayout>
@@ -86,14 +88,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Search items..."
+            style="@style/Widget.BidHub.TextInputLayout"
             app:startIconDrawable="@drawable/ic_search"
             app:boxBackgroundMode="outline"
-            app:boxCornerRadiusTopStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxCornerRadiusBottomStart="12dp"
-            app:boxCornerRadiusBottomEnd="12dp"
-            app:boxStrokeColor="@color/primary"
-            app:hintTextColor="@color/text_secondary">
+            app:hintTextColor="@color/text_hint">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_search"
@@ -115,7 +113,7 @@
         android:background="@color/background"
         android:elevation="2dp"
         android:orientation="horizontal"
-        android:paddingVertical="8dp"
+        android:paddingVertical="@dimen/spacing_2"
         android:visibility="gone">
 
         <HorizontalScrollView
@@ -123,7 +121,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:paddingHorizontal="16dp">
+            android:paddingHorizontal="@dimen/spacing_4">
 
             <LinearLayout
                 android:id="@+id/layout_filter_chips"
@@ -138,18 +136,19 @@
         </HorizontalScrollView>
 
         <!-- Clear All Button -->
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_clear_all_filters"
             android:layout_width="wrap_content"
             android:layout_height="32dp"
             android:text="Clear All"
-            android:textAppearance="@style/TextAppearance.Label.Small"
+            style="@style/Widget.BidHub.Button.Text"
+            android:textSize="12sp"
             android:textColor="@color/primary"
-            android:background="@android:color/transparent"
-            android:paddingHorizontal="12dp"
-            android:layout_marginEnd="16dp"
-            android:layout_gravity="center_vertical"
-            android:minWidth="60dp" />
+            android:minHeight="32dp"
+            android:minWidth="60dp"
+            android:paddingHorizontal="@dimen/spacing_3"
+            android:layout_marginEnd="@dimen/spacing_4"
+            android:layout_gravity="center_vertical" />
 
     </LinearLayout>
 
@@ -169,7 +168,7 @@
                 android:id="@+id/rv_items"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:padding="8dp"
+                android:padding="@dimen/spacing_2"
                 android:clipToPadding="false" />
 
             <!-- Loading Indicator -->
@@ -187,7 +186,7 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:padding="32dp"
+                android:padding="@dimen/spacing_8"
                 android:visibility="gone">
 
                 <ImageView
@@ -196,7 +195,7 @@
                     android:layout_height="120dp"
                     android:src="@drawable/ic_search"
                     android:alpha="0.2"
-                    android:layout_marginBottom="24dp"
+                    android:layout_marginBottom="@dimen/spacing_6"
                     android:contentDescription="No items found" />
 
             <TextView
@@ -204,25 +203,28 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="No items found"
-                android:textAppearance="@style/TextAppearance.Title.Large"
-                android:layout_marginBottom="12dp" />
+                android:textAppearance="@style/TextAppearance.BidHub.H3"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="@dimen/spacing_3" />
 
                 <TextView
                     android:id="@+id/tv_empty_subtitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="We couldn't find any items matching your search"
-                    android:textAppearance="@style/TextAppearance.Subtitle"
+                    android:textAppearance="@style/TextAppearance.BidHub.Body2"
+                    android:textColor="@color/text_secondary"
                     android:gravity="center"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_marginBottom="@dimen/spacing_2" />
 
                 <TextView
                     android:id="@+id/tv_empty_suggestions_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Try these suggestions:"
-                    android:textAppearance="@style/TextAppearance.Label"
-                    android:layout_marginBottom="16dp"
+                    android:textAppearance="@style/TextAppearance.BidHub.Body1"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="@dimen/spacing_4"
                     android:visibility="gone" />
 
                 <LinearLayout
@@ -237,28 +239,32 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="• Broaden your search terms"
-                        android:textAppearance="@style/TextAppearance.Body"
-                        android:layout_marginBottom="4dp" />
+                        android:textAppearance="@style/TextAppearance.BidHub.Body2"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="@dimen/spacing_1" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="• Remove some filters"
-                        android:textAppearance="@style/TextAppearance.Body"
-                        android:layout_marginBottom="4dp" />
+                        android:textAppearance="@style/TextAppearance.BidHub.Body2"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="@dimen/spacing_1" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="• Check your spelling"
-                        android:textAppearance="@style/TextAppearance.Body"
-                        android:layout_marginBottom="4dp" />
+                        android:textAppearance="@style/TextAppearance.BidHub.Body2"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="@dimen/spacing_1" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="• Try different keywords"
-                        android:textAppearance="@style/TextAppearance.Body" />
+                        android:textAppearance="@style/TextAppearance.BidHub.Body2"
+                        android:textColor="@color/text_secondary" />
 
                 </LinearLayout>
 
@@ -271,26 +277,20 @@
                     android:layout_marginTop="24dp"
                     android:visibility="gone">
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_clear_search"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Clear Search"
-                        android:textAppearance="@style/TextAppearance.Button.Secondary"
-                        android:background="@android:color/transparent"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="8dp"
-                        android:layout_marginEnd="16dp" />
+                        style="@style/Widget.BidHub.Button.Text"
+                        android:layout_marginEnd="@dimen/spacing_4" />
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_browse_categories"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Browse Categories"
-                        android:textAppearance="@style/TextAppearance.Button"
-                        android:background="@drawable/button_primary"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="8dp" />
+                        style="@style/Widget.BidHub.Button.Primary" />
 
                 </LinearLayout>
 

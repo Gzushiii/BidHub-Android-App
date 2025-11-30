@@ -65,11 +65,15 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             holder.bidCountText.setText(item.getBidCount() + " bids");
         
         // Set time remaining
+        boolean isEndingSoon = false;
         if (item.getEndDate() != null) {
             long timeRemaining = item.getEndDate().getTime() - System.currentTimeMillis();
             if (timeRemaining > 0) {
                 long days = timeRemaining / (1000 * 60 * 60 * 24);
                 long hours = (timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60);
+                
+                // Show "Ending Soon" if less than 24 hours remaining
+                isEndingSoon = days == 0 && hours < 24;
                 
                 if (days > 0) {
                     holder.timeRemainingText.setText(days + "d " + hours + "h left");
@@ -81,6 +85,15 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             }
         } else {
             holder.timeRemainingText.setText("No end date");
+        }
+        
+        // Show/hide "Ending Soon" badge
+        if (holder.endingSoonText != null) {
+            if (isEndingSoon) {
+                holder.endingSoonText.setVisibility(View.VISIBLE);
+            } else {
+                holder.endingSoonText.setVisibility(View.GONE);
+            }
         }
         
         // Set item image - load user images with Glide, fallback to placeholder
@@ -176,6 +189,7 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
         TextView sellerText;
         TextView bidCountText;
         TextView timeRemainingText;
+        TextView endingSoonText;
         
         ItemViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -185,6 +199,7 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             sellerText = itemView.findViewById(R.id.tv_seller_name);
             bidCountText = itemView.findViewById(R.id.tv_bid_count);
             timeRemainingText = itemView.findViewById(R.id.tv_time_remaining);
+            endingSoonText = itemView.findViewById(R.id.tv_ending_soon);
         }
     }
 }

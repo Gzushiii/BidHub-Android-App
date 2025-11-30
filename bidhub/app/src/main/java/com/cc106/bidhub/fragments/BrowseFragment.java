@@ -785,6 +785,68 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         this.loggedInUserEmail = email;
     }
     
+    /**
+     * Set category filter by category name
+     * Called when navigating from HomeFragment category chips
+     */
+    public void setCategoryFilter(String categoryName) {
+        if (categoryName == null || categoryName.isEmpty()) {
+            return;
+        }
+        
+        // Find category by name
+        com.cc106.bidhub.items.CategoryManager categoryManager = com.cc106.bidhub.items.CategoryManager.getInstance();
+        List<Category> allCategories = categoryManager.getAllMainCategories();
+        
+        for (Category category : allCategories) {
+            if (category.getName() != null && category.getName().equalsIgnoreCase(categoryName)) {
+                // Set category filter
+                if (currentFilter == null) {
+                    currentFilter = new FilterCriteria();
+                }
+                currentFilter.setCategoryId(category.getCategoryId());
+                
+                // Apply filters to show filtered items
+                applyFilters();
+                return;
+            }
+        }
+        
+        // If category not found by name, try to match by common names
+        // Map common display names to category names
+        String normalizedName = categoryName.toLowerCase();
+        String categoryId = null;
+        
+        if (normalizedName.contains("electronics") || normalizedName.contains("electronic")) {
+            categoryId = findCategoryIdByName("Electronics", allCategories);
+        } else if (normalizedName.contains("fashion") || normalizedName.contains("clothing")) {
+            categoryId = findCategoryIdByName("Fashion", allCategories);
+        } else if (normalizedName.contains("collectible")) {
+            categoryId = findCategoryIdByName("Collectibles", allCategories);
+        } else if (normalizedName.contains("home") || normalizedName.contains("garden")) {
+            categoryId = findCategoryIdByName("Home & Garden", allCategories);
+        } else if (normalizedName.contains("art")) {
+            categoryId = findCategoryIdByName("Art", allCategories);
+        }
+        
+        if (categoryId != null) {
+            if (currentFilter == null) {
+                currentFilter = new FilterCriteria();
+            }
+            currentFilter.setCategoryId(categoryId);
+            applyFilters();
+        }
+    }
+    
+    private String findCategoryIdByName(String name, List<Category> categories) {
+        for (Category category : categories) {
+            if (category.getName() != null && category.getName().equalsIgnoreCase(name)) {
+                return category.getCategoryId();
+            }
+        }
+        return null;
+    }
+    
     @Override
     public void onResume() {
         super.onResume();

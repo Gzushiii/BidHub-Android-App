@@ -24,7 +24,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="16dp">
+                android:layout_marginBottom="@dimen/spacing_4">
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -56,16 +56,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Profile"
-                            android:textColor="@color/on_primary"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
+                            android:textAppearance="@style/TextAppearance.BidHub.H2"
+                            android:textColor="@color/on_primary" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Manage your account and settings"
-                            android:textColor="@color/on_primary"
-                            android:textSize="14sp" />
+                            android:textAppearance="@style/TextAppearance.BidHub.Body2"
+                            android:textColor="@color/on_primary" />
 
                     </LinearLayout>
 
@@ -109,13 +108,11 @@
         </LinearLayout>
 
         <!-- User Information Card -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="8dp"
-            app:cardBackgroundColor="@color/background">
+            android:layout_margin="@dimen/spacing_4"
+            style="@style/Widget.BidHub.Card">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -127,10 +124,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Account Information"
+                    android:textAppearance="@style/TextAppearance.BidHub.H3"
                     android:textColor="@color/text_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginBottom="@dimen/spacing_4" />
 
                 <!-- Username -->
                 <LinearLayout
@@ -143,16 +139,16 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Username"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
+                        android:textAppearance="@style/TextAppearance.BidHub.Overline"
+                        android:textColor="@color/text_secondary" />
 
                     <TextView
                         android:id="@+id/textViewUsername"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="username"
+                        android:textAppearance="@style/TextAppearance.BidHub.Body1"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"
                         android:textStyle="bold" />
 
                 </LinearLayout>
@@ -168,16 +164,16 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Email"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
+                        android:textAppearance="@style/TextAppearance.BidHub.Overline"
+                        android:textColor="@color/text_secondary" />
 
                     <TextView
                         android:id="@+id/textViewEmail"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="email@example.com"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp" />
+                        android:textAppearance="@style/TextAppearance.BidHub.Body1"
+                        android:textColor="@color/text_primary" />
 
                 </LinearLayout>
 
@@ -192,16 +188,16 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Available Credits"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
+                        android:textAppearance="@style/TextAppearance.BidHub.Overline"
+                        android:textColor="@color/text_secondary" />
 
                     <TextView
                         android:id="@+id/textViewCredits"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="₱ 0.00"
+                        android:textAppearance="@style/TextAppearance.BidHub.H3"
                         android:textColor="@color/primary"
-                        android:textSize="20sp"
                         android:textStyle="bold" />
 
                 </LinearLayout>
@@ -216,8 +212,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Bidding Alias"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
+                        android:textAppearance="@style/TextAppearance.BidHub.Overline"
+                        android:textColor="@color/text_secondary" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -231,21 +227,19 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:text="SwiftBidder42"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body1"
                             android:textColor="@color/text_primary"
-                            android:textSize="16sp"
                             android:textStyle="bold" />
 
-                        <Button
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/buttonRegenerateAlias"
                             android:layout_width="wrap_content"
                             android:layout_height="36dp"
                             android:text="Regenerate"
+                            style="@style/Widget.BidHub.Button.Primary"
                             android:textSize="12sp"
-                            android:background="@drawable/button_press_selector"
-                            android:textColor="@color/background"
-                            android:paddingStart="12dp"
-                            android:paddingEnd="12dp"
-                            android:stateListAnimator="@null" />
+                            android:minHeight="36dp"
+                            android:paddingHorizontal="@dimen/spacing_3" />
 
                     </LinearLayout>
 
@@ -253,18 +247,16 @@
 
             </LinearLayout>
 
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Quick Actions Card -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="8dp"
-            app:cardBackgroundColor="@color/background">
+            android:layout_marginStart="@dimen/spacing_4"
+            android:layout_marginEnd="@dimen/spacing_4"
+            android:layout_marginBottom="@dimen/spacing_4"
+            style="@style/Widget.BidHub.Card">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -276,10 +268,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Quick Actions"
+                    android:textAppearance="@style/TextAppearance.BidHub.H3"
                     android:textColor="@color/text_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginBottom="@dimen/spacing_4" />
 
                 <!-- My Bids Button -->
                 <LinearLayout
@@ -303,28 +294,27 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="My Bids"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body1"
                             android:textColor="@color/text_primary"
-                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="View your active and past bids"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
+                            android:textAppearance="@style/TextAppearance.BidHub.Caption"
+                            android:textColor="@color/text_secondary" />
 
                     </LinearLayout>
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonViewBids"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="View"
+                        style="@style/Widget.BidHub.Button.Text"
                         android:textSize="12sp"
-                        android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary"
-                        android:stateListAnimator="@null" />
+                        android:textColor="@color/primary" />
 
                 </LinearLayout>
 
@@ -349,28 +339,27 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Transaction History"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body1"
                             android:textColor="@color/text_primary"
-                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="View your credit transactions"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
+                            android:textAppearance="@style/TextAppearance.BidHub.Caption"
+                            android:textColor="@color/text_secondary" />
 
                     </LinearLayout>
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonTransactionHistory"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="View"
+                        style="@style/Widget.BidHub.Button.Text"
                         android:textSize="12sp"
-                        android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary"
-                        android:stateListAnimator="@null" />
+                        android:textColor="@color/primary" />
 
                 </LinearLayout>
 
@@ -396,45 +385,44 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="FAQ"
+                            android:textAppearance="@style/TextAppearance.BidHub.Body1"
                             android:textColor="@color/text_primary"
-                            android:textSize="16sp"
                             android:textStyle="bold" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Frequently asked questions"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
+                            android:textAppearance="@style/TextAppearance.BidHub.Caption"
+                            android:textColor="@color/text_secondary" />
 
                     </LinearLayout>
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/buttonFAQ"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="View"
+                        style="@style/Widget.BidHub.Button.Text"
                         android:textSize="12sp"
-                        android:background="@drawable/ripple_effect"
-                        android:textColor="@color/primary"
-                        android:stateListAnimator="@null" />
+                        android:textColor="@color/primary" />
 
                 </LinearLayout>
 
             </LinearLayout>
 
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Privacy Information Card -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginStart="@dimen/spacing_4"
+            android:layout_marginEnd="@dimen/spacing_4"
+            android:layout_marginBottom="@dimen/spacing_4"
             app:cardCornerRadius="12dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="@color/primary_light">
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@color/primaryLight">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -460,22 +448,22 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Anonymous Bidding"
-                        android:textColor="@color/primary_dark"
-                        android:textSize="16sp"
+                        android:textAppearance="@style/TextAppearance.BidHub.Body1"
+                        android:textColor="@color/primaryVariant"
                         android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Your real identity is protected during auctions"
-                        android:textColor="@color/primary_dark"
-                        android:textSize="12sp" />
+                        android:textAppearance="@style/TextAppearance.BidHub.Caption"
+                        android:textColor="@color/primaryVariant" />
 
                 </LinearLayout>
 
             </LinearLayout>
 
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Logout Button -->
         <LinearLayout
@@ -484,16 +472,13 @@
             android:orientation="horizontal"
             android:padding="16dp">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonLogout"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="@dimen/button_height_primary"
                 android:text="Sign Out"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:textColor="@color/error"
-                android:background="@drawable/ripple_effect"
-                android:stateListAnimator="@null" />
+                style="@style/Widget.BidHub.Button.Danger"
+                android:textColor="@color/on_primary" />
 
         </LinearLayout>
 

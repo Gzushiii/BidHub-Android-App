@@ -403,11 +403,21 @@ public class MainActivity extends BaseActivity {
     
     /**
      * Switch to browse tab programmatically
+     * @param categoryFilter Optional category name to filter by
      */
-    public void switchToBrowseTab() {
+    public void switchToBrowseTab(String categoryFilter) {
         try {
             if (bottomNavigationView != null) {
                 bottomNavigationView.setSelectedItemId(R.id.nav_browse);
+                
+                // If category filter is provided, pass it to BrowseActivity
+                if (categoryFilter != null && !categoryFilter.isEmpty()) {
+                    Intent browseIntent = new Intent(this, BrowseActivity.class);
+                    browseIntent.putExtra("USER_EMAIL", getCurrentUserEmail());
+                    browseIntent.putExtra(BrowseActivity.EXTRA_CATEGORY_FILTER, categoryFilter);
+                    startActivity(browseIntent);
+                    return;
+                }
                 
                 // Force refresh the browse fragment after navigation
                 android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
@@ -417,7 +427,15 @@ public class MainActivity extends BaseActivity {
                         androidx.fragment.app.Fragment currentFragment = getSupportFragmentManager()
                                 .findFragmentById(R.id.content_frame);
                         if (currentFragment instanceof com.cc106.bidhub.fragments.BrowseFragment) {
-                            ((com.cc106.bidhub.fragments.BrowseFragment) currentFragment).loadItems();
+                            com.cc106.bidhub.fragments.BrowseFragment browseFragment = 
+                                (com.cc106.bidhub.fragments.BrowseFragment) currentFragment;
+                            
+                            // Apply category filter if provided
+                            if (categoryFilter != null && !categoryFilter.isEmpty()) {
+                                browseFragment.setCategoryFilter(categoryFilter);
+                            } else {
+                                browseFragment.loadItems();
+                            }
                         }
                     } catch (Exception e) {
                         android.util.Log.e("MainActivity", "Error refreshing browse fragment", e);
@@ -428,6 +446,13 @@ public class MainActivity extends BaseActivity {
             ToastHelper.showError(this, "Error switching to browse tab: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+    
+    /**
+     * Switch to browse tab programmatically (overload without category filter)
+     */
+    public void switchToBrowseTab() {
+        switchToBrowseTab(null);
     }
     
     /**
