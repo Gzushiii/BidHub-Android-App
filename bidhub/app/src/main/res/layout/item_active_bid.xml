@@ -25,18 +25,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/current_bid_label"
-            android:textSize="14sp"
-            android:textColor="@color/header_text_secondary"
-            android:layout_marginBottom="4dp"
+            android:textAppearance="@style/TextAppearance.BidHub.Body2"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="@dimen/spacing_1"
             tools:text="Current Bid:" />
 
         <TextView
             android:id="@+id/tv_current_bid_amount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textColor="@color/header_text_secondary"
-            android:layout_marginBottom="8dp"
+            android:textAppearance="@style/TextAppearance.BidHub.Body2"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="@dimen/spacing_2"
             tools:text="$55" />
 
         <!-- Item Name -->
@@ -44,12 +44,12 @@
             android:id="@+id/item_title_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
+            android:textAppearance="@style/TextAppearance.BidHub.Body1"
             android:textStyle="bold"
-            android:textColor="@color/header_text_primary"
+            android:textColor="@color/text_primary"
             android:maxLines="2"
             android:ellipsize="end"
-            android:layout_marginBottom="4dp"
+            android:layout_marginBottom="@dimen/spacing_1"
             tools:text="Vintage Camera" />
 
         <!-- Time Left -->
@@ -58,9 +58,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/time_left_label"
-            android:textSize="14sp"
-            android:textColor="@color/header_text_secondary"
-            android:layout_marginBottom="12dp"
+            android:textAppearance="@style/TextAppearance.BidHub.Body2"
+            android:textColor="@color/text_secondary"
+            android:layout_marginBottom="@dimen/spacing_3"
             tools:text="Time Left: 00h 55m 23s" />
 
         <!-- Bid Now Button -->
@@ -70,16 +70,16 @@
             android:layout_height="32dp"
             android:minHeight="32dp"
             android:minWidth="0dp"
-            android:paddingHorizontal="16dp"
+            android:paddingHorizontal="@dimen/spacing_4"
             android:text="@string/bid_now"
+            android:textAppearance="@style/TextAppearance.BidHub.Button"
             android:textSize="14sp"
-            android:textStyle="normal"
-            android:textColor="@color/header_text_primary"
-            android:backgroundTint="@color/chip_background"
+            android:textColor="@color/text_primary"
+            android:backgroundTint="@color/neutral_100"
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:drawableEnd="@drawable/ic_arrow_right"
-            android:drawablePadding="4dp"
+            android:drawablePadding="@dimen/spacing_1"
             style="@style/Widget.MaterialComponents.Button.TextButton"
             app:cornerRadius="8dp" />
 

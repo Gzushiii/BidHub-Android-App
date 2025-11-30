@@ -45,7 +45,7 @@
         app:itemIconTint="@color/bottom_nav_color_state"
         app:itemTextColor="@color/bottom_nav_color_state"
         app:labelVisibilityMode="labeled"
-        app:itemRippleColor="@color/primary_light"
+        app:itemRippleColor="@color/primaryLight"
         app:itemActiveIndicatorStyle="@style/ActiveIndicator" />
 
 </LinearLayout>

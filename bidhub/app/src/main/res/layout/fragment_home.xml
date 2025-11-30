@@ -49,11 +49,9 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/app_name"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/header_text_primary"
-                    android:gravity="center"
-                    android:letterSpacing="-0.015" />
+                    android:textAppearance="@style/TextAppearance.BidHub.H2"
+                    android:textColor="@color/text_primary"
+                    android:gravity="center" />
 
                 <!-- Credits (Right) -->
                 <TextView
@@ -61,12 +59,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="1200"
-                    android:textSize="16sp"
+                    android:textAppearance="@style/TextAppearance.BidHub.Body1"
                     android:textStyle="bold"
-                    android:textColor="@color/header_text_secondary"
+                    android:textColor="@color/text_secondary"
                     android:minWidth="48dp"
-                    android:gravity="end"
-                    android:letterSpacing="0.015" />
+                    android:gravity="end" />
 
             </LinearLayout>
 
@@ -75,13 +72,13 @@
                 android:id="@+id/search_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="12dp"
+                android:layout_marginStart="@dimen/spacing_4"
+                android:layout_marginEnd="@dimen/spacing_4"
+                android:layout_marginTop="@dimen/spacing_3"
+                android:layout_marginBottom="@dimen/spacing_3"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/chip_background"
+                app:cardBackgroundColor="@color/neutral_100"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
@@ -97,20 +94,20 @@
                     android:background="?attr/selectableItemBackground">
 
                     <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
+                        android:layout_width="@dimen/icon_size_medium"
+                        android:layout_height="@dimen/icon_size_medium"
                         android:src="@drawable/ic_search"
-                        android:tint="@color/header_text_secondary"
+                        android:tint="@color/text_secondary"
                         android:contentDescription="@string/search"
-                        android:layout_marginEnd="12dp" />
+                        android:layout_marginEnd="@dimen/spacing_3" />
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/search_for_items"
-                        android:textSize="16sp"
-                        android:textColor="@color/header_text_secondary"
+                        android:textAppearance="@style/TextAppearance.BidHub.Body1"
+                        android:textColor="@color/text_secondary"
                         android:maxLines="1" />
 
                 </LinearLayout>
@@ -146,13 +143,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/featured_auctions"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:textColor="@color/header_text_primary"
-                android:letterSpacing="-0.015"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="12dp" />
+                android:textAppearance="@style/TextAppearance.BidHub.H2"
+                android:textColor="@color/text_primary"
+                android:layout_marginStart="@dimen/spacing_4"
+                android:layout_marginTop="@dimen/spacing_5"
+                android:layout_marginBottom="@dimen/spacing_3" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_featured_items"
@@ -168,13 +163,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/active_auctions"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:textColor="@color/header_text_primary"
-                android:letterSpacing="-0.015"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="12dp" />
+                android:textAppearance="@style/TextAppearance.BidHub.H2"
+                android:textColor="@color/text_primary"
+                android:layout_marginStart="@dimen/spacing_4"
+                android:layout_marginTop="@dimen/spacing_5"
+                android:layout_marginBottom="@dimen/spacing_3" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_active_auctions"
@@ -200,10 +193,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/your_active_bids"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/header_text_primary"
-                    android:letterSpacing="-0.015" />
+                    android:textAppearance="@style/TextAppearance.BidHub.H2"
+                    android:textColor="@color/text_primary" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_view_all_bids"
@@ -231,13 +222,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/browse_categories"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:textColor="@color/header_text_primary"
-                android:letterSpacing="-0.015"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="12dp" />
+                android:textAppearance="@style/TextAppearance.BidHub.H2"
+                android:textColor="@color/text_primary"
+                android:layout_marginStart="@dimen/spacing_4"
+                android:layout_marginTop="@dimen/spacing_5"
+                android:layout_marginBottom="@dimen/spacing_3" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_categories"
@@ -263,20 +252,22 @@
                     android:src="@drawable/ic_image_placeholder"
                     android:tint="@color/text_hint"
                     android:contentDescription="@string/no_items"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginBottom="@dimen/spacing_4" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.BidHub.Headline"
+                    android:textAppearance="@style/TextAppearance.BidHub.H3"
                     android:text="@string/no_items_found"
-                    android:layout_marginBottom="8dp" />
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="@dimen/spacing_2" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.BidHub.Caption"
+                    android:textAppearance="@style/TextAppearance.BidHub.Body2"
                     android:text="@string/start_browsing_or_posting"
+                    android:textColor="@color/text_secondary"
                     android:gravity="center" />
 
             </LinearLayout>

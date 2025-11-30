@@ -119,12 +119,11 @@
                 android:id="@+id/tv_item_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.BidHub.Body"
+                android:textAppearance="@style/TextAppearance.BidHub.Body1"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
                 android:maxLines="2"
                 android:ellipsize="end"
-                android:lineSpacingExtra="2dp"
                 android:layout_marginBottom="@dimen/spacing_1"
                 tools:text="Sample Item Title That Can Be Very Long" />
             
@@ -134,8 +133,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/ending_soon"
-                android:textSize="14sp"
-                android:textColor="@color/header_text_secondary"
+                android:textAppearance="@style/TextAppearance.BidHub.Body2"
+                android:textColor="@color/text_secondary"
                 android:visibility="gone"
                 android:layout_marginBottom="@dimen/spacing_2"
                 tools:visibility="visible" />
