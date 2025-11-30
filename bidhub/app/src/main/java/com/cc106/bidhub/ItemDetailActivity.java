@@ -892,14 +892,42 @@ public class ItemDetailActivity extends AppCompatActivity {
      */
     private Item parseItemFromApiResponse(String responseData) {
         try {
+            if (responseData == null || responseData.isEmpty()) {
+                android.util.Log.e("ItemDetailActivity", "parseItemFromApiResponse: responseData is null or empty");
+                return null;
+            }
+            
             org.json.JSONObject jsonResponse = new org.json.JSONObject(responseData);
-            org.json.JSONObject itemJson = jsonResponse.getJSONObject("item");
+            
+            // Handle both direct item object and wrapped item object
+            org.json.JSONObject itemJson = null;
+            if (jsonResponse.has("item")) {
+                itemJson = jsonResponse.getJSONObject("item");
+            } else if (jsonResponse.has("id") || jsonResponse.has("title")) {
+                // Response is the item object itself
+                itemJson = jsonResponse;
+            } else {
+                android.util.Log.e("ItemDetailActivity", "parseItemFromApiResponse: No item object found in response");
+                return null;
+            }
+            
+            if (itemJson == null) {
+                android.util.Log.e("ItemDetailActivity", "parseItemFromApiResponse: itemJson is null");
+                return null;
+            }
             
             Item item = new Item();
             
-            // Parse basic fields
+            // Parse basic fields with null safety
             item.setItemId(itemJson.optString("id", itemJson.optString("uuid_id", "")));
-            item.setTitle(itemJson.getString("title"));
+            
+            // Title is required - use optString with fallback
+            String title = itemJson.optString("title", "");
+            if (title.isEmpty()) {
+                android.util.Log.w("ItemDetailActivity", "parseItemFromApiResponse: Title is empty, using fallback");
+                title = "Untitled Item";
+            }
+            item.setTitle(title);
             item.setDescription(itemJson.optString("description", ""));
             item.setStartingPrice(itemJson.optDouble("starting_bid", itemJson.optDouble("starting_price", 0.0)));
             item.setCurrentPrice(itemJson.optDouble("current_bid", itemJson.optDouble("current_price", 0.0)));
@@ -1489,27 +1517,49 @@ public class ItemDetailActivity extends AppCompatActivity {
                         }
                     );
                     
+                    // Reload item data from server to get latest bid count and current price
+                    // This ensures UI reflects the actual server state, not just local updates
+                    String itemId = currentItem != null ? currentItem.getItemId() : null;
+                    if (itemId != null) {
+                        // Fetch fresh item data from API
+                        com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(ItemDetailActivity.this);
+                        com.cc106.bidhub.api.ItemApiClient.ApiResponse itemResponse = apiClient.getItemById(itemId);
+                        
+                        if (itemResponse.isSuccess() && itemResponse.getData() != null) {
+                            // Parse updated item data
+                            Item updatedItem = parseItemFromApiResponse(itemResponse.getData());
+                            if (updatedItem != null) {
+                                // Update ItemManager cache
+                                itemManager.storeItem(updatedItem);
+                                currentItem = updatedItem;
+                            }
+                        }
+                    }
+                    
                     // Update UI on main thread
                     runOnUiThread(() -> {
                         android.widget.Toast.makeText(this, "Bid of " + currencyFormat.format(bidAmount) + " placed successfully!", android.widget.Toast.LENGTH_LONG).show();
                         
-                        // Update current bid display
-                        tvCurrentBid.setText(currencyFormat.format(bidAmount));
-                        
-                        // Update bid count
-                        if (currentItem != null) {
-                            currentItem.incrementBidCount();
-                            if (tvBidCount != null) {
-                                int bidCount = currentItem.getBidCount();
-                                tvBidCount.setText(bidCount + (bidCount == 1 ? " bid" : " bids"));
+                        // Reload item data to ensure UI reflects server state
+                        if (itemId != null) {
+                            loadItemData(itemId);
+                        } else {
+                            // Fallback: Update UI with local data if reload fails
+                            if (currentItem != null) {
+                                tvCurrentBid.setText(currencyFormat.format(bidAmount));
+                                currentItem.incrementBidCount();
+                                if (tvBidCount != null) {
+                                    int bidCount = currentItem.getBidCount();
+                                    tvBidCount.setText(bidCount + (bidCount == 1 ? " bid" : " bids"));
+                                }
                             }
+                            
+                            // Clear bid input
+                            etBidAmount.setText("");
+                            
+                            // Refresh bid history
+                            setupBidHistory();
                         }
-                        
-                        // Clear bid input
-                        etBidAmount.setText("");
-                        
-                        // Refresh bid history
-                        setupBidHistory();
                     });
                 } else {
                     String errorMessage = result.getMessage();
@@ -1775,7 +1825,12 @@ public class ItemDetailActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (currentItem != null && currentItem.getEndDate() != null) {
+        // Reload item data to ensure we have the latest bid count and current price
+        String itemId = getIntent().getStringExtra("ITEM_ID");
+        if (itemId != null) {
+            loadItemData(itemId);
+        } else if (currentItem != null && currentItem.getEndDate() != null) {
+            // If we have an item but no ID, just restart the countdown
             startCountdownTimer();
         }
     }

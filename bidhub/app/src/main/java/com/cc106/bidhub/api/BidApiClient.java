@@ -86,29 +86,43 @@ public class BidApiClient {
                 JSONObject jsonResponse = new JSONObject(responseBody);
                 return new ApiResponse(true, jsonResponse.optString("message", "Bid placed successfully"), jsonResponse);
             } else {
-                JSONObject errorResponse = new JSONObject(responseBody);
-                String errorType = errorResponse.optString("error", "bid_failed");
-                String errorMessage = errorResponse.optString("message", "Failed to place bid");
-                
-                // Provide more detailed error messages based on error type
-                if ("bid_too_low".equals(errorType)) {
-                    double requiredBid = errorResponse.optDouble("required_bid", 0);
-                    double currentBid = errorResponse.optDouble("current_bid", 0);
-                    double startingPrice = errorResponse.optDouble("starting_price", 0);
-                    if (requiredBid > 0) {
-                        errorMessage = String.format("Bid must be at least ₱%.2f. Current highest bid: ₱%.2f", 
-                            requiredBid, currentBid > 0 ? currentBid : startingPrice);
+                // Parse error response with null safety
+                JSONObject errorResponse = null;
+                try {
+                    if (responseBody != null && !responseBody.isEmpty()) {
+                        errorResponse = new JSONObject(responseBody);
                     }
-                } else if ("insufficient_credits".equals(errorType)) {
-                    double required = errorResponse.optDouble("required", 0);
-                    double available = errorResponse.optDouble("available", 0);
-                    if (required > 0 && available >= 0) {
-                        errorMessage = String.format("Insufficient credits. Required: ₱%.2f, Available: ₱%.2f", 
-                            required, available);
+                } catch (org.json.JSONException e) {
+                    Log.e(TAG, "Error parsing error response JSON: " + e.getMessage(), e);
+                }
+                
+                String errorType = "bid_failed";
+                String errorMessage = "Failed to place bid";
+                
+                if (errorResponse != null) {
+                    errorType = errorResponse.optString("error", "bid_failed");
+                    errorMessage = errorResponse.optString("message", "Failed to place bid");
+                    
+                    // Provide more detailed error messages based on error type
+                    if ("bid_too_low".equals(errorType)) {
+                        double requiredBid = errorResponse.optDouble("required_bid", 0);
+                        double currentBid = errorResponse.optDouble("current_bid", 0);
+                        double startingPrice = errorResponse.optDouble("starting_price", 0);
+                        if (requiredBid > 0) {
+                            errorMessage = String.format("Bid must be at least ₱%.2f. Current highest bid: ₱%.2f", 
+                                requiredBid, currentBid > 0 ? currentBid : startingPrice);
+                        }
+                    } else if ("insufficient_credits".equals(errorType)) {
+                        double required = errorResponse.optDouble("required", 0);
+                        double available = errorResponse.optDouble("available", 0);
+                        if (required > 0 && available >= 0) {
+                            errorMessage = String.format("Insufficient credits. Required: ₱%.2f, Available: ₱%.2f", 
+                                required, available);
+                        }
                     }
                 }
                 
-                return new ApiResponse(false, errorMessage, errorResponse);
+                return new ApiResponse(false, errorMessage, errorResponse != null ? errorResponse.toString() : null);
             }
             
         } catch (java.net.UnknownHostException e) {

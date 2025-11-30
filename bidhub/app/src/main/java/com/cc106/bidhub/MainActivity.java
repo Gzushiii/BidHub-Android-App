@@ -458,6 +458,31 @@ public class MainActivity extends BaseActivity {
     /**
      * Refresh HomeFragment categories (called after posting an item)
      */
+    /**
+     * Refresh credit displays across all fragments
+     * Called after successful top-up to update credit balance everywhere
+     */
+    public void refreshCreditDisplays() {
+        runOnUiThread(() -> {
+            // Refresh HomeFragment credit display
+            if (homeFragment != null && homeFragment.isAdded()) {
+                homeFragment.loadUserData();
+            }
+            
+            // Refresh CreditsFragment balance display
+            if (creditsFragment != null && creditsFragment.isAdded()) {
+                creditsFragment.loadCreditInformation();
+            }
+            
+            // Refresh ProfileFragment credit display
+            if (profileFragment != null && profileFragment.isAdded()) {
+                profileFragment.loadUserData();
+            }
+            
+            android.util.Log.d("MainActivity", "Credit displays refreshed across all fragments");
+        });
+    }
+    
     public void refreshHomeFragment() {
         try {
             if (homeFragment != null) {

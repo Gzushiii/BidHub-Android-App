@@ -142,7 +142,7 @@ public class ProfileFragment extends Fragment {
         }
     }
 
-    private void loadUserData() {
+    public void loadUserData() {
         try {
             // Use UserRepository as single source of truth
             com.cc106.bidhub.repository.UserRepository userRepo = 
