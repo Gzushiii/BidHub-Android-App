@@ -376,37 +376,35 @@ public class CreditsFragment extends Fragment {
                 public void onSuccess(double newBalance) {
                     getActivity().runOnUiThread(() -> {
                         android.util.Log.i("CreditsFragment", "=== TOP-UP SUCCESS CALLBACK ===");
-                        android.util.Log.i("CreditsFragment", String.format("New balance received: %.2f", newBalance));
+                        android.util.Log.i("CreditsFragment", String.format("Balance value received: %.2f", newBalance));
                         
                         progressPayment.setVisibility(android.view.View.GONE);
                         dialog.dismiss();
-                        ToastHelper.showSuccess(getContext(), getString(R.string.topup_processed_successfully));
                         
-                        // Balance already updated in UserRepository by submitTopupReference
-                        // Just refresh UI to show updated balance
-                        updateBalanceDisplay();
-                        
-                        // Optional: Refresh from backend to confirm (runs in background)
-                        // This is redundant but ensures consistency
+                        // Always refresh balance from backend to ensure accuracy
+                        // This handles both CONFIRMED (immediate update) and UNDER_REVIEW (pending) cases
                         com.cc106.bidhub.utils.CreditBalanceManager.refreshBalance(
                             getContext(),
                             new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
                                 @Override
                                 public void onBalanceUpdated(double confirmedBalance) {
                                     if (getActivity() != null && !getActivity().isFinishing()) {
-                                        // Update UserRepository with confirmed value
+                                        // Update UserRepository with confirmed value from backend
                                         com.cc106.bidhub.repository.UserRepository userRepo = 
                                             com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
                                         userRepo.updateCreditsImmediately(confirmedBalance);
                                         updateBalanceDisplay();
-                                        android.util.Log.d("CreditsFragment", String.format("Balance confirmed from backend: %.2f", confirmedBalance));
+                                        android.util.Log.i("CreditsFragment", String.format("Balance confirmed from backend: %.2f", confirmedBalance));
+                                        ToastHelper.showSuccess(getContext(), getString(R.string.topup_processed_successfully));
                                     }
                                 }
                                 
                                 @Override
                                 public void onError(String errorMessage) {
-                                    // Silent fail - balance was already updated from API response
-                                    android.util.Log.w("CreditsFragment", "Backend refresh failed, but balance already updated: " + errorMessage);
+                                    // If refresh fails, still show success but use the value we have
+                                    android.util.Log.w("CreditsFragment", "Backend refresh failed: " + errorMessage);
+                                    updateBalanceDisplay();
+                                    ToastHelper.showSuccess(getContext(), getString(R.string.topup_processed_successfully));
                                 }
                             }
                         );
@@ -661,38 +659,57 @@ public class CreditsFragment extends Fragment {
                     
                     // Parse success response to get new balance
                     double newBalance = 0.0;
+                    boolean shouldUpdateBalance = false;
                     try {
                         JSONObject responseJson = new JSONObject(responseBody);
+                        String status = responseJson.optString("status", "");
                         
-                        // Try multiple field names for compatibility
-                        if (responseJson.has("new_balance")) {
+                        android.util.Log.i("CreditsFragment", "Top-up status: " + status);
+                        
+                        // Only update balance if status is CONFIRMED and new_balance is present
+                        if ("CONFIRMED".equals(status) && responseJson.has("new_balance")) {
+                            // Try multiple field names for compatibility
                             Object balanceObj = responseJson.get("new_balance");
                             if (balanceObj instanceof Number) {
                                 newBalance = ((Number) balanceObj).doubleValue();
+                                shouldUpdateBalance = true;
                             } else if (balanceObj instanceof String) {
                                 try {
                                     newBalance = Double.parseDouble((String) balanceObj);
+                                    shouldUpdateBalance = true;
                                 } catch (NumberFormatException e) {
                                     android.util.Log.w("CreditsFragment", "Failed to parse new_balance string: " + balanceObj);
                                 }
                             }
+                            
+                            if (shouldUpdateBalance) {
+                                android.util.Log.i("CreditsFragment", String.format("New balance from API: %.2f", newBalance));
+                                
+                                // CRITICAL: Immediately update UserRepository and SharedPreferences
+                                com.cc106.bidhub.repository.UserRepository userRepo = 
+                                    com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+                                double oldBalance = userRepo.getCredits();
+                                userRepo.updateCreditsImmediately(newBalance);
+                                android.util.Log.i("CreditsFragment", String.format("Balance updated: %.2f -> %.2f (Delta: %.2f)", 
+                                    oldBalance, newBalance, newBalance - oldBalance));
+                            }
                         } else {
-                            newBalance = responseJson.optDouble("new_balance", responseJson.optDouble("balance", 0.0));
+                            // Status is UNDER_REVIEW or other - don't update balance, refresh from backend instead
+                            android.util.Log.i("CreditsFragment", "Top-up status is " + status + " - not updating balance immediately, will refresh from backend");
+                            // Get current balance to pass to callback (don't change it)
+                            com.cc106.bidhub.repository.UserRepository userRepo = 
+                                com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+                            newBalance = userRepo.getCredits();
+                            shouldUpdateBalance = false;
                         }
                         
-                        android.util.Log.i("CreditsFragment", String.format("New balance from API: %.2f", newBalance));
-                        
-                        // CRITICAL: Immediately update UserRepository and SharedPreferences
+                    } catch (org.json.JSONException e) {
+                        android.util.Log.e("CreditsFragment", "Could not parse response", e);
+                        android.util.Log.e("CreditsFragment", "Response body: " + responseBody);
+                        // Get current balance as fallback
                         com.cc106.bidhub.repository.UserRepository userRepo = 
                             com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
-                        double oldBalance = userRepo.getCredits();
-                        userRepo.updateCreditsImmediately(newBalance);
-                        android.util.Log.i("CreditsFragment", String.format("Balance updated: %.2f -> %.2f (Delta: %.2f)", 
-                            oldBalance, newBalance, newBalance - oldBalance));
-                        
-                    } catch (org.json.JSONException e) {
-                        android.util.Log.e("CreditsFragment", "Could not parse new_balance from response", e);
-                        android.util.Log.e("CreditsFragment", "Response body: " + responseBody);
+                        newBalance = userRepo.getCredits();
                     }
                     isSubmitRequestInProgress = false;
                     callback.onSuccess(newBalance);
