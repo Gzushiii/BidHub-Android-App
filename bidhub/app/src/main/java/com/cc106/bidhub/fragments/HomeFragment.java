@@ -150,11 +150,11 @@ public class HomeFragment extends Fragment {
             // Load user data and display it
             loadUserData();
             
-            // Load RecyclerView data
-            loadFeaturedItems();
-            loadActiveAuctions();
-            loadActiveBids();
-            loadCategories();
+            // Set up click listeners
+            setupClickListeners();
+            
+            // Sync items from API first, then load RecyclerView data
+            syncItemsFromApi();
             
             // Initialize category chips
             initializeCategoryChips();
@@ -175,9 +175,48 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        android.util.Log.d("HomeFragment", "=== ON RESUME - REFRESHING USER DATA ===");
+        android.util.Log.d("HomeFragment", "=== ON RESUME - REFRESHING ALL DATA ===");
         // Reload user data to ensure credits are up to date
         loadUserData();
+        // Refresh all sections to show latest data
+        refreshAllSections();
+    }
+    
+    /**
+     * Refresh all homepage sections with latest data
+     * Syncs items from API and refreshes credits from backend
+     */
+    private void refreshAllSections() {
+        if (getContext() == null) {
+            return;
+        }
+        
+        // Refresh credits from backend first, then sync items and update sections
+        com.cc106.bidhub.repository.UserRepository userRepo = 
+            com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+        
+        userRepo.refreshCreditsFromBackend(new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
+            @Override
+            public void onBalanceUpdated(double newBalance) {
+                // Update UI with new balance
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        if (tvHeaderCredits != null) {
+                            tvHeaderCredits.setText(String.format(Locale.getDefault(), "%.0f", newBalance));
+                        }
+                    });
+                }
+                // Sync items from API, then reload sections
+                syncItemsFromApi();
+            }
+            
+            @Override
+            public void onError(String errorMessage) {
+                android.util.Log.e("HomeFragment", "Error refreshing credits: " + errorMessage);
+                // Still sync items and refresh sections even if credit refresh fails
+                syncItemsFromApi();
+            }
+        });
     }
     
     /**
@@ -431,7 +470,8 @@ public class HomeFragment extends Fragment {
     }
     
     /**
-     * Load featured items from ItemManager
+     * Load featured items filtered by user's credit balance
+     * Featured auctions should show items where startingPrice OR currentHighestBid ≤ userCredits
      */
     private void loadFeaturedItems() {
         if (itemManager == null || featuredItemsAdapter == null) {
@@ -442,13 +482,55 @@ public class HomeFragment extends Fragment {
         showLoading();
         
         try {
-            List<Item> items = itemManager.getFeaturedItems();
-            if (items == null) {
-                items = new ArrayList<>();
+            // Get user's current credit balance
+            double userCredits = 0.0;
+            if (getContext() != null) {
+                com.cc106.bidhub.repository.UserRepository userRepo = 
+                    com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+                userCredits = userRepo.getCredits();
             }
             
+            android.util.Log.d("HomeFragment", "Loading featured items for user with credits: " + userCredits);
+            
+            // Get all active items (we'll filter by affordability)
+            List<Item> allActiveItems = itemManager.getAllActiveItems();
+            if (allActiveItems == null) {
+                allActiveItems = new ArrayList<>();
+            }
+            
+            // Filter items by affordability: startingPrice OR currentPrice ≤ userCredits
+            List<Item> affordableItems = new ArrayList<>();
+            for (Item item : allActiveItems) {
+                double startingPrice = item.getStartingPrice();
+                double currentPrice = item.getCurrentPrice() > 0 ? item.getCurrentPrice() : startingPrice;
+                
+                // Item is affordable if starting price or current price is within user's credits
+                if (startingPrice <= userCredits || currentPrice <= userCredits) {
+                    affordableItems.add(item);
+                }
+            }
+            
+            // Sort by creation date (newest first) and limit to 20
+            java.util.Collections.sort(affordableItems, new java.util.Comparator<Item>() {
+                @Override
+                public int compare(Item i1, Item i2) {
+                    java.util.Date d1 = i1.getCreatedAt();
+                    java.util.Date d2 = i2.getCreatedAt();
+                    if (d1 == null && d2 == null) return 0;
+                    if (d1 == null) return 1;
+                    if (d2 == null) return -1;
+                    return d2.compareTo(d1); // Reversed for newest first
+                }
+            });
+            
+            if (affordableItems.size() > 20) {
+                affordableItems = affordableItems.subList(0, 20);
+            }
+            
+            android.util.Log.d("HomeFragment", "Found " + affordableItems.size() + " affordable featured items");
+            
             featuredItems.clear();
-            featuredItems.addAll(items);
+            featuredItems.addAll(affordableItems);
             featuredItemsAdapter.notifyDataSetChanged();
             
             // Show/hide empty state
@@ -464,7 +546,8 @@ public class HomeFragment extends Fragment {
     }
     
     /**
-     * Load all active auctions (not just user's bids)
+     * Load all active auctions sorted by creation timestamp (newest first)
+     * This shows the most recently added item listings
      */
     private void loadActiveAuctions() {
         if (itemManager == null || activeAuctionsAdapter == null) {
@@ -473,10 +556,31 @@ public class HomeFragment extends Fragment {
         }
         
         try {
+            // Get all active items (already sorted by createdAt descending in ItemManager)
             List<Item> items = itemManager.getAllActiveItems();
             if (items == null) {
                 items = new ArrayList<>();
             }
+            
+            // Ensure proper sorting by creation date (newest first)
+            java.util.Collections.sort(items, new java.util.Comparator<Item>() {
+                @Override
+                public int compare(Item i1, Item i2) {
+                    java.util.Date d1 = i1.getCreatedAt();
+                    java.util.Date d2 = i2.getCreatedAt();
+                    if (d1 == null && d2 == null) return 0;
+                    if (d1 == null) return 1;
+                    if (d2 == null) return -1;
+                    return d2.compareTo(d1); // Reversed for newest first
+                }
+            });
+            
+            // Limit to 20 most recent items for homepage
+            if (items.size() > 20) {
+                items = items.subList(0, 20);
+            }
+            
+            android.util.Log.d("HomeFragment", "Loaded " + items.size() + " active auctions (newest first)");
             
             activeAuctions.clear();
             activeAuctions.addAll(items);
@@ -494,9 +598,11 @@ public class HomeFragment extends Fragment {
     
     /**
      * Load active bids for current user
+     * Fetches all listings where the user has submitted at least one bid
+     * Shows item details, latest bid amount, auction end time, and bid status
      */
     private void loadActiveBids() {
-        if (biddingEngine == null || activeBidsAdapter == null) {
+        if (biddingEngine == null || activeBidsAdapter == null || itemManager == null) {
             hideLoading();
             return;
         }
@@ -507,6 +613,7 @@ public class HomeFragment extends Fragment {
             String userId = prefsHelper.getUserId();
             
             if (userId == null || userId.isEmpty()) {
+                android.util.Log.w("HomeFragment", "No user ID found, clearing active bids");
                 activeBids.clear();
                 activeBidsAdapter.notifyDataSetChanged();
                 updateEmptyStateVisibility();
@@ -514,13 +621,57 @@ public class HomeFragment extends Fragment {
                 return;
             }
             
-            List<Bid> bids = biddingEngine.getUserActiveBids(userId);
-            if (bids == null) {
-                bids = new ArrayList<>();
+            // Get all active bids for the user
+            List<Bid> allUserBids = biddingEngine.getUserBids(userId);
+            if (allUserBids == null) {
+                allUserBids = new ArrayList<>();
             }
             
+            // Filter to only active bids (bids on items that are still active)
+            List<Bid> activeBidsList = new ArrayList<>();
+            java.util.Set<String> itemIdsWithBids = new java.util.HashSet<>();
+            
+            for (Bid bid : allUserBids) {
+                Item item = itemManager.getItemById(bid.getItemId());
+                
+                // Only include bids on active items
+                if (item != null && item.getStatus() == com.cc106.bidhub.items.ItemStatus.ACTIVE) {
+                    // Check if item is still active (hasn't ended)
+                    if (item.getEndDate() != null) {
+                        long timeRemaining = item.getTimeRemaining();
+                        if (timeRemaining > 0) {
+                            // Only add one bid per item (the highest one)
+                            if (!itemIdsWithBids.contains(bid.getItemId())) {
+                                activeBidsList.add(bid);
+                                itemIdsWithBids.add(bid.getItemId());
+                            } else {
+                                // Replace with higher bid if this one is higher
+                                for (int i = 0; i < activeBidsList.size(); i++) {
+                                    Bid existingBid = activeBidsList.get(i);
+                                    if (existingBid.getItemId().equals(bid.getItemId()) && 
+                                        bid.getAmount() > existingBid.getAmount()) {
+                                        activeBidsList.set(i, bid);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Sort by bid amount descending (highest bids first)
+            java.util.Collections.sort(activeBidsList, new java.util.Comparator<Bid>() {
+                @Override
+                public int compare(Bid b1, Bid b2) {
+                    return Double.compare(b2.getAmount(), b1.getAmount());
+                }
+            });
+            
+            android.util.Log.d("HomeFragment", "Loaded " + activeBidsList.size() + " active bids for user");
+            
             activeBids.clear();
-            activeBids.addAll(bids);
+            activeBids.addAll(activeBidsList);
             activeBidsAdapter.notifyDataSetChanged();
             
             // Show/hide empty state
@@ -633,6 +784,7 @@ public class HomeFragment extends Fragment {
     
     /**
      * Update empty state visibility based on data availability
+     * Also handles empty states for individual sections
      */
     private void updateEmptyStateVisibility() {
         if (layoutEmptyState == null) {
@@ -641,9 +793,120 @@ public class HomeFragment extends Fragment {
         
         boolean hasData = (featuredItems != null && !featuredItems.isEmpty()) ||
                          (activeBids != null && !activeBids.isEmpty()) ||
+                         (activeAuctions != null && !activeAuctions.isEmpty()) ||
                          (categories != null && !categories.isEmpty());
         
         layoutEmptyState.setVisibility(hasData ? View.GONE : View.VISIBLE);
+        
+        // Log empty states for debugging
+        if (featuredItems != null && featuredItems.isEmpty()) {
+            android.util.Log.d("HomeFragment", "Featured items section is empty");
+        }
+        if (activeBids != null && activeBids.isEmpty()) {
+            android.util.Log.d("HomeFragment", "Active bids section is empty");
+        }
+        if (activeAuctions != null && activeAuctions.isEmpty()) {
+            android.util.Log.d("HomeFragment", "Active auctions section is empty");
+        }
+    }
+    
+    /**
+     * Sync items from backend API before displaying
+     * This ensures we have the latest data from the server
+     */
+    private void syncItemsFromApi() {
+        if (getContext() == null) {
+            return;
+        }
+        
+        // Sync items from API on background thread
+        new Thread(() -> {
+            try {
+                SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(getContext());
+                String token = prefsHelper.getAuthToken();
+                
+                if (token == null || token.isEmpty()) {
+                    android.util.Log.w("HomeFragment", "No auth token available, using local items");
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        getActivity().runOnUiThread(() -> {
+                            loadFeaturedItems();
+                            loadActiveAuctions();
+                            loadActiveBids();
+                            loadCategories();
+                        });
+                    }
+                    return;
+                }
+                
+                // Fetch items from API
+                com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(getContext());
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItems(null, null, null, null, null, 100, 0);
+                
+                if (response.isSuccess() && response.getData() != null) {
+                    // Parse items from response using same logic as BrowseFragment
+                    try {
+                        String responseData = response.getData().toString();
+                        List<Item> apiItems = parseItemsFromResponse(responseData);
+                        
+                        // Add items to ItemManager
+                        for (Item item : apiItems) {
+                            // ItemManager stores items in a ConcurrentHashMap, so we need to use updateItem
+                            // or directly access the internal map. For now, we'll rely on ItemManager's
+                            // existing sync mechanism, but ensure items are available
+                            if (itemManager.getItemById(item.getItemId()) == null) {
+                                // Item not in manager, add it via updateItem
+                                itemManager.updateItem(item.getItemId(), item);
+                            }
+                        }
+                        
+                        android.util.Log.d("HomeFragment", "Synced " + apiItems.size() + " items from API");
+                        
+                        // Now load UI with synced data
+                        if (getActivity() != null && !getActivity().isFinishing()) {
+                            getActivity().runOnUiThread(() -> {
+                                loadFeaturedItems();
+                                loadActiveAuctions();
+                                loadActiveBids();
+                                loadCategories();
+                            });
+                        }
+                    } catch (Exception e) {
+                        android.util.Log.e("HomeFragment", "Error parsing items from API", e);
+                        // Fallback to loading from local data
+                        if (getActivity() != null && !getActivity().isFinishing()) {
+                            getActivity().runOnUiThread(() -> {
+                                loadFeaturedItems();
+                                loadActiveAuctions();
+                                loadActiveBids();
+                                loadCategories();
+                            });
+                        }
+                    }
+                } else {
+                    android.util.Log.w("HomeFragment", "API sync failed, using local items");
+                    // Fallback to loading from local data
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        getActivity().runOnUiThread(() -> {
+                            loadFeaturedItems();
+                            loadActiveAuctions();
+                            loadActiveBids();
+                            loadCategories();
+                        });
+                    }
+                }
+            } catch (Exception e) {
+                android.util.Log.e("HomeFragment", "Error syncing items from API", e);
+                // Fallback to loading from local data
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        loadFeaturedItems();
+                        loadActiveAuctions();
+                        loadActiveBids();
+                        loadCategories();
+                    });
+                }
+            }
+        }).start();
     }
     
     /**
@@ -822,6 +1085,129 @@ public class HomeFragment extends Fragment {
         } catch (Exception e) {
             android.util.Log.e("HomeFragment", "Error loading recent activity: " + e.getMessage(), e);
         }
+    }
+    
+    /**
+     * Parse items from API response JSON (same logic as BrowseFragment)
+     */
+    private List<Item> parseItemsFromResponse(String responseData) {
+        List<Item> items = new ArrayList<>();
+        try {
+            org.json.JSONObject jsonResponse = new org.json.JSONObject(responseData);
+            org.json.JSONArray itemsArray = jsonResponse.getJSONArray("items");
+            
+            for (int i = 0; i < itemsArray.length(); i++) {
+                org.json.JSONObject itemJson = itemsArray.getJSONObject(i);
+                Item item = new Item();
+                
+                item.setItemId(itemJson.optString("id", itemJson.optString("uuid_id", "")));
+                item.setTitle(itemJson.getString("title"));
+                item.setDescription(itemJson.optString("description", ""));
+                item.setStartingPrice(itemJson.optDouble("starting_bid", itemJson.optDouble("starting_price", 0.0)));
+                item.setCurrentPrice(itemJson.optDouble("current_bid", itemJson.optDouble("current_price", 0.0)));
+                item.setCategoryId(itemJson.optString("category_id", ""));
+                item.setSellerId(itemJson.optString("seller_email", itemJson.optString("seller_id", "")));
+                
+                // Set seller username
+                String sellerUsername = itemJson.optString("seller_username", null);
+                if (sellerUsername != null && !sellerUsername.isEmpty()) {
+                    item.setSellerName(sellerUsername);
+                } else {
+                    String sellerEmail = itemJson.optString("seller_email", "");
+                    if (!sellerEmail.isEmpty()) {
+                        int atIndex = sellerEmail.indexOf('@');
+                        if (atIndex > 0) {
+                            item.setSellerName(sellerEmail.substring(0, atIndex));
+                        } else {
+                            item.setSellerName("Unknown");
+                        }
+                    } else {
+                        item.setSellerName("Unknown");
+                    }
+                }
+                
+                // Set bid count
+                int bidCount = itemJson.optInt("bid_count", 0);
+                item.setBidCount(bidCount);
+                
+                // Set end date
+                if (itemJson.has("end_date") && !itemJson.isNull("end_date")) {
+                    try {
+                        String endDateStr = itemJson.getString("end_date");
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+                        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                        item.setEndDate(sdf.parse(endDateStr));
+                    } catch (Exception e) {
+                        android.util.Log.w("HomeFragment", "Error parsing end_date: " + e.getMessage());
+                    }
+                } else if (itemJson.has("bid_deadline") && !itemJson.isNull("bid_deadline")) {
+                    try {
+                        String deadlineStr = itemJson.getString("bid_deadline");
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+                        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                        item.setEndDate(sdf.parse(deadlineStr));
+                    } catch (Exception e) {
+                        android.util.Log.w("HomeFragment", "Error parsing bid_deadline: " + e.getMessage());
+                    }
+                }
+                
+                // Set created date
+                if (itemJson.has("created_at") && !itemJson.isNull("created_at")) {
+                    try {
+                        String createdAtStr = itemJson.getString("created_at");
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault());
+                        sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                        item.setCreatedAt(sdf.parse(createdAtStr));
+                    } catch (Exception e) {
+                        android.util.Log.w("HomeFragment", "Error parsing created_at: " + e.getMessage());
+                    }
+                }
+                
+                item.setCondition(itemJson.optString("item_condition", itemJson.optString("condition", "good")));
+                item.setStatus(com.cc106.bidhub.items.ItemStatus.ACTIVE);
+                
+                // Parse images
+                if (itemJson.has("images")) {
+                    try {
+                        Object imagesObj = itemJson.get("images");
+                        List<String> imagePaths = new ArrayList<>();
+                        
+                        if (imagesObj instanceof org.json.JSONArray) {
+                            org.json.JSONArray imagesArray = (org.json.JSONArray) imagesObj;
+                            for (int j = 0; j < imagesArray.length(); j++) {
+                                Object imgObj = imagesArray.get(j);
+                                if (imgObj instanceof org.json.JSONObject) {
+                                    org.json.JSONObject imgJson = (org.json.JSONObject) imgObj;
+                                    if (imgJson.has("image_url")) {
+                                        imagePaths.add(imgJson.getString("image_url"));
+                                    }
+                                } else if (imgObj instanceof String) {
+                                    imagePaths.add((String) imgObj);
+                                }
+                            }
+                        } else if (imagesObj instanceof String) {
+                            String imagesString = (String) imagesObj;
+                            if (!imagesString.isEmpty() && !imagesString.equals("null")) {
+                                org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
+                                for (int j = 0; j < imagesArray.length(); j++) {
+                                    imagePaths.add(imagesArray.getString(j));
+                                }
+                            }
+                        }
+                        
+                        item.setImagePaths(imagePaths);
+                    } catch (Exception e) {
+                        android.util.Log.w("HomeFragment", "Error parsing images", e);
+                        item.setImagePaths(new ArrayList<>());
+                    }
+                }
+                
+                items.add(item);
+            }
+        } catch (Exception e) {
+            android.util.Log.e("HomeFragment", "Error parsing items from response", e);
+        }
+        return items;
     }
     
     /**
