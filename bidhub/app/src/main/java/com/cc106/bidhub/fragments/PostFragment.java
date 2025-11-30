@@ -79,8 +79,9 @@ public class PostFragment extends Fragment implements
     private TextInputEditText etStartingPrice;
     private TextInputEditText etBuyNowPrice;
     private AutoCompleteTextView actvAuctionDuration;
-    private TextInputEditText etDonationReason;
-    private TextInputLayout layoutDonationReason;
+    // Donation functionality removed - all items are for sale
+    // private TextInputEditText etDonationReason;
+    // private TextInputLayout layoutDonationReason;
     // Tags functionality removed from new layout
     // private TextInputEditText etTags;
     private AutoCompleteTextView actvSize;
@@ -89,9 +90,10 @@ public class PostFragment extends Fragment implements
     private RecyclerView rvItemImages;
     // Tags RecyclerView removed from new layout
     // private RecyclerView rvTags;
-    private MaterialButtonToggleGroup togglePriceType;
-    private MaterialButton btnForSale;
-    private MaterialButton btnForFree;
+    // Price type toggle removed - all items are for sale
+    // private MaterialButtonToggleGroup togglePriceType;
+    // private MaterialButton btnForSale;
+    // private MaterialButton btnForFree;
     private ImageView btnToggleOptional;
     private MaterialButton btnSaveDraft;
     private MaterialButton btnPostItem;
@@ -120,7 +122,8 @@ public class PostFragment extends Fragment implements
     private List<Category> categories;
     private List<Category> subcategories;
     private String selectedMainCategoryId;
-    private boolean isForSale = true;
+    // All items are for sale - donation option removed
+    // private boolean isForSale = true;
     private boolean isOptionalDetailsVisible = true;
     
     // Auto-save functionality
@@ -192,15 +195,17 @@ public class PostFragment extends Fragment implements
         etStartingPrice = view.findViewById(R.id.et_starting_price);
         etBuyNowPrice = view.findViewById(R.id.et_buy_now_price);
         actvAuctionDuration = view.findViewById(R.id.actv_auction_duration);
-        etDonationReason = view.findViewById(R.id.et_donation_reason);
-        layoutDonationReason = view.findViewById(R.id.layout_donation_reason);
+        // Donation fields removed - all items are for sale
+        // etDonationReason = view.findViewById(R.id.et_donation_reason);
+        // layoutDonationReason = view.findViewById(R.id.layout_donation_reason);
         actvSize = view.findViewById(R.id.actv_size);
         actvOrigin = view.findViewById(R.id.actv_origin);
         
         rvItemImages = view.findViewById(R.id.rv_item_images);
-        togglePriceType = view.findViewById(R.id.toggle_price_type);
-        btnForSale = view.findViewById(R.id.btn_for_sale);
-        btnForFree = view.findViewById(R.id.btn_for_free);
+        // Price type toggle removed - all items are for sale
+        // togglePriceType = view.findViewById(R.id.toggle_price_type);
+        // btnForSale = view.findViewById(R.id.btn_for_sale);
+        // btnForFree = view.findViewById(R.id.btn_for_free);
         btnToggleOptional = view.findViewById(R.id.iv_toggle_optional);
         btnSaveDraft = view.findViewById(R.id.btn_save_draft);
         btnPostItem = view.findViewById(R.id.btn_post_item);
@@ -568,18 +573,7 @@ public class PostFragment extends Fragment implements
                 });
             }
             
-            // Price type toggle group
-            if (togglePriceType != null) {
-                togglePriceType.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-                    if (isChecked) {
-                        if (checkedId == R.id.btn_for_sale) {
-                            togglePriceMode(true);
-                        } else if (checkedId == R.id.btn_for_free) {
-                            togglePriceMode(false);
-                        }
-                    }
-                });
-            }
+            // Price type toggle removed - all items are for sale by default
             if (btnToggleOptional != null) {
                 btnToggleOptional.setOnClickListener(v -> toggleOptionalDetails());
             }
@@ -601,14 +595,7 @@ public class PostFragment extends Fragment implements
         }
     }
     
-    private void togglePriceMode(boolean forSale) {
-        isForSale = forSale;
-        // MaterialButtonToggleGroup handles the visual state automatically
-        // We just need to update the donation reason field visibility
-        if (layoutDonationReason != null) {
-            layoutDonationReason.setVisibility(forSale ? View.GONE : View.VISIBLE);
-        }
-    }
+    // togglePriceMode method removed - all items are for sale
     
     private void toggleOptionalDetails() {
         if (layoutOptionalDetails != null && btnToggleOptional != null) {
@@ -958,62 +945,45 @@ public class PostFragment extends Fragment implements
         }
         // If condition is empty or "Choose", don't set it (backend will handle as optional)
         
-        // Pricing
-        if (isForSale) {
-            String priceText = etStartingPrice.getText().toString().trim();
-            if (TextUtils.isEmpty(priceText)) {
-                ToastHelper.showError(getContext(), "Starting price is required for items for sale");
+        // Pricing - all items are for sale
+        String priceText = etStartingPrice.getText().toString().trim();
+        if (TextUtils.isEmpty(priceText)) {
+            ToastHelper.showError(getContext(), "Starting price is required");
+            return null;
+        }
+        try {
+            double startingPrice = Double.parseDouble(priceText);
+            // Validate minimum price (must be at least 0.01 to match backend requirement)
+            if (startingPrice < 0.01) {
+                ToastHelper.showError(getContext(), "Starting price must be at least ₱0.01");
                 return null;
             }
-            try {
-                double startingPrice = Double.parseDouble(priceText);
-                // Validate minimum price (must be at least 0.01 to match backend requirement)
-                if (startingPrice < 0.01) {
-                    ToastHelper.showError(getContext(), "Starting price must be at least ₱0.01");
-                    return null;
-                }
-                if (startingPrice > 1000000) {
-                    ToastHelper.showError(getContext(), "Price seems too high. Please verify the amount");
-                    return null;
-                }
-                itemData.setStartingPrice(startingPrice);
-                
-                // Handle Buy Now price (optional)
-                String buyNowPriceText = etBuyNowPrice.getText().toString().trim();
-                if (!TextUtils.isEmpty(buyNowPriceText)) {
-                    try {
-                        double buyNowPrice = Double.parseDouble(buyNowPriceText);
-                        if (buyNowPrice > startingPrice) {
-                            itemData.setBuyNowPrice(buyNowPrice);
-                        } else {
-                            ToastHelper.showError(getContext(), "Buy Now price must be higher than starting price");
-                            return null;
-                        }
-                    } catch (NumberFormatException e) {
-                        ToastHelper.showError(getContext(), "Invalid Buy Now price format");
+            if (startingPrice > 1000000) {
+                ToastHelper.showError(getContext(), "Price seems too high. Please verify the amount");
+                return null;
+            }
+            itemData.setStartingPrice(startingPrice);
+            
+            // Handle Buy Now price (optional)
+            String buyNowPriceText = etBuyNowPrice.getText().toString().trim();
+            if (!TextUtils.isEmpty(buyNowPriceText)) {
+                try {
+                    double buyNowPrice = Double.parseDouble(buyNowPriceText);
+                    if (buyNowPrice > startingPrice) {
+                        itemData.setBuyNowPrice(buyNowPrice);
+                    } else {
+                        ToastHelper.showError(getContext(), "Buy Now price must be higher than starting price");
                         return null;
                     }
+                } catch (NumberFormatException e) {
+                    ToastHelper.showError(getContext(), "Invalid Buy Now price format");
+                    return null;
                 }
-                // Buy Now price is optional, so no error if empty
-            } catch (NumberFormatException e) {
-                ToastHelper.showError(getContext(), "Invalid price format");
-                return null;
             }
-        } else {
-            // For donation items, set a minimum price that backend will accept
-            // Backend requires min 0.01, so we'll use that for donation items too
-            itemData.setStartingPrice(0.01); // Donation item - use minimum valid price
-            // Store donation reason in metadata
-            String donationReason = etDonationReason.getText().toString().trim();
-            if (!TextUtils.isEmpty(donationReason)) {
-                String metadata = itemData.getMetadata();
-                if (TextUtils.isEmpty(metadata)) {
-                    metadata = "Donation Reason: " + donationReason;
-                } else {
-                    metadata += ", Donation Reason: " + donationReason;
-                }
-                itemData.setMetadata(metadata);
-            }
+            // Buy Now price is optional, so no error if empty
+        } catch (NumberFormatException e) {
+            ToastHelper.showError(getContext(), "Invalid price format");
+            return null;
         }
         
         // Additional fields
@@ -1202,32 +1172,30 @@ public class PostFragment extends Fragment implements
         }
         // Description is optional, so no error if empty
         
-        // Validate starting price (only for sale items)
-        if (isForSale) {
+        // Validate starting price - all items are for sale
         String priceText = etStartingPrice.getText().toString().trim();
-            if (TextUtils.isEmpty(priceText)) {
-                ErrorHandler.showDetailedError(getContext(), "Starting price is required for items for sale");
-                android.util.Log.d("PostFragment", "Validation failed: Starting price is empty");
+        if (TextUtils.isEmpty(priceText)) {
+            ErrorHandler.showDetailedError(getContext(), "Starting price is required");
+            android.util.Log.d("PostFragment", "Validation failed: Starting price is empty");
+            return false;
+        }
+        try {
+            double price = Double.parseDouble(priceText);
+            // Backend requires minimum 0.01
+            if (price < 0.01) {
+                ErrorHandler.showDetailedError(getContext(), "Starting price must be at least ₱0.01");
+                android.util.Log.d("PostFragment", "Validation failed: Invalid starting price (" + price + ")");
                 return false;
             }
-            try {
-                double price = Double.parseDouble(priceText);
-                // Backend requires minimum 0.01
-                if (price < 0.01) {
-                    ErrorHandler.showDetailedError(getContext(), "Starting price must be at least ₱0.01");
-                    android.util.Log.d("PostFragment", "Validation failed: Invalid starting price (" + price + ")");
-                    return false;
-                }
-                if (price > 1000000) {
-                    ErrorHandler.showDetailedError(getContext(), "Price seems too high. Please verify the amount");
-                    android.util.Log.d("PostFragment", "Validation failed: Price too high (" + price + ")");
-                    return false;
-                }
-            } catch (NumberFormatException e) {
-                ErrorHandler.showDetailedError(getContext(), "Please enter a valid starting price");
-                android.util.Log.d("PostFragment", "Validation failed: Invalid price format (" + priceText + ")");
+            if (price > 1000000) {
+                ErrorHandler.showDetailedError(getContext(), "Price seems too high. Please verify the amount");
+                android.util.Log.d("PostFragment", "Validation failed: Price too high (" + price + ")");
                 return false;
             }
+        } catch (NumberFormatException e) {
+            ErrorHandler.showDetailedError(getContext(), "Please enter a valid starting price");
+            android.util.Log.d("PostFragment", "Validation failed: Invalid price format (" + priceText + ")");
+            return false;
         }
         
         // Note: Images are optional for backend (can be added later)
@@ -1291,25 +1259,9 @@ public class PostFragment extends Fragment implements
             return false;
         }
         
-        // Validate donation reason for donation items
-        if (!isForSale) {
-            String donationReason = etDonationReason.getText().toString().trim();
-            if (TextUtils.isEmpty(donationReason)) {
-                ToastHelper.showError(getContext(), "Donation reason is required");
-                etDonationReason.requestFocus();
-                return false;
-            }
-            if (donationReason.length() < 10) {
-                ToastHelper.showError(getContext(), "Please provide a more detailed donation reason (at least 10 characters)");
-                etDonationReason.requestFocus();
-                return false;
-            }
-        }
-        
-        // Validate price for sale items
-        if (isForSale) {
-            String priceText = etStartingPrice.getText().toString().trim();
-            if (TextUtils.isEmpty(priceText)) {
+        // Validate price - all items are for sale
+        String priceText = etStartingPrice.getText().toString().trim();
+        if (TextUtils.isEmpty(priceText)) {
                 ToastHelper.showError(getContext(), "Starting price is required for items for sale");
                 etStartingPrice.requestFocus();
                 return false;
@@ -1453,7 +1405,8 @@ public class PostFragment extends Fragment implements
         etStartingPrice.setText("");
         etBuyNowPrice.setText("");
         actvAuctionDuration.setText("7 Days");
-        etDonationReason.setText("");
+        // Donation reason field removed - all items are for sale
+        // etDonationReason.setText("");
         actvSize.setText("Choose");
         actvOrigin.setText("Choose");
         
