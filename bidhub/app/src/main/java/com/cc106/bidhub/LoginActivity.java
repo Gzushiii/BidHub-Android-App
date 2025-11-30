@@ -57,8 +57,13 @@ public class LoginActivity extends AppCompatActivity {
 
         buttonLogin.setOnClickListener(v -> loginUser());
         textViewRegisterLink.setOnClickListener(v -> {
+            try {
                 Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
                 startActivity(intent);
+            } catch (Exception e) {
+                e.printStackTrace();
+                ToastHelper.showError(this, "Error opening registration: " + e.getMessage());
+            }
         });
     }
 

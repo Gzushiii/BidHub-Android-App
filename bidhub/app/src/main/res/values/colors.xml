@@ -186,4 +186,10 @@
     <color name="text_hint_dark">#D1DEDE</color>
     <color name="text_disabled_dark">#9FB1B1</color>
     <color name="primary_light_old">#4DB6AC</color>
+    
+    <!-- PASSWORD STRENGTH COLORS -->
+    <color name="password_weak">#E57373</color>
+    <color name="password_fair">#FFB74D</color>
+    <color name="password_good">#64B5F6</color>
+    <color name="password_strong">#81C784</color>
 </resources>
