@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS topups (
     currency VARCHAR(3) DEFAULT 'PHP',
 
     -- Reference codes
-    generated_ref VARCHAR(16) NOT NULL UNIQUE,
+    generated_ref VARCHAR(50) NOT NULL UNIQUE,
     user_receipt_ref VARCHAR(64) NULL,
 
     -- Payment information
@@ -77,6 +77,15 @@ CREATE TABLE IF NOT EXISTS topups (
 
 SELECT '✓ topups table ready' AS '';
 SELECT '' AS '';
+
+-- =====================================================
+-- NOTE: If you have an existing topups table with generated_ref VARCHAR(16),
+-- you need to run the migration script: sql/migrate_fix_generated_ref_size.sql
+-- to update the column size to VARCHAR(50).
+-- 
+-- The generated reference format is: TOPUP + YYYYMMDD + 4-digit sequence (17 chars)
+-- which requires at least VARCHAR(20), but we use VARCHAR(50) for future flexibility.
+-- =====================================================
 
 -- =====================================================
 -- STEP 2: CREATE CREDIT_LEDGER TABLE

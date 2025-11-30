@@ -2,121 +2,202 @@
 
 This directory contains all SQL scripts and database-related files for the BidHub project.
 
-**Note:** This directory has been cleaned up to remove redundant files. See `REDUNDANT_FILES_TO_REMOVE.md` for details on what was removed.
+**Note:** This directory has been cleaned up and consolidated. Redundant files have been removed. See `FILES_TO_REMOVE.md` for details.
 
 ## 📁 File Organization
 
-### Database Schema Files
-- `bidhub_schema_step1_cleanup.sql` - Cleanup script to remove existing tables
-- `bidhub_schema_step2_database.sql` - Create the main database
-- `bidhub_schema_step3_minimal.sql` - Create essential tables (users, items, categories, etc.)
-- `bidhub_schema_step5_data_final.sql` - Insert sample data
-- `complete_database_recreation.sql` - Complete database recreation with all tables, procedures, and sample data
+### Core Schema Files
+- **`bidhub_schema.sql`** - Main comprehensive database schema with all tables, procedures, and views
+- **`add_manual_topup_tables.sql`** - Manual top-up support tables, procedures, and views (idempotent)
+- **`migrate_fix_generated_ref_size.sql`** - Migration to fix `generated_ref` column size (VARCHAR(16) → VARCHAR(50))
 
-### Database Setup Scripts
-- `run-schema.sh` - Main script to run all schema files in order
-- `setup_database.sh` - Database setup automation script
+### Database Diagnostics
+- **`comprehensive_database_diagnostic.sql`** - Comprehensive diagnostic script that checks:
+  - Schema verification (tables, columns, constraints)
+  - Data integrity and balance verification
+  - Bidding flow analysis
+  - Buy Now flow analysis
+  - Transaction isolation checks
+  - Index analysis
+  - Recent errors and patterns
 
-### Database Maintenance Files
-- `add_missing_columns.sql` - Add missing columns to existing tables (updated_at, transaction_date, etc.)
-- `add_manual_topup_tables.sql` - Add manual top-up support tables and procedures
-- `fix_api_schema_compatibility.sql` - Comprehensive fix for API schema compatibility
-- `fix_all_missing_components.sql` - Fix all missing database components
-- `fix_all_procedure_issues.sql` - Fix all stored procedure issues (PlaceBid, BuyNow)
-- `fix_all_items_status.sql` - Fix item status alignment issues
-- `fix_bidding_system_proper_flow.sql` - Fix bidding system flow
-- `fix_bidding_validation_logic.sql` - Fix bidding validation logic
-- `fix_buy_now_and_bidding_errors.sql` - Fix buy now and bidding errors
-- `fix_credit_system_comprehensive.sql` - Comprehensive credit system fixes
-- `fix_credit_balance_sync_issue.sql` - Fix credit balance synchronization
-- `fix_item_posting_database.sql` - Fix item posting database issues
-- `fix_remaining_database_errors.sql` - Fix remaining database errors
-- `remove_location_column.sql` - Remove location column from items table
-- `safe_database_queries.sql` - Safe database operations
+### Database Fixes
+- **`fix_credit_system_comprehensive.sql`** - Comprehensive fix for credit system issues:
+  - PlaceBid procedure with proper locking and outbid refunds
+  - BuyNow procedure with proper locking
+  - EndAuction procedure
+  - Idempotency support
+  - Performance indices
 
-### Database Testing & Verification Files
-- `check_actual_schema.sql` - Verify current database schema (comprehensive)
-- `check_bids_table.sql` - Check bids table structure
-- `check_credit_recording.sql` - Check credit recording functionality
-- `check_database_functionality.sql` - Test database functionality
-- `check_database_status.sql` - Check overall database status
-- `check_existing_items.sql` - Check existing items in database
-- `check_item_posting_issues.sql` - Check item posting issues
-- `check_items_persistence.sql` - Test item data persistence
-- `check_registered_users.sql` - Check registered users
-- `check_triggers_and_constraints.sql` - Check triggers and constraints
-- `check_user_password.sql` - Check user password information
-- `check_users.sql` - Check users in database
-- `check_users_table_structure.sql` - Check users table structure
-- `check_uuid_status.sql` - Check UUID status
-- `check_views.sql` - Check database views
-- `test_database_connection.sql` - Test database connectivity
-- `test_item_persistence.sql` - Test item persistence functionality
-- `test_placebid_procedure.sql` - Test PlaceBid procedure
-- `verify_latest_user.sql` - Verify latest user registration
-- `verify_production_schema.sql` - Verify production schema
-- `verify_render_db_schema.sql` - Verify Render database schema
+- **`fix_api_schema_compatibility.sql`** - Fixes API schema compatibility:
+  - Adds missing columns (uuid_id, starting_bid, reserve_price, end_date)
+  - Creates item_images table
+  - Creates credit_transactions table
+  - Creates/updates v_active_items view
+  - Updates stored procedures
 
-### Diagnostic & Analysis Files
-- `analyze_missing_database_components.sql` - Analyze missing database components
-- `comprehensive_database_diagnostic.sql` - Comprehensive database diagnostic (most complete)
-- `debug_insufficient_credits.sql` - Debug insufficient credits issues
-- `debug_placebid_procedure.sql` - Debug PlaceBid procedure
-- `debug_user_credits.sql` - Debug user credits
+### Utilities
+- **`add_missing_columns.sql`** - Utility to add missing columns to existing tables
+- **`create_active_items_view.sql`** - Creates the v_active_items view
+- **`create_bids_table.sql`** - Creates the bids table if missing
 
-### Database Views & Procedures
-- `create_active_items_view.sql` - Create view for active items
-- `create_bids_table.sql` - Create bids table
-- `create_test_items.sql` - Create test items for testing
+### Setup Scripts
+- **`run-schema.sh`** - Main script to run all schema files in order
+- **`setup_database.sh`** - Database setup automation script
 
 ## 🚀 Usage
 
-### Quick Setup
+### Initial Database Setup
+
+For a fresh database installation:
+
 ```bash
+# Option 1: Use the setup script
 cd sql
-./run-schema.sh
+./setup_database.sh
+
+# Option 2: Manual setup
+mysql -u username -p defaultdb < bidhub_schema.sql
+mysql -u username -p defaultdb < add_manual_topup_tables.sql
 ```
 
-### Manual Setup
-1. Run cleanup: `mysql < bidhub_schema_step1_cleanup.sql`
-2. Create database: `mysql < bidhub_schema_step2_database.sql`
-3. Create tables: `mysql < bidhub_schema_step3_minimal.sql`
-4. Insert data: `mysql < bidhub_schema_step5_data_final.sql`
+### Adding Top-Up Support
 
-### Testing
+If you need to add manual top-up support to an existing database:
+
 ```bash
-# Test database connection
-mysql < test_database_connection.sql
-
-# Check database status
-mysql < check_database_status.sql
-
-# Verify data
-mysql < verify_latest_user.sql
+mysql -u username -p defaultdb < add_manual_topup_tables.sql
 ```
 
-## 📝 Notes
+### Running Migrations
 
-- All scripts are designed to work with MySQL/MariaDB
-- Make sure to have proper database credentials configured
-- Some scripts may require specific database permissions
-- Always backup your database before running schema changes
+For specific migrations:
+
+```bash
+# Fix generated_ref column size
+mysql -u username -p defaultdb < migrate_fix_generated_ref_size.sql
+```
+
+### Database Diagnostics
+
+To diagnose database issues:
+
+```bash
+mysql -u username -p defaultdb < comprehensive_database_diagnostic.sql > diagnostic_report.txt
+```
+
+### Applying Fixes
+
+To fix database issues:
+
+```bash
+# Fix credit system issues
+mysql -u username -p defaultdb < fix_credit_system_comprehensive.sql
+
+# Fix API schema compatibility
+mysql -u username -p defaultdb < fix_api_schema_compatibility.sql
+```
+
+## 📝 File Descriptions
+
+### Schema Files
+
+**bidhub_schema.sql**
+- Complete database schema
+- Creates all core tables (users, items, categories, bids, credit_transactions, etc.)
+- Includes stored procedures (PlaceBid, BuyNow, EndAuction)
+- Includes views (v_active_items, v_user_bids, v_credit_summary)
+- Includes default categories
+
+**add_manual_topup_tables.sql**
+- Creates topups table for manual top-up requests
+- Creates credit_ledger table for audit trail
+- Creates supporting views (v_pending_topups, v_user_topup_stats, etc.)
+- Creates stored procedures (sp_confirm_topup, sp_reject_topup)
+- **Idempotent** - safe to run multiple times
+
+**migrate_fix_generated_ref_size.sql**
+- Fixes the `generated_ref` column in `topups` table
+- Changes from VARCHAR(16) to VARCHAR(50) to accommodate 17-character reference codes
+- Includes verification queries
+
+### Diagnostic Files
+
+**comprehensive_database_diagnostic.sql**
+- Most comprehensive diagnostic script
+- Checks schema, data integrity, procedures, and performance
+- Provides detailed analysis of credit system, bidding flow, and Buy Now flow
+- Use this for troubleshooting any database issues
+
+### Fix Files
+
+**fix_credit_system_comprehensive.sql**
+- Fixes all credit system issues
+- Implements proper row-level locking
+- Adds outbid refund logic
+- Adds idempotency support
+- Creates performance indices
+
+**fix_api_schema_compatibility.sql**
+- Ensures database schema matches API expectations
+- Adds missing columns and tables
+- Updates views and procedures
+- Handles data migration
 
 ## 🔧 Troubleshooting
 
-If you encounter issues:
-1. Check database connection with `test_database_connection.sql`
-2. Verify schema with `check_actual_schema.sql` or `verify_production_schema.sql`
-3. Run comprehensive diagnostic with `comprehensive_database_diagnostic.sql`
-4. Test data persistence with `test_item_persistence.sql`
-5. Check for missing components with `analyze_missing_database_components.sql`
+### Common Issues
+
+1. **"Insufficient Credits" errors**
+   - Run: `comprehensive_database_diagnostic.sql` to identify issues
+   - Apply: `fix_credit_system_comprehensive.sql` to fix
+
+2. **Schema mismatch errors**
+   - Run: `comprehensive_database_diagnostic.sql` to check schema
+   - Apply: `fix_api_schema_compatibility.sql` to fix
+
+3. **Top-up reference code errors**
+   - Apply: `migrate_fix_generated_ref_size.sql` to fix column size
+
+### Diagnostic Workflow
+
+1. **Check database status:**
+   ```bash
+   mysql -u username -p defaultdb < comprehensive_database_diagnostic.sql > report.txt
+   ```
+
+2. **Review the report** for:
+   - Schema issues
+   - Data integrity problems
+   - Missing procedures
+   - Balance mismatches
+
+3. **Apply appropriate fixes:**
+   - Credit issues → `fix_credit_system_comprehensive.sql`
+   - Schema issues → `fix_api_schema_compatibility.sql`
+   - Top-up issues → `migrate_fix_generated_ref_size.sql`
 
 ## 📋 Cleanup Summary
 
-This directory has been cleaned up to remove ~60+ redundant files. The remaining files are:
-- **Essential schema files** for database setup
-- **Comprehensive fix scripts** that consolidate multiple smaller fixes
-- **Most useful diagnostic/check scripts** for troubleshooting
-- **Production-ready procedures and views**
+This directory has been cleaned up to remove **48 redundant files**. The remaining files are:
 
-For details on what was removed, see `REDUNDANT_FILES_TO_REMOVE.md`.
+- **Essential schema files** for database setup
+- **Comprehensive diagnostic script** that consolidates all check scripts
+- **Comprehensive fix scripts** that consolidate multiple smaller fixes
+- **Essential utilities** for common operations
+
+For details on what was removed, see `FILES_TO_REMOVE.md`.
+
+## ⚠️ Important Notes
+
+- Always **backup your database** before running schema changes or fixes
+- Test fixes on a development database first
+- Some scripts require specific database permissions
+- All scripts are designed for MySQL/MariaDB
+- The `add_manual_topup_tables.sql` script is idempotent and safe to run multiple times
+
+## 📚 Related Documentation
+
+- Database documentation: `../docs/database/`
+- API documentation: `../docs/api/`
+- Development notes: `../docs/development/`
