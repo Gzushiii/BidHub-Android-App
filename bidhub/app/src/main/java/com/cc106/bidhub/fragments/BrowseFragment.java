@@ -1084,10 +1084,6 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         } else {
             android.util.Log.d("BrowseFragment", "Skipping refresh on resume - items already loaded or currently loading");
         }
-            loadItems();
-        } else {
-            android.util.Log.d("BrowseFragment", "Skipping refresh on resume - items already loaded");
-        }
     }
     
     @Override
