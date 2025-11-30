@@ -133,10 +133,16 @@ public class PostFragment extends Fragment implements
         
         // Initialize managers
         try {
-            itemManager = ItemManager.getInstance(requireContext());
+            Context context = getContext();
+            if (context == null) {
+                context = requireContext();
+            }
+            itemManager = ItemManager.getInstance(context);
             categoryManager = CategoryManager.getInstance();
         } catch (Exception e) {
-            ToastHelper.showError(getContext(), "Error initializing managers: " + e.getMessage());
+            if (getContext() != null) {
+                ToastHelper.showError(getContext(), "Error initializing managers: " + e.getMessage());
+            }
             return view;
         }
         
@@ -820,7 +826,12 @@ public class PostFragment extends Fragment implements
         try {
             // Get user email from SharedPreferences if not set
             if (TextUtils.isEmpty(loggedInUserEmail)) {
-                SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(requireContext());
+                Context context = getContext();
+                if (context == null) {
+                    ErrorHandler.showDetailedError(getContext(), "Context is null. Please try again.");
+                    return;
+                }
+                SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(context);
                 loggedInUserEmail = prefsHelper.getUserEmail();
                 if (TextUtils.isEmpty(loggedInUserEmail)) {
                     ErrorHandler.showDetailedError(getContext(), "User not logged in. Please log in again.");
@@ -1040,8 +1051,15 @@ public class PostFragment extends Fragment implements
         }
         
         // Upload images on background thread
+        Context context = getContext();
+        if (context == null) {
+            ErrorHandler.showDetailedError(getContext(), "Context is null. Please try again.");
+            resetButtonState(isDraft);
+            return;
+        }
+        
         new Thread(() -> {
-            ImageUploadClient uploadClient = new ImageUploadClient(getContext());
+            ImageUploadClient uploadClient = new ImageUploadClient(context);
             List<String> uploadedUrls = new ArrayList<>();
             int totalImages = selectedImages.size();
             int uploadedCount = 0;
@@ -1066,9 +1084,11 @@ public class PostFragment extends Fragment implements
                 } else {
                     // Upload failed - show error and abort
                     mainHandler.post(() -> {
-                        ErrorHandler.showDetailedError(getContext(), 
-                            "Failed to upload image: " + response.getMessage() + 
-                            "\nPlease try again.");
+                        if (getContext() != null) {
+                            ErrorHandler.showDetailedError(getContext(), 
+                                "Failed to upload image: " + response.getMessage() + 
+                                "\nPlease try again.");
+                        }
                         resetButtonState(isDraft);
                     });
                     return;
@@ -1112,10 +1132,19 @@ public class PostFragment extends Fragment implements
                 @Override
                 public void onResult(boolean success) {
                     if (success) {
-                        ErrorHandler.showSuccess(getContext(), "Item posted successfully!");
+                        if (getContext() != null) {
+                            ErrorHandler.showSuccess(getContext(), "Item posted successfully!");
+                        }
                         clearForm();
+                        // Refresh HomeFragment categories if MainActivity is available
+                        if (getActivity() instanceof MainActivity) {
+                            MainActivity mainActivity = (MainActivity) getActivity();
+                            mainActivity.refreshHomeFragment();
+                        }
                     } else {
-                        ErrorHandler.showDetailedError(getContext(), "Failed to post item. Please try again.");
+                        if (getContext() != null) {
+                            ErrorHandler.showDetailedError(getContext(), "Failed to post item. Please try again.");
+                        }
                     }
                     resetButtonState(false);
                 }

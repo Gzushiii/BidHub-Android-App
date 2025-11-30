@@ -456,6 +456,19 @@ public class MainActivity extends BaseActivity {
     }
     
     /**
+     * Refresh HomeFragment categories (called after posting an item)
+     */
+    public void refreshHomeFragment() {
+        try {
+            if (homeFragment != null) {
+                homeFragment.refreshCategories();
+            }
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Error refreshing home fragment", e);
+        }
+    }
+    
+    /**
      * Switch to profile tab programmatically
      */
     public void switchToProfileTab() {

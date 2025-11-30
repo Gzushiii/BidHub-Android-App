@@ -409,4 +409,51 @@ public class CategoryManager {
         }
         return null;
     }
+    
+    /**
+     * Update item counts for categories based on items from ItemManager
+     * This should be called after items are loaded or when items are added/removed
+     * @param itemManager The ItemManager instance to get items from
+     */
+    public void updateCategoryItemCounts(ItemManager itemManager) {
+        if (itemManager == null || categories == null) {
+            return;
+        }
+        
+        // Reset all counts first
+        for (Category category : categories.values()) {
+            if (category != null) {
+                category.setItemCount(0);
+            }
+        }
+        
+        // Get all active items
+        List<Item> allItems = itemManager.getAllActiveItems();
+        if (allItems == null) {
+            return;
+        }
+        
+        // Count items per category (including parent categories)
+        for (Item item : allItems) {
+            if (item == null || item.getCategoryId() == null) {
+                continue;
+            }
+            
+            String categoryId = item.getCategoryId();
+            Category category = categories.get(categoryId);
+            
+            // Increment count for the item's category
+            if (category != null) {
+                category.incrementItemCount();
+            }
+            
+            // Also increment count for parent category if this is a subcategory
+            if (category != null && category.getParentCategoryId() != null) {
+                Category parentCategory = categories.get(category.getParentCategoryId());
+                if (parentCategory != null) {
+                    parentCategory.incrementItemCount();
+                }
+            }
+        }
+    }
 }
