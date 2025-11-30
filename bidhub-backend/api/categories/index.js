@@ -1,4 +1,4 @@
-const db = require('../../src/config/database');
+const { pool } = require('../../src/config/database');
 
 module.exports = async (req, res) => {
   // Set CORS headers
@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const [categories] = await db.query(
+    const [categories] = await pool.query(
       `SELECT c.*, 
               COUNT(sc.id) as subcategory_count
        FROM categories c
@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
 
     // Get subcategories for each category
     for (let category of categories) {
-      const [subcategories] = await db.query(
+      const [subcategories] = await pool.query(
         'SELECT * FROM categories WHERE parent_id = ? ORDER BY name',
         [category.id]
       );

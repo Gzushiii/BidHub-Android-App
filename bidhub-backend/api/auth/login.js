@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { loginValidator } = require('../../src/validators/auth');
-const db = require('../../src/config/database');
+const { pool } = require('../../src/config/database');
 
 module.exports = async (req, res) => {
   // Set CORS headers
@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
     const { email, password } = req.body;
 
     // Find user by email
-    const [users] = await db.query(
+    const [users] = await pool.query(
       'SELECT * FROM users WHERE email = ?',
       [email]
     );

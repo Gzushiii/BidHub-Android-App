@@ -1,13 +1,13 @@
 const express = require('express');
 const { authenticateToken } = require('../../src/middleware/auth');
-const db = require('../../src/config/database');
+const { pool } = require('../../src/config/database');
 
 const app = express();
 app.use(express.json());
 app.use(authenticateToken);
 
 app.post('/api/credits/purchase', async (req, res) => {
-  const connection = await db.getConnection();
+  const connection = await pool.getConnection();
   
   try {
     await connection.beginTransaction();

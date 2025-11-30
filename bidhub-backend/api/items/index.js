@@ -1,4 +1,4 @@
-const db = require('../../src/config/database');
+const { pool } = require('../../src/config/database');
 
 module.exports = async (req, res) => {
   // Set CORS headers
@@ -52,7 +52,7 @@ module.exports = async (req, res) => {
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
     params.push(parseInt(limit), parseInt(offset));
 
-    const [items] = await db.query(query, params);
+    const [items] = await pool.query(query, params);
 
     // Get total count for pagination
     let countQuery = 'SELECT COUNT(*) as total FROM v_active_items WHERE 1=1';
@@ -78,7 +78,7 @@ module.exports = async (req, res) => {
       countParams.push(parseFloat(max_price));
     }
 
-    const [countResult] = await db.query(countQuery, countParams);
+    const [countResult] = await pool.query(countQuery, countParams);
     const total = countResult[0].total;
 
     res.json({ 

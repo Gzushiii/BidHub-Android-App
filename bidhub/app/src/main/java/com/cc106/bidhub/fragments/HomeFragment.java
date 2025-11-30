@@ -561,7 +561,7 @@ public class HomeFragment extends Fragment {
     }
     
     /**
-     * Load categories from CategoryManager
+     * Load categories from CategoryManager and update item counts
      */
     private void loadCategories() {
         if (categoryManager == null || categoryAdapter == null) {
@@ -570,6 +570,11 @@ public class HomeFragment extends Fragment {
         }
         
         try {
+            // Update category item counts based on actual items
+            if (itemManager != null) {
+                categoryManager.updateCategoryItemCounts(itemManager);
+            }
+            
             List<Category> mainCategories = categoryManager.getAllMainCategories();
             if (mainCategories == null) {
                 mainCategories = new ArrayList<>();
@@ -589,6 +594,13 @@ public class HomeFragment extends Fragment {
             }
             hideLoading();
         }
+    }
+    
+    /**
+     * Refresh categories (called after posting an item)
+     */
+    public void refreshCategories() {
+        loadCategories();
     }
     
     /**

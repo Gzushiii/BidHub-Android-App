@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { registerValidator } = require('../../src/validators/auth');
-const db = require('../../src/config/database');
+const { pool } = require('../../src/config/database');
 
 module.exports = async (req, res) => {
   // Set CORS headers
@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
     const { username, email, phone_number, password, first_name, last_name, alias } = req.body;
 
     // Check if user exists
-    const [existing] = await db.query(
+    const [existing] = await pool.query(
       'SELECT id FROM users WHERE email = ? OR username = ? OR alias = ?',
       [email, username, alias]
     );
@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
     const password_hash = await bcrypt.hash(password, salt);
 
     // Insert user
-    const [result] = await db.query(
+    const [result] = await pool.query(
       `INSERT INTO users (username, email, phone_number, password_hash, salt, 
        first_name, last_name, alias, credits) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 100.00)`,
