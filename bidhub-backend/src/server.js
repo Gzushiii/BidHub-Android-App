@@ -127,6 +127,19 @@ const startServer = async () => {
     // Initialize database connection
     await initializeDatabase();
     
+    // Auto-fix PlaceBid procedure if enabled
+    if (process.env.AUTO_FIX_PLACEBID === 'true') {
+      try {
+        console.log('🔧 Auto-fixing PlaceBid procedure...');
+        const { fixProcedure } = require('../scripts/fix_placebid_procedure_simple');
+        await fixProcedure();
+        console.log('✅ PlaceBid procedure fixed successfully');
+      } catch (fixError) {
+        console.error('⚠️  Warning: Failed to auto-fix PlaceBid procedure:', fixError.message);
+        console.error('   You may need to run: npm run fix:placebid');
+      }
+    }
+    
     // Start the server
     app.listen(PORT, () => {
       console.log(`BidHub API server running on port ${PORT}`);

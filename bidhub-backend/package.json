@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "test": "jest --testPathPattern=tests --coverage",
     "test:watch": "jest --testPathPattern=tests --watch",
-    "smoke": "node ../tests/apiSmokeTest.js"
+    "smoke": "node ../tests/apiSmokeTest.js",
+    "fix:placebid": "node scripts/fix_placebid_procedure_simple.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
