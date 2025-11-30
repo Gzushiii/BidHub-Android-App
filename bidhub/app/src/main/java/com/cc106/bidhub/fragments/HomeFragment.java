@@ -20,7 +20,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.GridLayoutManager;
 
 import com.cc106.bidhub.BrowseActivity;
 import com.cc106.bidhub.CreditsActivity;
@@ -33,12 +32,9 @@ import com.cc106.bidhub.PostActivity;
 import com.cc106.bidhub.ProfileActivity;
 import com.cc106.bidhub.R;
 import com.cc106.bidhub.adapters.ActiveBidsAdapter;
-import com.cc106.bidhub.adapters.CategoryAdapter;
 import com.cc106.bidhub.adapters.ItemCardAdapter;
 import com.cc106.bidhub.bidding.Bid;
 import com.cc106.bidhub.bidding.BiddingEngine;
-import com.cc106.bidhub.items.Category;
-import com.cc106.bidhub.items.CategoryManager;
 import com.cc106.bidhub.items.Item;
 import com.cc106.bidhub.items.ItemManager;
 
@@ -52,10 +48,6 @@ public class HomeFragment extends Fragment {
     private ImageView ivProfile;
     private TextView tvAppTitle;
     private TextView tvHeaderCredits;
-    private View searchBar;
-    
-    // Category chips
-    private ViewGroup layoutCategoryChips;
     
     // Quick action buttons
     private View cardBrowse, cardSell, cardMyListings;
@@ -64,13 +56,11 @@ public class HomeFragment extends Fragment {
     private RecyclerView rvFeaturedItems;
     private RecyclerView rvActiveAuctions;
     private RecyclerView rvActiveBids;
-    private RecyclerView rvCategories;
     
     // Adapters
     private ItemCardAdapter featuredItemsAdapter;
     private com.cc106.bidhub.adapters.ActiveAuctionsAdapter activeAuctionsAdapter;
     private ActiveBidsAdapter activeBidsAdapter;
-    private CategoryAdapter categoryAdapter;
     
     // Empty states
     private View layoutEmptyState;
@@ -96,13 +86,11 @@ public class HomeFragment extends Fragment {
     // Managers
     private ItemManager itemManager;
     private BiddingEngine biddingEngine;
-    private CategoryManager categoryManager;
     
     // Data lists
     private List<Item> featuredItems;
     private List<Item> activeAuctions;
     private List<Bid> activeBids;
-    private List<Category> categories;
     
     private DatabaseHelper dbHelper;
     private String loggedInUserEmail;
@@ -132,14 +120,12 @@ public class HomeFragment extends Fragment {
             if (getContext() != null) {
                 itemManager = ItemManager.getInstance(getContext());
                 biddingEngine = BiddingEngine.getInstance(getContext());
-                categoryManager = CategoryManager.getInstance();
             }
             
             // Initialize data lists
             featuredItems = new ArrayList<>();
             activeAuctions = new ArrayList<>();
             activeBids = new ArrayList<>();
-            categories = new ArrayList<>();
             
             // Initialize all UI components
             initializeViews(view);
@@ -147,32 +133,15 @@ public class HomeFragment extends Fragment {
             // Set up RecyclerViews
             setupRecyclerViews();
             
-            // Load user data and display it
-            loadUserData();
+            // FIX: Verify authentication before loading data
+            // This prevents empty homepage after login
+            verifyAuthenticationAndLoadData();
             
             // Set up click listeners
             setupClickListeners();
             
-            // Initialize category chips
-            initializeCategoryChips();
-            
             // Load quick stats
             loadQuickStats();
-            
-            // Load initial data from local cache first (for immediate display)
-            // This prevents empty homepage on first load
-            if (getActivity() != null && !getActivity().isFinishing()) {
-                getActivity().runOnUiThread(() -> {
-                    loadFeaturedItems();
-                    loadActiveAuctions();
-                    loadActiveBids();
-                    loadCategories();
-                });
-            }
-            
-            // Then sync items from API to get latest data
-            // This ensures we have latest data from backend and updates the display
-            syncItemsFromApi();
             
             // Recent activity loading removed - not part of new dashboard design
             
@@ -195,13 +164,18 @@ public class HomeFragment extends Fragment {
     }
     
     /**
-     * Refresh all homepage sections with latest data
+     * FIX: Refresh all homepage sections with latest data
      * Syncs items from API and refreshes credits from backend
+     * Ensures all sections update properly when data changes
+     * Made public so MainActivity can call it after item posting
      */
-    private void refreshAllSections() {
+    public void refreshAllSections() {
         if (getContext() == null) {
+            android.util.Log.w("HomeFragment", "Context is null, cannot refresh sections");
             return;
         }
+        
+        android.util.Log.d("HomeFragment", "=== REFRESHING ALL SECTIONS ===");
         
         // Refresh credits from backend first, then sync items and update sections
         com.cc106.bidhub.repository.UserRepository userRepo = 
@@ -210,15 +184,19 @@ public class HomeFragment extends Fragment {
         userRepo.refreshCreditsFromBackend(new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
             @Override
             public void onBalanceUpdated(double newBalance) {
+                android.util.Log.d("HomeFragment", "Credits refreshed: " + newBalance);
                 // Update UI with new balance
                 if (getActivity() != null && !getActivity().isFinishing()) {
                     getActivity().runOnUiThread(() -> {
                         if (tvHeaderCredits != null) {
                             tvHeaderCredits.setText(String.format(Locale.getDefault(), "%.0f", newBalance));
                         }
+                        // FIX: Reload featured items when credits change
+                        // This ensures featured items section updates with new affordability
+                        loadFeaturedItems();
                     });
                 }
-                // Sync items from API, then reload sections
+                // Sync items from API, then reload all sections
                 syncItemsFromApi();
             }
             
@@ -226,6 +204,12 @@ public class HomeFragment extends Fragment {
             public void onError(String errorMessage) {
                 android.util.Log.e("HomeFragment", "Error refreshing credits: " + errorMessage);
                 // Still sync items and refresh sections even if credit refresh fails
+                // But use current cached credits for featured items
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        loadFeaturedItems(); // Reload with cached credits
+                    });
+                }
                 syncItemsFromApi();
             }
         });
@@ -243,10 +227,6 @@ public class HomeFragment extends Fragment {
         ivProfile = view.findViewById(R.id.iv_profile);
         tvAppTitle = view.findViewById(R.id.tv_app_title);
         tvHeaderCredits = view.findViewById(R.id.tv_header_credits);
-        searchBar = view.findViewById(R.id.search_card);
-        
-        // Category chips container
-        layoutCategoryChips = view.findViewById(R.id.layout_category_chips);
         
         // Quick action buttons (removed - not in new design)
         // cardBrowse = view.findViewById(R.id.card_browse);
@@ -257,7 +237,6 @@ public class HomeFragment extends Fragment {
         rvFeaturedItems = view.findViewById(R.id.rv_featured_items);
         rvActiveAuctions = view.findViewById(R.id.rv_active_auctions);
         rvActiveBids = view.findViewById(R.id.rv_active_bids);
-        rvCategories = view.findViewById(R.id.rv_categories);
         
         // Empty states
         layoutEmptyState = view.findViewById(R.id.layout_empty_state);
@@ -333,20 +312,6 @@ public class HomeFragment extends Fragment {
             rvActiveBids.setAdapter(activeBidsAdapter);
         }
         
-        // Categories RecyclerView - grid layout
-        if (rvCategories != null) {
-            categoryAdapter = new CategoryAdapter(categories);
-            categoryAdapter.setOnCategoryClickListener(category -> {
-                // Navigate to browse with category filter
-                if (getActivity() instanceof MainActivity && category != null) {
-                    String categoryName = category.getName();
-                    ((MainActivity) getActivity()).switchToBrowseTab(categoryName);
-                }
-            });
-            GridLayoutManager categoryLayoutManager = new GridLayoutManager(getContext(), 2);
-            rvCategories.setLayoutManager(categoryLayoutManager);
-            rvCategories.setAdapter(categoryAdapter);
-        }
     }
     
     /**
@@ -363,23 +328,6 @@ public class HomeFragment extends Fragment {
                 } catch (Exception e) {
                     if (getContext() != null) {
                         ToastHelper.showError(getContext(), "Error opening profile: " + e.getMessage());
-                    }
-                    e.printStackTrace();
-                }
-            });
-        }
-        
-        // Search bar click listener
-        if (searchBar != null) {
-            searchBar.setOnClickListener(v -> {
-                try {
-                    // Navigate to browse tab
-                    if (getActivity() instanceof MainActivity) {
-                        ((MainActivity) getActivity()).switchToBrowseTab();
-                    }
-                } catch (Exception e) {
-                    if (getContext() != null) {
-                        ToastHelper.showError(getContext(), "Error opening browse: " + e.getMessage());
                     }
                     e.printStackTrace();
                 }
@@ -423,6 +371,91 @@ public class HomeFragment extends Fragment {
         // }
     }
     
+    /**
+     * FIX: Verify authentication and load data in proper sequence
+     * This ensures homepage doesn't appear empty after login
+     */
+    private void verifyAuthenticationAndLoadData() {
+        if (getContext() == null) {
+            android.util.Log.e("HomeFragment", "Context is null, cannot verify authentication");
+            return;
+        }
+        
+        // Run on background thread to avoid blocking UI
+        new Thread(() -> {
+            try {
+                SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(getContext());
+                String token = prefsHelper.getAuthToken();
+                String userId = prefsHelper.getUserId();
+                
+                // Verify authentication is ready
+                if (token == null || token.isEmpty() || userId == null || userId.isEmpty()) {
+                    android.util.Log.w("HomeFragment", "Authentication not ready, waiting...");
+                    // Wait a bit for authentication to complete (max 3 seconds)
+                    int retries = 0;
+                    while ((token == null || token.isEmpty() || userId == null || userId.isEmpty()) && retries < 6) {
+                        Thread.sleep(500); // Wait 500ms
+                        token = prefsHelper.getAuthToken();
+                        userId = prefsHelper.getUserId();
+                        retries++;
+                    }
+                }
+                
+                // Load user data first (synchronous on UI thread)
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        loadUserData();
+                    });
+                }
+                
+                // Load initial data from local cache first (for immediate display)
+                // This prevents empty homepage on first load
+                // Always load data even if authentication is not ready yet
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        android.util.Log.d("HomeFragment", "Loading initial data from local cache");
+                        // Load user data first to get credits for featured items
+                        loadUserData();
+                        // Then load all sections
+                        loadFeaturedItems();
+                        loadActiveAuctions();
+                        loadActiveBids();
+                        // Hide loading indicator
+                        hideLoading();
+                    });
+                }
+                
+                // Then sync items from API to get latest data
+                // This ensures we have latest data from backend and updates the display
+                syncItemsFromApi();
+                
+            } catch (InterruptedException e) {
+                android.util.Log.e("HomeFragment", "Authentication verification interrupted", e);
+                Thread.currentThread().interrupt();
+                // Still try to load data even if interrupted
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        loadUserData();
+                        loadFeaturedItems();
+                        loadActiveAuctions();
+                        loadActiveBids();
+                    });
+                }
+            } catch (Exception e) {
+                android.util.Log.e("HomeFragment", "Error verifying authentication", e);
+                // Fallback: still try to load data
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        loadUserData();
+                        loadFeaturedItems();
+                        loadActiveAuctions();
+                        loadActiveBids();
+                    });
+                }
+            }
+        }).start();
+    }
+    
     public void loadUserData() {
         // Try to get user email from arguments first
         if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
@@ -438,36 +471,44 @@ public class HomeFragment extends Fragment {
             }
         }
         
+        // If still null, try to get from SharedPreferences
         if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
             if (getContext() != null) {
-            ToastHelper.showError(getContext(), "Error: User not identified.");
+                SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(getContext());
+                loggedInUserEmail = prefsHelper.getUserEmail();
             }
-            return;
+        }
+        
+        if (loggedInUserEmail == null || loggedInUserEmail.isEmpty()) {
+            android.util.Log.w("HomeFragment", "User email not found, but continuing with data load");
+            // Don't return early - still try to load data
         }
 
         if (dbHelper == null) {
             if (getContext() != null) {
-                ToastHelper.showError(getContext(), "Error: Database not initialized.");
+                android.util.Log.w("HomeFragment", "Database not initialized, but continuing");
+                // Don't return early - still try to load data
             }
-            return;
         }
 
         // Load user data from UserRepository (single source of truth)
         try {
-            com.cc106.bidhub.repository.UserRepository userRepo = 
-                com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
-            
-            // Reload to ensure latest values
-            userRepo.reloadUserData();
-            
-            String alias = userRepo.getAlias();
-            double credits = userRepo.getCredits();
+            if (getContext() != null) {
+                com.cc106.bidhub.repository.UserRepository userRepo = 
+                    com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+                
+                // Reload to ensure latest values
+                userRepo.reloadUserData();
+                
+                String alias = userRepo.getAlias();
+                double credits = userRepo.getCredits();
 
-            android.util.Log.d("HomeFragment", String.format("Loading user data - Credits: %.2f", credits));
+                android.util.Log.d("HomeFragment", String.format("Loading user data - Credits: %.2f", credits));
 
-            // Update credit balance (header)
-            if (tvHeaderCredits != null) {
-                tvHeaderCredits.setText(String.format(Locale.getDefault(), "%.0f", credits));
+                // Update credit balance (header)
+                if (tvHeaderCredits != null) {
+                    tvHeaderCredits.setText(String.format(Locale.getDefault(), "%.0f", credits));
+                }
             }
         } catch (Exception e) {
             android.util.Log.e("HomeFragment", "Error loading user data", e);
@@ -482,8 +523,9 @@ public class HomeFragment extends Fragment {
     }
     
     /**
-     * Load featured items filtered by user's credit balance
+     * FIX: Load featured items filtered by user's credit balance
      * Featured auctions should show items where startingPrice OR currentHighestBid ≤ userCredits
+     * This method now properly updates when credits change
      */
     private void loadFeaturedItems() {
         if (itemManager == null || featuredItemsAdapter == null) {
@@ -494,11 +536,14 @@ public class HomeFragment extends Fragment {
         showLoading();
         
         try {
-            // Get user's current credit balance
+            // FIX: Always get fresh credit balance from UserRepository
+            // This ensures featured items update when credits change
             double userCredits = 0.0;
             if (getContext() != null) {
                 com.cc106.bidhub.repository.UserRepository userRepo = 
                     com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+                // Force reload to get latest credits
+                userRepo.reloadUserData();
                 userCredits = userRepo.getCredits();
             }
             
@@ -510,11 +555,18 @@ public class HomeFragment extends Fragment {
                 allActiveItems = new ArrayList<>();
             }
             
+            android.util.Log.d("HomeFragment", "Total active items available: " + allActiveItems.size());
+            
             // Filter items by affordability: startingPrice OR currentPrice ≤ userCredits
             List<Item> affordableItems = new ArrayList<>();
             for (Item item : allActiveItems) {
                 if (item == null) {
                     continue; // Skip null items
+                }
+                
+                // Only show ACTIVE items
+                if (item.getStatus() != com.cc106.bidhub.items.ItemStatus.ACTIVE) {
+                    continue;
                 }
                 
                 double startingPrice = item.getStartingPrice();
@@ -546,13 +598,23 @@ public class HomeFragment extends Fragment {
             
             android.util.Log.d("HomeFragment", "Found " + affordableItems.size() + " affordable featured items");
             
+            // FIX: Always update the list, even if empty, to ensure UI reflects current state
             featuredItems.clear();
             featuredItems.addAll(affordableItems);
-            featuredItemsAdapter.notifyDataSetChanged();
             
-            // Show/hide empty state
-            updateEmptyStateVisibility();
-            hideLoading();
+            // Update adapter on main thread
+            if (getActivity() != null && !getActivity().isFinishing()) {
+                getActivity().runOnUiThread(() -> {
+                    if (featuredItemsAdapter != null) {
+                        featuredItemsAdapter.notifyDataSetChanged();
+                    }
+                    // Show/hide empty state
+                    updateEmptyStateVisibility();
+                    hideLoading();
+                });
+            } else {
+                hideLoading();
+            }
         } catch (Exception e) {
             android.util.Log.e("HomeFragment", "Error loading featured items: " + e.getMessage(), e);
             if (getContext() != null) {
@@ -630,9 +692,10 @@ public class HomeFragment extends Fragment {
     }
     
     /**
-     * Sync user bids from backend API
+     * FIX: Sync user bids from backend API
      * Since there's no dedicated endpoint, we extract bid info from items the user has bid on
      * by checking items that have bids from this user
+     * This method now properly handles authentication and API responses
      */
     private void syncBidsFromApi() {
         if (getContext() == null) {
@@ -647,8 +710,20 @@ public class HomeFragment extends Fragment {
                 String userId = prefsHelper.getUserId();
                 String token = prefsHelper.getAuthToken();
                 
+                // FIX: Wait for authentication if not ready
+                if ((userId == null || userId.isEmpty() || token == null || token.isEmpty())) {
+                    android.util.Log.w("HomeFragment", "No user ID or token, waiting for authentication...");
+                    int retries = 0;
+                    while ((userId == null || userId.isEmpty() || token == null || token.isEmpty()) && retries < 6) {
+                        Thread.sleep(500);
+                        userId = prefsHelper.getUserId();
+                        token = prefsHelper.getAuthToken();
+                        retries++;
+                    }
+                }
+                
                 if (userId == null || userId.isEmpty() || token == null || token.isEmpty()) {
-                    android.util.Log.w("HomeFragment", "No user ID or token, loading bids from local only");
+                    android.util.Log.w("HomeFragment", "No user ID or token after waiting, loading bids from local only");
                     if (getActivity() != null && !getActivity().isFinishing()) {
                         getActivity().runOnUiThread(() -> loadActiveBidsFromLocal());
                     }
@@ -666,6 +741,8 @@ public class HomeFragment extends Fragment {
                     if (responseData != null && !responseData.isEmpty()) {
                         List<Item> allItems = parseItemsFromResponse(responseData);
                         
+                        android.util.Log.d("HomeFragment", "Synced " + allItems.size() + " items from API for bid loading");
+                        
                         // Store items in ItemManager so they're available for bid loading
                         for (Item item : allItems) {
                             if (item != null && item.getItemId() != null && !item.getItemId().isEmpty()) {
@@ -682,10 +759,16 @@ public class HomeFragment extends Fragment {
                         getActivity().runOnUiThread(() -> loadActiveBidsFromLocal());
                     }
                 } else {
-                    android.util.Log.w("HomeFragment", "API sync failed, loading bids from local");
+                    android.util.Log.w("HomeFragment", "API sync failed: " + (response.getMessage() != null ? response.getMessage() : "Unknown error") + ", loading bids from local");
                     if (getActivity() != null && !getActivity().isFinishing()) {
                         getActivity().runOnUiThread(() -> loadActiveBidsFromLocal());
                     }
+                }
+            } catch (InterruptedException e) {
+                android.util.Log.e("HomeFragment", "Bid sync interrupted", e);
+                Thread.currentThread().interrupt();
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> loadActiveBidsFromLocal());
                 }
             } catch (Exception e) {
                 android.util.Log.e("HomeFragment", "Error syncing bids from API", e);
@@ -697,7 +780,9 @@ public class HomeFragment extends Fragment {
     }
     
     /**
-     * Load active bids from local database/cache
+     * FIX: Load active bids from local database/cache
+     * Properly handles cases where items might not be in ItemManager yet
+     * Ensures active bids section updates dynamically
      */
     private void loadActiveBidsFromLocal() {
         if (biddingEngine == null || activeBidsAdapter == null || itemManager == null) {
@@ -713,7 +798,9 @@ public class HomeFragment extends Fragment {
             if (userId == null || userId.isEmpty()) {
                 android.util.Log.w("HomeFragment", "No user ID found, clearing active bids");
                 activeBids.clear();
-                activeBidsAdapter.notifyDataSetChanged();
+                if (activeBidsAdapter != null) {
+                    activeBidsAdapter.notifyDataSetChanged();
+                }
                 updateEmptyStateVisibility();
                 hideLoading();
                 return;
@@ -725,32 +812,53 @@ public class HomeFragment extends Fragment {
                 allUserBids = new ArrayList<>();
             }
             
+            android.util.Log.d("HomeFragment", "Found " + allUserBids.size() + " total bids for user");
+            
             // Filter to only active bids (bids on items that are still active)
             List<Bid> activeBidsList = new ArrayList<>();
             java.util.Set<String> itemIdsWithBids = new java.util.HashSet<>();
             
             for (Bid bid : allUserBids) {
+                if (bid == null || bid.getItemId() == null || bid.getItemId().isEmpty()) {
+                    continue; // Skip invalid bids
+                }
+                
                 Item item = itemManager.getItemById(bid.getItemId());
+                
+                // FIX: If item not found in ItemManager, try to get from active items list
+                if (item == null) {
+                    // Try to find in active auctions or featured items
+                    for (Item activeItem : itemManager.getAllActiveItems()) {
+                        if (activeItem != null && activeItem.getItemId() != null && 
+                            activeItem.getItemId().equals(bid.getItemId())) {
+                            item = activeItem;
+                            break;
+                        }
+                    }
+                }
                 
                 // Only include bids on active items
                 if (item != null && item.getStatus() == com.cc106.bidhub.items.ItemStatus.ACTIVE) {
                     // Check if item is still active (hasn't ended)
+                    boolean isActive = true;
                     if (item.getEndDate() != null) {
                         long timeRemaining = item.getTimeRemaining();
-                        if (timeRemaining > 0) {
-                            // Only add one bid per item (the highest one)
-                            if (!itemIdsWithBids.contains(bid.getItemId())) {
-                                activeBidsList.add(bid);
-                                itemIdsWithBids.add(bid.getItemId());
-                            } else {
-                                // Replace with higher bid if this one is higher
-                                for (int i = 0; i < activeBidsList.size(); i++) {
-                                    Bid existingBid = activeBidsList.get(i);
-                                    if (existingBid.getItemId().equals(bid.getItemId()) && 
-                                        bid.getAmount() > existingBid.getAmount()) {
-                                        activeBidsList.set(i, bid);
-                                        break;
-                                    }
+                        isActive = timeRemaining > 0;
+                    }
+                    
+                    if (isActive) {
+                        // Only add one bid per item (the highest one)
+                        if (!itemIdsWithBids.contains(bid.getItemId())) {
+                            activeBidsList.add(bid);
+                            itemIdsWithBids.add(bid.getItemId());
+                        } else {
+                            // Replace with higher bid if this one is higher
+                            for (int i = 0; i < activeBidsList.size(); i++) {
+                                Bid existingBid = activeBidsList.get(i);
+                                if (existingBid.getItemId().equals(bid.getItemId()) && 
+                                    bid.getAmount() > existingBid.getAmount()) {
+                                    activeBidsList.set(i, bid);
+                                    break;
                                 }
                             }
                         }
@@ -768,13 +876,23 @@ public class HomeFragment extends Fragment {
             
             android.util.Log.d("HomeFragment", "Loaded " + activeBidsList.size() + " active bids for user");
             
+            // FIX: Always update the list, even if empty, to ensure UI reflects current state
             activeBids.clear();
             activeBids.addAll(activeBidsList);
-            activeBidsAdapter.notifyDataSetChanged();
             
-            // Show/hide empty state
-            updateEmptyStateVisibility();
-            hideLoading();
+            // Update adapter on main thread
+            if (getActivity() != null && !getActivity().isFinishing()) {
+                getActivity().runOnUiThread(() -> {
+                    if (activeBidsAdapter != null) {
+                        activeBidsAdapter.notifyDataSetChanged();
+                    }
+                    // Show/hide empty state
+                    updateEmptyStateVisibility();
+                    hideLoading();
+                });
+            } else {
+                hideLoading();
+            }
         } catch (Exception e) {
             android.util.Log.e("HomeFragment", "Error loading active bids: " + e.getMessage(), e);
             if (getContext() != null) {
@@ -785,81 +903,30 @@ public class HomeFragment extends Fragment {
     }
     
     /**
-     * Initialize category chips in HorizontalScrollView
+     * FIX: Public method to refresh featured items when credits change
+     * This can be called from MainActivity or other fragments when credits are updated
      */
-    private void initializeCategoryChips() {
-        if (layoutCategoryChips == null || getContext() == null) {
-            return;
-        }
-        
-        // Clear existing chips
-        layoutCategoryChips.removeAllViews();
-        
-        // Category names
-        String[] categoryNames = {
-            getString(R.string.electronics),
-            getString(R.string.fashion),
-            getString(R.string.collectibles),
-            getString(R.string.home_garden),
-            getString(R.string.art)
-        };
-        
-        // Create and add chips
-        for (String categoryName : categoryNames) {
-            TextView chip = (TextView) LayoutInflater.from(getContext())
-                    .inflate(R.layout.item_category_chip, layoutCategoryChips, false);
-            chip.setText(categoryName);
-            chip.setOnClickListener(v -> {
-                // Navigate to browse with category filter
-                if (getActivity() instanceof MainActivity) {
-                    ((MainActivity) getActivity()).switchToBrowseTab(categoryName);
-                }
+    public void refreshFeaturedItems() {
+        android.util.Log.d("HomeFragment", "Refreshing featured items due to credit change");
+        if (getActivity() != null && !getActivity().isFinishing()) {
+            getActivity().runOnUiThread(() -> {
+                loadFeaturedItems();
             });
-            layoutCategoryChips.addView(chip);
         }
     }
     
     /**
-     * Load categories from CategoryManager and update item counts
+     * FIX: Public method to refresh active bids when a new bid is placed
+     * This ensures the active bids section updates immediately after bidding
      */
-    private void loadCategories() {
-        if (categoryManager == null || categoryAdapter == null) {
-            hideLoading();
-            return;
+    public void refreshActiveBids() {
+        android.util.Log.d("HomeFragment", "Refreshing active bids after new bid placed");
+        if (getActivity() != null && !getActivity().isFinishing()) {
+            getActivity().runOnUiThread(() -> {
+                // Sync from API first to get latest bid data, then load from local
+                syncBidsFromApi();
+            });
         }
-        
-        try {
-            // Update category item counts based on actual items
-            if (itemManager != null) {
-                categoryManager.updateCategoryItemCounts(itemManager);
-            }
-            
-            List<Category> mainCategories = categoryManager.getAllMainCategories();
-            if (mainCategories == null) {
-                mainCategories = new ArrayList<>();
-            }
-            
-            categories.clear();
-            categories.addAll(mainCategories);
-            categoryAdapter.notifyDataSetChanged();
-            
-            // Show/hide empty state
-            updateEmptyStateVisibility();
-            hideLoading();
-        } catch (Exception e) {
-            android.util.Log.e("HomeFragment", "Error loading categories: " + e.getMessage(), e);
-            if (getContext() != null) {
-                ToastHelper.showError(getContext(), "Error loading categories");
-            }
-            hideLoading();
-        }
-    }
-    
-    /**
-     * Refresh categories (called after posting an item)
-     */
-    public void refreshCategories() {
-        loadCategories();
     }
     
     /**
@@ -891,8 +958,7 @@ public class HomeFragment extends Fragment {
         
         boolean hasData = (featuredItems != null && !featuredItems.isEmpty()) ||
                          (activeBids != null && !activeBids.isEmpty()) ||
-                         (activeAuctions != null && !activeAuctions.isEmpty()) ||
-                         (categories != null && !categories.isEmpty());
+                         (activeAuctions != null && !activeAuctions.isEmpty());
         
         layoutEmptyState.setVisibility(hasData ? View.GONE : View.VISIBLE);
         
@@ -923,8 +989,19 @@ public class HomeFragment extends Fragment {
                 SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(getContext());
                 String token = prefsHelper.getAuthToken();
                 
+                // FIX: Wait for authentication if not ready
                 if (token == null || token.isEmpty()) {
-                    android.util.Log.w("HomeFragment", "No auth token available, using local items");
+                    android.util.Log.w("HomeFragment", "No auth token available, waiting for authentication...");
+                    int retries = 0;
+                    while ((token == null || token.isEmpty()) && retries < 6) {
+                        Thread.sleep(500);
+                        token = prefsHelper.getAuthToken();
+                        retries++;
+                    }
+                }
+                
+                if (token == null || token.isEmpty()) {
+                    android.util.Log.w("HomeFragment", "No auth token available after waiting, using local items");
                     // Still try to load from local data even without token
                     if (getActivity() != null && !getActivity().isFinishing()) {
                         getActivity().runOnUiThread(() -> {
@@ -932,7 +1009,6 @@ public class HomeFragment extends Fragment {
                             loadFeaturedItems();
                             loadActiveAuctions();
                             loadActiveBids();
-                            loadCategories();
                         });
                     }
                     return;
@@ -955,7 +1031,6 @@ public class HomeFragment extends Fragment {
                                     loadFeaturedItems();
                                     loadActiveAuctions();
                                     loadActiveBids();
-                                    loadCategories();
                                 });
                             }
                             return;
@@ -974,13 +1049,20 @@ public class HomeFragment extends Fragment {
                         
                         android.util.Log.d("HomeFragment", "Synced " + apiItems.size() + " items from API and stored in ItemManager");
                         
-                        // Now load UI with synced data
+                        // FIX: Now load UI with synced data
+                        // Ensure all sections are refreshed with latest data
                         if (getActivity() != null && !getActivity().isFinishing()) {
                             getActivity().runOnUiThread(() -> {
+                                android.util.Log.d("HomeFragment", "=== REFRESHING ALL SECTIONS AFTER API SYNC ===");
+                                // Reload user data to ensure credits are up to date
+                                loadUserData();
+                                // Reload all sections with synced data
+                                // Order matters: load items first, then bids (bids depend on items)
                                 loadFeaturedItems();
                                 loadActiveAuctions();
+                                // Load active bids last since they depend on items being in ItemManager
                                 loadActiveBids();
-                                loadCategories();
+                                android.util.Log.d("HomeFragment", "All sections refreshed after API sync");
                             });
                         }
                     } catch (Exception e) {
@@ -991,7 +1073,6 @@ public class HomeFragment extends Fragment {
                                 loadFeaturedItems();
                                 loadActiveAuctions();
                                 loadActiveBids();
-                                loadCategories();
                             });
                         }
                     }
@@ -1003,7 +1084,6 @@ public class HomeFragment extends Fragment {
                             loadFeaturedItems();
                             loadActiveAuctions();
                             loadActiveBids();
-                            loadCategories();
                         });
                     }
                 }
@@ -1015,7 +1095,6 @@ public class HomeFragment extends Fragment {
                         loadFeaturedItems();
                         loadActiveAuctions();
                         loadActiveBids();
-                        loadCategories();
                     });
                 }
             }
@@ -1236,7 +1315,13 @@ public class HomeFragment extends Fragment {
                     Item item = new Item();
                     
                     // Use optString/optDouble for safer parsing
-                    item.setItemId(itemJson.optString("id", itemJson.optString("uuid_id", "")));
+                    // CRITICAL: Prioritize uuid_id (backend primary ID), fallback to id
+                    String itemId = itemJson.optString("uuid_id", itemJson.optString("id", ""));
+                    if (itemId == null || itemId.isEmpty()) {
+                        android.util.Log.w("HomeFragment", "Item at index " + i + " has no valid ID, skipping");
+                        continue;
+                    }
+                    item.setItemId(itemId);
                     
                     String title = itemJson.optString("title", "");
                     if (title.isEmpty()) {
@@ -1245,8 +1330,21 @@ public class HomeFragment extends Fragment {
                     }
                     item.setTitle(title);
                     item.setDescription(itemJson.optString("description", ""));
-                    item.setStartingPrice(itemJson.optDouble("starting_bid", itemJson.optDouble("starting_price", 0.0)));
-                    item.setCurrentPrice(itemJson.optDouble("current_bid", itemJson.optDouble("current_price", 0.0)));
+                    double startingPrice = itemJson.optDouble("starting_bid", itemJson.optDouble("starting_price", 0.0));
+                    item.setStartingPrice(startingPrice);
+                    
+                    // FIX: Set current price correctly - if no bids, use starting price
+                    int bidCount = itemJson.optInt("bid_count", 0);
+                    double currentPrice;
+                    if (bidCount > 0) {
+                        // Has bids - use current_bid/current_price from API
+                        currentPrice = itemJson.optDouble("current_bid", itemJson.optDouble("current_price", startingPrice));
+                    } else {
+                        // No bids yet - current price should be 0 or starting price
+                        currentPrice = 0.0; // Will show starting price in UI
+                    }
+                    item.setCurrentPrice(currentPrice);
+                    
                     item.setCategoryId(itemJson.optString("category_id", ""));
                     item.setSellerId(itemJson.optString("seller_email", itemJson.optString("seller_id", "")));
                     
@@ -1268,8 +1366,7 @@ public class HomeFragment extends Fragment {
                         }
                     }
                     
-                    // Set bid count
-                    int bidCount = itemJson.optInt("bid_count", 0);
+                    // Set bid count (already retrieved above for price logic)
                     item.setBidCount(bidCount);
                     
                     // Set end date

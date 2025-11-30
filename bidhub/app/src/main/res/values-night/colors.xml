@@ -73,7 +73,15 @@
     <color name="background_tertiary">#2C2C2C</color>
     <color name="surface">#1E1E1E</color>
     <color name="surface_variant">#2C2C2C</color>
-    <color name="surface_container">#424242</color>
+    <color name="surface_container">#2C2C2C</color>
+    <color name="surface_container_low">#1E1E1E</color>
+    <color name="surface_container_lowest">#000000</color>
+    <color name="surface_container_high">#424242</color>
+    <color name="surface_container_highest">#616161</color>
+    
+    <!-- ON COLORS FOR TEXT ON SURFACES -->
+    <color name="on_background">#FFFFFF</color>
+    <color name="on_surface">#FFFFFF</color>
     
     <!-- BORDER AND OUTLINE COLORS -->
     <color name="outline">#424242</color>

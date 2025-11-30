@@ -73,6 +73,8 @@ public class ActiveAuctionsAdapter extends RecyclerView.Adapter<ActiveAuctionsAd
         private TextView tvCurrentBidLabel;
         private TextView tvCurrentBidAmount;
         private TextView tvItemName;
+        private TextView tvSellerName;
+        private TextView tvBidCount;
         private TextView tvTimeLeft;
         private com.google.android.material.button.MaterialButton btnBidNow;
         private android.widget.ImageView ivItemImage;
@@ -83,6 +85,8 @@ public class ActiveAuctionsAdapter extends RecyclerView.Adapter<ActiveAuctionsAd
             tvCurrentBidLabel = itemView.findViewById(R.id.tv_current_bid_label);
             tvCurrentBidAmount = itemView.findViewById(R.id.tv_current_bid_amount);
             tvItemName = itemView.findViewById(R.id.tv_item_name);
+            tvSellerName = itemView.findViewById(R.id.tv_seller_name);
+            tvBidCount = itemView.findViewById(R.id.tv_bid_count);
             tvTimeLeft = itemView.findViewById(R.id.tv_time_left);
             btnBidNow = itemView.findViewById(R.id.btn_bid_now);
             ivItemImage = itemView.findViewById(R.id.iv_item_image);
@@ -112,12 +116,54 @@ public class ActiveAuctionsAdapter extends RecyclerView.Adapter<ActiveAuctionsAd
                 return;
             }
             
-            // Set current bid
-            double currentBid = item.getCurrentPrice() > 0 ? item.getCurrentPrice() : item.getStartingPrice();
-            tvCurrentBidAmount.setText(currencyFormat.format(currentBid));
+            // FIX: Display correct price based on bid status
+            // If no bids yet, show starting price; otherwise show current highest bid
+            int bidCount = item.getBidCount();
+            double displayPrice;
+            String priceLabel;
+            if (bidCount > 0 && item.getCurrentPrice() > 0) {
+                // Active bids present - show current highest bid
+                displayPrice = item.getCurrentPrice();
+                priceLabel = context.getString(R.string.current_bid);
+            } else {
+                // No bids yet - show starting bid
+                displayPrice = item.getStartingPrice() > 0 ? item.getStartingPrice() : 0.0;
+                priceLabel = context.getString(R.string.starting_bid);
+            }
+            tvCurrentBidLabel.setText(priceLabel);
+            tvCurrentBidAmount.setText(currencyFormat.format(displayPrice));
             
             // Set item name
-            tvItemName.setText(item.getTitle());
+            tvItemName.setText(item.getTitle() != null ? item.getTitle() : "Untitled Item");
+            
+            // FIX: Display seller name
+            String sellerName = item.getSellerName();
+            if (sellerName == null || sellerName.isEmpty() || sellerName.equals("Unknown")) {
+                // Try to extract from sellerId (email)
+                String sellerId = item.getSellerId();
+                if (sellerId != null && sellerId.contains("@")) {
+                    int atIndex = sellerId.indexOf('@');
+                    if (atIndex > 0) {
+                        sellerName = sellerId.substring(0, atIndex);
+                    } else {
+                        sellerName = "Unknown";
+                    }
+                } else {
+                    sellerName = "Unknown";
+                }
+            }
+            if (tvSellerName != null) {
+                tvSellerName.setText("by " + sellerName);
+            }
+            
+            // FIX: Display bid count (bidCount already declared above)
+            if (tvBidCount != null) {
+                if (bidCount > 0) {
+                    tvBidCount.setText(bidCount + (bidCount == 1 ? " bid" : " bids"));
+                } else {
+                    tvBidCount.setText("No bids yet");
+                }
+            }
             
             // Set time left
             if (item.getEndDate() != null) {
@@ -136,15 +182,31 @@ public class ActiveAuctionsAdapter extends RecyclerView.Adapter<ActiveAuctionsAd
                 tvTimeLeft.setText(context.getString(R.string.time_left_label) + " N/A");
             }
             
-            // Load image
+            // FIX: Load image with proper fallback handling
             if (item.getImagePaths() != null && !item.getImagePaths().isEmpty()) {
-                ImageLoader.loadImage(
-                    context,
-                    item.getImagePaths().get(0),
-                    ivItemImage
-                );
+                String firstImagePath = item.getImagePaths().get(0);
+                // Validate image URL before loading
+                if (firstImagePath != null && !firstImagePath.isEmpty() && !firstImagePath.equals("null")) {
+                    ImageLoader.loadImageWithErrorCallback(
+                        context,
+                        firstImagePath,
+                        ivItemImage,
+                        new ImageLoader.ImageLoadErrorCallback() {
+                            @Override
+                            public void onError(String errorMessage) {
+                                android.util.Log.w("ActiveAuctionsAdapter", "Failed to load image: " + firstImagePath);
+                                // Fallback to placeholder on error
+                                ImageLoader.loadPlaceholder(context, ivItemImage);
+                            }
+                        }
+                    );
+                } else {
+                    // Invalid image path, use placeholder
+                    ImageLoader.loadPlaceholder(context, ivItemImage);
+                }
             } else {
-                ivItemImage.setImageResource(R.drawable.ic_image_placeholder);
+                // No images uploaded, use placeholder
+                ImageLoader.loadPlaceholder(context, ivItemImage);
             }
         }
     }

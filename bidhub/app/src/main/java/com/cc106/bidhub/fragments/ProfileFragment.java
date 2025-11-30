@@ -33,14 +33,13 @@ import com.cc106.bidhub.LoginActivity;
 import com.cc106.bidhub.ProfileEditActivity;
 import com.cc106.bidhub.ProfileSettingsActivity;
 import com.cc106.bidhub.R;
-import com.cc106.bidhub.FAQActivity;
 
 import java.util.Locale;
 
 public class ProfileFragment extends Fragment {
 
     private TextView textViewWelcome, textViewCredits, textViewAlias, textViewEmail, textViewUsername;
-    private Button buttonLogout, buttonRegenerateAlias, buttonViewBids, buttonTransactionHistory, buttonFAQ;
+    private Button buttonLogout, buttonRegenerateAlias;
     private ImageButton buttonEditProfile, buttonSettings;
     private ImageView imageViewProfilePicture;
     private DatabaseHelper dbHelper;
@@ -70,11 +69,8 @@ public class ProfileFragment extends Fragment {
         textViewUsername = view.findViewById(R.id.textViewUsername);
         buttonLogout = view.findViewById(R.id.buttonLogout);
         buttonRegenerateAlias = view.findViewById(R.id.buttonRegenerateAlias);
-        buttonViewBids = view.findViewById(R.id.buttonViewBids);
-        buttonTransactionHistory = view.findViewById(R.id.buttonTransactionHistory);
         buttonEditProfile = view.findViewById(R.id.buttonEditProfile);
         buttonSettings = view.findViewById(R.id.buttonSettings);
-        buttonFAQ = view.findViewById(R.id.buttonFAQ);
         imageViewProfilePicture = view.findViewById(R.id.imageViewProfilePicture);
         
         
@@ -106,18 +102,6 @@ public class ProfileFragment extends Fragment {
             });
         }
         
-        if (buttonViewBids != null) {
-            buttonViewBids.setOnClickListener(v -> {
-                ToastHelper.showInfo(getContext(), "My Bids - Coming Soon!");
-            });
-        }
-        
-        if (buttonTransactionHistory != null) {
-            buttonTransactionHistory.setOnClickListener(v -> {
-                ToastHelper.showInfo(getContext(), "Transaction History - Coming Soon!");
-            });
-        }
-        
         if (buttonEditProfile != null) {
             buttonEditProfile.setOnClickListener(v -> {
                 Intent intent = new Intent(getActivity(), ProfileEditActivity.class);
@@ -130,13 +114,6 @@ public class ProfileFragment extends Fragment {
             buttonSettings.setOnClickListener(v -> {
                 Intent intent = new Intent(getActivity(), ProfileSettingsActivity.class);
                 intent.putExtra("USER_EMAIL", loggedInUserEmail);
-                startActivity(intent);
-            });
-        }
-        
-        if (buttonFAQ != null) {
-            buttonFAQ.setOnClickListener(v -> {
-                Intent intent = new Intent(getActivity(), FAQActivity.class);
                 startActivity(intent);
             });
         }

@@ -431,71 +431,71 @@ public class ItemDetailActivity extends AppCompatActivity {
         }
     }
     
+    /**
+     * FIX: Update bid button state - disable for sellers with clear message
+     * Prevents users from bidding on their own listings
+     */
     private void updateBidButton() {
         if (btnPlaceBid == null) {
             android.util.Log.e("ItemDetailActivity", "btnPlaceBid is null in updateBidButton()");
             return;
         }
         
-        // Default: Show button and enable it
-        btnPlaceBid.setVisibility(View.VISIBLE);
-        btnPlaceBid.setEnabled(true);
-        btnPlaceBid.setText(getString(R.string.place_bid));
-        
-        // Check if user is the seller
-        // TEMPORARY: For testing, allow sellers to see the button (backend will reject the bid anyway)
-        // Only hide button if we're absolutely certain the user is the seller AND we want to hide it
-        boolean hideForSeller = false; // Set to true to hide button for sellers
-        
-        if (currentItem != null && loggedInUserEmail != null && hideForSeller) {
-            String sellerId = currentItem.getSellerId();
-            
-            // Log for debugging
-            android.util.Log.d("ItemDetailActivity", "Checking seller match - loggedInUserEmail: " + loggedInUserEmail + ", sellerId: " + sellerId);
-            
-            // Only hide if sellerId matches loggedInUserEmail exactly (case-insensitive)
-            // This prevents false positives from partial matches
-            if (sellerId != null && sellerId.trim().length() > 0 && 
-                loggedInUserEmail.trim().equalsIgnoreCase(sellerId.trim())) {
-                btnPlaceBid.setVisibility(View.GONE);
-                // Show "Your Item" indicator instead
-                if (tvSellerName != null) {
-                    tvSellerName.setText("Your Listing");
-                    tvSellerName.setTextColor(getResources().getColor(R.color.primary_color));
-                }
-                android.util.Log.d("ItemDetailActivity", "User is seller (exact match), hiding Place Bid button");
-                return;
-            } else {
-                android.util.Log.d("ItemDetailActivity", "User is NOT seller - showing Place Bid button. Match check: " + 
-                    (sellerId != null ? sellerId : "null") + " vs " + loggedInUserEmail);
-            }
-        } else {
-            if (currentItem != null && loggedInUserEmail != null) {
-                String sellerId = currentItem.getSellerId();
-                android.util.Log.d("ItemDetailActivity", "Seller check disabled for testing - loggedInUserEmail: " + loggedInUserEmail + ", sellerId: " + sellerId + 
-                    " (Button will be shown, backend will validate)");
-            }
-        }
-        
-        // Check if auction is active
-        if (currentItem != null) {
-            if (currentItem.isAvailableForBidding()) {
-                btnPlaceBid.setVisibility(View.VISIBLE);
-                btnPlaceBid.setEnabled(true);
-                android.util.Log.d("ItemDetailActivity", "Auction is active, showing Place Bid button");
-            } else {
-                // Auction ended or not available
-                btnPlaceBid.setVisibility(View.VISIBLE);
-                btnPlaceBid.setEnabled(false);
-                btnPlaceBid.setText("Auction Ended");
-                btnPlaceBid.setBackgroundColor(getResources().getColor(R.color.state_disabled));
-                android.util.Log.d("ItemDetailActivity", "Auction not available, disabling Place Bid button");
-            }
-        } else {
+        if (currentItem == null) {
             // No item data yet, show button anyway (will be validated on click)
             btnPlaceBid.setVisibility(View.VISIBLE);
             btnPlaceBid.setEnabled(true);
-            android.util.Log.d("ItemDetailActivity", "No item data, showing Place Bid button (will validate on click)");
+            btnPlaceBid.setText(getString(R.string.place_bid));
+            return;
+        }
+        
+        // FIX: Check if user is the seller - compare both email and user ID
+        boolean isSeller = false;
+        String sellerId = currentItem.getSellerId();
+        String currentUserId = getCurrentUserId();
+        
+        if (sellerId != null && !sellerId.isEmpty()) {
+            // Check email match (sellerId might be email)
+            if (loggedInUserEmail != null && loggedInUserEmail.trim().equalsIgnoreCase(sellerId.trim())) {
+                isSeller = true;
+                android.util.Log.d("ItemDetailActivity", "User is seller (email match): " + loggedInUserEmail);
+            }
+            
+            // Check user ID match (sellerId might be numeric user ID)
+            if (!isSeller && currentUserId != null && currentUserId.equals(sellerId)) {
+                isSeller = true;
+                android.util.Log.d("ItemDetailActivity", "User is seller (user ID match): " + currentUserId);
+            }
+        }
+        
+        if (isSeller) {
+            // User is the seller - disable bid button and show message
+            btnPlaceBid.setVisibility(View.VISIBLE);
+            btnPlaceBid.setEnabled(false);
+            btnPlaceBid.setText("Cannot bid on your own listing");
+            btnPlaceBid.setAlpha(0.6f); // Visual indication of disabled state
+            
+            // Show informational message - use Toast since layout doesn't have message container
+            // The disabled button text already conveys the message
+            return;
+        }
+        
+        // Owner message handling removed - layout doesn't have this view
+        
+        // Check if auction is active
+        if (currentItem.isAvailableForBidding()) {
+            btnPlaceBid.setVisibility(View.VISIBLE);
+            btnPlaceBid.setEnabled(true);
+            btnPlaceBid.setText(getString(R.string.place_bid));
+            btnPlaceBid.setAlpha(1.0f); // Full opacity
+            android.util.Log.d("ItemDetailActivity", "Auction is active, showing Place Bid button");
+        } else {
+            // Auction ended or not available
+            btnPlaceBid.setVisibility(View.VISIBLE);
+            btnPlaceBid.setEnabled(false);
+            btnPlaceBid.setText("Auction Ended");
+            btnPlaceBid.setAlpha(0.6f);
+            android.util.Log.d("ItemDetailActivity", "Auction not available, disabling Place Bid button");
         }
     }
     
@@ -839,6 +839,7 @@ public class ItemDetailActivity extends AppCompatActivity {
     
     /**
      * Fetch item from backend API when not found in ItemManager
+     * FIX: Improved error handling for 500 errors and better user feedback
      */
     private void fetchItemFromApi(String itemId) {
         // Run on background thread to avoid NetworkOnMainThreadException
@@ -869,18 +870,53 @@ public class ItemDetailActivity extends AppCompatActivity {
                     } else {
                         android.util.Log.e("ItemDetailActivity", "Failed to parse item from API response");
                         runOnUiThread(() -> {
-                            showItemNotFoundError(itemId);
+                            // FIX: Show more specific error message
+                            String errorMsg = response.getMessage();
+                            if (errorMsg != null && errorMsg.contains("Server error")) {
+                                ToastHelper.showError(this, "Server error loading item. Please try again later.");
+                            } else {
+                                showItemNotFoundError(itemId);
+                            }
                         });
                     }
                 } else {
-                    android.util.Log.w("ItemDetailActivity", "API returned error: " + response.getMessage());
+                    // FIX: Better error handling based on error type
+                    String errorMsg = response.getMessage();
+                    android.util.Log.w("ItemDetailActivity", "API returned error: " + errorMsg);
+                    
                     runOnUiThread(() -> {
-                        showItemNotFoundError(itemId);
+                        if (errorMsg != null) {
+                            if (errorMsg.contains("Server error") || errorMsg.contains("500")) {
+                                // Server error - show retry message
+                                ToastHelper.showError(this, "Server error loading item. Please try again.");
+                                // Don't show sample data for server errors - user can retry
+                                return;
+                            } else if (errorMsg.contains("not found") || errorMsg.contains("404")) {
+                                // Item not found - show appropriate message
+                                showItemNotFoundError(itemId);
+                            } else if (errorMsg.contains("Authentication")) {
+                                // Auth error
+                                ToastHelper.showError(this, "Authentication error. Please log in again.");
+                                finish();
+                            } else {
+                                // Other errors
+                                ToastHelper.showError(this, "Error loading item: " + errorMsg);
+                                showItemNotFoundError(itemId);
+                            }
+                        } else {
+                            showItemNotFoundError(itemId);
+                        }
                     });
                 }
             } catch (Exception e) {
                 android.util.Log.e("ItemDetailActivity", "Error fetching item from API", e);
                 runOnUiThread(() -> {
+                    // FIX: Show network error message
+                    if (e instanceof java.net.UnknownHostException || e instanceof java.net.SocketTimeoutException) {
+                        ToastHelper.showError(this, "Network error. Please check your internet connection.");
+                    } else {
+                        ToastHelper.showError(this, "Error loading item: " + e.getMessage());
+                    }
                     showItemNotFoundError(itemId);
                 });
             }
@@ -919,7 +955,18 @@ public class ItemDetailActivity extends AppCompatActivity {
             Item item = new Item();
             
             // Parse basic fields with null safety
-            item.setItemId(itemJson.optString("id", itemJson.optString("uuid_id", "")));
+            // CRITICAL: Use UUID ID from backend (prioritize uuid_id, fallback to id)
+            // Backend returns both "id" and "uuid_id" fields - use uuid_id as primary
+            String itemId = itemJson.optString("uuid_id", "");
+            if (itemId == null || itemId.isEmpty()) {
+                itemId = itemJson.optString("id", "");
+            }
+            if (itemId == null || itemId.isEmpty()) {
+                android.util.Log.e("ItemDetailActivity", "parseItemFromApiResponse: No valid item ID found in response");
+                return null; // Cannot proceed without item ID
+            }
+            item.setItemId(itemId);
+            android.util.Log.d("ItemDetailActivity", "Parsed item ID (UUID): " + itemId);
             
             // Title is required - use optString with fallback
             String title = itemJson.optString("title", "");
@@ -999,7 +1046,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                     break;
             }
             
-            // Parse images if available
+            // Parse images if available - FIX: Use same URL conversion logic as BrowseFragment
             if (itemJson.has("images")) {
                 try {
                     Object imagesObj = itemJson.get("images");
@@ -1010,19 +1057,32 @@ public class ItemDetailActivity extends AppCompatActivity {
                         org.json.JSONArray imagesArray = (org.json.JSONArray) imagesObj;
                         for (int j = 0; j < imagesArray.length(); j++) {
                             Object imageObj = imagesArray.get(j);
+                            String imageUrl = null;
+                            
+                            // Handle different image object formats
                             if (imageObj instanceof String) {
                                 // Direct URL string
-                                String url = (String) imageObj;
-                                if (url != null && !url.isEmpty() && !url.equals("null")) {
-                                    imagePaths.add(url);
-                                }
+                                imageUrl = (String) imageObj;
                             } else if (imageObj instanceof org.json.JSONObject) {
                                 // Image object with image_url field
                                 org.json.JSONObject imageJson = (org.json.JSONObject) imageObj;
-                                String imageUrl = imageJson.optString("image_url", imageJson.optString("url", ""));
-                                if (!imageUrl.isEmpty() && !imageUrl.equals("null")) {
-                                    imagePaths.add(imageUrl);
+                                imageUrl = imageJson.optString("image_url", imageJson.optString("url", null));
+                            }
+                            
+                            // Validate and convert relative URLs to absolute URLs
+                            if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
+                                // FIX: Convert relative URLs to absolute URLs (same logic as BrowseFragment)
+                                if (!imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+                                    // If it's a relative path, prepend base URL
+                                    String baseUrl = "https://bidhub-android-app.onrender.com";
+                                    if (imageUrl.startsWith("/")) {
+                                        imageUrl = baseUrl + imageUrl;
+                                    } else {
+                                        imageUrl = baseUrl + "/" + imageUrl;
+                                    }
+                                    android.util.Log.d("ItemDetailActivity", "Converted relative URL to absolute: " + imageUrl);
                                 }
+                                imagePaths.add(imageUrl);
                             }
                         }
                     } else if (imagesObj instanceof String) {
@@ -1032,15 +1092,19 @@ public class ItemDetailActivity extends AppCompatActivity {
                             try {
                                 org.json.JSONArray imagesArray = new org.json.JSONArray(imagesString);
                                 for (int j = 0; j < imagesArray.length(); j++) {
-                                    Object imageObj = imagesArray.get(j);
-                                    if (imageObj instanceof String) {
-                                        imagePaths.add((String) imageObj);
-                                    } else if (imageObj instanceof org.json.JSONObject) {
-                                        org.json.JSONObject imageJson = (org.json.JSONObject) imageObj;
-                                        String imageUrl = imageJson.optString("image_url", imageJson.optString("url", ""));
-                                        if (!imageUrl.isEmpty()) {
-                                            imagePaths.add(imageUrl);
+                                    String imageUrl = imagesArray.optString(j, null);
+                                    if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
+                                        // FIX: Convert relative URLs to absolute URLs
+                                        if (!imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+                                            String baseUrl = "https://bidhub-android-app.onrender.com";
+                                            if (imageUrl.startsWith("/")) {
+                                                imageUrl = baseUrl + imageUrl;
+                                            } else {
+                                                imageUrl = baseUrl + "/" + imageUrl;
+                                            }
+                                            android.util.Log.d("ItemDetailActivity", "Converted relative URL to absolute: " + imageUrl);
                                         }
+                                        imagePaths.add(imageUrl);
                                     }
                                 }
                             } catch (org.json.JSONException e) {
@@ -1060,6 +1124,10 @@ public class ItemDetailActivity extends AppCompatActivity {
                     android.util.Log.w("ItemDetailActivity", "Error parsing images for item", e);
                     item.setImagePaths(new ArrayList<>());
                 }
+            } else {
+                // No images field - set empty list
+                item.setImagePaths(new ArrayList<>());
+                android.util.Log.d("ItemDetailActivity", "No images field for item: " + item.getTitle());
             }
             
             return item;
@@ -1488,12 +1556,15 @@ public class ItemDetailActivity extends AppCompatActivity {
         // Move bid placement to background thread to avoid NetworkOnMainThreadException
         new Thread(() -> {
             try {
-                // First check if item exists on server
-                if (!checkItemExistsOnServer()) {
-                    return; // Error already handled in checkItemExistsOnServer
+                // Ensure we have a valid item - backend will validate during bid placement
+                if (currentItem == null || currentItem.getItemId() == null) {
+                    runOnUiThread(() -> {
+                        ToastHelper.showError(this, "Item information not available. Please refresh the page.");
+                    });
+                    return;
                 }
                 
-                // Use BiddingEngine to place the bid
+                // Use BiddingEngine to place the bid - backend will validate item exists
                 com.cc106.bidhub.bidding.BiddingEngine biddingEngine = com.cc106.bidhub.bidding.BiddingEngine.getInstance(this);
                 com.cc106.bidhub.bidding.BidResult result = biddingEngine.placeBid(
                     currentItem.getItemId(),
@@ -1930,12 +2001,15 @@ public class ItemDetailActivity extends AppCompatActivity {
         // Move network operation to background thread to avoid NetworkOnMainThreadException
         new Thread(() -> {
             try {
-                // First check if item exists on server
-                if (!checkItemExistsOnServer()) {
-                    return; // Error already handled in checkItemExistsOnServer
+                // Ensure we have a valid item - backend will validate during buy-now
+                if (currentItem == null || currentItem.getItemId() == null) {
+                    runOnUiThread(() -> {
+                        ToastHelper.showError(this, "Item information not available. Please refresh the page.");
+                    });
+                    return;
                 }
                 
-            // Complete purchase via backend
+            // Complete purchase via backend - backend will validate item exists
             String token = prefsHelper.getAuthToken();
             android.util.Log.i("ItemDetailActivity", "=== BUY NOW DEBUG ===");
             android.util.Log.i("ItemDetailActivity", "Auth token: " + (token != null ? token.substring(0, Math.min(20, token.length())) + "..." : "NULL"));

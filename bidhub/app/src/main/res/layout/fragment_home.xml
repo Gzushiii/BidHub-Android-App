@@ -77,81 +77,6 @@
 
             </LinearLayout>
 
-            <!-- Search Bar - Material 3 Styled -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/search_card"
-                style="@style/Widget.BidHub.Card.Filled"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/spacing_4"
-                android:layout_marginEnd="@dimen/spacing_4"
-                android:layout_marginTop="@dimen/spacing_3"
-                android:layout_marginBottom="@dimen/spacing_3"
-                app:cardCornerRadius="28dp"
-                app:cardElevation="0dp"
-                app:cardBackgroundColor="@color/surface_container_high"
-                app:strokeWidth="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:clickable="true"
-                    android:background="?attr/selectableItemBackgroundBorderless">
-
-                    <ImageView
-                        android:layout_width="@dimen/icon_size_medium"
-                        android:layout_height="@dimen/icon_size_medium"
-                        android:src="@drawable/ic_search"
-                        android:tint="@color/on_surface_variant"
-                        android:contentDescription="@string/search"
-                        android:layout_marginEnd="@dimen/spacing_3" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/search_for_items"
-                        android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
-                        android:textColor="@color/on_surface_variant"
-                        android:maxLines="1" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Category Chips - Material 3 -->
-            <HorizontalScrollView
-                android:id="@+id/hsv_categories"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none"
-                android:fadeScrollbars="true"
-                android:layout_marginTop="@dimen/spacing_2"
-                android:layout_marginBottom="@dimen/spacing_4">
-
-                <LinearLayout
-                    android:id="@+id/layout_category_chips"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingStart="@dimen/spacing_4"
-                    android:paddingEnd="@dimen/spacing_4"
-                    android:paddingTop="@dimen/spacing_2"
-                    android:paddingBottom="@dimen/spacing_2"
-                    android:gravity="center_vertical">
-
-                    <!-- Categories will be added programmatically as Material 3 Chips -->
-
-                </LinearLayout>
-
-            </HorizontalScrollView>
-
             <!-- Featured Auctions Section - Material 3 -->
             <TextView
                 android:layout_width="wrap_content"
@@ -236,27 +161,6 @@
                 android:paddingEnd="@dimen/spacing_2"
                 android:layout_marginBottom="@dimen/spacing_6"
                 tools:listitem="@layout/item_active_bid" />
-
-            <!-- Categories Section - Material 3 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/browse_categories"
-                android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
-                android:textColor="@color/on_surface"
-                android:layout_marginStart="@dimen/spacing_4"
-                android:layout_marginTop="@dimen/spacing_6"
-                android:layout_marginBottom="@dimen/spacing_3" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_categories"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                android:paddingStart="@dimen/spacing_2"
-                android:paddingEnd="@dimen/spacing_2"
-                android:layout_marginBottom="@dimen/spacing_6"
-                tools:listitem="@layout/item_category" />
 
             <!-- Empty State (initially hidden) -->
             <LinearLayout

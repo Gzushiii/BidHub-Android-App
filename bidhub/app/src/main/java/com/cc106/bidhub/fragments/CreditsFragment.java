@@ -297,6 +297,35 @@ public class CreditsFragment extends Fragment {
         dialog.setContentView(R.layout.dialog_gcash_payment);
         dialog.setCancelable(true);
         
+        // FIX: Set proper dialog window sizing
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            android.view.WindowManager.LayoutParams params = window.getAttributes();
+            
+            // Set width to 90% of screen width, with max width of 400dp
+            android.util.DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+            int screenWidth = displayMetrics.widthPixels;
+            int screenHeight = displayMetrics.heightPixels;
+            int maxWidth = (int) (400 * displayMetrics.density); // 400dp in pixels
+            int maxHeight = (int) (screenHeight * 0.85); // 85% of screen height
+            int dialogWidth = Math.min((int) (screenWidth * 0.9), maxWidth);
+            params.width = dialogWidth;
+            
+            // Set height to wrap_content with max height constraint
+            params.height = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
+            
+            // Center the dialog
+            params.gravity = android.view.Gravity.CENTER;
+            
+            window.setAttributes(params);
+            
+            // Ensure dialog doesn't exceed screen height - set layout after attributes
+            window.setLayout(dialogWidth, android.view.WindowManager.LayoutParams.WRAP_CONTENT);
+            
+            // Set background to solid surface color (not transparent)
+            window.setBackgroundDrawableResource(R.color.surface);
+        }
+        
         // Initialize views
         android.widget.TextView tvPackageName = dialog.findViewById(R.id.tv_package_name);
         android.widget.TextView tvPackageCredits = dialog.findViewById(R.id.tv_package_credits);
@@ -1076,30 +1105,202 @@ public class CreditsFragment extends Fragment {
     }
     
     /**
-     * Load recent transactions
+     * FIX: Load recent transactions from backend API
+     * Fetches both credit transactions and top-ups to show complete history
      */
     private void loadRecentTransactions() {
-        if (creditManager == null || userId == null) {
+        if (getContext() == null) {
             return;
         }
         
-        try {
-            transactionHistory = creditManager.getTransactionHistory(userId);
-            
-            // Show last transaction info
-            if (!transactionHistory.isEmpty() && tvLastTransaction != null) {
-                CreditTransaction lastTransaction = transactionHistory.get(0);
-                String lastTransactionText = String.format("Last: %s %s on %s",
-                    lastTransaction.getType(),
-                    creditManager.formatCurrency(Math.abs(lastTransaction.getAmount())),
-                    new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(lastTransaction.getCreatedAt())
-                );
-                tvLastTransaction.setText(lastTransactionText);
+        // Fetch from backend API on background thread
+        new Thread(() -> {
+            try {
+                SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(getContext());
+                String token = prefsHelper.getAuthToken();
+                
+                if (token == null || token.isEmpty()) {
+                    android.util.Log.w("CreditsFragment", "No auth token, cannot fetch transaction history");
+                    return;
+                }
+                
+                // Fetch credit transactions from API
+                List<CreditTransaction> apiTransactions = fetchCreditTransactionsFromApi(token);
+                
+                // Fetch top-ups from API
+                List<CreditTransaction> topupTransactions = fetchTopupsFromApi(token);
+                
+                // Combine and sort by date
+                List<CreditTransaction> allTransactions = new ArrayList<>();
+                allTransactions.addAll(apiTransactions);
+                allTransactions.addAll(topupTransactions);
+                
+                // Sort by date descending (newest first)
+                java.util.Collections.sort(allTransactions, (t1, t2) -> {
+                    if (t1.getCreatedAt() == null && t2.getCreatedAt() == null) return 0;
+                    if (t1.getCreatedAt() == null) return 1;
+                    if (t2.getCreatedAt() == null) return -1;
+                    return t2.getCreatedAt().compareTo(t1.getCreatedAt());
+                });
+                
+                // Update transaction history
+                transactionHistory = allTransactions;
+                
+                // Update UI on main thread
+                if (getActivity() != null && !getActivity().isFinishing()) {
+                    getActivity().runOnUiThread(() -> {
+                        // Show last transaction info
+                        if (!transactionHistory.isEmpty() && tvLastTransaction != null) {
+                            CreditTransaction lastTransaction = transactionHistory.get(0);
+                            String lastTransactionText = String.format("Last: %s %s on %s",
+                                lastTransaction.getType(),
+                                creditManager.formatCurrency(Math.abs(lastTransaction.getAmount())),
+                                new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(lastTransaction.getCreatedAt())
+                            );
+                            tvLastTransaction.setText(lastTransactionText);
+                        }
+                    });
+                }
+                
+            } catch (Exception e) {
+                android.util.Log.e("CreditsFragment", "Error loading recent transactions from API: " + e.getMessage(), e);
+                // Fallback to local transactions
+                if (creditManager != null && userId != null) {
+                    transactionHistory = creditManager.getTransactionHistory(userId);
+                }
             }
+        }).start();
+    }
+    
+    /**
+     * Fetch credit transactions from backend API
+     */
+    private List<CreditTransaction> fetchCreditTransactionsFromApi(String token) {
+        List<CreditTransaction> transactions = new ArrayList<>();
+        
+        try {
+            URL url = new URL(BASE_URL + "/credits/transactions?limit=50&offset=0");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
             
+            int code = conn.getResponseCode();
+            if (code >= 200 && code < 300) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) sb.append(line);
+                reader.close();
+                
+                JSONObject json = new JSONObject(sb.toString());
+                JSONArray transactionsArray = json.optJSONArray("transactions");
+                
+                if (transactionsArray != null) {
+                    for (int i = 0; i < transactionsArray.length(); i++) {
+                        JSONObject txJson = transactionsArray.getJSONObject(i);
+                        CreditTransaction tx = new CreditTransaction();
+                        tx.setTransactionId(txJson.optString("id", ""));
+                        tx.setType(txJson.optString("type", ""));
+                        tx.setAmount(txJson.optDouble("amount", 0.0));
+                        tx.setDescription(txJson.optString("description", ""));
+                        tx.setStatus(txJson.optString("status", ""));
+                        tx.setReference(txJson.optString("reference", ""));
+                        
+                        // Parse created_at
+                        if (txJson.has("created_at") && !txJson.isNull("created_at")) {
+                            try {
+                                String dateStr = txJson.getString("created_at");
+                                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+                                sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                                tx.setCreatedAt(sdf.parse(dateStr));
+                            } catch (Exception e) {
+                                android.util.Log.w("CreditsFragment", "Error parsing transaction date: " + e.getMessage());
+                                tx.setCreatedAt(new Date());
+                            }
+                        } else {
+                            tx.setCreatedAt(new Date());
+                        }
+                        
+                        transactions.add(tx);
+                    }
+                }
+            }
         } catch (Exception e) {
-            android.util.Log.e("CreditsFragment", "Error loading recent transactions: " + e.getMessage(), e);
+            android.util.Log.e("CreditsFragment", "Error fetching credit transactions from API: " + e.getMessage(), e);
         }
+        
+        return transactions;
+    }
+    
+    /**
+     * Fetch top-ups from backend API and convert to CreditTransaction format
+     */
+    private List<CreditTransaction> fetchTopupsFromApi(String token) {
+        List<CreditTransaction> transactions = new ArrayList<>();
+        
+        try {
+            URL url = new URL(BASE_URL + "/topups?limit=50&offset=0");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
+            
+            int code = conn.getResponseCode();
+            if (code >= 200 && code < 300) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) sb.append(line);
+                reader.close();
+                
+                JSONObject json = new JSONObject(sb.toString());
+                JSONArray topupsArray = json.optJSONArray("topups");
+                
+                if (topupsArray != null) {
+                    for (int i = 0; i < topupsArray.length(); i++) {
+                        JSONObject topupJson = topupsArray.getJSONObject(i);
+                        
+                        // Only include confirmed top-ups as successful purchases
+                        String status = topupJson.optString("status", "");
+                        if (!"CONFIRMED".equals(status)) {
+                            continue; // Skip pending/under review/rejected top-ups
+                        }
+                        
+                        CreditTransaction tx = new CreditTransaction();
+                        tx.setTransactionId("topup_" + topupJson.optInt("id", 0));
+                        tx.setType(SimpleCreditManager.TRANSACTION_PURCHASE);
+                        tx.setAmount(topupJson.optDouble("amount", 0.0));
+                        tx.setDescription("Top-up via " + topupJson.optString("payment_method", "GCash"));
+                        tx.setStatus("CONFIRMED");
+                        tx.setReference(topupJson.optString("generated_ref", ""));
+                        
+                        // Parse created_at
+                        if (topupJson.has("created_at") && !topupJson.isNull("created_at")) {
+                            try {
+                                String dateStr = topupJson.getString("created_at");
+                                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
+                                sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                                tx.setCreatedAt(sdf.parse(dateStr));
+                            } catch (Exception e) {
+                                android.util.Log.w("CreditsFragment", "Error parsing topup date: " + e.getMessage());
+                                tx.setCreatedAt(new Date());
+                            }
+                        } else {
+                            tx.setCreatedAt(new Date());
+                        }
+                        
+                        transactions.add(tx);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.e("CreditsFragment", "Error fetching top-ups from API: " + e.getMessage(), e);
+        }
+        
+        return transactions;
     }
     
     /**

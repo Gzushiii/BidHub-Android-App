@@ -175,7 +175,9 @@ public class ItemManager {
                     item.setTitle(itemData.getTitle());
                     item.setDescription(itemData.getDescription());
                     item.setStartingPrice(itemData.getStartingPrice());
-                    item.setCurrentPrice(itemData.getStartingPrice());
+                    // FIX: For new items with no bids, currentPrice should be 0 (will show starting price in UI)
+                    item.setCurrentPrice(0.0);
+                    item.setBidCount(0); // New item has no bids yet
                     item.setBuyNowPrice(itemData.getBuyNowPrice());
                     item.setCurrency(itemData.getCurrency());
                     item.setSellerId(sellerEmail); // Store email as seller ID for now
@@ -235,6 +237,10 @@ public class ItemManager {
                     // Initialize counters
                     itemViewCounts.put(item.getItemId(), 0);
                     itemBidCounts.put(item.getItemId(), 0);
+                    // FIX: Ensure bidCount is set on the item object itself (already set above, but ensure it's 0)
+                    if (item.getBidCount() < 0) {
+                        item.setBidCount(0);
+                    }
                     
                     Log.i(TAG, "Item created successfully: " + item.getItemId());
                     Log.i(TAG, "Total items in local storage: " + items.size());
@@ -298,7 +304,9 @@ public class ItemManager {
             item.setTitle(itemData.getTitle());
             item.setDescription(itemData.getDescription());
             item.setStartingPrice(itemData.getStartingPrice());
-            item.setCurrentPrice(itemData.getStartingPrice());
+            // FIX: For new items with no bids, currentPrice should be 0 (will show starting price in UI)
+            item.setCurrentPrice(0.0);
+            item.setBidCount(0); // New local item has no bids yet
             item.setBuyNowPrice(itemData.getBuyNowPrice());
             item.setCurrency(itemData.getCurrency());
             item.setSellerId(sellerEmail);

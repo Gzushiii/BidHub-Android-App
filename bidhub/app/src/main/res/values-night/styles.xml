@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- BUTTON STYLES FOR DARK MODE -->
+    <!-- Primary Button (Filled) - Dark Mode -->
+    <style name="Widget.BidHub.Button.Primary" parent="Widget.Material3.Button">
+        <item name="android:layout_height">@dimen/button_height_primary</item>
+        <item name="android:minHeight">@dimen/button_height_primary</item>
+        <item name="android:backgroundTint">@color/primary</item>
+        <item name="android:textColor">@color/on_primary</item>
+        <item name="android:textAppearance">@style/TextAppearance.BidHub.Button</item>
+        <item name="android:paddingHorizontal">24dp</item>
+        <item name="android:paddingVertical">12dp</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.BidHub.Button</item>
+    </style>
+    
+    <!-- Outlined Button - Dark Mode -->
+    <style name="Widget.BidHub.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:layout_height">@dimen/button_height_primary</item>
+        <item name="android:minHeight">@dimen/button_height_primary</item>
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:textAppearance">@style/TextAppearance.BidHub.Button</item>
+        <item name="strokeColor">@color/outline</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:paddingHorizontal">24dp</item>
+        <item name="android:paddingVertical">12dp</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.BidHub.Button</item>
+    </style>
+    
+    <!-- Text Button - Dark Mode -->
+    <style name="Widget.BidHub.Button.Text" parent="Widget.Material3.Button.TextButton">
+        <item name="android:layout_height">@dimen/button_height_primary</item>
+        <item name="android:minHeight">@dimen/button_height_primary</item>
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:textAppearance">@style/TextAppearance.BidHub.Button</item>
+        <item name="android:paddingHorizontal">12dp</item>
+        <item name="android:paddingVertical">12dp</item>
+        <item name="rippleColor">@color/primary_light</item>
+    </style>
+    
+    <!-- Semantic Button Variants - Dark Mode -->
+    <style name="Widget.BidHub.Button.Success" parent="Widget.BidHub.Button.Primary">
+        <item name="android:backgroundTint">@color/success</item>
+        <item name="android:textColor">@color/on_success</item>
+    </style>
+    
+    <style name="Widget.BidHub.Button.Warning" parent="Widget.BidHub.Button.Primary">
+        <item name="android:backgroundTint">@color/warning</item>
+        <item name="android:textColor">@color/on_warning</item>
+    </style>
+    
+    <style name="Widget.BidHub.Button.Danger" parent="Widget.BidHub.Button.Primary">
+        <item name="android:backgroundTint">@color/error</item>
+        <item name="android:textColor">@color/on_error</item>
+    </style>
+    
+    <!-- Button Text Appearance - Dark Mode -->
+    <style name="TextAppearance.BidHub.Button" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/on_primary</item>
+        <item name="android:lineSpacingExtra">6sp</item>
+        <item name="android:lineSpacingMultiplier">1.43</item>
+    </style>
+</resources>
+

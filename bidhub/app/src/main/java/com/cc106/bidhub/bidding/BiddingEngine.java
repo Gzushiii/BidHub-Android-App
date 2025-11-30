@@ -105,15 +105,25 @@ public class BiddingEngine {
                 return new BidResult(false, validation.getErrorMessage(), null);
             }
             
-            // Get item details
+            // Get item details from cache (if available) for basic validation
+            // Backend will be the authoritative source for all item validation
             Item item = itemManager.getItemById(itemId);
-            if (item == null) {
-                return new BidResult(false, "Item not found", null);
-            }
             
-            // Check if auction is still active
-            if (!item.isAvailableForBidding()) {
-                return new BidResult(false, "Auction has ended or is not available for bidding", null);
+            // Basic local validation if item is in cache (optional - backend validates everything)
+            if (item != null) {
+                // Check if user is the seller (quick local check)
+                if (bidderId.equals(item.getSellerId())) {
+                    return new BidResult(false, "Sellers cannot bid on their own items", null);
+                }
+                
+                // Check if auction appears active (backend will validate)
+                if (!item.isAvailableForBidding()) {
+                    Log.w(TAG, "Item found in cache but appears inactive - backend will validate");
+                    // Still proceed - backend validation takes precedence
+                }
+            } else {
+                Log.i(TAG, "Item not in cache (" + itemId + "), backend will validate item exists");
+                // Item not in cache - backend will validate item exists and is available for bidding
             }
             
             // Refresh credit balance from backend before placing bid

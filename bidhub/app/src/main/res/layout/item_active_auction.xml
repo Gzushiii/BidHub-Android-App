@@ -67,6 +67,37 @@
             android:layout_marginBottom="@dimen/spacing_1"
             tools:text="Vintage Camera" />
 
+        <!-- Seller and Bid Count Info -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="@dimen/spacing_1">
+
+            <!-- Seller Info -->
+            <TextView
+                android:id="@+id/tv_seller_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:textColor="@color/on_surface_variant"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="by Seller Name" />
+
+            <!-- Bid Count -->
+            <TextView
+                android:id="@+id/tv_bid_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:textColor="@color/on_surface_variant"
+                tools:text="5 bids" />
+
+        </LinearLayout>
+
         <!-- Time Left - Material 3 -->
         <TextView
             android:id="@+id/tv_time_left"
@@ -87,9 +118,7 @@
             android:minHeight="36dp"
             android:minWidth="0dp"
             android:text="@string/bid_now"
-            android:textSize="14sp"
-            android:drawableEnd="@drawable/ic_arrow_right"
-            android:drawablePadding="@dimen/spacing_1" />
+            android:textSize="14sp" />
 
     </LinearLayout>
 

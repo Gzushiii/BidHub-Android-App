@@ -1113,10 +1113,18 @@ public class PostFragment extends Fragment implements
                             ErrorHandler.showSuccess(getContext(), "Item posted successfully!");
                         }
                         clearForm();
-                        // Refresh HomeFragment categories if MainActivity is available
+                        // FIX: Refresh both HomeFragment and BrowseFragment after posting
+                        // This ensures the new item appears immediately in both places
                         if (getActivity() instanceof MainActivity) {
                             MainActivity mainActivity = (MainActivity) getActivity();
-                            mainActivity.refreshHomeFragment();
+                            // Small delay to ensure backend has processed the item
+                            android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+                            handler.postDelayed(() -> {
+                                // Refresh homepage to show new item in featured/active auctions
+                                mainActivity.refreshHomeFragment();
+                                // Refresh browse tab to show new item in listings
+                                mainActivity.refreshBrowseFragment();
+                            }, 500); // 500ms delay to allow backend to process
                         }
                     } else {
                         if (getContext() != null) {

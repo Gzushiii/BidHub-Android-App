@@ -247,7 +247,12 @@ public class BrowseActivity extends BaseActivity {
                 org.json.JSONObject itemJson = itemsArray.getJSONObject(i);
                 Item item = new Item();
                 
-                item.setItemId(itemJson.optString("id", itemJson.optString("uuid_id", "")));
+                // CRITICAL: Prioritize uuid_id (backend primary ID), fallback to id
+                String itemId = itemJson.optString("uuid_id", itemJson.optString("id", ""));
+                if (itemId == null || itemId.isEmpty()) {
+                    continue; // Skip items without valid IDs
+                }
+                item.setItemId(itemId);
                 item.setTitle(itemJson.getString("title"));
                 item.setDescription(itemJson.optString("description", ""));
                 

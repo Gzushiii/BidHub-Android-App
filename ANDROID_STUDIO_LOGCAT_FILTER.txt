@@ -1,0 +1,38 @@
+==========================================
+ANDROID STUDIO LOGCAT FILTER FOR BLACK SCREEN
+==========================================
+
+Copy and paste this into Android Studio's Logcat filter bar:
+
+(tag:LoginActivity | level:ERROR | message:inflate | message:Exception | message:NullPointer) & package:mine
+
+==========================================
+ALTERNATIVE SIMPLE FILTERS:
+==========================================
+
+Filter 1 (Errors + LoginActivity):
+(tag:LoginActivity | level:ERROR) & package:mine
+
+Filter 2 (Comprehensive):
+tag:LoginActivity | tag:AndroidRuntime | level:ERROR | tag:ActivityTaskManager | message:Exception
+
+Filter 3 (Layout Issues):
+(tag:LoginActivity | message:inflate | message:ResourceNotFound | tag:LayoutInflater) & package:mine
+
+Filter 4 (Activity Lifecycle):
+(tag:LoginActivity | tag:ActivityTaskManager | message:ActivityRecord | level:ERROR) & package:mine
+
+==========================================
+QUICK REFERENCE:
+==========================================
+
+Use these operators:
+- | (pipe) = OR
+- & (ampersand) = AND  
+- tag: = Filter by log tag
+- level: = Filter by log level (ERROR, WARN, INFO, DEBUG, VERBOSE)
+- message: = Filter by message content
+- package:mine = Filter by your app's package
+
+==========================================
+

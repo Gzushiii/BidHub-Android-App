@@ -197,37 +197,51 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
             GridLayoutManager layoutManager = new GridLayoutManager(getContext(), columnCount);
             
             // FIX: Add proper spacing between items with consistent margins
+            // Remove existing decorations first to avoid duplicates
+            if (rvItems.getItemDecorationCount() > 0) {
+                for (int i = rvItems.getItemDecorationCount() - 1; i >= 0; i--) {
+                    rvItems.removeItemDecorationAt(i);
+                }
+            }
+            
+            // Add spacing decoration
             androidx.recyclerview.widget.RecyclerView.ItemDecoration spacingDecoration = 
                 new androidx.recyclerview.widget.RecyclerView.ItemDecoration() {
                     @Override
                     public void getItemOffsets(android.graphics.Rect outRect, View view, 
                                              androidx.recyclerview.widget.RecyclerView parent, 
                                              androidx.recyclerview.widget.RecyclerView.State state) {
-                        // Use consistent 8dp spacing
+                        // Use consistent 8dp spacing (matches card margin)
                         int spacing = (int) (8 * view.getContext().getResources().getDisplayMetrics().density);
                         int position = parent.getChildAdapterPosition(view);
-                        int spanCount = ((GridLayoutManager) parent.getLayoutManager()).getSpanCount();
+                        
+                        if (position == androidx.recyclerview.widget.RecyclerView.NO_POSITION) {
+                            return;
+                        }
+                        
+                        GridLayoutManager gridLayoutManager = (GridLayoutManager) parent.getLayoutManager();
+                        if (gridLayoutManager == null) {
+                            return;
+                        }
+                        
+                        int spanCount = gridLayoutManager.getSpanCount();
                         
                         // Calculate column index
                         int column = position % spanCount;
                         
-                        // Apply spacing evenly
+                        // Apply spacing evenly - left and right spacing
                         outRect.left = spacing - column * spacing / spanCount;
                         outRect.right = (column + 1) * spacing / spanCount;
                         
-                        // Vertical spacing
+                        // Vertical spacing - top spacing for first row
                         if (position < spanCount) {
                             outRect.top = spacing; // Top row
+                        } else {
+                            outRect.top = 0; // No top spacing for other rows
                         }
-                        outRect.bottom = spacing; // All rows
+                        outRect.bottom = spacing; // Bottom spacing for all rows
                     }
                 };
-            // Remove existing decorations to avoid duplicates
-            if (rvItems.getItemDecorationCount() > 0) {
-                for (int i = rvItems.getItemDecorationCount() - 1; i >= 0; i--) {
-                    rvItems.removeItemDecorationAt(i);
-                }
-            }
             rvItems.addItemDecoration(spacingDecoration);
             rvItems.setLayoutManager(layoutManager);
         } else {
@@ -236,9 +250,12 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         }
         
         rvItems.setAdapter(itemAdapter);
-        // Ensure RecyclerView doesn't clip children
+        // FIX: Ensure RecyclerView doesn't clip children and has proper padding
         rvItems.setClipToPadding(false);
         rvItems.setClipChildren(false);
+        // Add padding to RecyclerView to match card margins
+        int padding = (int) (8 * getContext().getResources().getDisplayMetrics().density);
+        rvItems.setPadding(padding, padding, padding, padding);
     }
     
     private void setupSearch() {
@@ -388,6 +405,17 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     private void applyFilters() {
         showLoading(true);
 
+        // FIX: Ensure we have items to filter - if allItems is empty, try loading from ItemManager
+        if (allItems.isEmpty() && itemManager != null) {
+            android.util.Log.w("BrowseFragment", "allItems is empty, attempting to load from ItemManager");
+            List<Item> managerItems = itemManager.getAllActiveItems();
+            if (!managerItems.isEmpty()) {
+                allItems.clear();
+                allItems.addAll(managerItems);
+                android.util.Log.d("BrowseFragment", "Loaded " + allItems.size() + " items from ItemManager");
+            }
+        }
+
         // Debug: Log before filtering with comprehensive filter info
         android.util.Log.d("BrowseFragment", "Applying filters to " + allItems.size() + " items");
         android.util.Log.d("BrowseFragment", "Current filter criteria (raw): " + (currentFilter != null ? currentFilter.toString() : "null"));
@@ -418,10 +446,12 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
 
         // Perform filtering on background thread
         new Thread(() -> {
-            List<Item> results = itemManager.filterItems(normalizedFilter);
+            // FIX: Filter directly from allItems instead of ItemManager cache
+            // This ensures we're filtering from the items we just loaded from API
+            List<Item> results = filterItemsLocally(allItems, normalizedFilter);
 
             // Debug: Log filter results
-            android.util.Log.d("BrowseFragment", "Filter results: " + results.size() + " items");
+            android.util.Log.d("BrowseFragment", "Filter results: " + results.size() + " items from " + allItems.size() + " total items");
 
             // Defensive fallback: if filtering resulted in 0 items but we have items, use unfiltered list
             final List<Item> finalResults;
@@ -433,39 +463,190 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
             }
 
             // Update UI on main thread - check if fragment is still attached
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(() -> {
-                    if (isAdded()) { // Check if fragment is still added to activity
-                        filteredItems.clear();
-                        filteredItems.addAll(finalResults);
-                        itemAdapter.notifyDataSetChanged();
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            if (isAdded() && !isDetached()) { // Check if fragment is still added to activity
+                                // FIX: Update filtered items list
+                                filteredItems.clear();
+                                filteredItems.addAll(finalResults);
+                                
+                                // FIX: Ensure adapter is properly updated with new data
+                                if (itemAdapter != null) {
+                                    itemAdapter.updateItems(filteredItems);
+                                    android.util.Log.d("BrowseFragment", "Adapter updated with " + filteredItems.size() + " filtered items");
+                                } else {
+                                    android.util.Log.w("BrowseFragment", "Adapter is null, reinitializing");
+                                    setupRecyclerView();
+                                    if (itemAdapter != null) {
+                                        itemAdapter.updateItems(filteredItems);
+                                    }
+                                }
 
-                        // Debug: Log after updating adapter
-                        android.util.Log.d("BrowseFragment", "Adapter updated with " + filteredItems.size() + " filtered items");
-
-                        showLoading(false);
-                        updateEmptyState();
-                        updateItemCount();
+                                showLoading(false);
+                                updateEmptyState();
+                                updateItemCount();
+                            } else {
+                                android.util.Log.w("BrowseFragment", "Fragment not attached, skipping UI update");
+                            }
+                        });
                     }
-                });
-            }
         }).start();
     }
     
+    /**
+     * Filter items locally from allItems list
+     * This ensures we filter from the items we loaded, not from ItemManager cache
+     */
+    private List<Item> filterItemsLocally(List<Item> itemsToFilter, FilterCriteria criteria) {
+        if (itemsToFilter == null || itemsToFilter.isEmpty()) {
+            android.util.Log.d("BrowseFragment", "filterItemsLocally: No items to filter");
+            return new ArrayList<>();
+        }
+        
+        if (criteria == null) {
+            android.util.Log.d("BrowseFragment", "filterItemsLocally: No filter criteria, returning all items");
+            return new ArrayList<>(itemsToFilter);
+        }
+        
+        List<Item> filtered = new ArrayList<>();
+        
+        for (Item item : itemsToFilter) {
+            if (item == null) continue;
+            
+            // Only show ACTIVE items
+            if (item.getStatus() != com.cc106.bidhub.items.ItemStatus.ACTIVE) {
+                continue;
+            }
+            
+            // Search filter
+            boolean matchesSearch = true;
+            if (criteria.getQuery() != null && !criteria.getQuery().trim().isEmpty()) {
+                String queryLower = criteria.getQuery().toLowerCase().trim();
+                matchesSearch = item.getTitle().toLowerCase().contains(queryLower) ||
+                    (item.getDescription() != null && item.getDescription().toLowerCase().contains(queryLower));
+                
+                if (!matchesSearch && item.getTags() != null) {
+                    for (String tag : item.getTags()) {
+                        if (tag.toLowerCase().contains(queryLower)) {
+                            matchesSearch = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Category filter
+            boolean matchesCategory = (criteria.getCategoryId() == null || criteria.getCategoryId().isEmpty()) ||
+                criteria.getCategoryId().equals(item.getCategoryId());
+            
+            // Condition filter
+            boolean matchesCondition = (criteria.getCondition() == null || criteria.getCondition().isEmpty()) ||
+                criteria.getCondition().equals(item.getCondition());
+            
+            // Price filters
+            double price = item.getCurrentPrice() > 0 ? item.getCurrentPrice() : 
+                          (item.getStartingPrice() > 0 ? item.getStartingPrice() : 0.0);
+            boolean matchesMin = (criteria.getMinPrice() == null) || price >= criteria.getMinPrice();
+            boolean matchesMax = (criteria.getMaxPrice() == null) || price <= criteria.getMaxPrice();
+            
+            // Featured filter
+            boolean matchesFeatured = (criteria.getIsFeatured() == null) ||
+                criteria.getIsFeatured() == item.isFeatured();
+            
+            // Trending filter
+            boolean matchesTrending = (criteria.getIsTrending() == null) ||
+                criteria.getIsTrending() == item.isTrending();
+            
+            if (matchesSearch && matchesCategory && matchesCondition && 
+                matchesMin && matchesMax && matchesFeatured && matchesTrending) {
+                filtered.add(item);
+            }
+        }
+        
+        // Sort items
+        if (criteria.getSortBy() != null) {
+            java.util.Comparator<Item> comparator = getComparator(criteria.getSortBy(), criteria.getSortOrder());
+            java.util.Collections.sort(filtered, comparator);
+        } else {
+            // Default: sort by creation date (newest first)
+            java.util.Collections.sort(filtered, new java.util.Comparator<Item>() {
+                @Override
+                public int compare(Item i1, Item i2) {
+                    java.util.Date d1 = i1.getCreatedAt();
+                    java.util.Date d2 = i2.getCreatedAt();
+                    if (d1 == null && d2 == null) return 0;
+                    if (d1 == null) return 1;
+                    if (d2 == null) return -1;
+                    return d2.compareTo(d1); // Newest first
+                }
+            });
+        }
+        
+        android.util.Log.d("BrowseFragment", "filterItemsLocally: Filtered " + filtered.size() + " items from " + itemsToFilter.size() + " total");
+        return filtered;
+    }
+    
+    /**
+     * Get comparator for sorting items
+     */
+    private java.util.Comparator<Item> getComparator(String sortBy, String sortOrder) {
+        boolean ascending = "asc".equalsIgnoreCase(sortOrder);
+        
+        return new java.util.Comparator<Item>() {
+            @Override
+            public int compare(Item i1, Item i2) {
+                int result = 0;
+                
+                if ("price".equalsIgnoreCase(sortBy)) {
+                    double price1 = i1.getCurrentPrice() > 0 ? i1.getCurrentPrice() : i1.getStartingPrice();
+                    double price2 = i2.getCurrentPrice() > 0 ? i2.getCurrentPrice() : i2.getStartingPrice();
+                    result = Double.compare(price1, price2);
+                } else if ("title".equalsIgnoreCase(sortBy)) {
+                    result = i1.getTitle().compareToIgnoreCase(i2.getTitle());
+                } else if ("date".equalsIgnoreCase(sortBy) || "created".equalsIgnoreCase(sortBy)) {
+                    java.util.Date d1 = i1.getCreatedAt();
+                    java.util.Date d2 = i2.getCreatedAt();
+                    if (d1 == null && d2 == null) result = 0;
+                    else if (d1 == null) result = 1;
+                    else if (d2 == null) result = -1;
+                    else result = d1.compareTo(d2);
+                } else {
+                    // Default: sort by creation date
+                    java.util.Date d1 = i1.getCreatedAt();
+                    java.util.Date d2 = i2.getCreatedAt();
+                    if (d1 == null && d2 == null) result = 0;
+                    else if (d1 == null) result = 1;
+                    else if (d2 == null) result = -1;
+                    else result = d2.compareTo(d1); // Newest first by default
+                }
+                
+                return ascending ? result : -result;
+            }
+        };
+    }
+    
     public void loadItems() {
-        // Prevent duplicate loading
+        // Prevent duplicate loading, but allow refresh if explicitly requested
         if (isLoading) {
             android.util.Log.d("BrowseFragment", "Already loading items, skipping duplicate load");
+            // If swipe refresh is active, ensure it completes
+            if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
+                // Don't return - allow the existing load to complete
+                return;
+            }
             return;
         }
         
         isLoading = true;
-        showLoading(true);
+        // Only show loading indicator if not already refreshing via swipe
+        if (swipeRefreshLayout == null || !swipeRefreshLayout.isRefreshing()) {
+            showLoading(true);
+        }
         
         // Debug: Log before loading
-        android.util.Log.d("BrowseFragment", "Loading items...");
+        android.util.Log.d("BrowseFragment", "Loading items from API...");
         
-        // Try to load from database first, fallback to local
+        // Always load from API to get latest data
         loadItemsFromDatabase();
     }
     
@@ -652,7 +833,13 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                     Item item = new Item();
                     
                     // Use optString/optDouble for safer parsing
-                    item.setItemId(itemJson.optString("id", itemJson.optString("uuid_id", "")));
+                    // CRITICAL: Prioritize uuid_id (backend primary ID), fallback to id
+                    String itemId = itemJson.optString("uuid_id", itemJson.optString("id", ""));
+                    if (itemId == null || itemId.isEmpty()) {
+                        android.util.Log.w("BrowseFragment", "Item at index " + i + " has no valid ID, skipping");
+                        continue;
+                    }
+                    item.setItemId(itemId);
                     
                     String title = itemJson.optString("title", "");
                     if (title.isEmpty()) {
@@ -661,8 +848,21 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                     }
                     item.setTitle(title);
                     item.setDescription(itemJson.optString("description", ""));
-                    item.setStartingPrice(itemJson.optDouble("starting_bid", itemJson.optDouble("starting_price", 0.0)));
-                    item.setCurrentPrice(itemJson.optDouble("current_bid", itemJson.optDouble("current_price", 0.0)));
+                    double startingPrice = itemJson.optDouble("starting_bid", itemJson.optDouble("starting_price", 0.0));
+                    item.setStartingPrice(startingPrice);
+                    
+                    // FIX: Set current price correctly - if no bids, use starting price
+                    int bidCount = itemJson.optInt("bid_count", 0);
+                    double currentPrice;
+                    if (bidCount > 0) {
+                        // Has bids - use current_bid/current_price from API
+                        currentPrice = itemJson.optDouble("current_bid", itemJson.optDouble("current_price", startingPrice));
+                    } else {
+                        // No bids yet - current price should be 0 or starting price
+                        currentPrice = 0.0; // Will show starting price in UI
+                    }
+                    item.setCurrentPrice(currentPrice);
+                    
                     item.setCategoryId(itemJson.optString("category_id", ""));
                     item.setSellerId(itemJson.optString("seller_email", itemJson.optString("seller_id", "")));
                 
@@ -685,8 +885,7 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                     }
                 }
                 
-                // Set bid count from API response
-                int bidCount = itemJson.optInt("bid_count", 0);
+                // Set bid count from API response (already retrieved above for price logic)
                 item.setBidCount(bidCount);
                 
                 // Set end date for countdown
@@ -1125,17 +1324,15 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     @Override
     public void onResume() {
         super.onResume();
-        // FIX: Refresh items on resume to ensure latest data, but preserve existing items during load
-        // Only refresh if items are empty or if not currently loading
-        // This prevents duplicate loads when fragment is already visible
-        // Also refresh if swipe refresh was triggered (user manually refreshed)
-        if ((allItems.isEmpty() && !isLoading) || (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing())) {
-            android.util.Log.d("BrowseFragment", "onResume: Items empty or refresh triggered, loading...");
-            if (!isLoading) {
-                loadItems();
-            }
+        // FIX: Always refresh items on resume to ensure latest data
+        // But only if not currently loading to prevent duplicate API calls
+        // This ensures items persist across configuration changes and refresh cycles
+        if (!isLoading) {
+            android.util.Log.d("BrowseFragment", "onResume: Refreshing items to ensure latest data");
+            // Always refresh from API to get latest items
+            loadItems();
         } else {
-            android.util.Log.d("BrowseFragment", "Skipping refresh on resume - items already loaded or currently loading");
+            android.util.Log.d("BrowseFragment", "Skipping refresh on resume - currently loading");
         }
     }
     

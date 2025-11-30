@@ -240,12 +240,45 @@ public class ItemApiClient {
             }
             reader.close();
             
+            String responseBody = response.toString();
+            
             if (responseCode >= 200 && responseCode < 300) {
-                Log.i(TAG, "Item exists on server: " + itemId);
-                return new ApiResponse(true, "Item found", response.toString());
+                // Parse JSON response to verify item actually exists
+                try {
+                    org.json.JSONObject jsonResponse = new org.json.JSONObject(responseBody);
+                    
+                    // Backend returns: { success: true, item: {...}, correlationId: ... }
+                    // OR direct item object: { id: ..., title: ..., ... }
+                    boolean hasItem = jsonResponse.has("item") || jsonResponse.has("id") || jsonResponse.has("uuid_id");
+                    boolean hasSuccess = jsonResponse.has("success") && jsonResponse.getBoolean("success");
+                    
+                    if (hasItem || hasSuccess) {
+                        Log.i(TAG, "Item exists on server: " + itemId);
+                        return new ApiResponse(true, "Item found", responseBody);
+                    } else {
+                        Log.w(TAG, "Item response missing item data: " + itemId);
+                        return new ApiResponse(false, "Item data not found in response", responseBody);
+                    }
+                } catch (org.json.JSONException e) {
+                    Log.e(TAG, "Error parsing item existence check response", e);
+                    // If we can't parse JSON but got 200, assume item exists
+                    Log.i(TAG, "Item exists on server (unparseable response): " + itemId);
+                    return new ApiResponse(true, "Item found", responseBody);
+                }
             } else {
-                Log.w(TAG, "Item not found on server: " + itemId + " - " + responseCode);
-                return new ApiResponse(false, "Item not found", response.toString());
+                // Parse error response for better error messages
+                String errorMessage = "Item not found";
+                try {
+                    if (responseBody != null && !responseBody.isEmpty()) {
+                        org.json.JSONObject errorJson = new org.json.JSONObject(responseBody);
+                        errorMessage = errorJson.optString("message", errorJson.optString("error", "Item not found"));
+                    }
+                } catch (org.json.JSONException e) {
+                    Log.w(TAG, "Could not parse error response", e);
+                }
+                
+                Log.w(TAG, "Item not found on server: " + itemId + " - " + responseCode + " - " + errorMessage);
+                return new ApiResponse(false, errorMessage, responseBody);
             }
             
         } catch (Exception e) {
@@ -255,80 +288,128 @@ public class ItemApiClient {
     
     /**
      * Get a single item by ID with full details from the backend API
-     * This method fetches the item from the API and returns the full response
+     * This method uses the proper endpoint /items/{itemId} with retry logic for 500 errors
      * @param itemId Item ID to fetch
      * @return ApiResponse with success/failure and full item details if found
      */
     public ApiResponse getItemById(String itemId) {
         Log.i(TAG, "Fetching item by ID from API: " + itemId);
         
-        try {
-            String authToken = prefsHelper.getAuthToken();
-            if (authToken == null || authToken.isEmpty()) {
-                return new ApiResponse(false, "Authentication token not found", null);
-            }
-            
-            // Use getItems endpoint with high limit and search for the specific item
-            // This is not ideal but works until backend provides a full single-item endpoint
-            URL url = new URL(ITEMS_ENDPOINT + "?limit=1000&offset=0");
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setRequestProperty("Authorization", "Bearer " + authToken);
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(30000);
-            
-            int responseCode = connection.getResponseCode();
-            BufferedReader reader;
-            
-            if (responseCode >= 200 && responseCode < 300) {
-                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            } else {
-                reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-            }
-            
-            StringBuilder response = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
-            }
-            reader.close();
-            
-            if (responseCode >= 200 && responseCode < 300) {
-                // Parse response and find the item with matching ID
-                try {
-                    org.json.JSONObject jsonResponse = new org.json.JSONObject(response.toString());
-                    org.json.JSONArray itemsArray = jsonResponse.getJSONArray("items");
-                    
-                    for (int i = 0; i < itemsArray.length(); i++) {
-                        org.json.JSONObject itemJson = itemsArray.getJSONObject(i);
-                        String itemIdFromJson = itemJson.optString("id", "");
-                        String uuidIdFromJson = itemJson.optString("uuid_id", "");
-                        
-                        // Check if this is the item we're looking for
-                        if (itemId.equals(itemIdFromJson) || itemId.equals(uuidIdFromJson)) {
-                            Log.i(TAG, "Item found in API response: " + itemId);
-                            // Return the item as a JSON object wrapped in a response
-                            org.json.JSONObject itemResponse = new org.json.JSONObject();
-                            itemResponse.put("success", true);
-                            itemResponse.put("item", itemJson);
-                            return new ApiResponse(true, "Item found", itemResponse.toString());
-                        }
-                    }
-                    
-                    Log.w(TAG, "Item not found in API response: " + itemId);
-                    return new ApiResponse(false, "Item not found in API response", null);
-                } catch (org.json.JSONException e) {
-                    Log.e(TAG, "Error parsing API response", e);
-                    return new ApiResponse(false, "Error parsing API response: " + e.getMessage(), null);
+        // Retry configuration for 500 errors
+        final int MAX_RETRIES = 2;
+        final int[] RETRY_DELAYS_MS = {200, 500}; // Exponential backoff: 200ms, 500ms
+        
+        int attempt = 0;
+        ApiResponse lastResponse = null;
+        
+        while (attempt <= MAX_RETRIES) {
+            try {
+                if (attempt > 0) {
+                    // Wait before retry
+                    int delayMs = RETRY_DELAYS_MS[attempt - 1];
+                    Log.i(TAG, "Retrying getItemById API call (attempt " + (attempt + 1) + "/" + (MAX_RETRIES + 1) + ") after " + delayMs + "ms delay");
+                    Thread.sleep(delayMs);
                 }
-            } else {
-                Log.w(TAG, "API error fetching items: " + responseCode);
-                return new ApiResponse(false, "API error: " + responseCode, response.toString());
+                
+                String authToken = prefsHelper.getAuthToken();
+                if (authToken == null || authToken.isEmpty()) {
+                    return new ApiResponse(false, "Authentication token not found", null);
+                }
+                
+                // FIX: Use proper endpoint /items/{itemId} instead of fetching all items
+                URL url = new URL(ITEMS_ENDPOINT + "/" + itemId);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setRequestProperty("Authorization", "Bearer " + authToken);
+                connection.setConnectTimeout(30000);
+                connection.setReadTimeout(30000);
+                
+                int responseCode = connection.getResponseCode();
+                BufferedReader reader;
+                
+                if (responseCode >= 200 && responseCode < 300) {
+                    reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                } else {
+                    reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                }
+                
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+                
+                if (responseCode >= 200 && responseCode < 300) {
+                    // Success - parse the item response
+                    Log.i(TAG, "Item fetched successfully from API: " + itemId + (attempt > 0 ? " (after " + attempt + " retries)" : ""));
+                    try {
+                        // Response might be direct item object or wrapped in {item: {...}}
+                        org.json.JSONObject jsonResponse = new org.json.JSONObject(response.toString());
+                        org.json.JSONObject itemJson;
+                        
+                        if (jsonResponse.has("item")) {
+                            itemJson = jsonResponse.getJSONObject("item");
+                        } else if (jsonResponse.has("id") || jsonResponse.has("uuid_id")) {
+                            // Response is the item object itself
+                            itemJson = jsonResponse;
+                        } else {
+                            Log.e(TAG, "Unexpected response format: " + response.toString());
+                            return new ApiResponse(false, "Unexpected response format from API", response.toString());
+                        }
+                        
+                        // Wrap in standard format for consistency
+                        org.json.JSONObject itemResponse = new org.json.JSONObject();
+                        itemResponse.put("item", itemJson);
+                        return new ApiResponse(true, "Item found", itemResponse.toString());
+                    } catch (org.json.JSONException e) {
+                        Log.e(TAG, "Error parsing API response", e);
+                        return new ApiResponse(false, "Error parsing API response: " + e.getMessage(), response.toString());
+                    }
+                } else if (responseCode >= 500 && responseCode < 600) {
+                    // Server error (500-599) - retry
+                    Log.w(TAG, "Server error fetching item: " + responseCode + " - " + response.toString());
+                    lastResponse = new ApiResponse(false, "Server error: " + responseCode, response.toString());
+                    
+                    if (attempt < MAX_RETRIES) {
+                        // Will retry
+                        attempt++;
+                        continue;
+                    } else {
+                        // Max retries reached
+                        Log.e(TAG, "Max retries reached for getItemById, returning error");
+                        return lastResponse;
+                    }
+                } else if (responseCode == 404) {
+                    // Item not found - don't retry
+                    Log.w(TAG, "Item not found on server: " + itemId + " - 404");
+                    return new ApiResponse(false, "Item not found", response.toString());
+                } else {
+                    // Other client errors (4xx) - don't retry
+                    Log.w(TAG, "API error fetching item: " + responseCode + " - " + response.toString());
+                    return new ApiResponse(false, "API error: " + responseCode, response.toString());
+                }
+                
+            } catch (InterruptedException e) {
+                Log.e(TAG, "Retry sleep interrupted", e);
+                Thread.currentThread().interrupt();
+                return new ApiResponse(false, "Network error: " + e.getMessage(), null);
+            } catch (Exception e) {
+                Log.e(TAG, "Error fetching item by ID (attempt " + (attempt + 1) + "): " + itemId, e);
+                lastResponse = handleNetworkException(e, "Error fetching item by ID: " + itemId);
+                
+                // Retry on network errors too
+                if (attempt < MAX_RETRIES) {
+                    attempt++;
+                    continue;
+                } else {
+                    return lastResponse;
+                }
             }
-            
-        } catch (Exception e) {
-            return handleNetworkException(e, "Error fetching item by ID: " + itemId);
         }
+        
+        // Should not reach here, but return last response if we do
+        return lastResponse != null ? lastResponse : new ApiResponse(false, "Unknown error fetching item", null);
     }
     
     /**

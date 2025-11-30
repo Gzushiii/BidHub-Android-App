@@ -66,51 +66,69 @@ router.get('/', async (req, res) => {
     const [items] = await pool.query(query, params);
 
     // Enhance items with bid_count and ensure seller_username is present
+    // FIX: Properly map field names from v_active_items view to consistent API response format
     const enhancedItems = await Promise.all(items.map(async (item) => {
+      // v_active_items returns: id (integer), uuid_id, starting_price, current_price
+      // Need to map to: id (uuid), uuid_id, starting_bid/starting_price, current_bid/current_price
+      const integerId = item.id; // Integer ID from view
+      const uuidId = item.uuid_id; // UUID ID from view
+      
       // Get bid count for this item
       const [bidCountResult] = await pool.query(
         'SELECT COUNT(*) as bid_count FROM bids WHERE item_id = ? OR item_uuid_id = ?',
-        [item.integer_id || item.id, item.id || item.uuid_id]
+        [integerId, uuidId]
       );
       
       const bidCount = bidCountResult[0]?.bid_count || 0;
       
-      // Get images for this item - FIX: Ensure proper image URL retrieval
+      // Get images for this item - item_images table uses integer item_id FK
       let imageUrls = [];
       try {
-        // Try both integer_id and uuid_id to find images
         const [images] = await pool.query(
           `SELECT image_url FROM item_images 
-           WHERE item_id = ? OR item_uuid_id = ? 
+           WHERE item_id = ? 
            ORDER BY display_order ASC`,
-          [item.integer_id || item.id, item.id || item.uuid_id]
+          [integerId]
         );
         
         // Extract image URLs and filter out null/empty values
         imageUrls = images
           .map(img => img.image_url)
           .filter(url => url != null && url.trim() !== '' && url !== 'null');
-        
-        // If no images found, try alternative lookup
-        if (imageUrls.length === 0 && item.id) {
-          const [altImages] = await pool.query(
-            'SELECT image_url FROM item_images WHERE item_id = ? ORDER BY display_order ASC',
-            [item.id]
-          );
-          imageUrls = altImages
-            .map(img => img.image_url)
-            .filter(url => url != null && url.trim() !== '' && url !== 'null');
-        }
       } catch (imageError) {
-        console.error(`Error fetching images for item ${item.id}:`, imageError);
+        console.error(`Error fetching images for item ${integerId}:`, imageError);
         imageUrls = [];
       }
       
+      // Normalize field names for frontend compatibility
+      // View has: starting_price, current_price
+      // Frontend expects: starting_bid (or starting_price), current_bid (or current_price)
       return {
-        ...item,
+        id: uuidId || integerId, // Use UUID as primary ID, fallback to integer
+        uuid_id: uuidId, // Explicitly include UUID
+        integer_id: integerId, // Include integer ID for reference
+        title: item.title,
+        description: item.description || '',
+        category_id: item.category_id,
+        category_name: item.category_name || null,
+        seller_id: item.seller_id,
+        seller_email: item.seller_email || null,
+        seller_username: item.seller_username || null,
+        seller_alias: item.seller_alias || null,
+        // Provide both field name variants for compatibility
+        starting_price: item.starting_price || item.starting_bid || 0,
+        starting_bid: item.starting_bid || item.starting_price || 0,
+        current_price: item.current_price || item.current_bid || 0,
+        current_bid: item.current_bid || item.current_price || 0,
+        buy_now_price: item.buy_now_price || null,
+        status: item.status || 'active',
+        condition: item.item_condition || item.condition || 'good',
+        end_date: item.end_date || item.bid_deadline || null,
+        bid_deadline: item.bid_deadline || item.end_date || null,
+        created_at: item.created_at || null,
+        updated_at: item.updated_at || null,
         bid_count: bidCount,
         images: imageUrls, // Always return array, even if empty
-        seller_username: item.seller_username || null
       };
     }));
 
@@ -227,10 +245,10 @@ router.get('/:id', async (req, res) => {
 
     const fullItem = itemDetails[0];
 
-    // Get images for this item
+    // Get images for this item - item_images table uses integer item_id FK
     const [images] = await connection.query(
-      'SELECT image_url, display_order FROM item_images WHERE item_id = ? OR item_uuid_id = ? ORDER BY display_order',
-      [fullItem.id, fullItem.uuid_id]
+      'SELECT image_url, display_order FROM item_images WHERE item_id = ? ORDER BY display_order',
+      [fullItem.id] // Use integer ID from items table
     );
 
     // Get recent bids
@@ -337,12 +355,14 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // Create the item with UUID
     const itemUuid = require('crypto').randomUUID();
+    // FIX: Insert both starting_price/starting_bid and current_price/current_bid for compatibility
+    // The view uses starting_price and current_price, but stored procedures may use starting_bid/current_bid
     const [result] = await connection.query(
       `INSERT INTO items 
-       (uuid_id, title, description, category_id, seller_id, starting_price, reserve_price,
-        current_bid, end_date, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      [itemUuid, title, itemDescription, category_id, seller_id, starting_price, reserve_price, starting_price, end_date, status]
+       (uuid_id, title, description, category_id, seller_id, starting_price, starting_bid, reserve_price,
+        current_price, current_bid, end_date, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      [itemUuid, title, itemDescription, category_id, seller_id, starting_price, starting_price, reserve_price, starting_price, starting_price, end_date, status]
     );
 
     const itemIntegerId = result.insertId; // Integer ID for foreign keys
@@ -374,14 +394,33 @@ router.post('/', authenticateToken, async (req, res) => {
     );
 
     const createdItem = items[0] || null;
+    
+    // Normalize response to include both field name variants for frontend compatibility
+    const normalizedImages = (itemImages || []).map(img => 
+      typeof img === 'string' ? img : (img.image_url || img.imageUrl || img)
+    );
 
     res.status(201).json({
       message: 'Item created successfully',
       item: {
         id: itemUuidId,
         uuid_id: itemUuidId,
-        ...(createdItem || {}),
-        images: itemImages || []
+        integer_id: createdItem?.id || itemIntegerId,
+        title: createdItem?.title || title,
+        description: createdItem?.description || itemDescription,
+        category_id: createdItem?.category_id || category_id,
+        seller_id: createdItem?.seller_id || seller_id,
+        starting_price: createdItem?.starting_price || createdItem?.starting_bid || starting_price,
+        starting_bid: createdItem?.starting_bid || createdItem?.starting_price || starting_price,
+        current_price: createdItem?.current_price || createdItem?.current_bid || starting_price,
+        current_bid: createdItem?.current_bid || createdItem?.current_price || starting_price,
+        buy_now_price: createdItem?.buy_now_price || null,
+        status: createdItem?.status || status,
+        end_date: createdItem?.end_date || end_date,
+        bid_deadline: createdItem?.bid_deadline || createdItem?.end_date || end_date,
+        created_at: createdItem?.created_at || null,
+        updated_at: createdItem?.updated_at || null,
+        images: normalizedImages
       }
     });
 

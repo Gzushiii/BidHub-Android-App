@@ -464,9 +464,12 @@ public class MainActivity extends BaseActivity {
      */
     public void refreshCreditDisplays() {
         runOnUiThread(() -> {
-            // Refresh HomeFragment credit display
+            // FIX: Refresh HomeFragment credit display and featured items
+            // Featured items need to refresh when credits change to show affordable items
             if (homeFragment != null && homeFragment.isAdded()) {
                 homeFragment.loadUserData();
+                // Refresh featured items since they're filtered by credit balance
+                homeFragment.refreshFeaturedItems();
             }
             
             // Refresh CreditsFragment balance display
@@ -486,10 +489,42 @@ public class MainActivity extends BaseActivity {
     public void refreshHomeFragment() {
         try {
             if (homeFragment != null) {
-                homeFragment.refreshCategories();
+                // Refresh all sections of home fragment
+                homeFragment.refreshAllSections();
             }
         } catch (Exception e) {
             android.util.Log.e("MainActivity", "Error refreshing home fragment", e);
+        }
+    }
+    
+    /**
+     * FIX: Refresh BrowseFragment after item posting
+     * Ensures new items appear immediately in browse tab
+     */
+    public void refreshBrowseFragment() {
+        try {
+            // Find BrowseFragment if it exists
+            androidx.fragment.app.Fragment browseFragment = getSupportFragmentManager()
+                    .findFragmentByTag("browse_fragment");
+            if (browseFragment == null) {
+                // Try to find it in the fragment manager
+                java.util.List<androidx.fragment.app.Fragment> fragments = getSupportFragmentManager().getFragments();
+                for (androidx.fragment.app.Fragment fragment : fragments) {
+                    if (fragment instanceof com.cc106.bidhub.fragments.BrowseFragment) {
+                        browseFragment = fragment;
+                        break;
+                    }
+                }
+            }
+            
+            if (browseFragment instanceof com.cc106.bidhub.fragments.BrowseFragment) {
+                com.cc106.bidhub.fragments.BrowseFragment browse = 
+                    (com.cc106.bidhub.fragments.BrowseFragment) browseFragment;
+                // Force refresh items from API
+                browse.loadItems();
+            }
+        } catch (Exception e) {
+            android.util.Log.e("MainActivity", "Error refreshing browse fragment", e);
         }
     }
     
