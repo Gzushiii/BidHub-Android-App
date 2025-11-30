@@ -30,6 +30,44 @@ public class ItemApiClient {
     }
     
     /**
+     * Validate if a string is a valid URI (for image URLs)
+     * Backend uses Joi.uri() validator which requires proper URI format
+     */
+    private boolean isValidUri(String url) {
+        if (url == null || url.trim().isEmpty()) {
+            return false;
+        }
+        
+        try {
+            // Basic URI validation: must have protocol://host format
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                return false;
+            }
+            
+            // Try to parse as URI to ensure it's valid
+            java.net.URI uri = new java.net.URI(url);
+            String scheme = uri.getScheme();
+            String host = uri.getHost();
+            
+            // Must have http or https scheme and a host
+            if ((scheme == null || (!scheme.equals("http") && !scheme.equals("https"))) ||
+                (host == null || host.isEmpty())) {
+                return false;
+            }
+            
+            // Additional check: URL should not contain spaces or invalid characters
+            if (url.contains(" ") || url.length() > 500) { // Backend max is 500 chars
+                return false;
+            }
+            
+            return true;
+        } catch (Exception e) {
+            Log.w(TAG, "Invalid URI format: " + url, e);
+            return false;
+        }
+    }
+    
+    /**
      * Handle network exceptions and return appropriate error message
      */
     private ApiResponse handleNetworkException(Exception e, String operation) {
@@ -49,135 +87,366 @@ public class ItemApiClient {
     }
     
     /**
-     * Create a new item via backend API (synchronous version for backward compatibility)
+     * Create a new item via backend API (synchronous version with retry logic for 500 errors)
      */
     public ApiResponse createItem(ItemData itemData, String sellerEmail) {
         Log.i(TAG, "Creating item via API: " + itemData.getTitle());
         
-        try {
-            // Get auth token
-            String authToken = prefsHelper.getAuthToken();
-            if (authToken == null || authToken.isEmpty()) {
-                return new ApiResponse(false, "Authentication token not found", null);
-            }
-            
-            // Prepare request data
-            JSONObject requestData = new JSONObject();
-            requestData.put("title", itemData.getTitle());
-            // Send description if available, otherwise send empty string (backend will handle null)
-            String description = itemData.getDescription();
-            if (description == null || description.trim().isEmpty()) {
-                requestData.put("description", ""); // Send empty string instead of null
-            } else {
-                requestData.put("description", description);
-            }
-            // Convert category_id from string to integer using mapping
+        // Retry configuration for 500 errors (transient server errors)
+        final int MAX_RETRIES = 2;
+        final int[] RETRY_DELAYS_MS = {500, 1000}; // Exponential backoff: 500ms, 1000ms
+        
+        int attempt = 0;
+        ApiResponse lastResponse = null;
+        
+        while (attempt <= MAX_RETRIES) {
             try {
-                Integer categoryIdInt = com.cc106.bidhub.utils.CategoryMapping.toBackendCategoryId(itemData.getCategoryId());
-                if (categoryIdInt == null) {
-                    Log.e(TAG, "No mapping found for category_id: " + itemData.getCategoryId());
-                    Log.e(TAG, "Available categories: " + com.cc106.bidhub.utils.CategoryMapping.getAllCategoryIds());
-                    return new ApiResponse(false, "Category not found in mapping. Please update CategoryMapping class.", null);
+                if (attempt > 0) {
+                    // Wait before retry
+                    int delayMs = RETRY_DELAYS_MS[attempt - 1];
+                    Log.i(TAG, "Retrying createItem API call (attempt " + (attempt + 1) + "/" + (MAX_RETRIES + 1) + ") after " + delayMs + "ms delay");
+                    Thread.sleep(delayMs);
                 }
-                requestData.put("category_id", categoryIdInt);
-            } catch (Exception e) {
-                Log.e(TAG, "Error mapping category_id: " + itemData.getCategoryId(), e);
-                return new ApiResponse(false, "Invalid category ID mapping", null);
-            }
-            requestData.put("starting_price", itemData.getStartingPrice());
-            requestData.put("reserve_price", itemData.getStartingPrice());
-            requestData.put("duration_days", 7);
-            // Don't send seller_email - backend gets seller from authenticated token
-            // Set status based on whether this is a draft or active item
-            requestData.put("status", "active");
-            
-            // Add images if available - should already be URLs from upload
-            if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
-                JSONArray imagesArray = new JSONArray();
-                for (String imageUrl : itemData.getImagePaths()) {
-                    if (imageUrl != null && !imageUrl.isEmpty()) {
-                        imagesArray.put(imageUrl);
+                
+                // Get auth token
+                String authToken = prefsHelper.getAuthToken();
+                if (authToken == null || authToken.isEmpty()) {
+                    return new ApiResponse(false, "Authentication token not found", null);
                 }
+                
+                // FIX: Prepare request data with validation
+                JSONObject requestData = new JSONObject();
+                
+                // Validate and set title (required, min 3 chars)
+                String title = itemData.getTitle();
+                if (title == null || title.trim().isEmpty()) {
+                    Log.e(TAG, "Title is null or empty");
+                    return new ApiResponse(false, "Title is required. Please enter a title.", null);
                 }
-                if (imagesArray.length() > 0) {
-                requestData.put("images", imagesArray);
-            }
-            }
-            
-            // Note: metadata, item_condition, and buy_now_price are not in the backend validator schema
-            // These fields are not currently supported by the backend API
-            // If needed, they should be added to the backend validator first
-            
-            // Make API call
-            URL url = new URL(ITEMS_ENDPOINT);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("Authorization", "Bearer " + authToken);
-            connection.setDoOutput(true);
-            connection.setConnectTimeout(60000);
-            connection.setReadTimeout(60000);
-            
-            // Send request
-            OutputStream os = connection.getOutputStream();
-            os.write(requestData.toString().getBytes("UTF-8"));
-            os.close();
-            
-            // Get response
-            int responseCode = connection.getResponseCode();
-            BufferedReader reader;
-            
-            if (responseCode >= 200 && responseCode < 300) {
-                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            } else {
-                reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-            }
-            
-            StringBuilder response = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
-            }
-            reader.close();
-            
-            if (responseCode >= 200 && responseCode < 300) {
-                Log.i(TAG, "Item created successfully via API");
-                Log.d(TAG, "API Response: " + response.toString());
-                return new ApiResponse(true, "Item created successfully", response.toString());
-            } else {
-                // Parse error response for better error messages
-                String errorMessage = "API error: " + responseCode;
+                if (title.trim().length() < 3) {
+                    Log.e(TAG, "Title is too short: " + title.length() + " characters");
+                    return new ApiResponse(false, "Title must be at least 3 characters long.", null);
+                }
+                requestData.put("title", title.trim());
+                
+                // Send description if available, otherwise send empty string (backend will handle null)
+                String description = itemData.getDescription();
+                if (description == null || description.trim().isEmpty()) {
+                    requestData.put("description", ""); // Send empty string instead of null
+                } else {
+                    // Backend validates: if description provided, must be at least 10 chars
+                    if (description.trim().length() < 10) {
+                        Log.w(TAG, "Description provided but too short (" + description.length() + " chars), sending empty string");
+                        requestData.put("description", ""); // Send empty if too short
+                    } else {
+                        requestData.put("description", description.trim());
+                    }
+                }
+                // FIX: Convert category_id from string to integer using mapping
+                // CategoryMapping already has fallback to category 10 (Others) if mapping not found
                 try {
-                    if (response.length() > 0) {
-                        org.json.JSONObject errorJson = new org.json.JSONObject(response.toString());
-                        if (errorJson.has("error")) {
-                            errorMessage = errorJson.getString("error");
-                        }
-                        if (errorJson.has("details")) {
-                            Object details = errorJson.get("details");
-                            if (details instanceof org.json.JSONArray) {
-                                org.json.JSONArray detailsArray = (org.json.JSONArray) details;
-                                if (detailsArray.length() > 0) {
-                                    errorMessage += ": " + detailsArray.getString(0);
-                                }
-                            } else if (details instanceof String) {
-                                errorMessage += ": " + details;
+                    String categoryId = itemData.getCategoryId();
+                    if (categoryId == null || categoryId.isEmpty()) {
+                        Log.e(TAG, "Category ID is null or empty");
+                        return new ApiResponse(false, "Category is required. Please select a category.", null);
+                    }
+                    
+                    Integer categoryIdInt = com.cc106.bidhub.utils.CategoryMapping.toBackendCategoryId(categoryId);
+                    if (categoryIdInt == null) {
+                        // CategoryMapping should never return null (has fallback), but handle it just in case
+                        Log.w(TAG, "Category mapping returned null for: " + categoryId + ", using fallback category 10");
+                        categoryIdInt = 10; // Fallback to "Others" category
+                    }
+                    requestData.put("category_id", categoryIdInt);
+                    Log.d(TAG, "Mapped category: " + categoryId + " -> " + categoryIdInt);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error mapping category_id: " + itemData.getCategoryId(), e);
+                    return new ApiResponse(false, "Invalid category. Please select a valid category.", null);
+                }
+                
+                // FIX: Validate starting price before sending
+                double startingPrice = itemData.getStartingPrice();
+                if (startingPrice < 0.01) {
+                    Log.e(TAG, "Starting price is too low: " + startingPrice);
+                    return new ApiResponse(false, "Starting price must be at least ₱0.01", null);
+                }
+                if (startingPrice > 999999.99) {
+                    Log.e(TAG, "Starting price is too high: " + startingPrice);
+                    return new ApiResponse(false, "Starting price cannot exceed ₱999,999.99", null);
+                }
+                // FIX: Ensure starting_price is sent as a number (not string)
+                requestData.put("starting_price", startingPrice);
+                requestData.put("reserve_price", startingPrice); // Reserve price defaults to starting price
+                // FIX: duration_days is REQUIRED by backend - ensure it's always sent as integer
+                requestData.put("duration_days", 7); // Default duration (backend requires 1-30, default 7)
+                // Don't send seller_email - backend gets seller from authenticated token
+                // Set status based on whether this is a draft or active item
+                requestData.put("status", "active");
+                
+                // FIX: Add images if available - validate URLs as valid URIs (backend uses Joi.uri() validator)
+                if (itemData.getImagePaths() != null && !itemData.getImagePaths().isEmpty()) {
+                    JSONArray imagesArray = new JSONArray();
+                    for (String imageUrl : itemData.getImagePaths()) {
+                        if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.equals("null")) {
+                            // FIX: Validate URL as proper URI (backend Joi validator requires valid URI)
+                            // Check for proper URI format: protocol://host/path
+                            String trimmedUrl = imageUrl.trim();
+                            if (isValidUri(trimmedUrl)) {
+                                imagesArray.put(trimmedUrl);
+                                Log.d(TAG, "Valid image URL added: " + trimmedUrl);
+                            } else {
+                                Log.w(TAG, "Skipping invalid image URL (not a valid URI): " + imageUrl);
                             }
-                        } else if (errorJson.has("message")) {
-                            errorMessage += ": " + errorJson.getString("message");
                         }
                     }
-                } catch (org.json.JSONException e) {
-                    Log.w(TAG, "Could not parse error response", e);
+                    if (imagesArray.length() > 0) {
+                        // Backend allows max 10 images
+                        if (imagesArray.length() > 10) {
+                            Log.w(TAG, "Too many images (" + imagesArray.length() + "), limiting to 10");
+                            JSONArray limitedArray = new JSONArray();
+                            for (int i = 0; i < 10; i++) {
+                                limitedArray.put(imagesArray.get(i));
+                            }
+                            requestData.put("images", limitedArray);
+                        } else {
+                            requestData.put("images", imagesArray);
+                        }
+                        Log.d(TAG, "Including " + imagesArray.length() + " image(s) in request");
+                    } else {
+                        Log.d(TAG, "No valid image URLs to include in request");
+                    }
+                } else {
+                    Log.d(TAG, "No images provided for item");
                 }
-                Log.e(TAG, "API error: " + responseCode + " - " + response.toString());
-                Log.e(TAG, "Request data was: " + requestData.toString());
-                return new ApiResponse(false, errorMessage, response.toString());
+                
+                // Note: metadata, item_condition, and buy_now_price are not in the backend validator schema
+                // These fields are not currently supported by the backend API
+                // If needed, they should be added to the backend validator first
+                
+                // Make API call
+                URL url = new URL(ITEMS_ENDPOINT);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setRequestProperty("Authorization", "Bearer " + authToken);
+                connection.setDoOutput(true);
+                connection.setConnectTimeout(60000);
+                connection.setReadTimeout(60000);
+                
+                // FIX: Validate and log request data before sending for debugging
+                String requestJson = requestData.toString();
+                
+                // Validate JSON is properly formatted before sending
+                try {
+                    // Try to parse the JSON to ensure it's valid
+                    new org.json.JSONObject(requestJson);
+                    Log.d(TAG, "Request JSON validated successfully");
+                } catch (org.json.JSONException e) {
+                    Log.e(TAG, "Invalid JSON generated for request", e);
+                    Log.e(TAG, "Request data: " + requestData.toString());
+                    return new ApiResponse(false, "Internal error: Invalid request data format", null);
+                }
+                
+                Log.d(TAG, "=== SENDING ITEM CREATION REQUEST ===");
+                Log.d(TAG, "Request JSON: " + requestJson);
+                Log.d(TAG, "Request URL: " + ITEMS_ENDPOINT);
+                Log.d(TAG, "Request Fields:");
+                Log.d(TAG, "  - title: " + requestData.optString("title", "null"));
+                Log.d(TAG, "  - description: " + (requestData.has("description") ? requestData.optString("description", "empty") : "not set"));
+                Log.d(TAG, "  - category_id: " + requestData.optInt("category_id", -1));
+                Log.d(TAG, "  - starting_price: " + requestData.optDouble("starting_price", -1));
+                Log.d(TAG, "  - reserve_price: " + requestData.optDouble("reserve_price", -1));
+                Log.d(TAG, "  - duration_days: " + requestData.optInt("duration_days", -1));
+                Log.d(TAG, "  - status: " + requestData.optString("status", "null"));
+                Log.d(TAG, "  - images: " + (requestData.has("images") ? requestData.optJSONArray("images").length() + " image(s)" : "none"));
+                Log.d(TAG, "=====================================");
+                
+                // Send request
+                OutputStream os = connection.getOutputStream();
+                os.write(requestJson.getBytes("UTF-8"));
+                os.flush();
+                os.close();
+                
+                // Get response
+                int responseCode = connection.getResponseCode();
+                BufferedReader reader;
+                
+                if (responseCode >= 200 && responseCode < 300) {
+                    reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                } else {
+                    reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+                }
+                
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+            
+            if (responseCode >= 200 && responseCode < 300) {
+                Log.i(TAG, "Item created successfully via API" + (attempt > 0 ? " (after " + attempt + " retries)" : ""));
+                Log.d(TAG, "API Response: " + response.toString());
+                return new ApiResponse(true, "Item created successfully", response.toString());
+            } else if (responseCode >= 500 && responseCode < 600) {
+                // Server error (500-599) - retry
+                String fullErrorDetails = response.toString();
+                Log.w(TAG, "Server error creating item: " + responseCode + " - " + fullErrorDetails);
+                lastResponse = new ApiResponse(false, "Server error: " + responseCode, fullErrorDetails);
+                
+                if (attempt < MAX_RETRIES) {
+                    // Will retry
+                    attempt++;
+                    continue;
+                } else {
+                    // Max retries reached - parse error for better message
+                    String errorMessage = parseServerError(fullErrorDetails, responseCode);
+                    Log.e(TAG, "Max retries reached for createItem, returning error");
+                    return new ApiResponse(false, errorMessage, fullErrorDetails);
+                }
+            } else {
+                // Client errors (4xx) - don't retry, parse error immediately
+                String fullErrorDetails = response.toString();
+                String errorMessage = parseClientError(fullErrorDetails, responseCode);
+                
+                // Enhanced logging for debugging
+                Log.e(TAG, "=== ITEM POSTING FAILED ===");
+                Log.e(TAG, "HTTP Status Code: " + responseCode);
+                Log.e(TAG, "Error Message: " + errorMessage);
+                Log.e(TAG, "Full Error Response: " + fullErrorDetails);
+                Log.e(TAG, "Request Data: " + requestData.toString());
+                Log.e(TAG, "Request URL: " + ITEMS_ENDPOINT);
+                Log.e(TAG, "===========================");
+                
+                return new ApiResponse(false, errorMessage, fullErrorDetails);
             }
             
-        } catch (Exception e) {
-            return handleNetworkException(e, "Error creating item via API");
+            } catch (InterruptedException e) {
+                Log.e(TAG, "Retry sleep interrupted", e);
+                Thread.currentThread().interrupt();
+                return new ApiResponse(false, "Network error: " + e.getMessage(), null);
+            } catch (Exception e) {
+                Log.e(TAG, "Error creating item via API (attempt " + (attempt + 1) + "): " + itemData.getTitle(), e);
+                lastResponse = handleNetworkException(e, "Error creating item via API");
+                
+                // Retry on network errors too
+                if (attempt < MAX_RETRIES) {
+                    attempt++;
+                    continue;
+                } else {
+                    return lastResponse;
+                }
+            }
         }
+        
+        // Should not reach here, but return last response if we do
+        return lastResponse != null ? lastResponse : new ApiResponse(false, "Unknown error creating item", null);
+    }
+    
+    /**
+     * Parse server error (500-599) responses for better error messages
+     */
+    private String parseServerError(String errorResponse, int statusCode) {
+        String errorMessage = "Server error occurred. Please try again.";
+        
+        try {
+            if (errorResponse != null && errorResponse.length() > 0) {
+                org.json.JSONObject errorJson = new org.json.JSONObject(errorResponse);
+                
+                // Check for detailed error message
+                if (errorJson.has("message")) {
+                    errorMessage = errorJson.getString("message");
+                } else if (errorJson.has("error")) {
+                    String error = errorJson.getString("error");
+                    // If error is generic, add more context
+                    if (error.equals("Failed to create item")) {
+                        errorMessage = "Server error while creating item. The server may be temporarily unavailable. Please try again in a moment.";
+                    } else {
+                        errorMessage = error;
+                    }
+                }
+                
+                // Add details if available
+                if (errorJson.has("details")) {
+                    Object details = errorJson.get("details");
+                    if (details instanceof String && !((String) details).isEmpty()) {
+                        errorMessage += ": " + details;
+                    }
+                }
+            }
+        } catch (org.json.JSONException e) {
+            Log.w(TAG, "Could not parse server error response as JSON: " + errorResponse, e);
+            // Use default message
+        }
+        
+        return errorMessage;
+    }
+    
+    /**
+     * Parse client error (400-499) responses for better error messages
+     */
+    private String parseClientError(String errorResponse, int statusCode) {
+        String errorMessage = "Failed to post item";
+        
+        try {
+            if (errorResponse != null && errorResponse.length() > 0) {
+                org.json.JSONObject errorJson = new org.json.JSONObject(errorResponse);
+                
+                // Prioritize message field for user-friendly errors
+                if (errorJson.has("message")) {
+                    errorMessage = errorJson.getString("message");
+                } else if (errorJson.has("error")) {
+                    errorMessage = errorJson.getString("error");
+                }
+                
+                // Add validation details if available
+                if (errorJson.has("details")) {
+                    Object details = errorJson.get("details");
+                    StringBuilder detailsBuilder = new StringBuilder();
+                    
+                    if (details instanceof org.json.JSONArray) {
+                        org.json.JSONArray detailsArray = (org.json.JSONArray) details;
+                        for (int i = 0; i < detailsArray.length(); i++) {
+                            if (i > 0) detailsBuilder.append("; ");
+                            detailsBuilder.append(detailsArray.getString(i));
+                        }
+                    } else if (details instanceof String) {
+                        detailsBuilder.append((String) details);
+                    }
+                    
+                    String detailsStr = detailsBuilder.toString();
+                    if (!detailsStr.isEmpty()) {
+                        errorMessage += ": " + detailsStr;
+                    }
+                }
+            } else {
+                // No response body - use HTTP status code message
+                switch (statusCode) {
+                    case 400:
+                        errorMessage = "Invalid request. Please check your input fields.";
+                        break;
+                    case 401:
+                        errorMessage = "Authentication failed. Please log in again.";
+                        break;
+                    case 403:
+                        errorMessage = "You don't have permission to perform this action.";
+                        break;
+                    case 404:
+                        errorMessage = "Server endpoint not found. Please try again later.";
+                        break;
+                    default:
+                        errorMessage = "Failed to post item (HTTP " + statusCode + ")";
+                }
+            }
+        } catch (org.json.JSONException e) {
+            Log.w(TAG, "Could not parse error response as JSON: " + errorResponse, e);
+            // If response is not JSON, use it as-is if it's not empty
+            if (errorResponse != null && !errorResponse.trim().isEmpty()) {
+                errorMessage = errorResponse;
+            }
+        }
+        
+        return errorMessage;
     }
     
     /**
