@@ -296,17 +296,25 @@ public class CreditsFragment extends Fragment {
             }
         });
         
-        // Enable submit button when reference number is entered
+        // Enable submit button when reference number is exactly 13 digits
         etReferenceNumber.addTextChangedListener(new android.text.TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                boolean isValid = s != null && s.toString().trim().length() >= 4;
+                String ref = s != null ? s.toString().trim() : "";
+                boolean isValid = isValidReferenceNumber(ref);
                 btnSubmit.setEnabled(isValid && topupId[0] > 0);
-                if (s != null && s.toString().trim().length() > 0 && s.toString().trim().length() < 4) {
-                    tilReferenceNumber.setError(getString(R.string.invalid_reference));
+                
+                if (ref.length() > 0 && !isValid) {
+                    if (ref.length() != 13) {
+                        tilReferenceNumber.setError(getString(R.string.reference_must_be_13_digits));
+                    } else if (!ref.matches("\\d+")) {
+                        tilReferenceNumber.setError(getString(R.string.reference_numbers_only));
+                    } else {
+                        tilReferenceNumber.setError(getString(R.string.invalid_reference));
+                    }
                 } else {
                     tilReferenceNumber.setError(null);
                 }
@@ -316,14 +324,23 @@ public class CreditsFragment extends Fragment {
             public void afterTextChanged(android.text.Editable s) {}
         });
         
+        // Set input type to numbers only (maxLength is set in XML)
+        etReferenceNumber.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        
         // Cancel button
         btnCancel.setOnClickListener(v -> dialog.dismiss());
         
         // Submit button
         btnSubmit.setOnClickListener(v -> {
             String refNumber = etReferenceNumber.getText().toString().trim();
-            if (refNumber.length() < 4) {
-                tilReferenceNumber.setError(getString(R.string.invalid_reference));
+            if (!isValidReferenceNumber(refNumber)) {
+                if (refNumber.length() != 13) {
+                    tilReferenceNumber.setError(getString(R.string.reference_must_be_13_digits));
+                } else if (!refNumber.matches("\\d+")) {
+                    tilReferenceNumber.setError(getString(R.string.reference_numbers_only));
+                } else {
+                    tilReferenceNumber.setError(getString(R.string.invalid_reference));
+                }
                 return;
             }
             
@@ -335,15 +352,17 @@ public class CreditsFragment extends Fragment {
             // Submit reference number
             submitTopupReference(topupId[0], refNumber, new TopupSubmitCallback() {
                 @Override
-                public void onSuccess() {
+                public void onSuccess(double newBalance) {
                     getActivity().runOnUiThread(() -> {
                         progressPayment.setVisibility(android.view.View.GONE);
                         dialog.dismiss();
-                        ToastHelper.showSuccess(getContext(), getString(R.string.payment_submitted));
-                        // Refresh balance after a delay
-                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                            fetchBalanceFromBackend();
-                        }, 2000);
+                        ToastHelper.showSuccess(getContext(), getString(R.string.topup_processed_successfully));
+                        // Update balance immediately
+                        if (balanceAmount != null) {
+                            balanceAmount.setText(creditManager.formatCurrency(newBalance));
+                        }
+                        // Refresh balance from backend to ensure consistency
+                        fetchBalanceFromBackend();
                     });
                 }
                 
@@ -353,7 +372,7 @@ public class CreditsFragment extends Fragment {
                         progressPayment.setVisibility(android.view.View.GONE);
                         btnSubmit.setEnabled(true);
                         btnCancel.setEnabled(true);
-                        ToastHelper.showError(getContext(), "Failed to submit reference: " + error);
+                        ToastHelper.showError(getContext(), "Failed to process top-up: " + error);
                     });
                 }
             });
@@ -374,8 +393,20 @@ public class CreditsFragment extends Fragment {
      * Interface for top-up submission callback
      */
     private interface TopupSubmitCallback {
-        void onSuccess();
+        void onSuccess(double newBalance);
         void onError(String error);
+    }
+    
+    /**
+     * Validate 13-digit reference number
+     * Must contain exactly 13 digits, numeric only
+     */
+    private boolean isValidReferenceNumber(String ref) {
+        if (ref == null || ref.trim().isEmpty()) {
+            return false;
+        }
+        String trimmed = ref.trim();
+        return trimmed.length() == 13 && trimmed.matches("\\d+");
     }
     
     /**
@@ -510,7 +541,7 @@ public class CreditsFragment extends Fragment {
     }
     
     /**
-     * Submit reference number for top-up
+     * Submit reference number for top-up - automatically processes and adds credits
      */
     private void submitTopupReference(int topupId, String referenceNumber, TopupSubmitCallback callback) {
         // Prevent duplicate requests
@@ -524,10 +555,10 @@ public class CreditsFragment extends Fragment {
         
         new Thread(() -> {
             try {
-                // Validate reference number
-                if (referenceNumber == null || referenceNumber.trim().length() < 4) {
+                // Validate 13-digit reference number
+                if (!isValidReferenceNumber(referenceNumber)) {
                     isSubmitRequestInProgress = false;
-                    callback.onError("Reference number must be at least 4 characters");
+                    callback.onError("Reference number must contain exactly 13 digits (numbers only)");
                     return;
                 }
                 
@@ -573,15 +604,23 @@ public class CreditsFragment extends Fragment {
                 android.util.Log.d("CreditsFragment", "Submit response body: " + responseBody);
                 
                 if (code >= 200 && code < 300) {
-                    android.util.Log.d("CreditsFragment", "Reference submitted successfully");
+                    // Parse success response to get new balance
+                    double newBalance = 0.0;
+                    try {
+                        JSONObject responseJson = new JSONObject(responseBody);
+                        newBalance = responseJson.optDouble("new_balance", 0.0);
+                        android.util.Log.d("CreditsFragment", "Top-up processed successfully. New balance: " + newBalance);
+                    } catch (org.json.JSONException e) {
+                        android.util.Log.w("CreditsFragment", "Could not parse new_balance from response", e);
+                    }
                     isSubmitRequestInProgress = false;
-                    callback.onSuccess();
+                    callback.onSuccess(newBalance);
                 } else {
                     // Parse error response
-                    String errorMessage = "Failed to submit reference";
+                    String errorMessage = "Failed to process top-up";
                     try {
                         JSONObject errorJson = new JSONObject(responseBody);
-                        errorMessage = errorJson.optString("error", "Failed to submit reference");
+                        errorMessage = errorJson.optString("error", "Failed to process top-up");
                         String details = errorJson.optString("details", "");
                         if (!details.isEmpty()) {
                             errorMessage += ": " + details;
@@ -594,7 +633,7 @@ public class CreditsFragment extends Fragment {
                             errorMessage += " (HTTP " + code + ")";
                         }
                     }
-                    android.util.Log.e("CreditsFragment", "Reference submission failed: " + errorMessage);
+                    android.util.Log.e("CreditsFragment", "Top-up processing failed: " + errorMessage);
                     isSubmitRequestInProgress = false;
                     callback.onError(errorMessage);
                 }

@@ -233,27 +233,44 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 /**
+ * Validate 13-digit reference number
+ * Must contain exactly 13 digits, numeric only
+ */
+function validateReferenceNumber(ref) {
+  if (!ref || typeof ref !== 'string') {
+    return false;
+  }
+  const trimmed = ref.trim();
+  // Must be exactly 13 digits, numeric only
+  return /^\d{13}$/.test(trimmed);
+}
+
+/**
  * POST /api/topups/:id/submit
- * User submits receipt reference number
+ * User submits receipt reference number - automatically processes top-up
  */
 router.post('/:id/submit', authenticateToken, async (req, res) => {
   let connection;
   
   try {
     connection = await pool.getConnection();
+    await connection.beginTransaction();
     
     const topup_id = parseInt(req.params.id);
     const { user_receipt_ref } = req.body;
     const user_id = req.user.id;
 
-    // Validate input
-    if (!user_receipt_ref || user_receipt_ref.trim().length < 4) {
+    // Validate 13-digit reference number
+    if (!validateReferenceNumber(user_receipt_ref)) {
+      await connection.rollback();
       if (connection) connection.release();
       return res.status(400).json({ 
         error: 'Invalid receipt reference',
-        details: 'Receipt reference must be at least 4 characters'
+        details: 'Reference number must contain exactly 13 digits (numbers only)'
       });
     }
+
+    const trimmedRef = user_receipt_ref.trim();
 
     // Find topup and verify ownership
     const [topups] = await connection.query(
@@ -262,6 +279,7 @@ router.post('/:id/submit', authenticateToken, async (req, res) => {
     );
 
     if (topups.length === 0) {
+      await connection.rollback();
       if (connection) connection.release();
       return res.status(404).json({ 
         error: 'Top-up not found',
@@ -271,8 +289,9 @@ router.post('/:id/submit', authenticateToken, async (req, res) => {
 
     const topup = topups[0];
 
-    // Check status
+    // Check status - only allow submission for PENDING top-ups
     if (topup.status !== 'PENDING') {
+      await connection.rollback();
       if (connection) connection.release();
       return res.status(400).json({ 
         error: 'Invalid status transition',
@@ -280,28 +299,95 @@ router.post('/:id/submit', authenticateToken, async (req, res) => {
       });
     }
 
-    // Update topup
-    await connection.query(
-      `UPDATE topups 
-       SET user_receipt_ref = ?, status = 'UNDER_REVIEW', submitted_at = NOW() 
-       WHERE id = ?`,
-      [user_receipt_ref.trim(), topup_id]
+    const amount = parseFloat(topup.amount);
+
+    // Get current user balance
+    const [users] = await connection.query(
+      'SELECT id, credits FROM users WHERE id = ?',
+      [user_id]
     );
 
-    console.log(`Top-up ${topup_id} submitted for review with receipt: ${user_receipt_ref}`);
+    if (users.length === 0) {
+      await connection.rollback();
+      if (connection) connection.release();
+      return res.status(404).json({ 
+        error: 'User not found',
+        details: 'User associated with top-up not found'
+      });
+    }
+
+    const currentBalance = parseFloat(users[0].credits) || 0;
+    const newBalance = currentBalance + amount;
+
+    // Update user credits
+    await connection.query(
+      'UPDATE users SET credits = ? WHERE id = ?',
+      [newBalance, user_id]
+    );
+
+    // Create credit transaction
+    const [ctResult] = await connection.query(
+      `INSERT INTO credit_transactions 
+       (user_id, type, amount, status, payment_method, reference, transaction_id, created_at) 
+       VALUES (?, 'purchase', ?, 'completed', ?, ?, ?, NOW())`,
+      [
+        user_id,
+        amount,
+        topup.payment_method,
+        topup.generated_ref,
+        trimmedRef
+      ]
+    );
+
+    const credit_transaction_id = ctResult.insertId;
+
+    // Create ledger entry
+    await connection.query(
+      `INSERT INTO credit_ledger 
+       (user_id, user_email, delta, balance_before, balance_after, 
+        reason, description, ref_id, ref_type, credit_transaction_id, performed_by) 
+       VALUES (?, ?, ?, ?, ?, 'TOPUP', ?, ?, 'topup', ?, ?)`,
+      [
+        user_id,
+        topup.user_email,
+        amount,
+        currentBalance,
+        newBalance,
+        `Top-up processed: ₱${amount.toFixed(2)} via ${topup.payment_method} (Ref: ${trimmedRef})`,
+        topup_id,
+        credit_transaction_id,
+        user_id // Auto-processed by system
+      ]
+    );
+
+    // Update topup status to CONFIRMED (automatically processed)
+    await connection.query(
+      `UPDATE topups 
+       SET user_receipt_ref = ?, status = 'CONFIRMED', submitted_at = NOW(), confirmed_at = NOW() 
+       WHERE id = ?`,
+      [trimmedRef, topup_id]
+    );
+
+    await connection.commit();
+
+    console.log(`Top-up ${topup_id} automatically processed. User ${user_id} balance: ₱${currentBalance} -> ₱${newBalance} (Ref: ${trimmedRef})`);
 
     res.json({
       success: true,
-      status: 'UNDER_REVIEW',
-      message: 'Top-up submitted for review'
+      status: 'CONFIRMED',
+      new_balance: newBalance,
+      message: 'Top-up processed successfully. Credits have been added to your account.'
     });
 
   } catch (err) {
+    if (connection) {
+      await connection.rollback();
+    }
     console.error('Top-up submission error:', err);
     console.error('Error stack:', err.stack);
     
     const errorDetails = {
-      error: 'Failed to submit receipt',
+      error: 'Failed to process top-up',
       details: err.message || 'An unexpected error occurred'
     };
     

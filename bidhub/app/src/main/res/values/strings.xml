@@ -384,11 +384,14 @@
     <string name="reference_code">Reference Code:</string>
     <string name="after_payment_instructions">After sending payment via GCash, enter the reference number from your transaction receipt below.</string>
     <string name="enter_gcash_reference">Enter GCash Reference Number</string>
-    <string name="reference_number_helper">Enter the reference number from your GCash transaction</string>
-    <string name="submit_reference">Submit Reference</string>
+    <string name="reference_number_helper">Enter the 13-digit reference number from your GCash transaction</string>
+    <string name="submit_reference">Submit &amp; Process</string>
     <string name="payment_pending">Payment pending review</string>
     <string name="payment_submitted">Payment submitted successfully. Waiting for admin confirmation.</string>
-    <string name="invalid_reference">Please enter a valid reference number (at least 4 characters)</string>
+    <string name="topup_processed_successfully">Top-up processed successfully! Credits have been added to your account.</string>
+    <string name="invalid_reference">Please enter a valid 13-digit reference number</string>
+    <string name="reference_must_be_13_digits">Reference number must be exactly 13 digits</string>
+    <string name="reference_numbers_only">Reference number must contain only numbers</string>
     
     <!-- Dashboard Redesign -->
     <string name="ending_soon">Ending Soon</string>

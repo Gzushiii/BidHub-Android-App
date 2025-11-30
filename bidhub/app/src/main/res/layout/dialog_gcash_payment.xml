@@ -187,9 +187,10 @@
                 android:id="@+id/et_reference_number"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text"
+                android:inputType="number"
                 android:maxLines="1"
-                android:minHeight="48dp" />
+                android:minHeight="48dp"
+                android:maxLength="13" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
