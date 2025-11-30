@@ -56,6 +56,10 @@ public class CreditsFragment extends Fragment {
     private LinearLayout layoutPromotionalBanner;
     private RecyclerView rvTransactionHistory;
     private List<CreditTransaction> transactionHistory;
+    
+    // Request deduplication flags
+    private boolean isTopupRequestInProgress = false;
+    private boolean isSubmitRequestInProgress = false;
 
     @Nullable
     @Override
@@ -378,20 +382,32 @@ public class CreditsFragment extends Fragment {
      * Initiate top-up request with backend
      */
     private void initiateTopupRequest(double amount, TopupInitCallback callback) {
+        // Prevent duplicate requests
+        if (isTopupRequestInProgress) {
+            android.util.Log.w("CreditsFragment", "Top-up request already in progress, ignoring duplicate request");
+            callback.onError("A top-up request is already in progress. Please wait.");
+            return;
+        }
+        
+        isTopupRequestInProgress = true;
+        
         new Thread(() -> {
             try {
                 // Validate amount before sending
                 if (amount < 100.0) {
+                    isTopupRequestInProgress = false;
                     callback.onError("Amount too low. Minimum top-up is ₱100.00");
                     return;
                 }
                 if (amount > 50000.0) {
+                    isTopupRequestInProgress = false;
                     callback.onError("Amount too high. Maximum top-up is ₱50,000.00");
                     return;
                 }
                 
                 String token = prefsHelper.getAuthToken();
                 if (token == null || token.isEmpty()) {
+                    isTopupRequestInProgress = false;
                     callback.onError("Please log in again");
                     return;
                 }
@@ -438,13 +454,16 @@ public class CreditsFragment extends Fragment {
                             int topupId = json.getInt("topup_id");
                             String refCode = json.getString("generated_ref");
                             android.util.Log.d("CreditsFragment", "Top-up initiated successfully: id=" + topupId + ", ref=" + refCode);
+                            isTopupRequestInProgress = false;
                             callback.onSuccess(topupId, refCode);
                         } else {
                             android.util.Log.e("CreditsFragment", "Missing fields in response: " + responseBody);
+                            isTopupRequestInProgress = false;
                             callback.onError("Invalid response from server. Please try again.");
                         }
                     } catch (org.json.JSONException e) {
                         android.util.Log.e("CreditsFragment", "JSON parsing error: " + e.getMessage(), e);
+                        isTopupRequestInProgress = false;
                         callback.onError("Invalid response format. Please try again.");
                     }
                 } else {
@@ -467,19 +486,24 @@ public class CreditsFragment extends Fragment {
                         }
                     }
                     android.util.Log.e("CreditsFragment", "Top-up initiation failed: " + errorMessage);
+                    isTopupRequestInProgress = false;
                     callback.onError(errorMessage);
                 }
             } catch (java.net.SocketTimeoutException e) {
                 android.util.Log.e("CreditsFragment", "Request timeout", e);
+                isTopupRequestInProgress = false;
                 callback.onError("Request timed out. Please check your connection and try again.");
             } catch (java.net.UnknownHostException e) {
                 android.util.Log.e("CreditsFragment", "Unknown host", e);
+                isTopupRequestInProgress = false;
                 callback.onError("Cannot connect to server. Please check your internet connection.");
             } catch (java.io.IOException e) {
                 android.util.Log.e("CreditsFragment", "Network error", e);
+                isTopupRequestInProgress = false;
                 callback.onError("Network error: " + e.getMessage() + ". Please check your connection.");
             } catch (Exception e) {
                 android.util.Log.e("CreditsFragment", "Unexpected error", e);
+                isTopupRequestInProgress = false;
                 callback.onError("Unexpected error: " + e.getMessage());
             }
         }).start();
@@ -489,16 +513,27 @@ public class CreditsFragment extends Fragment {
      * Submit reference number for top-up
      */
     private void submitTopupReference(int topupId, String referenceNumber, TopupSubmitCallback callback) {
+        // Prevent duplicate requests
+        if (isSubmitRequestInProgress) {
+            android.util.Log.w("CreditsFragment", "Submit request already in progress, ignoring duplicate request");
+            callback.onError("A submission is already in progress. Please wait.");
+            return;
+        }
+        
+        isSubmitRequestInProgress = true;
+        
         new Thread(() -> {
             try {
                 // Validate reference number
                 if (referenceNumber == null || referenceNumber.trim().length() < 4) {
+                    isSubmitRequestInProgress = false;
                     callback.onError("Reference number must be at least 4 characters");
                     return;
                 }
                 
                 String token = prefsHelper.getAuthToken();
                 if (token == null || token.isEmpty()) {
+                    isSubmitRequestInProgress = false;
                     callback.onError("Please log in again");
                     return;
                 }
@@ -539,6 +574,7 @@ public class CreditsFragment extends Fragment {
                 
                 if (code >= 200 && code < 300) {
                     android.util.Log.d("CreditsFragment", "Reference submitted successfully");
+                    isSubmitRequestInProgress = false;
                     callback.onSuccess();
                 } else {
                     // Parse error response
@@ -559,19 +595,24 @@ public class CreditsFragment extends Fragment {
                         }
                     }
                     android.util.Log.e("CreditsFragment", "Reference submission failed: " + errorMessage);
+                    isSubmitRequestInProgress = false;
                     callback.onError(errorMessage);
                 }
             } catch (java.net.SocketTimeoutException e) {
                 android.util.Log.e("CreditsFragment", "Submit request timeout", e);
+                isSubmitRequestInProgress = false;
                 callback.onError("Request timed out. Please check your connection and try again.");
             } catch (java.net.UnknownHostException e) {
                 android.util.Log.e("CreditsFragment", "Unknown host", e);
+                isSubmitRequestInProgress = false;
                 callback.onError("Cannot connect to server. Please check your internet connection.");
             } catch (java.io.IOException e) {
                 android.util.Log.e("CreditsFragment", "Network error", e);
+                isSubmitRequestInProgress = false;
                 callback.onError("Network error: " + e.getMessage() + ". Please check your connection.");
             } catch (Exception e) {
                 android.util.Log.e("CreditsFragment", "Unexpected error", e);
+                isSubmitRequestInProgress = false;
                 callback.onError("Unexpected error: " + e.getMessage());
             }
         }).start();
