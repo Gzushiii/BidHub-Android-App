@@ -117,6 +117,23 @@ public class CreditBalanceManager {
     }
     
     /**
+     * Update balance in SharedPreferences immediately (for use when balance is confirmed from API)
+     * This is useful when you receive a balance update from an API response (e.g., after top-up)
+     * and want to update the cache immediately without making another API call.
+     * @param context Application context
+     * @param newBalance The new balance value to save
+     */
+    public static void updateBalanceImmediately(Context context, double newBalance) {
+        if (context == null) {
+            Log.w(TAG, "Context is null, cannot update balance");
+            return;
+        }
+        SharedPreferencesHelper prefsHelper = new SharedPreferencesHelper(context);
+        prefsHelper.setCredits(newBalance);
+        Log.i(TAG, "Balance updated immediately in SharedPreferences: " + newBalance);
+    }
+    
+    /**
      * Callback interface for balance updates
      */
     public interface BalanceUpdateCallback {

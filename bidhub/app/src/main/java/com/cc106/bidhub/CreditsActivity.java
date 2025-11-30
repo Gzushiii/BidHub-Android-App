@@ -149,7 +149,16 @@ public class CreditsActivity extends BaseActivity {
     
     private void updateBalanceDisplay() {
         if (balanceAmount != null) {
-            double balance = creditManager.getCreditBalance(userId);
+            // Use SharedPreferences (updated by CreditBalanceManager) as source of truth
+            com.cc106.bidhub.utils.SharedPreferencesHelper prefsHelper = 
+                new com.cc106.bidhub.utils.SharedPreferencesHelper(this);
+            double balance = prefsHelper.getCredits();
+            
+            // Fallback to local manager if SharedPreferences is empty
+            if (balance <= 0) {
+                balance = creditManager.getCreditBalance(userId);
+            }
+            
             String newBalance = creditManager.formatCurrency(balance);
             
             // Animate balance update
@@ -170,8 +179,36 @@ public class CreditsActivity extends BaseActivity {
         }
     }
     
-    private void refreshBalance() {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh balance from backend when activity resumes
+        refreshBalanceFromBackend();
+    }
+    
+    private void refreshBalanceFromBackend() {
+        // First update UI with cached value
         updateBalanceDisplay();
+        
+        // Then refresh from backend
+        com.cc106.bidhub.utils.CreditBalanceManager.refreshBalance(
+            this,
+            new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
+                @Override
+                public void onBalanceUpdated(double newBalance) {
+                    updateBalanceDisplay();
+                }
+                
+                @Override
+                public void onError(String errorMessage) {
+                    // Silent fail - already showing cached value
+                }
+            }
+        );
+    }
+    
+    private void refreshBalance() {
+        refreshBalanceFromBackend();
         ToastHelper.showInfo(this, "Balance refreshed");
     }
     

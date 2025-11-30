@@ -177,6 +177,13 @@ public class ProfileFragment extends Fragment {
     private static final String BASE_URL = "https://bidhub-android-app.onrender.com/api";
 
     private void refreshCreditsFromBackend() {
+        // First, update UI with cached value from SharedPreferences (in case it was updated elsewhere)
+        double cachedBalance = prefsHelper.getCredits();
+        if (textViewCredits != null && cachedBalance > 0) {
+            textViewCredits.setText(String.format(Locale.getDefault(), "₱ %.2f", cachedBalance));
+        }
+        
+        // Then refresh from backend to get latest value
         com.cc106.bidhub.utils.CreditBalanceManager.refreshBalance(
             getContext(),
             new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
@@ -191,7 +198,8 @@ public class ProfileFragment extends Fragment {
                 
                 @Override
                 public void onError(String errorMessage) {
-                    // Silent fail - use cached value
+                    // Silent fail - use cached value from SharedPreferences (already displayed above)
+                    // This ensures UI shows updated balance even if network refresh fails
                 }
             }
         );

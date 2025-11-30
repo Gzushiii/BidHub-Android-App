@@ -375,24 +375,37 @@ public class CreditsFragment extends Fragment {
                         progressPayment.setVisibility(android.view.View.GONE);
                         dialog.dismiss();
                         ToastHelper.showSuccess(getContext(), getString(R.string.topup_processed_successfully));
-                        // Update balance immediately
+                        
+                        // CRITICAL: Update SharedPreferences immediately with new balance from API response
+                        // This ensures all parts of the app see the updated balance immediately
+                        prefsHelper.setCredits(newBalance);
+                        android.util.Log.d("CreditsFragment", "Updated SharedPreferences with new balance: " + newBalance);
+                        
+                        // Update UI immediately with the new balance
                         if (balanceAmount != null) {
                             balanceAmount.setText(creditManager.formatCurrency(newBalance));
                         }
-                        // Refresh balance from backend to ensure consistency
+                        
+                        // Refresh balance from backend to confirm consistency (runs in background)
+                        // This ensures we have the latest value even if there were any edge cases
                         com.cc106.bidhub.utils.CreditBalanceManager.refreshBalance(
                             getContext(),
                             new com.cc106.bidhub.utils.CreditBalanceManager.BalanceUpdateCallback() {
                                 @Override
-                                public void onBalanceUpdated(double newBalance) {
+                                public void onBalanceUpdated(double confirmedBalance) {
                                     if (getActivity() != null && !getActivity().isFinishing()) {
+                                        // Update SharedPreferences again with confirmed value from backend
+                                        prefsHelper.setCredits(confirmedBalance);
                                         updateBalanceDisplay();
+                                        android.util.Log.d("CreditsFragment", "Balance confirmed from backend: " + confirmedBalance);
                                     }
                                 }
                                 
                                 @Override
                                 public void onError(String errorMessage) {
-                                    // Silent fail - balance was already updated from callback
+                                    // Silent fail - balance was already updated from API response
+                                    // UI already shows correct value, backend refresh is just for confirmation
+                                    android.util.Log.w("CreditsFragment", "Backend refresh failed, but balance already updated: " + errorMessage);
                                 }
                             }
                         );
