@@ -80,7 +80,7 @@ Stores all top-up requests with their status and references.
 | `user_id` | INT UNSIGNED | Foreign key to users |
 | `user_email` | VARCHAR(255) | User email (denormalized) |
 | `amount` | DECIMAL(10,2) | Top-up amount |
-| `generated_ref` | VARCHAR(16) | System-generated unique reference |
+| `generated_ref` | VARCHAR(50) | System-generated unique reference |
 | `user_receipt_ref` | VARCHAR(64) | User-entered receipt code |
 | `payment_method` | ENUM | 'gcash', 'maya', 'bank_transfer', 'other' |
 | `status` | ENUM | 'PENDING', 'UNDER_REVIEW', 'CONFIRMED', 'REJECTED' |
