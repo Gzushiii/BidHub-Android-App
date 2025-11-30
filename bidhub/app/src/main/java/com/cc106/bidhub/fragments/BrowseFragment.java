@@ -121,16 +121,6 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         return view;
     }
     
-    @Override
-    public void onResume() {
-        super.onResume();
-        // FIX: Refresh items on resume to ensure latest data, but preserve existing items during load
-        if (!isLoading) {
-            android.util.Log.d("BrowseFragment", "onResume - refreshing items");
-            loadItems();
-        }
-    }
-    
     private void initializeViews(View view) {
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
         etSearch = view.findViewById(R.id.et_search);
@@ -1085,18 +1075,15 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     @Override
     public void onResume() {
         super.onResume();
-        // Only refresh if items are empty or if explicitly needed
-        // Don't refresh on every resume to prevent items disappearing
+        // FIX: Refresh items on resume to ensure latest data, but preserve existing items during load
+        // Only refresh if items are empty or if not currently loading
+        // This prevents duplicate loads when fragment is already visible
         if (allItems.isEmpty() && !isLoading) {
             android.util.Log.d("BrowseFragment", "onResume: Items empty, loading...");
             loadItems();
         } else {
-            android.util.Log.d("BrowseFragment", "Skipping refresh on resume - items already loaded");
+            android.util.Log.d("BrowseFragment", "Skipping refresh on resume - items already loaded or currently loading");
         }
-        // Only refresh if items list is empty or if explicitly needed
-        // This prevents duplicate loads when fragment is already visible
-        if (allItems.isEmpty() && !isLoading) {
-            android.util.Log.d("BrowseFragment", "Items list is empty, refreshing on resume");
             loadItems();
         } else {
             android.util.Log.d("BrowseFragment", "Skipping refresh on resume - items already loaded");
