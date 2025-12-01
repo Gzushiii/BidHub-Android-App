@@ -1,6 +1,7 @@
 package com.cc106.bidhub;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -46,7 +47,9 @@ public class PasswordStrengthIndicator extends LinearLayout {
         progressBar.setLayoutParams(new LinearLayout.LayoutParams(0, 8, 1));
         progressBar.setMax(6);
         progressBar.setProgress(0);
-        progressBar.setProgressTintList(ContextCompat.getColorStateList(context, R.color.password_weak));
+        // FIX: Convert color to ColorStateList - password_weak is a color, not a ColorStateList
+        int weakColor = ContextCompat.getColor(context, R.color.password_weak);
+        progressBar.setProgressTintList(ColorStateList.valueOf(weakColor));
         
         // Strength text
         strengthText = new TextView(context);
@@ -112,7 +115,9 @@ public class PasswordStrengthIndicator extends LinearLayout {
         }
         
         strengthText.setTextColor(ContextCompat.getColor(getContext(), colorRes));
-        progressBar.setProgressTintList(ContextCompat.getColorStateList(getContext(), colorRes));
+        // FIX: Convert color to ColorStateList - password colors are colors, not ColorStateLists
+        int color = ContextCompat.getColor(getContext(), colorRes);
+        progressBar.setProgressTintList(ColorStateList.valueOf(color));
         
         // Update recommendations
         if (!result.recommendations.isEmpty()) {
@@ -127,7 +132,9 @@ public class PasswordStrengthIndicator extends LinearLayout {
         progressBar.setProgress(0);
         strengthText.setText("Enter password");
         strengthText.setTextColor(ContextCompat.getColor(getContext(), R.color.text_hint));
-        progressBar.setProgressTintList(ContextCompat.getColorStateList(getContext(), R.color.password_weak));
+        // FIX: Convert color to ColorStateList - password_weak is a color, not a ColorStateList
+        int weakColor = ContextCompat.getColor(getContext(), R.color.password_weak);
+        progressBar.setProgressTintList(ColorStateList.valueOf(weakColor));
         recommendationsContainer.setVisibility(GONE);
     }
 }

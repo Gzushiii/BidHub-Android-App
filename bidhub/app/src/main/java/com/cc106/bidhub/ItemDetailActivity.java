@@ -71,6 +71,12 @@ public class ItemDetailActivity extends AppCompatActivity {
     private boolean isAuctionEndingSoon = false;
     private boolean isAuctionEnded = false;
     
+    // Real-time data polling
+    private android.os.Handler pollingHandler;
+    private java.lang.Runnable pollingRunnable;
+    private static final int POLLING_INTERVAL = 10000; // 10 seconds - refresh item data every 10 seconds
+    private boolean isPollingActive = false;
+    
     // UI Enhancement features
     private LinearLayout layoutBidIncrements;
     private Button btnIncrement10, btnIncrement50, btnIncrement100;
@@ -295,6 +301,9 @@ public class ItemDetailActivity extends AppCompatActivity {
         
         // Initialize countdown handler
         countdownHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        
+        // Initialize polling handler for real-time updates
+        pollingHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     }
     
     /**
@@ -791,9 +800,25 @@ public class ItemDetailActivity extends AppCompatActivity {
     }
 
     private void loadItemData(String itemId) {
-        android.util.Log.i("ItemDetailActivity", "loadItemData called with itemId: " + itemId);
+        loadItemData(itemId, false);
+    }
+    
+    /**
+     * Load item data with optional force refresh from API
+     * @param itemId Item ID to load
+     * @param forceRefresh If true, always fetch fresh data from API
+     */
+    private void loadItemData(String itemId, boolean forceRefresh) {
+        android.util.Log.i("ItemDetailActivity", "loadItemData called with itemId: " + itemId + (forceRefresh ? " (FORCE REFRESH)" : ""));
         if (itemId != null) {
             try {
+                // FIX: If force refresh, always fetch from API for real-time updates
+                if (forceRefresh) {
+                    android.util.Log.d("ItemDetailActivity", "Force refresh requested, fetching from API...");
+                    fetchItemFromApi(itemId, true);
+                    return;
+                }
+                
                 // Load real item data from database
                 android.util.Log.d("ItemDetailActivity", "Calling itemManager.getItemById(" + itemId + ")");
                 currentItem = itemManager.getItemById(itemId);
@@ -807,11 +832,15 @@ public class ItemDetailActivity extends AppCompatActivity {
                         "Successfully loaded item data from database",
                         String.format("ItemID: %s, Title: %s", itemId, currentItem.getTitle())
                     );
+                    
+                    // FIX: Also fetch from API in background to ensure we have latest data
+                    // This ensures real-time updates (bid count, current price, etc.)
+                    fetchItemFromApi(itemId, false);
                 } else {
                     // Item not found in ItemManager, try fetching from API
                     android.util.Log.w("ItemDetailActivity", "Item NOT found in ItemManager for ID: " + itemId);
                     android.util.Log.i("ItemDetailActivity", "Attempting to fetch item from API...");
-                    fetchItemFromApi(itemId);
+                    fetchItemFromApi(itemId, false);
                 }
             } catch (Exception e) {
                 com.cc106.bidhub.utils.ErrorHandler.handleDatabaseError(
@@ -840,12 +869,24 @@ public class ItemDetailActivity extends AppCompatActivity {
     /**
      * Fetch item from backend API when not found in ItemManager
      * FIX: Improved error handling for 500 errors and better user feedback
+     * @param forceRefresh If true, always update UI even if item already exists
      */
     private void fetchItemFromApi(String itemId) {
+        fetchItemFromApi(itemId, false);
+    }
+    
+    /**
+     * Fetch item from backend API with optional force refresh
+     * @param itemId Item ID to fetch
+     * @param forceRefresh If true, always update UI even if item already exists
+     */
+    private void fetchItemFromApi(String itemId, boolean forceRefresh) {
         // Run on background thread to avoid NetworkOnMainThreadException
         new Thread(() -> {
             try {
                 com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(this);
+                // FIX: Always fetch fresh data from API for real-time updates
+                // The API client will use cache-busting if needed
                 com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItemById(itemId);
                 
                 if (response.isSuccess() && response.getData() != null) {
@@ -856,15 +897,29 @@ public class ItemDetailActivity extends AppCompatActivity {
                         itemManager.storeItem(item);
                         android.util.Log.i("ItemDetailActivity", "Item fetched from API and stored in ItemManager: " + item.getTitle());
                         
-                        // Update UI on main thread
+                        // FIX: Always update UI with latest data from API for real-time updates
+                        // This ensures bid count, current price, and other fields are always current
                         runOnUiThread(() -> {
+                            // Update current item with latest data
+                            boolean wasItemNull = (currentItem == null);
                             currentItem = item;
+                            
+                            // Always refresh UI to show latest data (bid count, price, etc.)
                             populateItemDataFromDatabase();
-                            loadItemImages();
+                            
+                            // Only reload images if item was null (first load) or force refresh
+                            if (wasItemNull || forceRefresh) {
+                                loadItemImages();
+                            }
+                            
+                            // Restart countdown timer with latest end date
+                            startCountdownTimer();
+                            
                             com.cc106.bidhub.utils.ErrorHandler.logInfo(
                                 "ItemDetailActivity", 
-                                "Successfully loaded item data from API",
-                                String.format("ItemID: %s, Title: %s", itemId, item.getTitle())
+                                "Successfully loaded item data from API" + (forceRefresh ? " (force refresh)" : ""),
+                                String.format("ItemID: %s, Title: %s, BidCount: %d, CurrentPrice: %.2f", 
+                                    itemId, item.getTitle(), item.getBidCount(), item.getCurrentPrice())
                             );
                         });
                     } else {
@@ -1611,9 +1666,11 @@ public class ItemDetailActivity extends AppCompatActivity {
                     runOnUiThread(() -> {
                         android.widget.Toast.makeText(this, "Bid of " + currencyFormat.format(bidAmount) + " placed successfully!", android.widget.Toast.LENGTH_LONG).show();
                         
-                        // Reload item data to ensure UI reflects server state
+                        // FIX: Force refresh item data to ensure UI reflects latest server state in real-time
+                        // This ensures bid count, current price, and other fields are immediately updated
                         if (itemId != null) {
-                            loadItemData(itemId);
+                            android.util.Log.d("ItemDetailActivity", "Refreshing item data after successful bid");
+                            loadItemData(itemId, true); // true = force refresh from API
                         } else {
                             // Fallback: Update UI with local data if reload fails
                             if (currentItem != null) {
@@ -1885,24 +1942,118 @@ public class ItemDetailActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         stopCountdownTimer();
+        // Stop polling when activity is destroyed
+        stopRealTimePolling();
+    }
+    
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // FIX: Force refresh item data on resume to ensure real-time updates
+        // This ensures bid count, current price, and other fields are always current
+        String itemId = getIntent().getStringExtra("ITEM_ID");
+        if (itemId != null) {
+            android.util.Log.d("ItemDetailActivity", "onResume: Force refreshing item data for real-time updates");
+            loadItemData(itemId, true); // true = force refresh from API
+            
+            // Start polling for real-time updates
+            startRealTimePolling(itemId);
+        } else if (currentItem != null && currentItem.getEndDate() != null) {
+            // If we have an item but no ID, just restart the countdown
+            startCountdownTimer();
+        }
     }
     
     @Override
     protected void onPause() {
         super.onPause();
         stopCountdownTimer();
+        // Stop polling when activity is paused to save resources
+        stopRealTimePolling();
     }
     
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // Reload item data to ensure we have the latest bid count and current price
-        String itemId = getIntent().getStringExtra("ITEM_ID");
-        if (itemId != null) {
-            loadItemData(itemId);
-        } else if (currentItem != null && currentItem.getEndDate() != null) {
-            // If we have an item but no ID, just restart the countdown
-            startCountdownTimer();
+    /**
+     * Start polling for real-time item updates
+     * Fetches fresh data from API every POLLING_INTERVAL seconds
+     */
+    private void startRealTimePolling(String itemId) {
+        if (isPollingActive) {
+            return; // Already polling
+        }
+        
+        isPollingActive = true;
+        android.util.Log.d("ItemDetailActivity", "Starting real-time polling for item: " + itemId);
+        
+        pollingRunnable = new java.lang.Runnable() {
+            @Override
+            public void run() {
+                if (!isPollingActive || isFinishing() || isDestroyed()) {
+                    return;
+                }
+                
+                // Fetch fresh data from API in background
+                new Thread(() -> {
+                    try {
+                        com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(ItemDetailActivity.this);
+                        com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItemById(itemId);
+                        
+                        if (response.isSuccess() && response.getData() != null) {
+                            Item updatedItem = parseItemFromApiResponse(response.getData());
+                            if (updatedItem != null) {
+                                // Check if data has changed (bid count, price, etc.)
+                                boolean dataChanged = false;
+                                if (currentItem != null) {
+                                    dataChanged = (updatedItem.getBidCount() != currentItem.getBidCount()) ||
+                                                (Math.abs(updatedItem.getCurrentPrice() - currentItem.getCurrentPrice()) > 0.01);
+                                } else {
+                                    dataChanged = true;
+                                }
+                                
+                                if (dataChanged) {
+                                    // Update ItemManager cache
+                                    itemManager.storeItem(updatedItem);
+                                    
+                                    // Update UI on main thread
+                                    runOnUiThread(() -> {
+                                        if (!isFinishing() && !isDestroyed()) {
+                                            currentItem = updatedItem;
+                                            populateItemDataFromDatabase();
+                                            android.util.Log.d("ItemDetailActivity", "Real-time update: BidCount=" + updatedItem.getBidCount() + ", Price=" + updatedItem.getCurrentPrice());
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        android.util.Log.w("ItemDetailActivity", "Error during real-time polling", e);
+                    }
+                    
+                    // Schedule next poll if still active
+                    if (isPollingActive && !isFinishing() && !isDestroyed()) {
+                        pollingHandler.postDelayed(this, POLLING_INTERVAL);
+                    }
+                }).start();
+            }
+        };
+        
+        // Start first poll after a short delay
+        pollingHandler.postDelayed(pollingRunnable, POLLING_INTERVAL);
+    }
+    
+    /**
+     * Stop polling for real-time updates
+     */
+    private void stopRealTimePolling() {
+        if (!isPollingActive) {
+            return;
+        }
+        
+        isPollingActive = false;
+        android.util.Log.d("ItemDetailActivity", "Stopping real-time polling");
+        
+        if (pollingRunnable != null && pollingHandler != null) {
+            pollingHandler.removeCallbacks(pollingRunnable);
         }
     }
     

@@ -31,7 +31,20 @@ router.post('/place', authenticateToken, async (req, res) => {
 
     const { item_id, amount } = req.body;
     const bidder_id = req.user.id;
-    const bidder_alias = req.user.alias;
+    let bidder_alias = req.user.alias || req.user.username || req.user.email;
+
+    // If alias is still missing, fetch it from database
+    if (!bidder_alias || bidder_alias.trim() === '') {
+      const [userRows] = await connection.query(
+        'SELECT alias, username, email FROM users WHERE id = ?',
+        [bidder_id]
+      );
+      if (userRows.length > 0) {
+        bidder_alias = userRows[0].alias || userRows[0].username || userRows[0].email || `user_${bidder_id}`;
+      } else {
+        bidder_alias = `user_${bidder_id}`;
+      }
+    }
 
     const normalizedItemId = String(item_id ?? '').trim();
     const bidAmount = Number(amount);

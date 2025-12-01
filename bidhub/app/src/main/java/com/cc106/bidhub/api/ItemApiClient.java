@@ -691,10 +691,16 @@ public class ItemApiClient {
                 }
                 
                 // FIX: Use proper endpoint /items/{itemId} instead of fetching all items
-                URL url = new URL(ITEMS_ENDPOINT + "/" + itemId);
+                // Add cache-busting parameter for real-time updates
+                String urlString = ITEMS_ENDPOINT + "/" + itemId + "?_t=" + System.currentTimeMillis();
+                URL url = new URL(urlString);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 connection.setRequestProperty("Authorization", "Bearer " + authToken);
+                // FIX: Add cache-control headers to ensure fresh data for real-time updates
+                connection.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
+                connection.setRequestProperty("Pragma", "no-cache");
+                connection.setRequestProperty("Expires", "0");
                 connection.setConnectTimeout(30000);
                 connection.setReadTimeout(30000);
                 
@@ -976,7 +982,15 @@ public class ItemApiClient {
      * Get items from backend API with retry logic for 5xx errors
      */
     public ApiResponse getItems(String categoryId, String search, Double minPrice, Double maxPrice, String sellerEmail, int limit, int offset) {
-        Log.i(TAG, "Getting items from API");
+        return getItems(categoryId, search, minPrice, maxPrice, sellerEmail, limit, offset, false);
+    }
+    
+    /**
+     * Get items from backend API with retry logic for 5xx errors
+     * @param forceRefresh If true, adds cache-busting parameter to ensure fresh data
+     */
+    public ApiResponse getItems(String categoryId, String search, Double minPrice, Double maxPrice, String sellerEmail, int limit, int offset, boolean forceRefresh) {
+        Log.i(TAG, "Getting items from API" + (forceRefresh ? " (FORCE REFRESH)" : ""));
 
         // Retry configuration
         final int MAX_RETRIES = 2;
@@ -997,6 +1011,13 @@ public class ItemApiClient {
                 // Build query parameters
                 StringBuilder urlBuilder = new StringBuilder(ITEMS_ENDPOINT);
                 urlBuilder.append("?limit=").append(limit).append("&offset=").append(offset);
+                
+                // FIX: Add cache-busting parameter to ensure fresh data when forceRefresh is true
+                // This prevents browsers/proxies from returning cached responses
+                if (forceRefresh) {
+                    urlBuilder.append("&_t=").append(System.currentTimeMillis());
+                    Log.d(TAG, "Added cache-busting parameter for force refresh");
+                }
 
                 if (categoryId != null && !categoryId.isEmpty()) {
                     urlBuilder.append("&category_id=").append(categoryId);
@@ -1025,6 +1046,13 @@ public class ItemApiClient {
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 connection.setRequestProperty("Authorization", "Bearer " + authToken);
+                // FIX: Add cache-control headers to ensure fresh data for real-time updates
+                if (forceRefresh) {
+                    connection.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
+                    connection.setRequestProperty("Pragma", "no-cache");
+                    connection.setRequestProperty("Expires", "0");
+                    Log.d(TAG, "Added cache-control headers for force refresh");
+                }
                 connection.setConnectTimeout(60000);
                 connection.setReadTimeout(60000);
 

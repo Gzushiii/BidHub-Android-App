@@ -499,7 +499,8 @@ public class MainActivity extends BaseActivity {
     
     /**
      * FIX: Refresh BrowseFragment after item posting
-     * Ensures new items appear immediately in browse tab
+     * Ensures new items appear immediately in browse tab for all users
+     * Uses force refresh to bypass loading checks and ensure fresh data from API
      */
     public void refreshBrowseFragment() {
         try {
@@ -520,8 +521,12 @@ public class MainActivity extends BaseActivity {
             if (browseFragment instanceof com.cc106.bidhub.fragments.BrowseFragment) {
                 com.cc106.bidhub.fragments.BrowseFragment browse = 
                     (com.cc106.bidhub.fragments.BrowseFragment) browseFragment;
-                // Force refresh items from API
-                browse.loadItems();
+                // FIX: Force refresh items from API with cache-busting
+                // This ensures new items posted by any user appear immediately
+                android.util.Log.d("MainActivity", "Force refreshing BrowseFragment to show new items");
+                browse.loadItems(true); // true = force refresh
+            } else {
+                android.util.Log.d("MainActivity", "BrowseFragment not found, will refresh when tab is opened");
             }
         } catch (Exception e) {
             android.util.Log.e("MainActivity", "Error refreshing browse fragment", e);

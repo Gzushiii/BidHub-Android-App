@@ -110,20 +110,19 @@
                 android:maxLines="2"
                 android:ellipsize="end"
                 android:layout_marginBottom="@dimen/spacing_2"
-                tools:text="ITEM LISTING" />
+                tools:text="Keyboard" />
 
-            <!-- Price (Optional - can be hidden if not needed in design) -->
+            <!-- Price - Always visible, prominent display -->
             <TextView
                 android:id="@+id/tv_item_price"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
                 android:textStyle="bold"
                 android:textColor="@color/primary"
                 android:layout_marginBottom="@dimen/spacing_2"
-                android:visibility="gone"
-                tools:text="₱ 1,500.00"
-                tools:visibility="visible" />
+                android:visibility="visible"
+                tools:text="₱ 1,500.00" />
 
             <!-- Poster Information Row -->
             <LinearLayout
@@ -131,30 +130,30 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="@dimen/spacing_2">
+                android:layout_marginBottom="@dimen/spacing_1">
 
                 <ImageView
-                    android:layout_width="@dimen/icon_size_small"
-                    android:layout_height="@dimen/icon_size_small"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:src="@drawable/ic_person"
                     android:tint="@color/text_secondary"
                     android:contentDescription="@string/seller"
-                    android:layout_marginEnd="@dimen/spacing_1" />
+                    android:layout_marginEnd="4dp" />
 
                 <TextView
                     android:id="@+id/tv_seller_name"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                     android:textColor="@color/on_surface_variant"
                     android:maxLines="1"
                     android:ellipsize="end"
-                    tools:text="Poster Username" />
+                    tools:text="keo" />
 
             </LinearLayout>
 
-            <!-- Bidder Count and Duration Row -->
+            <!-- Bidder Count and Duration Row - Side by side for better space usage -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -163,32 +162,25 @@
                 android:layout_marginBottom="@dimen/spacing_2">
 
                 <!-- Left: Bidder Count -->
-                <LinearLayout
+                <TextView
+                    android:id="@+id/tv_bid_count"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:id="@+id/tv_bid_count"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                        android:textColor="@color/on_surface_variant"
-                        tools:text="No Bids Yet" />
-
-                </LinearLayout>
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                    android:textColor="@color/on_surface_variant"
+                    tools:text="No Bids Yet" />
 
                 <!-- Right: Duration Left -->
                 <TextView
                     android:id="@+id/tv_duration_left"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                     android:textColor="@color/on_surface_variant"
                     android:textStyle="bold"
-                    tools:text="6d 17h 50m Left" />
+                    android:gravity="end"
+                    tools:text="23h 59m Left" />
 
             </LinearLayout>
 
@@ -204,12 +196,12 @@
                 android:progress="30"
                 tools:progress="30" />
 
-            <!-- Action Button -->
+            <!-- Action Button - Hidden, card itself is clickable -->
             <Button
                 android:id="@+id/btn_view_listing"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="View Trip"
+                android:text="View Listing"
                 android:textAllCaps="false"
                 android:textColor="@color/text_primary"
                 android:textSize="14sp"
@@ -217,7 +209,8 @@
                 android:minHeight="48dp"
                 android:background="@drawable/button_gray_background"
                 android:paddingHorizontal="@dimen/spacing_4"
-                android:paddingVertical="@dimen/spacing_2" />
+                android:paddingVertical="@dimen/spacing_2"
+                android:visibility="gone" />
 
         </LinearLayout>
 

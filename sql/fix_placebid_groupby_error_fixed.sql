@@ -158,7 +158,7 @@ END$$
 CREATE PROCEDURE BuyNow(
     IN p_item_id INT UNSIGNED,
     IN p_buyer_id INT UNSIGNED,
-    IN p_buyer_alias VARCHAR(50)
+    IN p_buy_now_price DECIMAL(10,2)
 )
 BEGIN
     DECLARE v_buy_now_price DECIMAL(10,2) DEFAULT 0.00;
@@ -204,6 +204,11 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Item does not have buy now option';
     END IF;
 
+    -- Verify buy now price matches
+    IF ABS(p_buy_now_price - v_buy_now_price) > 0.01 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Price mismatch for buy now';
+    END IF;
+
     -- Check buyer is not the seller
     IF p_buyer_id = v_seller_id THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cannot buy your own item';
@@ -219,49 +224,50 @@ BEGIN
     END IF;
 
     -- Check if user has enough credits
-    IF v_user_credits < v_buy_now_price THEN
+    IF v_user_credits < p_buy_now_price THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Insufficient credits';
     END IF;
 
     -- Lock seller's row
-    SELECT credits INTO v_seller_credits
-    FROM users
-    WHERE id = v_seller_id
-    FOR UPDATE;
+    SELECT id INTO @dummy FROM users WHERE id = v_seller_id FOR UPDATE;
 
     -- Deduct credits from buyer
     UPDATE users 
-    SET credits = credits - v_buy_now_price
+    SET credits = credits - p_buy_now_price,
+        balance_version = COALESCE(balance_version, 0) + 1
     WHERE id = p_buyer_id;
 
     -- Add credits to seller
     UPDATE users 
-    SET credits = credits + v_buy_now_price
+    SET credits = credits + p_buy_now_price,
+        balance_version = COALESCE(balance_version, 0) + 1
     WHERE id = v_seller_id;
-
-    -- FIXED: Use credit_transactions table with correct column names
-    INSERT INTO credit_transactions (user_id, type, amount, status, description, item_id, reference)
-    VALUES (p_buyer_id, 'buy_now', v_buy_now_price, 'completed',
-            CONCAT('Buy now purchase of item ', p_item_id), p_item_id,
-            CONCAT('BUY_NOW_', p_item_id, '_', p_buyer_id));
-
-    -- FIXED: Use credit_transactions table with correct column names
-    INSERT INTO credit_transactions (user_id, type, amount, status, description, item_id, reference)
-    VALUES (v_seller_id, 'bonus', v_buy_now_price, 'completed',
-            CONCAT('Sale of item ', p_item_id), p_item_id,
-            CONCAT('SALE_', p_item_id, '_', v_seller_id));
 
     -- Mark item as sold
     UPDATE items 
     SET status = 'sold',
-        current_bid = v_buy_now_price,
-        current_price = v_buy_now_price,
+        current_bid = p_buy_now_price,
+        current_price = p_buy_now_price,
         current_bidder_id = p_buyer_id
     WHERE id = p_item_id;
 
+    -- FIXED: Use credit_transactions table with correct column names and idempotency
+    INSERT INTO credit_transactions (user_id, type, amount, status, reference, transaction_date, item_id, idempotency_key)
+    VALUES (p_buyer_id, 'buy_now', p_buy_now_price, 'completed',
+            CONCAT('BUY_NOW_ITEM_', p_item_id), NOW(), p_item_id,
+            CONCAT('BUYNOW_BUYER_', p_item_id, '_', p_buyer_id, '_', UNIX_TIMESTAMP()))
+    ON DUPLICATE KEY UPDATE status = 'completed';
+
+    -- FIXED: Use credit_transactions table with correct column names and idempotency
+    INSERT INTO credit_transactions (user_id, type, amount, status, reference, transaction_date, item_id, idempotency_key)
+    VALUES (v_seller_id, 'bonus', p_buy_now_price, 'completed',
+            CONCAT('SELL_ITEM_', p_item_id), NOW(), p_item_id,
+            CONCAT('BUYNOW_SELLER_', p_item_id, '_', v_seller_id, '_', UNIX_TIMESTAMP()))
+    ON DUPLICATE KEY UPDATE status = 'completed';
+
     COMMIT;
     
-    SELECT 'Item purchased successfully' AS message, v_buy_now_price AS purchase_amount;
+    SELECT 'Item purchased successfully' AS message, p_buy_now_price AS purchase_amount;
 END$$
 
 DELIMITER ;

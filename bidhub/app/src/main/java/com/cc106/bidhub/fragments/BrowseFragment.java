@@ -626,8 +626,16 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     }
     
     public void loadItems() {
+        loadItems(false);
+    }
+    
+    /**
+     * Load items from API with optional force refresh
+     * @param forceRefresh If true, bypasses loading check and forces fresh data from API
+     */
+    public void loadItems(boolean forceRefresh) {
         // Prevent duplicate loading, but allow refresh if explicitly requested
-        if (isLoading) {
+        if (!forceRefresh && isLoading) {
             android.util.Log.d("BrowseFragment", "Already loading items, skipping duplicate load");
             // If swipe refresh is active, ensure it completes
             if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
@@ -644,13 +652,17 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         }
         
         // Debug: Log before loading
-        android.util.Log.d("BrowseFragment", "Loading items from API...");
+        android.util.Log.d("BrowseFragment", "Loading items from API..." + (forceRefresh ? " (FORCE REFRESH)" : ""));
         
         // Always load from API to get latest data
-        loadItemsFromDatabase();
+        loadItemsFromDatabase(forceRefresh);
     }
     
     private void loadItemsFromDatabase() {
+        loadItemsFromDatabase(false);
+    }
+    
+    private void loadItemsFromDatabase(boolean forceRefresh) {
         // Try to fetch from backend API first
         new Thread(() -> {
             try {
@@ -671,7 +683,8 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                 }
                 
                 com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(getContext());
-                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItems(null, null, null, null, null, 100, 0);
+                // FIX: Pass forceRefresh flag to ensure fresh data from API
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItems(null, null, null, null, null, 100, 0, forceRefresh);
                 
                 if (response.isSuccess() && response.getData() != null) {
                     // Parse and display items from database
@@ -1325,14 +1338,22 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     public void onResume() {
         super.onResume();
         // FIX: Always refresh items on resume to ensure latest data
-        // But only if not currently loading to prevent duplicate API calls
-        // This ensures items persist across configuration changes and refresh cycles
+        // Use force refresh to ensure we get the most up-to-date items from the server
+        // This ensures new items posted by other users appear immediately when the tab becomes visible
         if (!isLoading) {
-            android.util.Log.d("BrowseFragment", "onResume: Refreshing items to ensure latest data");
-            // Always refresh from API to get latest items
-            loadItems();
+            android.util.Log.d("BrowseFragment", "onResume: Refreshing items to ensure latest data (force refresh)");
+            // Force refresh from API to get latest items (bypasses loading check)
+            loadItems(true); // true = force refresh
         } else {
             android.util.Log.d("BrowseFragment", "Skipping refresh on resume - currently loading");
+            // Even if loading, schedule a refresh after a short delay to ensure we get latest data
+            android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+            handler.postDelayed(() -> {
+                if (isAdded() && !isDetached()) {
+                    android.util.Log.d("BrowseFragment", "Delayed refresh after resume");
+                    loadItems(true); // Force refresh after delay
+                }
+            }, 1000); // 1 second delay
         }
     }
     

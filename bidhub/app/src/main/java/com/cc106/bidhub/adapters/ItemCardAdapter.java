@@ -62,7 +62,7 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             // Set item data with null safety
             holder.titleText.setText(item.getTitle() != null ? item.getTitle() : "Untitled Item");
             
-            // FIX: Display correct price based on bid status
+            // FIX: Display correct price based on bid status - always show price prominently
             // If no bids yet, show starting price; otherwise show current highest bid
             int bidCount = item.getBidCount();
             double displayPrice;
@@ -73,7 +73,12 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
                 // No bids yet - show starting bid
                 displayPrice = item.getStartingPrice() > 0 ? item.getStartingPrice() : 0.0;
             }
-            holder.priceText.setText(currencyFormat.format(displayPrice));
+            
+            // Always show price - make it visible and prominent
+            if (holder.priceText != null) {
+                holder.priceText.setText(currencyFormat.format(displayPrice));
+                holder.priceText.setVisibility(View.VISIBLE);
+            }
             
             // Display seller name - use sellerName if available, otherwise fallback
             String sellerName = item.getSellerName();
