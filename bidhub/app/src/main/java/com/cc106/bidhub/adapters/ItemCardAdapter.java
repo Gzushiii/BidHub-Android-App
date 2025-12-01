@@ -16,14 +16,18 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Adapter for displaying items in a grid layout for browsing
+ * Adapter for displaying items in both grid and list layouts for browsing
  */
 public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemViewHolder> {
+    
+    public static final int VIEW_TYPE_GRID = 0;
+    public static final int VIEW_TYPE_LIST = 1;
     
     private List<Item> items;
     private OnItemClickListener onItemClickListener;
     private NumberFormat currencyFormat;
     private SimpleDateFormat dateFormat;
+    private int viewType = VIEW_TYPE_GRID; // Default to grid view
     
     public interface OnItemClickListener {
         void onItemClick(Item item);
@@ -35,16 +39,33 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
         this.dateFormat = new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault());
     }
     
+    public void setViewType(int viewType) {
+        if (this.viewType != viewType) {
+            this.viewType = viewType;
+            notifyDataSetChanged();
+        }
+    }
+    
+    public int getViewType() {
+        return viewType;
+    }
+    
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.onItemClickListener = listener;
+    }
+    
+    @Override
+    public int getItemViewType(int position) {
+        return viewType;
     }
     
     @NonNull
     @Override
     public ItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        int layoutId = (viewType == VIEW_TYPE_LIST) ? R.layout.item_card_list : R.layout.item_card;
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_card, parent, false);
-        return new ItemViewHolder(view);
+                .inflate(layoutId, parent, false);
+        return new ItemViewHolder(view, viewType);
     }
     
     @Override
@@ -101,9 +122,11 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             }
             
             // FIX: Display bid count in new format (reuse bidCount from above)
+            // Use compact format to prevent text wrapping
             if (holder.bidCountText != null) {
                 if (bidCount > 0) {
-                    holder.bidCountText.setText(bidCount + (bidCount == 1 ? " bidder" : " bidders"));
+                    // Use compact format: "5 bids" instead of "5 bidders"
+                    holder.bidCountText.setText(bidCount + (bidCount == 1 ? " bid" : " bids"));
                 } else {
                     holder.bidCountText.setText("No Bids Yet");
                 }
@@ -130,13 +153,15 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
                 // Show "Ending Soon" if less than 24 hours remaining
                 isEndingSoon = days == 0 && hours < 24;
                 
-                // Format duration text for new layout
+                // Format duration text for new layout - ensure single line, compact format
                 if (days > 0) {
                     durationText = days + "d " + hours + "h " + minutes + "m Left";
                 } else if (hours > 0) {
                     durationText = hours + "h " + minutes + "m Left";
-                } else {
+                } else if (minutes > 0) {
                     durationText = minutes + "m Left";
+                } else {
+                    durationText = "Ending Soon";
                 }
                 
                 // Show time remaining badge if ending soon
@@ -305,9 +330,11 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
         com.google.android.material.button.MaterialButton viewListingButton;
         com.google.android.material.card.MaterialCardView imageCountCard;
         TextView imageCountText;
+        int viewType;
         
-        ItemViewHolder(@NonNull View itemView) {
+        ItemViewHolder(@NonNull View itemView, int viewType) {
             super(itemView);
+            this.viewType = viewType;
             itemImage = itemView.findViewById(R.id.iv_item_image);
             titleText = itemView.findViewById(R.id.tv_item_title);
             priceText = itemView.findViewById(R.id.tv_item_price);
@@ -327,6 +354,11 @@ public class ItemCardAdapter extends RecyclerView.Adapter<ItemCardAdapter.ItemVi
             // Hide the view listing button - card itself is clickable
             if (viewListingButton != null) {
                 viewListingButton.setVisibility(View.GONE);
+            }
+            
+            // Hide time remaining badge in list view (it's only for grid view)
+            if (viewType == VIEW_TYPE_LIST && timeRemainingBadge != null) {
+                timeRemainingBadge.setVisibility(View.GONE);
             }
         }
     }

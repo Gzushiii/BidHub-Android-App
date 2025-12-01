@@ -325,7 +325,8 @@ router.post('/place', authenticateToken, async (req, res) => {
       bidder_alias
     });
 
-    await connection.query('CALL PlaceBid(?, ?, ?, ?)', [
+    // Call stored procedure and get result with updated balance
+    const [procedureResult] = await connection.query('CALL PlaceBid(?, ?, ?, ?)', [
       numericItemId,  // Use numeric INT ID instead of UUID
       actualUserId,
       bidAmount,
@@ -334,17 +335,35 @@ router.post('/place', authenticateToken, async (req, res) => {
 
     await connection.commit();
 
+    // Get updated balance from procedure result
+    const resultData = procedureResult[0]?.[0] || {};
+    const newBalance = resultData.new_balance || null;
+
+    // Fetch current balance if not returned by procedure
+    let currentBalance = newBalance;
+    if (currentBalance === null) {
+      const [balanceRows] = await connection.query(
+        'SELECT credits FROM users WHERE id = ?',
+        [actualUserId]
+      );
+      currentBalance = balanceRows[0]?.credits || userCredits - bidAmount;
+    }
+
     console.log('Bid placed successfully', {
       correlationId,
       bid_amount: bidAmount,
       item_id: canonicalItemId,
-      numeric_item_id: numericItemId
+      numeric_item_id: numericItemId,
+      new_balance: currentBalance
     });
 
     return res.json({
       message: 'Bid placed successfully',
       bid_amount: bidAmount,
       item_id: canonicalItemId,  // Return UUID for client compatibility
+      previous_balance: userCredits,
+      new_balance: currentBalance,
+      refunded_amount: resultData.refunded_amount || 0,
       correlationId
     });
   } catch (err) {

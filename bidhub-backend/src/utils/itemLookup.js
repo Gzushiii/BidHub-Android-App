@@ -231,22 +231,51 @@ async function getItemImages(itemId, connection = null) {
  * @returns {Promise<Array>} Array of bid objects
  */
 async function getItemBids(itemId, connection = null) {
-  if (!itemId || typeof itemId !== 'string') {
+  if (!itemId) {
     return [];
   }
 
-  const id = itemId.trim();
   const db = connection || pool;
 
   try {
+    // First, resolve UUID to integer ID if needed (bids table only has item_id as integer FK)
+    let integerItemId = null;
+    
+    if (typeof itemId === 'string' && itemId.trim().length > 0) {
+      const id = itemId.trim();
+      // Check if it's a UUID or numeric ID
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      if (isUuid) {
+        // Resolve UUID to integer ID
+        const [itemRows] = await db.execute(
+          'SELECT id FROM items WHERE uuid_id = ? LIMIT 1',
+          [id]
+        );
+        if (itemRows.length > 0) {
+          integerItemId = itemRows[0].id;
+        }
+      } else if (!isNaN(parseInt(id, 10))) {
+        // It's already a numeric ID
+        integerItemId = parseInt(id, 10);
+      }
+    } else if (typeof itemId === 'number') {
+      integerItemId = itemId;
+    }
+
+    if (!integerItemId) {
+      return [];
+    }
+
+    // Query bids using integer item_id
     const [rows] = await db.execute(
       `SELECT b.*, u.alias as bidder_alias 
        FROM bids b 
        JOIN users u ON b.bidder_id = u.id 
-       WHERE b.item_uuid_id = ? 
-       ORDER BY b.placed_at DESC 
+       WHERE b.item_id = ? 
+       ORDER BY b.created_at DESC 
        LIMIT 10`,
-      [id]
+      [integerItemId]
     );
 
     return rows;

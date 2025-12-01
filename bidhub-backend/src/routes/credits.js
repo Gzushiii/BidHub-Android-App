@@ -6,14 +6,15 @@ const { pool } = require('../config/database');
 
 const router = express.Router();
 
-// Get credits balance
+// Get credits balance with real-time updates
 router.get('/balance', authenticateToken, async (req, res) => {
   try {
     const user_id = req.user.id;
 
-    // Get user credits
+    // Get user credits with balance version for consistency checking
+    // Handle case where balance_version column might not exist
     const [users] = await pool.query(
-      'SELECT credits FROM users WHERE id = ?',
+      'SELECT credits, COALESCE(balance_version, 0) as balance_version FROM users WHERE id = ?',
       [user_id]
     );
 
@@ -21,20 +22,37 @@ router.get('/balance', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const credits = users[0].credits;
+    const credits = Number(users[0].credits || 0);
+    const balance_version = Number(users[0].balance_version || 0);
 
     // Get recent transactions
     const [transactions] = await pool.query(
-      `SELECT * FROM credit_transactions 
+      `SELECT 
+        id, type, amount, status, description, item_id, 
+        reference, transaction_date, created_at
+       FROM credit_transactions 
        WHERE user_id = ? 
        ORDER BY created_at DESC 
-       LIMIT 10`,
+       LIMIT 20`,
       [user_id]
     );
 
+    // Calculate pending transactions (if any)
+    const [pendingTransactions] = await pool.query(
+      `SELECT SUM(amount) as pending_total
+       FROM credit_transactions 
+       WHERE user_id = ? AND status = 'pending'`,
+      [user_id]
+    );
+    const pendingTotal = Number(pendingTransactions[0]?.pending_total || 0);
+
     res.json({
       credits,
-      recent_transactions: transactions
+      balance_version,
+      available_balance: credits - pendingTotal,
+      pending_balance: pendingTotal,
+      recent_transactions: transactions,
+      last_updated: new Date().toISOString()
     });
   } catch (err) {
     console.error('Credits balance error:', err);

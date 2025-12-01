@@ -102,9 +102,18 @@ public class BidApiClient {
                 if (errorResponse != null) {
                     errorType = errorResponse.optString("error", "bid_failed");
                     errorMessage = errorResponse.optString("message", "Failed to place bid");
+                    String details = errorResponse.optString("details", "");
                     
+                    // Check for database schema errors
+                    if (errorMessage != null && (errorMessage.contains("Unknown column") || 
+                        errorMessage.contains("current_bidder_id") || 
+                        errorMessage.contains("field list"))) {
+                        errorMessage = "Database schema error detected. The server database is missing required columns. This is a backend configuration issue that needs to be fixed on the server.";
+                        Log.e(TAG, "Database schema error detected in bid placement: " + errorMessage);
+                    }
                     // Provide more detailed error messages based on error type
-                    if ("bid_too_low".equals(errorType)) {
+                    else if ("bid_too_low".equals(errorType) || "bid_failed".equals(errorType) && 
+                             (errorMessage.contains("must be higher") || errorMessage.contains("starting price"))) {
                         double requiredBid = errorResponse.optDouble("required_bid", 0);
                         double currentBid = errorResponse.optDouble("current_bid", 0);
                         double startingPrice = errorResponse.optDouble("starting_price", 0);
@@ -119,6 +128,10 @@ public class BidApiClient {
                             errorMessage = String.format("Insufficient credits. Required: ₱%.2f, Available: ₱%.2f", 
                                 required, available);
                         }
+                    } else if ("sql_error".equals(details) && errorMessage != null && 
+                              (errorMessage.contains("Unknown column") || errorMessage.contains("field list"))) {
+                        errorMessage = "Database schema error detected. The server database is missing required columns. This is a backend configuration issue that needs to be fixed on the server.";
+                        Log.e(TAG, "SQL error detected in bid placement: " + errorMessage);
                     }
                 }
                 

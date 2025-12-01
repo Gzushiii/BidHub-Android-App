@@ -180,6 +180,9 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
             itemAdapter.updateItems(filteredItems);
         }
         
+        // Set adapter view type
+        itemAdapter.setViewType(isGridView ? ItemCardAdapter.VIEW_TYPE_GRID : ItemCardAdapter.VIEW_TYPE_LIST);
+        
         // Set layout manager based on view type
         if (isGridView) {
             // FIX: Use GridLayoutManager with 2 columns and proper spacing
@@ -246,6 +249,29 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
             rvItems.setLayoutManager(layoutManager);
         } else {
             LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+            
+            // Remove grid spacing decorations for list view
+            if (rvItems.getItemDecorationCount() > 0) {
+                for (int i = rvItems.getItemDecorationCount() - 1; i >= 0; i--) {
+                    rvItems.removeItemDecorationAt(i);
+                }
+            }
+            
+            // Add simple vertical spacing for list view
+            androidx.recyclerview.widget.RecyclerView.ItemDecoration listSpacing = 
+                new androidx.recyclerview.widget.RecyclerView.ItemDecoration() {
+                    @Override
+                    public void getItemOffsets(android.graphics.Rect outRect, View view, 
+                                             androidx.recyclerview.widget.RecyclerView parent, 
+                                             androidx.recyclerview.widget.RecyclerView.State state) {
+                        int spacing = (int) (4 * view.getContext().getResources().getDisplayMetrics().density);
+                        outRect.top = spacing;
+                        outRect.bottom = spacing;
+                        outRect.left = (int) (8 * view.getContext().getResources().getDisplayMetrics().density);
+                        outRect.right = (int) (8 * view.getContext().getResources().getDisplayMetrics().density);
+                    }
+                };
+            rvItems.addItemDecoration(listSpacing);
             rvItems.setLayoutManager(layoutManager);
         }
         
@@ -1387,15 +1413,20 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     private void toggleView() {
         isGridView = !isGridView;
         
-        // Update button icon
-        if (isGridView) {
-            btnViewToggle.setImageResource(R.drawable.ic_grid_view);
-        } else {
-            btnViewToggle.setImageResource(R.drawable.ic_list_view);
+        // Update adapter view type before setting up RecyclerView
+        if (itemAdapter != null) {
+            itemAdapter.setViewType(isGridView ? ItemCardAdapter.VIEW_TYPE_GRID : ItemCardAdapter.VIEW_TYPE_LIST);
         }
         
         // Update RecyclerView layout
         setupRecyclerView();
+        
+        // Update button icon (shows opposite of current view)
+        if (isGridView) {
+            btnViewToggle.setImageResource(R.drawable.ic_list_view);
+        } else {
+            btnViewToggle.setImageResource(R.drawable.ic_grid_view);
+        }
     }
     
     /**

@@ -20,6 +20,8 @@ const router = express.Router();
 
 // Get all items with filtering and pagination (must come before /:id route)
 router.get('/', async (req, res) => {
+  const connection = await pool.getConnection();
+  
   try {
     const { 
       status = 'active', 
@@ -32,9 +34,57 @@ router.get('/', async (req, res) => {
       offset = 0 
     } = req.query;
 
-    let query = 'SELECT * FROM v_active_items WHERE 1=1';
+    // Try to use v_active_items view first, fallback to direct query if view doesn't exist
+    let query;
+    let useView = true;
+    
+    try {
+      // Test if view exists by doing a simple count query
+      await connection.query('SELECT COUNT(*) as count FROM v_active_items LIMIT 1');
+      query = 'SELECT * FROM v_active_items WHERE 1=1';
+    } catch (viewError) {
+      console.warn('v_active_items view not available, using direct query:', viewError.message);
+      useView = false;
+      // Fallback: query items table directly
+      query = `SELECT 
+        i.id,
+        i.uuid_id,
+        i.title,
+        i.description,
+        i.category_id,
+        i.seller_id,
+        COALESCE(i.starting_price, i.starting_bid, 0) as starting_price,
+        COALESCE(i.starting_bid, i.starting_price, 0) as starting_bid,
+        i.reserve_price,
+        COALESCE(i.current_price, i.current_bid, COALESCE(i.starting_price, i.starting_bid, 0)) as current_price,
+        COALESCE(i.current_bid, i.current_price, COALESCE(i.starting_bid, i.starting_price, 0)) as current_bid,
+        i.buy_now_price,
+        COALESCE(i.item_condition, i.condition, 'good') as item_condition,
+        COALESCE(i.item_condition, i.condition, 'good') as condition,
+        i.status,
+        i.end_date,
+        COALESCE(i.bid_deadline, i.end_date) as bid_deadline,
+        COALESCE(i.current_bidder_id, NULL) as current_bidder_id,
+        i.created_at,
+        i.updated_at,
+        COALESCE(i.seller_email, u.email) as seller_email,
+        u.username as seller_username,
+        u.alias as seller_alias,
+        c.name as category_name,
+        c.description as category_description
+      FROM items i
+      LEFT JOIN users u ON i.seller_id = u.id
+      LEFT JOIN categories c ON i.category_id = c.id
+      WHERE i.status = ?`;
+    }
+    
     const params = [];
 
+    if (!useView) {
+      // For direct query, status is already in WHERE clause
+      params.push(status);
+    }
+    
     if (category_id) {
       query += ' AND category_id = ?';
       params.push(category_id);
@@ -63,7 +113,7 @@ router.get('/', async (req, res) => {
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
     params.push(parseInt(limit), parseInt(offset));
 
-    const [items] = await pool.query(query, params);
+    const [items] = await connection.query(query, params);
 
     // Enhance items with bid_count and ensure seller_username is present
     // FIX: Properly map field names from v_active_items view to consistent API response format
@@ -73,10 +123,10 @@ router.get('/', async (req, res) => {
       const integerId = item.id; // Integer ID from view
       const uuidId = item.uuid_id; // UUID ID from view
       
-      // Get bid count for this item
-      const [bidCountResult] = await pool.query(
-        'SELECT COUNT(*) as bid_count FROM bids WHERE item_id = ? OR item_uuid_id = ?',
-        [integerId, uuidId]
+      // Get bid count for this item - bids table only has item_id (integer FK)
+      const [bidCountResult] = await connection.query(
+        'SELECT COUNT(*) as bid_count FROM bids WHERE item_id = ?',
+        [integerId]
       );
       
       const bidCount = bidCountResult[0]?.bid_count || 0;
@@ -84,7 +134,7 @@ router.get('/', async (req, res) => {
       // Get images for this item - item_images table uses integer item_id FK
       let imageUrls = [];
       try {
-        const [images] = await pool.query(
+        const [images] = await connection.query(
           `SELECT image_url FROM item_images 
            WHERE item_id = ? 
            ORDER BY display_order ASC`,
@@ -133,8 +183,17 @@ router.get('/', async (req, res) => {
     }));
 
     // Get total count for pagination
-    let countQuery = 'SELECT COUNT(*) as total FROM v_active_items WHERE 1=1';
+    let countQuery;
     const countParams = [];
+    
+    if (useView) {
+      countQuery = 'SELECT COUNT(*) as total FROM v_active_items WHERE 1=1';
+    } else {
+      countQuery = `SELECT COUNT(*) as total FROM items i
+        LEFT JOIN users u ON i.seller_id = u.id
+        WHERE i.status = ?`;
+      countParams.push(status);
+    }
     
     if (category_id) {
       countQuery += ' AND category_id = ?';
@@ -161,7 +220,7 @@ router.get('/', async (req, res) => {
       countParams.push(seller_email);
     }
 
-    const [countResult] = await pool.query(countQuery, countParams);
+    const [countResult] = await connection.query(countQuery, countParams);
     const total = countResult[0].total;
 
     res.json({ 
@@ -173,7 +232,33 @@ router.get('/', async (req, res) => {
     });
   } catch (err) {
     console.error('Items fetch error:', err);
-    res.status(500).json({ error: 'Failed to fetch items' });
+    console.error('Error details:', {
+      message: err.message,
+      code: err.code,
+      sqlState: err.sqlState,
+      sqlMessage: err.sqlMessage,
+      stack: err.stack
+    });
+    
+    // Provide more detailed error information in development
+    const errorResponse = {
+      error: 'Failed to fetch items',
+      message: err.message || 'Unknown error occurred'
+    };
+    
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+      errorResponse.details = {
+        code: err.code,
+        sqlState: err.sqlState,
+        sqlMessage: err.sqlMessage
+      };
+    }
+    
+    res.status(500).json(errorResponse);
+  } finally {
+    if (connection) {
+      connection.release();
+    }
   }
 });
 
@@ -225,7 +310,7 @@ router.get('/:id', async (req, res) => {
         u.alias as seller_alias,
         c.name as category_name,
         c.description as category_description,
-        (SELECT COUNT(*) FROM bids WHERE item_id = i.id OR item_uuid_id = i.uuid_id) as bid_count
+        (SELECT COUNT(*) FROM bids WHERE item_id = i.id) as bid_count
       FROM items i
       LEFT JOIN users u ON i.seller_id = u.id
       LEFT JOIN categories c ON i.category_id = c.id
@@ -849,16 +934,48 @@ router.post('/:id/buy-now', authenticateToken, async (req, res) => {
       purchaseAmount
     });
 
-    await connection.query('CALL BuyNow(?, ?, ?)', [
+    // Get buyer's balance before purchase
+    const [buyerBefore] = await connection.query(
+      'SELECT credits FROM users WHERE id = ?',
+      [buyerId]
+    );
+    const buyerPreviousBalance = buyerBefore[0]?.credits || 0;
+
+    // Call stored procedure and get result with updated balances
+    const [procedureResult] = await connection.query('CALL BuyNow(?, ?, ?)', [
       numericItemId,  // Use numeric INT ID instead of UUID
       buyerId,
       purchaseAmount
     ]);
 
+    // Get updated balances from procedure result
+    const resultData = procedureResult[0]?.[0] || {};
+    const buyerNewBalance = resultData.buyer_new_balance || null;
+    const sellerNewBalance = resultData.seller_new_balance || null;
+
+    // Fetch current balances if not returned by procedure
+    let currentBuyerBalance = buyerNewBalance;
+    let currentSellerBalance = sellerNewBalance;
+    
+    if (currentBuyerBalance === null) {
+      const [buyerRows] = await connection.query(
+        'SELECT credits FROM users WHERE id = ?',
+        [buyerId]
+      );
+      currentBuyerBalance = buyerRows[0]?.credits || buyerPreviousBalance - purchaseAmount;
+    }
+
     return res.json({
       message: 'Purchase completed successfully', 
       item_id: canonicalItemId,
       amount: purchaseAmount,
+      buyer: {
+        previous_balance: buyerPreviousBalance,
+        new_balance: currentBuyerBalance
+      },
+      seller: {
+        new_balance: currentSellerBalance
+      },
       correlationId
     });
   } catch (err) {
