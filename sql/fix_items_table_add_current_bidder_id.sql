@@ -212,3 +212,4 @@ SELECT '' AS '';
 SELECT 'The items table now has the current_bidder_id column' AS '';
 SELECT 'needed for bid placement operations.' AS '';
 
+

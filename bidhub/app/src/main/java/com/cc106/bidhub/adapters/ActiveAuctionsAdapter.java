@@ -70,25 +70,21 @@ public class ActiveAuctionsAdapter extends RecyclerView.Adapter<ActiveAuctionsAd
     }
     
     class ActiveAuctionViewHolder extends RecyclerView.ViewHolder {
-        private TextView tvCurrentBidLabel;
         private TextView tvCurrentBidAmount;
         private TextView tvItemName;
         private TextView tvSellerName;
         private TextView tvBidCount;
         private TextView tvTimeLeft;
-        private com.google.android.material.button.MaterialButton btnBidNow;
         private android.widget.ImageView ivItemImage;
         
         public ActiveAuctionViewHolder(@NonNull View itemView) {
             super(itemView);
             
-            tvCurrentBidLabel = itemView.findViewById(R.id.tv_current_bid_label);
             tvCurrentBidAmount = itemView.findViewById(R.id.tv_current_bid_amount);
             tvItemName = itemView.findViewById(R.id.tv_item_name);
             tvSellerName = itemView.findViewById(R.id.tv_seller_name);
             tvBidCount = itemView.findViewById(R.id.tv_bid_count);
             tvTimeLeft = itemView.findViewById(R.id.tv_time_left);
-            btnBidNow = itemView.findViewById(R.id.btn_bid_now);
             ivItemImage = itemView.findViewById(R.id.iv_item_image);
             
             // Set click listeners
@@ -101,14 +97,6 @@ public class ActiveAuctionsAdapter extends RecyclerView.Adapter<ActiveAuctionsAd
                 }
             });
             
-            btnBidNow.setOnClickListener(v -> {
-                if (onAuctionClickListener != null) {
-                    int position = getAdapterPosition();
-                    if (position != RecyclerView.NO_POSITION && items != null) {
-                        onAuctionClickListener.onAuctionClick(items.get(position));
-                    }
-                }
-            });
         }
         
         public void bind(Item item) {
@@ -120,17 +108,13 @@ public class ActiveAuctionsAdapter extends RecyclerView.Adapter<ActiveAuctionsAd
             // If no bids yet, show starting price; otherwise show current highest bid
             int bidCount = item.getBidCount();
             double displayPrice;
-            String priceLabel;
             if (bidCount > 0 && item.getCurrentPrice() > 0) {
                 // Active bids present - show current highest bid
                 displayPrice = item.getCurrentPrice();
-                priceLabel = context.getString(R.string.current_bid);
             } else {
                 // No bids yet - show starting bid
                 displayPrice = item.getStartingPrice() > 0 ? item.getStartingPrice() : 0.0;
-                priceLabel = context.getString(R.string.starting_bid);
             }
-            tvCurrentBidLabel.setText(priceLabel);
             tvCurrentBidAmount.setText(currencyFormat.format(displayPrice));
             
             // Set item name

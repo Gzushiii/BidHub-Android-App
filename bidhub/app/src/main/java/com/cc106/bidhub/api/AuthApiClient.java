@@ -29,38 +29,154 @@ public class AuthApiClient {
     
     /**
      * Login user with email and password
+     * Includes retry logic for timeout errors
      */
     public ApiResponse login(String email, String password) {
-        try {
-            URL url = new URL(LOGIN_ENDPOINT);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            
-            // Set request method and headers
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("Accept", "application/json");
-            connection.setDoOutput(true);
-            // Render free tier can cold start and take ~50s; increase timeouts accordingly
-            connection.setConnectTimeout(60000);
-            connection.setReadTimeout(60000);
-            
-            // Create request body
-            JSONObject requestData = new JSONObject();
-            requestData.put("email", email);
-            requestData.put("password", password);
-            
-            // Debug logging
-            Log.d(TAG, "Login request - Email: " + email + ", Password length: " + password.length());
-            
-            // Send request
-            try (OutputStream os = connection.getOutputStream()) {
-                byte[] input = requestData.toString().getBytes("utf-8");
-                os.write(input, 0, input.length);
+        return loginWithRetry(email, password, 3);
+    }
+    
+    /**
+     * Login with retry logic for handling timeouts
+     * @param email User email
+     * @param password User password
+     * @param maxRetries Maximum number of retry attempts
+     * @return ApiResponse with login result
+     */
+    private ApiResponse loginWithRetry(String email, String password, int maxRetries) {
+        int retryCount = 0;
+        long baseDelayMs = 1000; // Start with 1 second delay
+        
+        while (retryCount < maxRetries) {
+            try {
+                URL url = new URL(LOGIN_ENDPOINT);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                
+                // Set request method and headers
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setDoOutput(true);
+                connection.setInstanceFollowRedirects(false);
+                
+                // Render free tier can cold start and take ~50s; increase timeouts accordingly
+                // Using longer timeouts to handle cold starts
+                connection.setConnectTimeout(90000); // 90 seconds for connection
+                connection.setReadTimeout(90000);    // 90 seconds for read
+                
+                // Enable connection reuse
+                connection.setRequestProperty("Connection", "keep-alive");
+                
+                // Create request body
+                JSONObject requestData = new JSONObject();
+                requestData.put("email", email);
+                requestData.put("password", password);
+                
+                // Debug logging
+                Log.d(TAG, "Login request attempt " + (retryCount + 1) + " - Email: " + email);
+                
+                // Send request
+                try (OutputStream os = connection.getOutputStream()) {
+                    byte[] input = requestData.toString().getBytes("utf-8");
+                    os.write(input, 0, input.length);
+                }
+                
+                // Get response code - this can also timeout, so it's in the retry loop
+                // Wrap in try-catch to handle timeouts during response reading
+                int responseCode;
+                try {
+                    responseCode = connection.getResponseCode();
+                    Log.d(TAG, "Login response code: " + responseCode);
+                } catch (java.net.SocketTimeoutException e) {
+                    // Timeout while reading response - retry
+                    retryCount++;
+                    Log.w(TAG, "Login response read timeout attempt " + retryCount + "/" + maxRetries);
+                    
+                    if (retryCount >= maxRetries) {
+                        Log.e(TAG, "Login failed after " + maxRetries + " timeout attempts (response read)");
+                        return new ApiResponse(false, 
+                            "Connection timed out while reading response. The server may be slow. Please try again.", 
+                            null);
+                    }
+                    
+                    // Exponential backoff
+                    long delayMs = baseDelayMs * (1L << (retryCount - 1));
+                    Log.d(TAG, "Retrying login in " + delayMs + "ms...");
+                    try {
+                        Thread.sleep(delayMs);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        return new ApiResponse(false, "Login interrupted. Please try again.", null);
+                    }
+                    continue; // Retry the entire request
+                }
+                
+                // If we get here, the request succeeded - process response
+                return processLoginResponse(connection, email, responseCode);
+                
+            } catch (java.net.SocketTimeoutException e) {
+                retryCount++;
+                Log.w(TAG, "Login timeout attempt " + retryCount + "/" + maxRetries + ": " + e.getMessage());
+                
+                if (retryCount >= maxRetries) {
+                    Log.e(TAG, "Login failed after " + maxRetries + " timeout attempts");
+                    return new ApiResponse(false, 
+                        "Connection timed out after multiple attempts. The server may be starting up. Please wait a moment and try again.", 
+                        null);
+                }
+                
+                // Exponential backoff: 1s, 2s, 4s
+                long delayMs = baseDelayMs * (1L << (retryCount - 1));
+                Log.d(TAG, "Retrying login in " + delayMs + "ms...");
+                try {
+                    Thread.sleep(delayMs);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    return new ApiResponse(false, "Login interrupted. Please try again.", null);
+                }
+                
+            } catch (java.net.UnknownHostException e) {
+                Log.e(TAG, "Login error: Unable to resolve host - " + e.getMessage(), e);
+                return new ApiResponse(false, "Unable to connect to server. Please check your internet connection.", null);
+            } catch (java.io.IOException e) {
+                // Check if it's a connection timeout wrapped in IOException
+                String errorMsg = e.getMessage();
+                if (errorMsg != null && (errorMsg.contains("timeout") || errorMsg.contains("timed out"))) {
+                    retryCount++;
+                    Log.w(TAG, "Login connection error (timeout) attempt " + retryCount + "/" + maxRetries);
+                    
+                    if (retryCount >= maxRetries) {
+                        return new ApiResponse(false, 
+                            "Connection timed out after multiple attempts. Please check your internet connection and try again.", 
+                            null);
+                    }
+                    
+                    long delayMs = baseDelayMs * (1L << (retryCount - 1));
+                    try {
+                        Thread.sleep(delayMs);
+                        continue; // Retry the request
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        return new ApiResponse(false, "Login interrupted. Please try again.", null);
+                    }
+                } else {
+                    Log.e(TAG, "Login error: Network I/O problem - " + e.getMessage(), e);
+                    return new ApiResponse(false, "Network error. Please check your internet connection and try again.", null);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Login error: Unexpected error - " + e.getMessage(), e);
+                return new ApiResponse(false, "An unexpected error occurred during login. Please try again.", null);
             }
-            
-            // Get response
-            int responseCode = connection.getResponseCode();
-            Log.d(TAG, "Login response code: " + responseCode);
+        }
+        
+        // Should never reach here, but just in case
+        return new ApiResponse(false, "Login failed after multiple attempts. Please try again.", null);
+    }
+    
+    /**
+     * Process login response after successful connection
+     */
+    private ApiResponse processLoginResponse(HttpURLConnection connection, String email, int responseCode) {
+        try {
             
             BufferedReader reader;
             if (responseCode >= 200 && responseCode < 300) {
@@ -110,13 +226,15 @@ public class AuthApiClient {
                     
                     // Immediately refresh credits from backend to ensure accuracy
                     // This runs in background, but we've already saved the value from login response
+                    // Use shorter timeout since server should be warmed up after login
                     try {
                         URL balUrl = new URL(BASE_URL + "/credits/balance");
                         HttpURLConnection balConn = (HttpURLConnection) balUrl.openConnection();
                         balConn.setRequestMethod("GET");
                         balConn.setRequestProperty("Authorization", "Bearer " + token);
-                        balConn.setConnectTimeout(60000);
-                        balConn.setReadTimeout(60000);
+                        balConn.setRequestProperty("Connection", "keep-alive");
+                        balConn.setConnectTimeout(20000); // 20 seconds - server should be warm
+                        balConn.setReadTimeout(20000);
                         int balCode = balConn.getResponseCode();
                         if (balCode >= 200 && balCode < 300) {
                             BufferedReader br = new BufferedReader(new InputStreamReader(balConn.getInputStream()));
@@ -149,19 +267,9 @@ public class AuthApiClient {
                 Log.e(TAG, "Login failed - Response code: " + responseCode + ", Message: " + errorMessage);
                 return new ApiResponse(false, errorMessage, null);
             }
-            
-        } catch (java.net.UnknownHostException e) {
-            Log.e(TAG, "Login error: Unable to resolve host - " + e.getMessage(), e);
-            return new ApiResponse(false, "Unable to connect to server. Please check your internet connection.", null);
-        } catch (java.net.SocketTimeoutException e) {
-            Log.e(TAG, "Login error: Connection timed out - " + e.getMessage(), e);
-            return new ApiResponse(false, "Connection timed out. The server may be busy. Please try again.", null);
-        } catch (java.io.IOException e) {
-            Log.e(TAG, "Login error: Network I/O problem - " + e.getMessage(), e);
-            return new ApiResponse(false, "Network error. Please check your internet connection and try again.", null);
         } catch (Exception e) {
-            Log.e(TAG, "Login error: Unexpected error - " + e.getMessage(), e);
-            return new ApiResponse(false, "An unexpected error occurred during login. Please try again.", null);
+            Log.e(TAG, "Error processing login response: " + e.getMessage(), e);
+            return new ApiResponse(false, "Error processing server response. Please try again.", null);
         }
     }
     
@@ -179,9 +287,12 @@ public class AuthApiClient {
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Accept", "application/json");
             connection.setDoOutput(true);
+            connection.setInstanceFollowRedirects(false);
             // Render free tier can cold start and take ~50s; increase timeouts accordingly
-            connection.setConnectTimeout(60000);
-            connection.setReadTimeout(60000);
+            connection.setConnectTimeout(90000); // 90 seconds for connection
+            connection.setReadTimeout(90000);    // 90 seconds for read
+            // Enable connection reuse
+            connection.setRequestProperty("Connection", "keep-alive");
             
             // Create request body
             JSONObject requestData = new JSONObject();

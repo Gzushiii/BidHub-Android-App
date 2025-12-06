@@ -62,8 +62,12 @@ public class ImageUploadClient {
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
             connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
             connection.setDoOutput(true);
-            connection.setConnectTimeout(60000);
-            connection.setReadTimeout(60000);
+            connection.setInstanceFollowRedirects(false);
+            // Render free tier can cold start and take ~50s; increase timeouts for large uploads
+            connection.setConnectTimeout(90000); // 90 seconds for connection
+            connection.setReadTimeout(90000);    // 90 seconds for read (large file uploads)
+            // Enable connection reuse
+            connection.setRequestProperty("Connection", "keep-alive");
             
             // Write multipart form data
             OutputStream outputStream = connection.getOutputStream();

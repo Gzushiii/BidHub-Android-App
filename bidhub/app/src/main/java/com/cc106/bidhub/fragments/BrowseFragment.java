@@ -58,8 +58,8 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
     private ImageButton btnViewToggle;
     private RecyclerView rvItems;
     private ProgressBar progressBar;
-    private LinearLayout layoutEmptyState;
-    private LinearLayout layoutFilterChipsContainer;
+    private View layoutEmptyState; // Changed to View - now MaterialCardView
+    private View layoutFilterChipsContainer; // Changed to View - now MaterialCardView
     private HorizontalScrollView hsvFilterChips;
     private LinearLayout layoutFilterChips;
     private Button btnClearAllFilters;

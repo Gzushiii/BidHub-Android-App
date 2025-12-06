@@ -14,7 +14,8 @@
     android:foreground="?attr/selectableItemBackgroundBorderless"
     app:cardCornerRadius="16dp"
     app:cardElevation="1dp"
-    app:cardBackgroundColor="@color/surface_container">
+    app:cardBackgroundColor="@color/surface"
+    app:rippleColor="@color/primary_light">
 
 <androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="match_parent"

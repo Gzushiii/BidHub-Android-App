@@ -133,22 +133,25 @@
     
     <!-- CARD STYLES - Material 3 -->
     <style name="Widget.BidHub.Card" parent="Widget.Material3.CardView.Elevated">
-        <item name="cardCornerRadius">12dp</item>
+        <item name="cardCornerRadius">16dp</item>
         <item name="cardElevation">1dp</item>
         <item name="cardBackgroundColor">@color/surface</item>
         <item name="strokeColor">@color/outline</item>
         <item name="strokeWidth">0dp</item>
+        <item name="rippleColor">@color/primary_light</item>
         <item name="android:layout_margin">@dimen/spacing_2</item>
     </style>
     
     <style name="Widget.BidHub.Card.Item" parent="Widget.BidHub.Card">
-        <item name="cardElevation">3dp</item>
-        <item name="cardBackgroundColor">@color/surface_container</item>
+        <item name="cardElevation">1dp</item>
+        <item name="cardBackgroundColor">@color/surface</item>
+        <item name="cardCornerRadius">16dp</item>
     </style>
     
     <style name="Widget.BidHub.Card.Bid" parent="Widget.BidHub.Card">
         <item name="cardCornerRadius">16dp</item>
-        <item name="cardElevation">2dp</item>
+        <item name="cardElevation">1dp</item>
+        <item name="cardBackgroundColor">@color/surface</item>
     </style>
     
     <style name="Widget.BidHub.Card.Credit" parent="Widget.BidHub.Card">
@@ -159,17 +162,20 @@
     
     <!-- Material 3 Filled Card -->
     <style name="Widget.BidHub.Card.Filled" parent="Widget.Material3.CardView.Filled">
-        <item name="cardCornerRadius">12dp</item>
-        <item name="cardBackgroundColor">@color/surface_variant</item>
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardBackgroundColor">@color/surface_container_high</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">0dp</item>
         <item name="android:layout_margin">@dimen/spacing_2</item>
     </style>
     
     <!-- Material 3 Outlined Card -->
     <style name="Widget.BidHub.Card.Outlined" parent="Widget.Material3.CardView.Outlined">
-        <item name="cardCornerRadius">12dp</item>
+        <item name="cardCornerRadius">16dp</item>
         <item name="cardBackgroundColor">@color/surface</item>
         <item name="strokeColor">@color/outline</item>
         <item name="strokeWidth">1dp</item>
+        <item name="cardElevation">0dp</item>
         <item name="android:layout_margin">@dimen/spacing_2</item>
     </style>
     

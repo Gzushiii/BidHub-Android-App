@@ -39,10 +39,13 @@ public class BidApiClient {
             connection.setDoOutput(true);
             connection.setDoInput(true);
             connection.setUseCaches(false);
+            connection.setInstanceFollowRedirects(false);
             
-            // Set timeouts to handle Render cold starts
-            connection.setConnectTimeout(60000); // 60 seconds
-            connection.setReadTimeout(60000);    // 60 seconds
+            // Set timeouts to handle Render cold starts (~50s cold start)
+            connection.setConnectTimeout(90000); // 90 seconds for connection
+            connection.setReadTimeout(90000);    // 90 seconds for read
+            // Enable connection reuse
+            connection.setRequestProperty("Connection", "keep-alive");
             
             // Create request body
             JSONObject requestData = new JSONObject();

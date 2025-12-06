@@ -14,12 +14,29 @@
     android:foreground="?attr/selectableItemBackgroundBorderless"
     app:cardCornerRadius="16dp"
     app:cardElevation="1dp"
-    app:cardBackgroundColor="@color/surface_container">
+    app:cardBackgroundColor="@color/surface"
+    app:rippleColor="@color/primary_light">
 
 <androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="@dimen/spacing_4">
+    android:padding="@dimen/spacing_3"
+    android:minHeight="120dp">
+
+    <!-- Right Section: Image (Square) -->
+    <ImageView
+        android:id="@+id/iv_item_image"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:scaleType="centerCrop"
+        android:background="@color/surface_variant"
+        android:contentDescription="@string/item_image"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/layout_text_content"
+        android:layout_marginStart="@dimen/spacing_3"
+        tools:src="@drawable/ic_image_placeholder" />
 
     <!-- Left Section: Text Content -->
     <LinearLayout
@@ -27,47 +44,41 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="start"
+        android:gravity="start|center_vertical"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/iv_item_image"
-        app:layout_constraintWidth_percent="0.66">
+        android:layout_marginEnd="@dimen/spacing_3">
 
-        <!-- Current Bid - Material 3 -->
-        <TextView
-            android:id="@+id/tv_current_bid_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/current_bid_label"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            android:textColor="@color/on_surface_variant"
-            android:layout_marginBottom="@dimen/spacing_1"
-            tools:text="Current Bid:" />
-
+        <!-- Current/Starting Bid Amount - Prominent, Large, Green -->
         <TextView
             android:id="@+id/tv_current_bid_amount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+            android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
             android:textStyle="bold"
-            android:textColor="@color/primary"
+            android:textColor="@color/success"
+            android:textSize="20sp"
+            android:letterSpacing="0.01"
             android:layout_marginBottom="@dimen/spacing_2"
-            tools:text="$55" />
+            tools:text="P1,220.00" />
 
-        <!-- Item Name - Material 3 -->
+        <!-- Item Name - Medium Size -->
         <TextView
             android:id="@+id/tv_item_name"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
             android:textColor="@color/on_surface"
+            android:textSize="16sp"
             android:maxLines="2"
             android:ellipsize="end"
-            android:layout_marginBottom="@dimen/spacing_1"
-            tools:text="Vintage Camera" />
+            android:lineSpacingExtra="2dp"
+            android:layout_marginBottom="@dimen/spacing_2"
+            tools:text="Keyboard" />
 
-        <!-- Seller and Bid Count Info -->
+        <!-- Seller and Bid Count Info - Same Line -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -83,9 +94,10 @@
                 android:layout_weight="1"
                 android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                 android:textColor="@color/on_surface_variant"
+                android:textSize="12sp"
                 android:maxLines="1"
                 android:ellipsize="end"
-                tools:text="by Seller Name" />
+                tools:text="by juji" />
 
             <!-- Bid Count -->
             <TextView
@@ -94,49 +106,22 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                 android:textColor="@color/on_surface_variant"
+                android:textSize="12sp"
                 tools:text="5 bids" />
 
         </LinearLayout>
 
-        <!-- Time Left - Material 3 -->
+        <!-- Time Left - Small Size -->
         <TextView
             android:id="@+id/tv_time_left"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/time_left_label"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
             android:textColor="@color/on_surface_variant"
-            android:layout_marginBottom="@dimen/spacing_3"
-            tools:text="Time Left: 00h 55m 23s" />
-
-        <!-- Bid Now Button - Material 3 -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_bid_now"
-            style="@style/Widget.BidHub.Button.Text"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:minHeight="36dp"
-            android:minWidth="0dp"
-            android:text="@string/bid_now"
-            android:textSize="14sp" />
+            android:textSize="12sp"
+            tools:text="Time Left: 18h 25m 10s" />
 
     </LinearLayout>
-
-    <!-- Right Section: Image -->
-    <ImageView
-        android:id="@+id/iv_item_image"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:scaleType="centerCrop"
-        android:background="@color/surface_variant"
-        android:contentDescription="@string/item_image"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/layout_text_content"
-        app:layout_constraintWidth_percent="0.33"
-        app:layout_constraintDimensionRatio="16:9"
-        tools:src="@drawable/ic_image_placeholder" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

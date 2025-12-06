@@ -230,8 +230,11 @@ public class ItemApiClient {
                 connection.setRequestProperty("Content-Type", "application/json");
                 connection.setRequestProperty("Authorization", "Bearer " + authToken);
                 connection.setDoOutput(true);
-                connection.setConnectTimeout(60000);
-                connection.setReadTimeout(60000);
+                // Render free tier can cold start and take ~50s; increase timeouts accordingly
+                connection.setConnectTimeout(90000); // 90 seconds for connection
+                connection.setReadTimeout(90000);    // 90 seconds for read
+                // Enable connection reuse
+                connection.setRequestProperty("Connection", "keep-alive");
                 
                 // FIX: Validate and log request data before sending for debugging
                 String requestJson = requestData.toString();
@@ -595,8 +598,12 @@ public class ItemApiClient {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(30000);
+            connection.setInstanceFollowRedirects(false);
+            // Render free tier can cold start and take ~50s; increase timeouts accordingly
+            connection.setConnectTimeout(90000); // 90 seconds for connection
+            connection.setReadTimeout(90000);    // 90 seconds for read
+            // Enable connection reuse
+            connection.setRequestProperty("Connection", "keep-alive");
             
             int responseCode = connection.getResponseCode();
             BufferedReader reader;
@@ -701,8 +708,12 @@ public class ItemApiClient {
                 connection.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
                 connection.setRequestProperty("Pragma", "no-cache");
                 connection.setRequestProperty("Expires", "0");
-                connection.setConnectTimeout(30000);
-                connection.setReadTimeout(30000);
+                connection.setInstanceFollowRedirects(false);
+                // Render free tier can cold start and take ~50s; increase timeouts accordingly
+                connection.setConnectTimeout(90000); // 90 seconds for connection
+                connection.setReadTimeout(90000);    // 90 seconds for read
+                // Enable connection reuse
+                connection.setRequestProperty("Connection", "keep-alive");
                 
                 int responseCode = connection.getResponseCode();
                 BufferedReader reader;
@@ -858,8 +869,12 @@ public class ItemApiClient {
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
             connection.setDoOutput(true);
-            connection.setConnectTimeout(60000);
-            connection.setReadTimeout(60000);
+            connection.setInstanceFollowRedirects(false);
+            // Render free tier can cold start and take ~50s; increase timeouts accordingly
+            connection.setConnectTimeout(90000); // 90 seconds for connection
+            connection.setReadTimeout(90000);    // 90 seconds for read
+            // Enable connection reuse
+            connection.setRequestProperty("Connection", "keep-alive");
             
             // Send request
             OutputStream os = connection.getOutputStream();
@@ -940,8 +955,12 @@ public class ItemApiClient {
             connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Authorization", "Bearer " + authToken);
             connection.setDoOutput(true);
-            connection.setConnectTimeout(60000);
-            connection.setReadTimeout(60000);
+            connection.setInstanceFollowRedirects(false);
+            // Render free tier can cold start and take ~50s; increase timeouts accordingly
+            connection.setConnectTimeout(90000); // 90 seconds for connection
+            connection.setReadTimeout(90000);    // 90 seconds for read
+            // Enable connection reuse
+            connection.setRequestProperty("Connection", "keep-alive");
             
             // Send request
             OutputStream os = connection.getOutputStream();
@@ -1053,8 +1072,11 @@ public class ItemApiClient {
                     connection.setRequestProperty("Expires", "0");
                     Log.d(TAG, "Added cache-control headers for force refresh");
                 }
-                connection.setConnectTimeout(60000);
-                connection.setReadTimeout(60000);
+                // Render free tier can cold start and take ~50s; increase timeouts accordingly
+                connection.setConnectTimeout(90000); // 90 seconds for connection
+                connection.setReadTimeout(90000);    // 90 seconds for read
+                // Enable connection reuse
+                connection.setRequestProperty("Connection", "keep-alive");
 
                 // Get response
                 int responseCode = connection.getResponseCode();

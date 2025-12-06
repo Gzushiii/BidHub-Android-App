@@ -468,32 +468,43 @@
             android:padding="@dimen/spacing_4"
             android:background="@color/surface">
 
-            <!-- Bid Amount Input -->
+            <!-- Bid Amount Input - Enhanced Material 3 Design -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/enter_your_bid"
-                android:layout_marginBottom="@dimen/spacing_3"
+                android:layout_marginBottom="@dimen/spacing_4"
                 style="@style/Widget.BidHub.TextInputLayout"
                 app:prefixText="₱"
+                app:prefixTextColor="@color/on_surface"
+                app:prefixTextAppearance="@style/TextAppearance.Material3.TitleLarge"
                 app:boxBackgroundMode="outline"
-                app:boxCornerRadiusTopStart="@dimen/input_corner_radius"
-                app:boxCornerRadiusTopEnd="@dimen/input_corner_radius"
-                app:boxCornerRadiusBottomStart="@dimen/input_corner_radius"
-                app:boxCornerRadiusBottomEnd="@dimen/input_corner_radius"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
                 app:boxStrokeColor="@color/outline"
                 app:boxStrokeWidth="2dp"
-                app:hintTextColor="@color/text_secondary">
+                app:boxStrokeWidthFocused="2dp"
+                app:boxBackgroundColor="@color/surface_container_high"
+                app:hintTextColor="@color/on_surface_variant">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_bid_amount"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/text_input_height"
+                    android:layout_height="64dp"
+                    android:minHeight="64dp"
                     android:inputType="numberDecimal"
-                    android:textAppearance="@style/TextAppearance.BidHub.Body"
-                    android:textSize="18sp"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+                    android:textSize="20sp"
                     android:textStyle="bold"
-                    android:textColor="@color/text_primary" />
+                    android:textColor="@color/on_surface"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:paddingTop="16dp"
+                    android:paddingBottom="16dp"
+                    android:gravity="center_vertical"
+                    android:letterSpacing="0.01" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -501,26 +512,33 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_place_bid"
                     android:layout_width="0dp"
-                    android:layout_height="@dimen/button_height_primary"
+                    android:layout_height="56dp"
+                    android:minHeight="56dp"
                     android:layout_weight="1"
                     android:text="@string/place_bid"
                     android:visibility="visible"
                     android:enabled="true"
                     style="@style/Widget.BidHub.Button.Primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
                     android:layout_marginEnd="@dimen/spacing_2" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_buy_now"
                     android:layout_width="0dp"
-                    android:layout_height="@dimen/button_height_primary"
+                    android:layout_height="56dp"
+                    android:minHeight="56dp"
                     android:layout_weight="1"
                     android:text="@string/buy_now"
                     style="@style/Widget.BidHub.Button.Secondary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
                     android:layout_marginStart="@dimen/spacing_2" />
 
             </LinearLayout>
