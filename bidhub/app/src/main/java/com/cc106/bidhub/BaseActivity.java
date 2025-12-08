@@ -59,13 +59,18 @@ public abstract class BaseActivity extends AppCompatActivity implements BottomNa
     
     /**
      * Call this method after inflating content in child activities
+     * Provides smooth fade-in animation for better UX
      */
     protected void animateContentIn() {
-        // Temporarily disabled to debug crash
-        // View contentFrame = findViewById(R.id.content_frame);
-        // if (contentFrame != null) {
-        //     UIUtils.fadeInView(contentFrame, 300);
-        // }
+        View contentFrame = findViewById(R.id.content_frame);
+        if (contentFrame != null) {
+            contentFrame.setAlpha(0f);
+            contentFrame.animate()
+                .alpha(1f)
+                .setDuration(300)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                .start();
+        }
     }
 
     @Override

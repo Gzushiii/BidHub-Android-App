@@ -122,8 +122,10 @@ public class CreditsFragment extends Fragment {
             btnTransactionHistory.setOnClickListener(v -> showTransactionHistory());
         }
         
-        // Add test button for debugging (remove in production)
-        addTestButton();
+        // Test button only in debug builds
+        if (com.cc106.bidhub.BuildConfig.DEBUG) {
+            addTestButton();
+        }
     }
     
     public void loadCreditInformation() {
@@ -482,6 +484,9 @@ public class CreditsFragment extends Fragment {
                                             ((com.cc106.bidhub.MainActivity) getActivity()).refreshCreditDisplays();
                                         }
                                         
+                                        // CRITICAL: Refresh credit transaction history after balance update
+                                        refreshCreditHistoryFromBackend();
+                                        
                                         // Show appropriate message based on top-up status
                                         String message = getString(R.string.topup_processed_successfully);
                                         if ("CONFIRMED".equals(topupStatus)) {
@@ -504,6 +509,9 @@ public class CreditsFragment extends Fragment {
                                     if (getActivity() != null && !getActivity().isFinishing() && getActivity() instanceof com.cc106.bidhub.MainActivity) {
                                         ((com.cc106.bidhub.MainActivity) getActivity()).refreshCreditDisplays();
                                     }
+                                    
+                                    // Still try to refresh history even if balance refresh failed
+                                    refreshCreditHistoryFromBackend();
                                     
                                     // Show appropriate message based on status
                                     String message = getString(R.string.topup_processed_successfully);
@@ -798,7 +806,11 @@ public class CreditsFragment extends Fragment {
                                     com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
                                 double oldBalance = userRepo.getCredits();
                                 userRepo.updateCreditsImmediately(newBalance);
-                                android.util.Log.i("CreditsFragment", String.format("Balance updated immediately: %.2f -> %.2f (Delta: %.2f)", 
+                                
+                                // Also update SharedPreferences immediately for consistency
+                                com.cc106.bidhub.utils.CreditBalanceManager.updateBalanceImmediately(getContext(), newBalance);
+                                
+                                android.util.Log.i("CreditsFragment", String.format("Balance updated immediately: %.2f -> %.2f (Delta: %.2f)",
                                     oldBalance, newBalance, newBalance - oldBalance));
                                 
                                 // Log full transaction details for debugging
@@ -1034,28 +1046,31 @@ public class CreditsFragment extends Fragment {
     
     
     private void addTestButton() {
-        if (packagesContainer != null) {
-            Button testButton = new Button(getContext());
-            testButton.setText("🧪 Test Credits System");
-            testButton.setBackgroundColor(getResources().getColor(android.R.color.holo_orange_light));
-            testButton.setTextColor(getResources().getColor(android.R.color.white));
-            testButton.setPadding(16, 16, 16, 16);
-            testButton.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ));
-            
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) testButton.getLayoutParams();
-            params.setMargins(0, 16, 0, 0);
-            testButton.setLayoutParams(params);
-            
-            testButton.setOnClickListener(v -> {
-                // Run a simple test
-                ToastHelper.showInfo(getContext(), "Credits system is working! Balance: " + creditManager.formatCurrency(creditManager.getCreditBalance(userId)));
-            });
-            
-            packagesContainer.addView(testButton);
+        // Only show test button in debug builds
+        if (!com.cc106.bidhub.BuildConfig.DEBUG || packagesContainer == null) {
+            return;
         }
+        
+        Button testButton = new Button(getContext());
+        testButton.setText("🧪 Test Credits System");
+        testButton.setBackgroundColor(getResources().getColor(android.R.color.holo_orange_light));
+        testButton.setTextColor(getResources().getColor(android.R.color.white));
+        testButton.setPadding(16, 16, 16, 16);
+        testButton.setLayoutParams(new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+        
+        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) testButton.getLayoutParams();
+        params.setMargins(0, 16, 0, 0);
+        testButton.setLayoutParams(params);
+        
+        testButton.setOnClickListener(v -> {
+            // Run a simple test
+            ToastHelper.showInfo(getContext(), "Credits system is working! Balance: " + creditManager.formatCurrency(creditManager.getCreditBalance(userId)));
+        });
+        
+        packagesContainer.addView(testButton);
     }
     
     public void updateUserEmail(String email) {
@@ -1105,6 +1120,7 @@ public class CreditsFragment extends Fragment {
     }
     
     /**
+<<<<<<< Updated upstream
      * FIX: Load recent transactions from backend API
      * Fetches both credit transactions and top-ups to show complete history
      */
@@ -1301,6 +1317,99 @@ public class CreditsFragment extends Fragment {
         }
         
         return transactions;
+    }
+    
+    /**
+     * Refresh credit transaction history from backend API
+     * This method uses CreditBalanceManager for consistency with other parts of the app
+     */
+    private void refreshCreditHistoryFromBackend() {
+        android.util.Log.d("CreditsFragment", "Refreshing credit transaction history from backend");
+        
+        com.cc106.bidhub.utils.CreditBalanceManager.refreshTransactionHistory(
+            getContext(),
+            new com.cc106.bidhub.utils.CreditBalanceManager.TransactionHistoryCallback() {
+                @Override
+                public void onHistoryUpdated(org.json.JSONArray transactions) {
+                    if (getActivity() != null && !getActivity().isFinishing()) {
+                        try {
+                            // Convert JSONArray to List<CreditTransaction>
+                            transactionHistory = new ArrayList<>();
+                            if (transactions != null) {
+                                for (int i = 0; i < transactions.length(); i++) {
+                                    org.json.JSONObject txJson = transactions.getJSONObject(i);
+                                    CreditTransaction tx = new CreditTransaction();
+                                    
+                                    // Map backend fields to CreditTransaction
+                                    tx.setTransactionId(txJson.optString("id", String.valueOf(txJson.optInt("id", 0))));
+                                    tx.setUserId(String.valueOf(txJson.optInt("user_id", 0)));
+                                    tx.setType(txJson.optString("type", "unknown"));
+                                    tx.setAmount(txJson.optDouble("amount", 0.0));
+                                    tx.setStatus(txJson.optString("status", "completed"));
+                                    tx.setPaymentMethod(txJson.optString("payment_method", ""));
+                                    tx.setReference(txJson.optString("reference", ""));
+                                    
+                                    // Parse created_at timestamp
+                                    String createdAtStr = txJson.optString("created_at", "");
+                                    if (!createdAtStr.isEmpty()) {
+                                        try {
+                                            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+                                            sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                                            tx.setCreatedAt(sdf.parse(createdAtStr));
+                                        } catch (Exception e) {
+                                            android.util.Log.w("CreditsFragment", "Failed to parse created_at: " + createdAtStr, e);
+                                            tx.setCreatedAt(new Date());
+                                        }
+                                    } else {
+                                        tx.setCreatedAt(new Date());
+                                    }
+                                    
+                                    // Set description based on type
+                                    if ("purchase".equals(tx.getType())) {
+                                        tx.setDescription("Top-up: ₱" + String.format("%.2f", Math.abs(tx.getAmount())));
+                                    } else if ("bid".equals(tx.getType())) {
+                                        tx.setDescription("Bid placed: ₱" + String.format("%.2f", Math.abs(tx.getAmount())));
+                                    } else {
+                                        tx.setDescription(txJson.optString("description", tx.getType()));
+                                    }
+                                    
+                                    transactionHistory.add(tx);
+                                }
+                            }
+                            
+                            android.util.Log.i("CreditsFragment", "Loaded " + transactionHistory.size() + " transactions from backend");
+                            
+                            // Update UI with last transaction
+                            if (!transactionHistory.isEmpty() && tvLastTransaction != null) {
+                                CreditTransaction lastTransaction = transactionHistory.get(0);
+                                String lastTransactionText = String.format("Last: %s %s on %s",
+                                    lastTransaction.getType(),
+                                    creditManager.formatCurrency(Math.abs(lastTransaction.getAmount())),
+                                    new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(lastTransaction.getCreatedAt())
+                                );
+                                tvLastTransaction.setText(lastTransactionText);
+                            }
+                            
+                        } catch (Exception e) {
+                            android.util.Log.e("CreditsFragment", "Error parsing transaction history", e);
+                        }
+                    }
+                }
+                
+                @Override
+                public void onError(String errorMessage) {
+                    android.util.Log.w("CreditsFragment", "Failed to refresh transaction history: " + errorMessage);
+                    // Fallback to local storage if backend fails
+                    if (creditManager != null && userId != null) {
+                        try {
+                            transactionHistory = creditManager.getTransactionHistory(userId);
+                        } catch (Exception e) {
+                            android.util.Log.e("CreditsFragment", "Error loading local transaction history", e);
+                        }
+                    }
+                }
+            }
+        );
     }
     
     /**

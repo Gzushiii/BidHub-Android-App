@@ -155,5 +155,130 @@ public class BidApiClient {
             return new ApiResponse(false, "An unexpected error occurred. Please try again.", null);
         }
     }
+    
+    /**
+     * Get user's bid history from backend
+     */
+    public static ApiResponse getBidHistory(String authToken, String status, int limit, int offset) {
+        try {
+            Log.i(TAG, "Fetching bid history - status: " + status + ", limit: " + limit + ", offset: " + offset);
+            
+            StringBuilder urlBuilder = new StringBuilder(BASE_URL + "/bids/history");
+            boolean firstParam = true;
+            
+            if (status != null && !status.isEmpty()) {
+                urlBuilder.append(firstParam ? "?" : "&").append("status=").append(status);
+                firstParam = false;
+            }
+            if (limit > 0) {
+                urlBuilder.append(firstParam ? "?" : "&").append("limit=").append(limit);
+                firstParam = false;
+            }
+            if (offset > 0) {
+                urlBuilder.append(firstParam ? "?" : "&").append("offset=").append(offset);
+            }
+            
+            URL url = new URL(urlBuilder.toString());
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Authorization", "Bearer " + authToken);
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setConnectTimeout(60000);
+            connection.setReadTimeout(60000);
+            
+            int responseCode = connection.getResponseCode();
+            Log.i(TAG, "Bid history response code: " + responseCode);
+            
+            BufferedReader reader;
+            if (responseCode >= 200 && responseCode < 300) {
+                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            } else {
+                reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+            }
+            
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+            
+            String responseBody = response.toString();
+            Log.i(TAG, "Bid history response: " + responseCode + " - " + responseBody);
+            
+            if (responseCode >= 200 && responseCode < 300) {
+                JSONObject jsonResponse = new JSONObject(responseBody);
+                return new ApiResponse(true, "Bid history fetched successfully", jsonResponse);
+            } else {
+                JSONObject errorResponse = new JSONObject(responseBody);
+                String errorMessage = errorResponse.optString("message", "Failed to fetch bid history");
+                return new ApiResponse(false, errorMessage, errorResponse);
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching bid history: " + e.getMessage(), e);
+            return new ApiResponse(false, "An error occurred while fetching bid history: " + e.getMessage(), null);
+        }
+    }
+    
+    /**
+     * Get bids for a specific item
+     */
+    public static ApiResponse getItemBids(String itemId, int limit, int offset) {
+        try {
+            Log.i(TAG, "Fetching bids for item: " + itemId);
+            
+            StringBuilder urlBuilder = new StringBuilder(BASE_URL + "/bids/item/" + itemId);
+            boolean firstParam = true;
+            
+            if (limit > 0) {
+                urlBuilder.append(firstParam ? "?" : "&").append("limit=").append(limit);
+                firstParam = false;
+            }
+            if (offset > 0) {
+                urlBuilder.append(firstParam ? "?" : "&").append("offset=").append(offset);
+            }
+            
+            URL url = new URL(urlBuilder.toString());
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setConnectTimeout(60000);
+            connection.setReadTimeout(60000);
+            
+            int responseCode = connection.getResponseCode();
+            Log.i(TAG, "Item bids response code: " + responseCode);
+            
+            BufferedReader reader;
+            if (responseCode >= 200 && responseCode < 300) {
+                reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            } else {
+                reader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+            }
+            
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+            
+            String responseBody = response.toString();
+            Log.i(TAG, "Item bids response: " + responseCode + " - " + responseBody);
+            
+            if (responseCode >= 200 && responseCode < 300) {
+                JSONObject jsonResponse = new JSONObject(responseBody);
+                return new ApiResponse(true, "Item bids fetched successfully", jsonResponse);
+            } else {
+                JSONObject errorResponse = new JSONObject(responseBody);
+                String errorMessage = errorResponse.optString("message", "Failed to fetch item bids");
+                return new ApiResponse(false, errorMessage, errorResponse);
+            }
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching item bids: " + e.getMessage(), e);
+            return new ApiResponse(false, "An error occurred while fetching item bids: " + e.getMessage(), null);
+        }
+    }
 }
 

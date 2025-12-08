@@ -15,15 +15,14 @@ class AuctionEndService {
     
     try {
       // Find all active auctions that have ended
-      // Use SELECT ... FOR UPDATE SKIP LOCKED to prevent duplicate processing
-      // Note: SKIP LOCKED requires MySQL 8.0.1+ or MariaDB 10.6+
-      // If your database doesn't support it, remove "SKIP LOCKED" (may cause slight delays)
+      // Note: Removed SKIP LOCKED for compatibility with older MySQL versions
+      // This may cause slight delays if multiple processes run simultaneously, but ensures compatibility
       const [endedAuctions] = await connection.query(
         `SELECT id, title, seller_id, seller_email, end_date, current_price, starting_price
          FROM items 
          WHERE status = 'active' 
          AND end_date <= NOW()
-         FOR UPDATE SKIP LOCKED`
+         FOR UPDATE`
       );
       
       console.log(`Found ${endedAuctions.length} ended auctions to process`);
@@ -158,7 +157,6 @@ class AuctionEndService {
         await this.notifySellerNoBids(connection, item);
         console.log(`Auction ${item.id} ended with no bids`);
       }
-      
     } catch (error) {
       console.error(`Error processing auction end for item ${item.id}:`, error);
       throw error;
