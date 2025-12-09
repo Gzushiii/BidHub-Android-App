@@ -308,6 +308,8 @@ router.get('/:id', async (req, res) => {
         u.username as seller_username,
         u.email as seller_email,
         u.alias as seller_alias,
+        COALESCE(u.seller_rating, 0.00) as seller_rating,
+        COALESCE(u.seller_review_count, 0) as seller_review_count,
         c.name as category_name,
         c.description as category_description,
         (SELECT COUNT(*) FROM bids WHERE item_id = i.id) as bid_count
@@ -353,6 +355,8 @@ router.get('/:id', async (req, res) => {
         seller_email: fullItem.seller_email,
         seller_username: fullItem.seller_username,
         seller_alias: fullItem.seller_alias,
+        seller_rating: parseFloat(fullItem.seller_rating || 0),
+        seller_review_count: parseInt(fullItem.seller_review_count || 0),
         starting_bid: fullItem.starting_bid || fullItem.starting_price,
         current_bid: fullItem.current_bid || fullItem.current_price,
         buy_now_price: fullItem.buy_now_price,

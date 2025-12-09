@@ -470,6 +470,7 @@
 
             <!-- Bid Amount Input - Enhanced Material 3 Design -->
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layout_bid_input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/enter_your_bid"
@@ -510,6 +511,7 @@
 
             <!-- Action Buttons -->
             <LinearLayout
+                android:id="@+id/layout_action_buttons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"

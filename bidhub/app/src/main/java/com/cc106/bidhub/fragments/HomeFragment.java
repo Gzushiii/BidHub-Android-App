@@ -564,8 +564,13 @@ public class HomeFragment extends Fragment {
                     continue; // Skip null items
                 }
                 
-                // Only show ACTIVE items
+                // Only show ACTIVE items that haven't ended
                 if (item.getStatus() != com.cc106.bidhub.items.ItemStatus.ACTIVE) {
+                    continue;
+                }
+                
+                // Exclude ended auctions
+                if (item.hasEnded() || !item.isAvailableForBidding()) {
                     continue;
                 }
                 
@@ -641,6 +646,15 @@ public class HomeFragment extends Fragment {
                 items = new ArrayList<>();
             }
             
+            // Additional filter to exclude ended auctions (safety check)
+            List<Item> nonEndedItems = new ArrayList<>();
+            for (Item item : items) {
+                if (item != null && !item.hasEnded() && item.isAvailableForBidding()) {
+                    nonEndedItems.add(item);
+                }
+            }
+            items = nonEndedItems;
+            
             // Ensure proper sorting by creation date (newest first)
             java.util.Collections.sort(items, new java.util.Comparator<Item>() {
                 @Override
@@ -659,7 +673,7 @@ public class HomeFragment extends Fragment {
                 items = items.subList(0, 20);
             }
             
-            android.util.Log.d("HomeFragment", "Loaded " + items.size() + " active auctions (newest first)");
+            android.util.Log.d("HomeFragment", "Loaded " + items.size() + " active auctions (newest first, ended auctions excluded)");
             
             activeAuctions.clear();
             activeAuctions.addAll(items);

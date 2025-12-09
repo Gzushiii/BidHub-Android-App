@@ -48,6 +48,8 @@ public class ItemDetailActivity extends AppCompatActivity {
     private ImageButton btnBack, btnShare, btnFavorite;
     private ProgressBar progressTimeLeft;
     private LinearLayout layoutBidHistory;
+    private com.google.android.material.textfield.TextInputLayout layoutBidInput;
+    private LinearLayout layoutActionButtons;
     private CreditManager creditManager;
     private SharedPreferencesHelper prefsHelper;
     private NumberFormat currencyFormat;
@@ -260,6 +262,12 @@ public class ItemDetailActivity extends AppCompatActivity {
             layoutBidHistory = findViewById(R.id.layout_bid_history);
             android.util.Log.d("ItemDetailActivity", "layoutBidHistory initialized");
             
+            layoutBidInput = findViewById(R.id.layout_bid_input);
+            android.util.Log.d("ItemDetailActivity", "layoutBidInput initialized");
+            
+            layoutActionButtons = findViewById(R.id.layout_action_buttons);
+            android.util.Log.d("ItemDetailActivity", "layoutActionButtons initialized");
+            
             // Initialize ViewPager2 for image gallery
             viewPagerImages = findViewById(R.id.viewpager_images);
             android.util.Log.d("ItemDetailActivity", "viewPagerImages initialized");
@@ -408,13 +416,23 @@ public class ItemDetailActivity extends AppCompatActivity {
                 }
             }
             
-            // Calculate and display time left
-            String timeLeft = calculateTimeLeft(currentItem.getEndDate());
-            tvTimeLeft.setText(timeLeft);
-            
-            // Set progress based on time remaining
-            int progress = calculateAuctionProgress(currentItem.getEndDate());
-            progressTimeLeft.setProgress(progress);
+            // Check if auction has already ended
+            if (currentItem.hasEnded() || !currentItem.isAvailableForBidding()) {
+                isAuctionEnded = true;
+                tvTimeLeft.setText("Auction Ended");
+                tvTimeLeft.setTextColor(getResources().getColor(R.color.semantic_error));
+                progressTimeLeft.setProgress(100);
+                // Hide bidding controls immediately
+                hideBiddingControls();
+            } else {
+                // Calculate and display time left
+                String timeLeft = calculateTimeLeft(currentItem.getEndDate());
+                tvTimeLeft.setText(timeLeft);
+                
+                // Set progress based on time remaining
+                int progress = calculateAuctionProgress(currentItem.getEndDate());
+                progressTimeLeft.setProgress(progress);
+            }
             
             // Load seller information
             loadSellerInformation(currentItem.getSellerId());
@@ -428,7 +446,24 @@ public class ItemDetailActivity extends AppCompatActivity {
             double startingPrice = currentItem.getStartingPrice();
             double minBid = Math.max(currentHighestBid + 1.0, startingPrice);
             if (etBidAmount != null) {
-                etBidAmount.setHint("Min: " + currencyFormat.format(minBid));
+                // Store the minimum bid hint text
+                final String minBidHint = "Min: " + currencyFormat.format(minBid);
+                
+                // Initially hide the hint - it will only show when the field is focused
+                etBidAmount.setHint("");
+                
+                // Add focus listener to show/hide hint based on focus state
+                etBidAmount.setOnFocusChangeListener((v, hasFocus) -> {
+                    if (hasFocus) {
+                        // Show the minimum bid hint when field gains focus
+                        etBidAmount.setHint(minBidHint);
+                    } else {
+                        // Hide the hint when field loses focus (if empty)
+                        if (etBidAmount.getText().toString().trim().isEmpty()) {
+                            etBidAmount.setHint("");
+                        }
+                    }
+                });
             }
             
             // Start countdown timer
@@ -492,19 +527,17 @@ public class ItemDetailActivity extends AppCompatActivity {
         // Owner message handling removed - layout doesn't have this view
         
         // Check if auction is active
-        if (currentItem.isAvailableForBidding()) {
-            btnPlaceBid.setVisibility(View.VISIBLE);
+        if (currentItem.isAvailableForBidding() && !isAuctionEnded) {
+            // Show bidding controls
+            showBiddingControls();
             btnPlaceBid.setEnabled(true);
             btnPlaceBid.setText(getString(R.string.place_bid));
             btnPlaceBid.setAlpha(1.0f); // Full opacity
             android.util.Log.d("ItemDetailActivity", "Auction is active, showing Place Bid button");
         } else {
-            // Auction ended or not available
-            btnPlaceBid.setVisibility(View.VISIBLE);
-            btnPlaceBid.setEnabled(false);
-            btnPlaceBid.setText("Auction Ended");
-            btnPlaceBid.setAlpha(0.6f);
-            android.util.Log.d("ItemDetailActivity", "Auction not available, disabling Place Bid button");
+            // Auction ended or not available - hide bidding controls
+            hideBiddingControls();
+            android.util.Log.d("ItemDetailActivity", "Auction not available, hiding bidding controls");
         }
     }
     
@@ -1056,6 +1089,12 @@ public class ItemDetailActivity extends AppCompatActivity {
                 }
             }
             
+            // Parse seller rating and review count
+            double sellerRating = itemJson.optDouble("seller_rating", 0.0);
+            int sellerReviewCount = itemJson.optInt("seller_review_count", 0);
+            item.setSellerRating(sellerRating);
+            item.setSellerReviewCount(sellerReviewCount);
+            
             // Parse bid count
             int bidCount = itemJson.optInt("bid_count", 0);
             item.setBidCount(bidCount);
@@ -1342,11 +1381,20 @@ public class ItemDetailActivity extends AppCompatActivity {
             // Use seller name from item if available (from API)
             if (currentItem != null && currentItem.getSellerName() != null && !currentItem.getSellerName().isEmpty()) {
                 tvSellerName.setText(currentItem.getSellerName());
-                tvSellerRating.setText("4.5 (50 reviews)");
+                
+                // Display dynamic seller rating and review count
+                double rating = currentItem.getSellerRating();
+                int reviewCount = currentItem.getSellerReviewCount();
+                if (reviewCount > 0) {
+                    tvSellerRating.setText(String.format("%.1f (%d %s)", rating, reviewCount, reviewCount == 1 ? "review" : "reviews"));
+                } else {
+                    tvSellerRating.setText("No rating");
+                }
+                
                 com.cc106.bidhub.utils.ErrorHandler.logInfo(
                     "ItemDetailActivity", 
                     "Successfully loaded seller username from item",
-                    String.format("SellerID: %s, Username: %s", sellerId, currentItem.getSellerName())
+                    String.format("SellerID: %s, Username: %s, Rating: %.1f, Reviews: %d", sellerId, currentItem.getSellerName(), rating, reviewCount)
                 );
                 return;
             }
@@ -1356,7 +1404,16 @@ public class ItemDetailActivity extends AppCompatActivity {
             if (username != null && !username.isEmpty()) {
                 // Display just the username without "Seller" prefix
                 tvSellerName.setText(username);
-                tvSellerRating.setText("4.5 (50 reviews)");
+                
+                // Use dynamic rating from item if available, otherwise show default
+                if (currentItem != null && currentItem.getSellerReviewCount() > 0) {
+                    double rating = currentItem.getSellerRating();
+                    int reviewCount = currentItem.getSellerReviewCount();
+                    tvSellerRating.setText(String.format("%.1f (%d %s)", rating, reviewCount, reviewCount == 1 ? "review" : "reviews"));
+                } else {
+                    tvSellerRating.setText("No rating");
+                }
+                
                 com.cc106.bidhub.utils.ErrorHandler.logInfo(
                     "ItemDetailActivity", 
                     "Successfully loaded seller username from database",
@@ -1366,7 +1423,16 @@ public class ItemDetailActivity extends AppCompatActivity {
                 // Fallback: extract username from email
                 String extractedUsername = extractUsernameFromEmail(sellerId);
                 tvSellerName.setText(extractedUsername);
-                tvSellerRating.setText("4.5 (50 reviews)");
+                
+                // Use dynamic rating from item if available, otherwise show default
+                if (currentItem != null && currentItem.getSellerReviewCount() > 0) {
+                    double rating = currentItem.getSellerRating();
+                    int reviewCount = currentItem.getSellerReviewCount();
+                    tvSellerRating.setText(String.format("%.1f (%d %s)", rating, reviewCount, reviewCount == 1 ? "review" : "reviews"));
+                } else {
+                    tvSellerRating.setText("No rating");
+                }
+                
                 com.cc106.bidhub.utils.ErrorHandler.logWarning(
                     "ItemDetailActivity", 
                     "Could not find username in database, using email extraction",
@@ -1853,10 +1919,8 @@ public class ItemDetailActivity extends AppCompatActivity {
                 progressTimeLeft.setProgress(100);
                 stopCountdownTimer();
                 
-                // Disable bidding
-                btnPlaceBid.setEnabled(false);
-                btnPlaceBid.setText("Auction Ended");
-                btnPlaceBid.setBackgroundColor(getResources().getColor(R.color.state_disabled));
+                // Hide bid input and buttons when auction has ended
+                hideBiddingControls();
                 
                 // Send notification if user was bidding
                 sendAuctionEndedNotification();
@@ -1935,6 +1999,50 @@ public class ItemDetailActivity extends AppCompatActivity {
             }
         } catch (Exception e) {
             android.util.Log.e("ItemDetailActivity", "Error sending ended notification: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Hide bidding controls (bid input and buttons) when auction has ended
+     */
+    private void hideBiddingControls() {
+        if (layoutBidInput != null) {
+            layoutBidInput.setVisibility(View.GONE);
+        }
+        if (layoutActionButtons != null) {
+            layoutActionButtons.setVisibility(View.GONE);
+        }
+        // Also hide individual elements as backup
+        if (etBidAmount != null) {
+            etBidAmount.setVisibility(View.GONE);
+        }
+        if (btnPlaceBid != null) {
+            btnPlaceBid.setVisibility(View.GONE);
+        }
+        if (btnBuyNow != null) {
+            btnBuyNow.setVisibility(View.GONE);
+        }
+    }
+    
+    /**
+     * Show bidding controls (bid input and buttons) when auction is active
+     */
+    private void showBiddingControls() {
+        if (layoutBidInput != null) {
+            layoutBidInput.setVisibility(View.VISIBLE);
+        }
+        if (layoutActionButtons != null) {
+            layoutActionButtons.setVisibility(View.VISIBLE);
+        }
+        // Also show individual elements as backup
+        if (etBidAmount != null) {
+            etBidAmount.setVisibility(View.VISIBLE);
+        }
+        if (btnPlaceBid != null) {
+            btnPlaceBid.setVisibility(View.VISIBLE);
+        }
+        if (btnBuyNow != null) {
+            btnBuyNow.setVisibility(View.VISIBLE);
         }
     }
     

@@ -191,15 +191,18 @@ public class BrowseActivity extends BaseActivity {
                     // Parse items from response
                     List<Item> apiItems = parseItemsFromResponse(response.getData());
                     
-                    // Filter to only show ACTIVE items
+                    // Filter to only show ACTIVE items that haven't ended
                     List<Item> activeItems = new ArrayList<>();
                     for (Item item : apiItems) {
-                        if (item.getStatus() == ItemStatus.ACTIVE) {
+                        if (item != null && 
+                            item.getStatus() == ItemStatus.ACTIVE && 
+                            !item.hasEnded() && 
+                            item.isAvailableForBidding()) {
                             activeItems.add(item);
                         }
                     }
                     
-                    Log.d(TAG, "Loaded " + activeItems.size() + " active items from API");
+                    Log.d(TAG, "Loaded " + activeItems.size() + " active items from API (ended auctions excluded)");
                     
                     // Convert Item objects to BrowseItem objects
                     List<BrowseItem> browseItems = convertItemsToBrowseItems(activeItems);

@@ -19,6 +19,8 @@ public class Item {
     private String currency;
     private String sellerId;
     private String sellerName;
+    private double sellerRating;
+    private int sellerReviewCount;
     private String categoryId;
     private String categoryName;
     private ItemStatus status;
@@ -137,6 +139,22 @@ public class Item {
     
     public void setSellerName(String sellerName) {
         this.sellerName = sellerName;
+    }
+    
+    public double getSellerRating() {
+        return sellerRating;
+    }
+    
+    public void setSellerRating(double sellerRating) {
+        this.sellerRating = sellerRating;
+    }
+    
+    public int getSellerReviewCount() {
+        return sellerReviewCount;
+    }
+    
+    public void setSellerReviewCount(int sellerReviewCount) {
+        this.sellerReviewCount = sellerReviewCount;
     }
     
     public String getCategoryId() {

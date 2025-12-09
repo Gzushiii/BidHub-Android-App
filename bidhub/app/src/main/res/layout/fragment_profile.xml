@@ -69,62 +69,31 @@
 
             </LinearLayout>
 
-            <!-- Action Buttons -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+            <!-- FAQ Button -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                app:cardCornerRadius="10dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surface_container_high"
+                app:strokeWidth="0dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless">
 
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    app:cardCornerRadius="10dp"
-                    app:cardElevation="0dp"
-                    app:cardBackgroundColor="@color/surface_container_high"
-                    app:strokeWidth="0dp"
-                    android:layout_marginEnd="@dimen/spacing_2"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackgroundBorderless">
+                <ImageButton
+                    android:id="@+id/buttonFAQ"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_help_circle"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="FAQ"
+                    android:padding="8dp"
+                    android:scaleType="centerInside"
+                    android:stateListAnimator="@null"
+                    android:tint="@color/on_surface" />
 
-                    <ImageButton
-                        android:id="@+id/buttonEditProfile"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:src="@drawable/ic_edit"
-                        android:background="@android:color/transparent"
-                        android:contentDescription="Edit Profile"
-                        android:padding="8dp"
-                        android:scaleType="centerInside"
-                        android:stateListAnimator="@null" />
-
-                </com.google.android.material.card.MaterialCardView>
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    app:cardCornerRadius="10dp"
-                    app:cardElevation="0dp"
-                    app:cardBackgroundColor="@color/surface_container_high"
-                    app:strokeWidth="0dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:foreground="?attr/selectableItemBackgroundBorderless">
-
-                    <ImageButton
-                        android:id="@+id/buttonSettings"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:src="@drawable/ic_settings"
-                        android:background="@android:color/transparent"
-                        android:contentDescription="Settings"
-                        android:padding="8dp"
-                        android:scaleType="centerInside"
-                        android:stateListAnimator="@null" />
-
-                </com.google.android.material.card.MaterialCardView>
-
-            </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 
@@ -286,6 +255,7 @@
                             android:text="Regenerate"
                             style="@style/Widget.BidHub.Button.Primary"
                             android:textSize="12sp"
+                            android:textColor="@color/on_primary"
                             android:minHeight="36dp"
                             android:paddingHorizontal="@dimen/spacing_3"
                             app:cornerRadius="8dp" />

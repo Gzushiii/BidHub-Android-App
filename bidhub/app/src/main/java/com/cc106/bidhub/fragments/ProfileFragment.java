@@ -30,8 +30,7 @@ import androidx.fragment.app.Fragment;
 import com.cc106.bidhub.AliasGenerator;
 import com.cc106.bidhub.DatabaseHelper;
 import com.cc106.bidhub.LoginActivity;
-import com.cc106.bidhub.ProfileEditActivity;
-import com.cc106.bidhub.ProfileSettingsActivity;
+import com.cc106.bidhub.FAQActivity;
 import com.cc106.bidhub.R;
 
 import java.util.Locale;
@@ -40,7 +39,7 @@ public class ProfileFragment extends Fragment {
 
     private TextView textViewWelcome, textViewCredits, textViewAlias, textViewEmail, textViewUsername;
     private Button buttonLogout, buttonRegenerateAlias;
-    private ImageButton buttonEditProfile, buttonSettings;
+    private ImageButton buttonFAQ;
     private ImageView imageViewProfilePicture;
     private DatabaseHelper dbHelper;
     private SharedPreferencesHelper prefsHelper;
@@ -69,8 +68,7 @@ public class ProfileFragment extends Fragment {
         textViewUsername = view.findViewById(R.id.textViewUsername);
         buttonLogout = view.findViewById(R.id.buttonLogout);
         buttonRegenerateAlias = view.findViewById(R.id.buttonRegenerateAlias);
-        buttonEditProfile = view.findViewById(R.id.buttonEditProfile);
-        buttonSettings = view.findViewById(R.id.buttonSettings);
+        buttonFAQ = view.findViewById(R.id.buttonFAQ);
         imageViewProfilePicture = view.findViewById(R.id.imageViewProfilePicture);
         
         
@@ -102,18 +100,9 @@ public class ProfileFragment extends Fragment {
             });
         }
         
-        if (buttonEditProfile != null) {
-            buttonEditProfile.setOnClickListener(v -> {
-                Intent intent = new Intent(getActivity(), ProfileEditActivity.class);
-                intent.putExtra("USER_EMAIL", loggedInUserEmail);
-                startActivity(intent);
-            });
-        }
-        
-        if (buttonSettings != null) {
-            buttonSettings.setOnClickListener(v -> {
-                Intent intent = new Intent(getActivity(), ProfileSettingsActivity.class);
-                intent.putExtra("USER_EMAIL", loggedInUserEmail);
+        if (buttonFAQ != null) {
+            buttonFAQ.setOnClickListener(v -> {
+                Intent intent = new Intent(getActivity(), FAQActivity.class);
                 startActivity(intent);
             });
         }

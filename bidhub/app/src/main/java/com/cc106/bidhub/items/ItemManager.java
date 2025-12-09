@@ -1262,7 +1262,8 @@ public class ItemManager {
     public List<Item> getAllActiveItems() {
         List<Item> result = new ArrayList<>();
         for (Item item : items.values()) {
-            if (item.getStatus() == ItemStatus.ACTIVE) {
+            // Only include items that are ACTIVE and not ended
+            if (item.getStatus() == ItemStatus.ACTIVE && !item.hasEnded()) {
                 result.add(item);
             }
         }
@@ -1282,12 +1283,14 @@ public class ItemManager {
     }
     
     /**
-     * Get all browsable items (both ACTIVE and DRAFT)
+     * Get all browsable items (both ACTIVE and DRAFT, excluding ended auctions)
      */
     public List<Item> getAllBrowsableItems() {
         List<Item> result = new ArrayList<>();
         for (Item item : items.values()) {
-            if (item.getStatus() == ItemStatus.ACTIVE || item.getStatus() == ItemStatus.DRAFT) {
+            // Include ACTIVE items that haven't ended, or DRAFT items
+            if ((item.getStatus() == ItemStatus.ACTIVE && !item.hasEnded()) || 
+                item.getStatus() == ItemStatus.DRAFT) {
                 result.add(item);
             }
         }

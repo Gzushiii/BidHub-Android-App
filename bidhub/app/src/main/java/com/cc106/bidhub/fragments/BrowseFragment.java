@@ -544,6 +544,11 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                 continue;
             }
             
+            // Exclude ended auctions
+            if (item.hasEnded() || !item.isAvailableForBidding()) {
+                continue;
+            }
+            
             // Search filter
             boolean matchesSearch = true;
             if (criteria.getQuery() != null && !criteria.getQuery().trim().isEmpty()) {
@@ -715,11 +720,14 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
                 if (response.isSuccess() && response.getData() != null) {
                     // Parse and display items from database
                     List<Item> dbItems = parseItemsFromResponse(response.getData());
-                    // Filter to only show ACTIVE items
+                    // Filter to only show ACTIVE items that haven't ended
                     List<Item> activeItems = dbItems.stream()
-                        .filter(item -> item.getStatus() == com.cc106.bidhub.items.ItemStatus.ACTIVE)
+                        .filter(item -> item != null && 
+                               item.getStatus() == com.cc106.bidhub.items.ItemStatus.ACTIVE &&
+                               !item.hasEnded() && 
+                               item.isAvailableForBidding())
                         .collect(java.util.stream.Collectors.toList());
-                    android.util.Log.d("BrowseFragment", "Loaded " + activeItems.size() + " active items from database (filtered from " + dbItems.size() + " total)");
+                    android.util.Log.d("BrowseFragment", "Loaded " + activeItems.size() + " active items from database (filtered from " + dbItems.size() + " total, ended auctions excluded)");
                     
                     // CRITICAL FIX: Always update items when API returns successfully, even if empty
                     // This ensures consistency - if API says there are no items, we should show that
@@ -792,13 +800,16 @@ public class BrowseFragment extends Fragment implements ItemCardAdapter.OnItemCl
         new Thread(() -> {
             try {
                 List<Item> items = itemManager.getAllBrowsableItems();
-                // Filter to only show ACTIVE items
+                // Filter to only show ACTIVE items that haven't ended
                 List<Item> activeItems = items.stream()
-                    .filter(item -> item.getStatus() == com.cc106.bidhub.items.ItemStatus.ACTIVE)
+                    .filter(item -> item != null && 
+                           item.getStatus() == com.cc106.bidhub.items.ItemStatus.ACTIVE &&
+                           !item.hasEnded() && 
+                           item.isAvailableForBidding())
                     .collect(java.util.stream.Collectors.toList());
                 
                 // Debug: Log item count
-                android.util.Log.d("BrowseFragment", "Loaded " + activeItems.size() + " active local items (filtered from " + items.size() + " total)");
+                android.util.Log.d("BrowseFragment", "Loaded " + activeItems.size() + " active local items (filtered from " + items.size() + " total, ended auctions excluded)");
                 
                 // Update UI on main thread - check if fragment is still attached
                 if (getActivity() != null && !getActivity().isFinishing()) {
