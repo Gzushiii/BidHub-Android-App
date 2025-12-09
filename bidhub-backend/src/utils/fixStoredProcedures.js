@@ -1,70 +1,40 @@
 /**
- * Simple script to fix PlaceBid procedure
- * This version uses a direct approach that works reliably
+ * Automatically fix PlaceBid and BuyNow stored procedures
+ * This runs on server startup to ensure procedures are always fixed
  */
 
 const mysql = require('mysql2/promise');
-const path = require('path');
-const fs = require('fs');
 
-// Load environment variables - try multiple locations
-if (process.env.NODE_ENV !== 'production') {
-  // Try parent directory first (like server.js does)
-  const parentEnv = path.join(__dirname, '../.env');
-  const rootEnv = path.join(__dirname, '../../.env');
+/**
+ * Fix PlaceBid and BuyNow stored procedures
+ * @param {mysql.Pool} pool - Database connection pool (used to get config)
+ */
+async function fixStoredProcedures(pool) {
+  let connection;
   
-  if (fs.existsSync(parentEnv)) {
-    require('dotenv').config({ path: parentEnv });
-  } else if (fs.existsSync(rootEnv)) {
-    require('dotenv').config({ path: rootEnv });
-  } else {
-    require('dotenv').config();
-  }
-} else {
-  require('dotenv').config();
-}
-
-async function fixProcedure() {
-  // Check if required environment variables are set
-  const requiredVars = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
-  const missingVars = requiredVars.filter(v => !process.env[v]);
-  
-  if (missingVars.length > 0) {
-    console.error('❌ Missing required environment variables:');
-    missingVars.forEach(v => console.error(`   - ${v}`));
-    console.error('\n💡 Please set these in your .env file or as environment variables.');
-    console.error('   Example .env file location: bidhub-backend/.env or project root/.env\n');
-    throw new Error(`Missing environment variables: ${missingVars.join(', ')}`);
-  }
-  
-  console.log('📋 Database connection info:');
-  console.log(`   Host: ${process.env.DB_HOST}`);
-  console.log(`   Port: ${process.env.DB_PORT || 3306}`);
-  console.log(`   Database: ${process.env.DB_NAME}`);
-  console.log(`   User: ${process.env.DB_USER}`);
-  console.log('');
-  
-  // Create a direct connection (not from pool) for procedure creation
-  const connection = await mysql.createConnection({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT || 3306,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-    multipleStatements: true // Enable for procedure creation
-  });
-
   try {
-    console.log('🔧 Fixing PlaceBid stored procedure...\n');
+    // Create a direct connection with multiple statements enabled for procedure creation
+    // We can't use the pool because it doesn't have multipleStatements enabled
+    const poolConfig = pool.config || pool.pool?.config;
+    connection = await mysql.createConnection({
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT) || 3306,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+      multipleStatements: true // Required for procedure creation
+    });
     
-    // Drop existing procedure
+    console.log('🔧 Checking and fixing stored procedures...');
+    
+    // Drop existing procedures
     await connection.query('DROP PROCEDURE IF EXISTS PlaceBid');
-    console.log('✅ Dropped old PlaceBid procedure');
+    await connection.query('DROP PROCEDURE IF EXISTS BuyNow');
+    console.log('✅ Dropped old procedures');
     
-    // Create the fixed procedure
-    // Note: No DELIMITER needed when using mysql2
-    const createProcedure = `
+    // Create fixed PlaceBid procedure
+    const createPlaceBid = `
 CREATE PROCEDURE PlaceBid(
     IN p_item_id INT UNSIGNED,
     IN p_bidder_id INT UNSIGNED,
@@ -179,15 +149,11 @@ BEGIN
 END
     `;
     
-    await connection.query(createProcedure);
+    await connection.query(createPlaceBid);
     console.log('✅ Created fixed PlaceBid procedure');
     
-    // Also fix BuyNow procedure
-    console.log('\n🔧 Fixing BuyNow stored procedure...\n');
-    await connection.query('DROP PROCEDURE IF EXISTS BuyNow');
-    console.log('✅ Dropped old BuyNow procedure');
-    
-    const createBuyNowProcedure = `
+    // Create fixed BuyNow procedure
+    const createBuyNow = `
 CREATE PROCEDURE BuyNow(
     IN p_item_id INT UNSIGNED,
     IN p_buyer_id INT UNSIGNED,
@@ -283,50 +249,36 @@ BEGIN
 END
     `;
     
-    await connection.query(createBuyNowProcedure);
+    await connection.query(createBuyNow);
     console.log('✅ Created fixed BuyNow procedure');
     
-    // Verify both procedures
+    // Verify procedures exist
     const [procedures] = await connection.query(
       "SHOW PROCEDURE STATUS WHERE Db = DATABASE() AND Name IN ('PlaceBid', 'BuyNow')"
     );
     
     if (procedures.length >= 2) {
-      console.log('\n✅ Both procedures verified successfully!');
-      console.log('   - PlaceBid: ✅');
-      console.log('   - BuyNow: ✅');
-      console.log('\n✨ Fix applied successfully!');
-      console.log('You can now place bids and use buy now without the GROUP BY error.\n');
-    } else if (procedures.length === 1) {
-      console.log('\n⚠️  Warning: Only one procedure was created. Expected 2.');
-      console.log('Created procedures:', procedures.map(p => p.Name).join(', '));
+      console.log('✅ Stored procedures verified successfully');
+      return true;
     } else {
-      throw new Error('Failed to verify procedures');
+      console.warn('⚠️  Warning: Not all procedures were created. Found:', procedures.length);
+      return false;
     }
     
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('❌ Error fixing stored procedures:', error.message);
     if (error.sqlMessage) {
-      console.error('SQL Error:', error.sqlMessage);
+      console.error('   SQL Error:', error.sqlMessage);
     }
-    throw error;
+    // Don't throw - allow server to start even if fix fails
+    // The procedures might already be fixed
+    return false;
   } finally {
-    await connection.end();
+    if (connection) {
+      await connection.end();
+    }
   }
 }
 
-// Run if called directly
-if (require.main === module) {
-  fixProcedure()
-    .then(() => {
-      console.log('✅ Done!');
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error('\n❌ Failed:', error.message);
-      process.exit(1);
-    });
-}
-
-module.exports = { fixProcedure };
+module.exports = { fixStoredProcedures };
 

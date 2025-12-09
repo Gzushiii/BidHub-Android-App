@@ -221,14 +221,26 @@ public class BiddingEngine {
         // Minimum bid is either: current highest bid + 1, or starting price (whichever is higher)
         double currentBid = item.getCurrentPrice();
         double startingPrice = item.getStartingPrice();
-        double minimumBid = currentBid > 0 
-            ? currentBid + MIN_BID_INCREMENT  // Must be at least MIN_BID_INCREMENT higher than current bid
-            : startingPrice;                   // Must be at least the starting price
+        
+        // CRITICAL FIX: Ensure minimum bid calculation matches backend logic
+        // Backend requires: bid must be > current bid (if exists) OR >= starting price
+        double minimumBid;
+        if (currentBid > 0) {
+            // If there are existing bids, new bid must be at least 1 higher
+            minimumBid = currentBid + MIN_BID_INCREMENT;
+        } else {
+            // No bids yet, must be at least the starting price
+            minimumBid = Math.max(startingPrice, MIN_BID_INCREMENT);
+        }
         
         if (amount < minimumBid) {
-            String errorMsg = currentBid > 0
-                ? String.format("Bid must be at least ₱%.2f (current bid: ₱%.2f)", minimumBid, currentBid)
-                : String.format("Bid must be at least the starting price (₱%.2f)", startingPrice);
+            String errorMsg;
+            if (currentBid > 0) {
+                errorMsg = String.format("Bid must be at least ₱%.2f (current highest bid: ₱%.2f)", 
+                    minimumBid, currentBid);
+            } else {
+                errorMsg = String.format("Bid must be at least the starting price (₱%.2f)", startingPrice);
+            }
             return new BidValidationResult(false, errorMsg);
         }
         
@@ -253,7 +265,7 @@ public class BiddingEngine {
     // ==================== BID MANAGEMENT ====================
     
     /**
-     * Get all bids for an item
+     * Get all bids for an item - FIXED: Now fetches from backend API
      */
     public List<Bid> getItemBids(String itemId) {
         if (itemId == null || itemId.trim().isEmpty()) {
@@ -265,20 +277,46 @@ public class BiddingEngine {
             return new ArrayList<>(itemBidsCache.get(itemId));
         }
         
-        // Load from database
-        List<Bid> bids = loadBidsFromDatabase("item_id = ?", new String[]{itemId});
-        
-        // Sort by amount descending (highest first)
-        bids.sort(Comparator.comparing(Bid::getAmount).reversed());
-        
-        // Update cache
-        itemBidsCache.put(itemId, bids);
-        
-        return bids;
+        // Fetch from backend API
+        try {
+            ApiResponse apiResponse = BidApiClient.getItemBids(itemId, 100, 0);
+            
+            if (apiResponse.isSuccess() && apiResponse.getData() != null) {
+                // Cast Object to JSONObject
+                JSONObject jsonResponse = (JSONObject) apiResponse.getData();
+                org.json.JSONArray bidsArray = jsonResponse.optJSONArray("bids");
+                
+                List<Bid> bids = new ArrayList<>();
+                if (bidsArray != null) {
+                    for (int i = 0; i < bidsArray.length(); i++) {
+                        org.json.JSONObject bidJson = bidsArray.getJSONObject(i);
+                        Bid bid = parseBidFromJson(bidJson, itemId);
+                        if (bid != null) {
+                            bids.add(bid);
+                        }
+                    }
+                }
+                
+                // Sort by amount descending (highest first)
+                bids.sort(Comparator.comparing(Bid::getAmount).reversed());
+                
+                // Update cache
+                itemBidsCache.put(itemId, bids);
+                
+                Log.i(TAG, "Loaded " + bids.size() + " bids for item " + itemId + " from backend");
+                return bids;
+            } else {
+                Log.w(TAG, "Failed to fetch bids from backend: " + apiResponse.getMessage());
+                return new ArrayList<>();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching item bids from backend", e);
+            return new ArrayList<>();
+        }
     }
     
     /**
-     * Get all bids by a user
+     * Get all bids by a user - FIXED: Now fetches from backend API
      */
     public List<Bid> getUserBids(String userId) {
         if (userId == null || userId.trim().isEmpty()) {
@@ -290,16 +328,48 @@ public class BiddingEngine {
             return new ArrayList<>(userBidsCache.get(userId));
         }
         
-        // Load from database
-        List<Bid> bids = loadBidsFromDatabase("bidder_id = ?", new String[]{userId});
-        
-        // Sort by placed date descending (newest first)
-        bids.sort(Comparator.comparing(Bid::getPlacedAt).reversed());
-        
-        // Update cache
-        userBidsCache.put(userId, bids);
-        
-        return bids;
+        // Fetch from backend API
+        try {
+            String authToken = prefsHelper.getAuthToken();
+            if (authToken == null || authToken.isEmpty()) {
+                Log.w(TAG, "No auth token available for fetching user bids");
+                return new ArrayList<>();
+            }
+            
+            ApiResponse apiResponse = BidApiClient.getBidHistory(authToken, null, 100, 0);
+            
+            if (apiResponse.isSuccess() && apiResponse.getData() != null) {
+                // Cast Object to JSONObject
+                JSONObject jsonResponse = (JSONObject) apiResponse.getData();
+                org.json.JSONArray bidsArray = jsonResponse.optJSONArray("bids");
+                
+                List<Bid> bids = new ArrayList<>();
+                if (bidsArray != null) {
+                    for (int i = 0; i < bidsArray.length(); i++) {
+                        org.json.JSONObject bidJson = bidsArray.getJSONObject(i);
+                        Bid bid = parseBidFromJson(bidJson, bidJson.optString("item_id"));
+                        if (bid != null) {
+                            bids.add(bid);
+                        }
+                    }
+                }
+                
+                // Sort by placed date descending (newest first)
+                bids.sort(Comparator.comparing(Bid::getPlacedAt).reversed());
+                
+                // Update cache
+                userBidsCache.put(userId, bids);
+                
+                Log.i(TAG, "Loaded " + bids.size() + " bids for user " + userId + " from backend");
+                return bids;
+            } else {
+                Log.w(TAG, "Failed to fetch user bids from backend: " + apiResponse.getMessage());
+                return new ArrayList<>();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error fetching user bids from backend", e);
+            return new ArrayList<>();
+        }
     }
     
     /**
@@ -507,6 +577,61 @@ public class BiddingEngine {
         // Bids are now managed by backend API - no local database operations
         Log.w(TAG, "loadBidsFromDatabase called but bids are now managed by backend API");
         return new ArrayList<>(); // Return empty list to avoid breaking existing code
+    }
+    
+    /**
+     * Parse Bid object from JSON response
+     */
+    private Bid parseBidFromJson(org.json.JSONObject bidJson, String itemId) {
+        try {
+            Bid bid = new Bid();
+            bid.setBidId(bidJson.optString("id", ""));
+            bid.setItemId(itemId != null ? itemId : bidJson.optString("item_id", ""));
+            bid.setBidderId(bidJson.optString("bidder_id", ""));
+            bid.setAmount(bidJson.optDouble("amount", 0.0));
+            bid.setBidderAlias(bidJson.optString("bidder_alias", "Anonymous"));
+            
+            // Parse placed_at timestamp
+            String placedAtStr = bidJson.optString("placed_at", "");
+            if (!placedAtStr.isEmpty()) {
+                try {
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US);
+                    sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                    bid.setPlacedAt(sdf.parse(placedAtStr));
+                } catch (Exception e) {
+                    // Try alternative format
+                    try {
+                        java.text.SimpleDateFormat sdf2 = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US);
+                        bid.setPlacedAt(sdf2.parse(placedAtStr));
+                    } catch (Exception e2) {
+                        bid.setPlacedAt(new Date()); // Fallback to current time
+                    }
+                }
+            } else {
+                bid.setPlacedAt(new Date());
+            }
+            
+            // Parse status
+            String statusStr = bidJson.optString("status", "active").toLowerCase();
+            if ("winning".equals(statusStr)) {
+                bid.setStatus(BidStatus.WINNING);
+                bid.setWinning(true);
+            } else if ("outbid".equals(statusStr) || "lost".equals(statusStr)) {
+                bid.setStatus(BidStatus.OUTBID);
+                bid.setWinning(false);
+            } else if ("cancelled".equals(statusStr)) {
+                bid.setStatus(BidStatus.CANCELLED);
+                bid.setWinning(false);
+            } else {
+                bid.setStatus(BidStatus.ACTIVE);
+                bid.setWinning(false);
+            }
+            
+            return bid;
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing bid from JSON", e);
+            return null;
+        }
     }
     
     private Bid createBidFromCursor(Cursor cursor) {

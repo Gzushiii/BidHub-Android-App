@@ -84,11 +84,24 @@ public class BidHistoryActivity extends AppCompatActivity {
     }
     
     private void initializeData() {
-        // Get user ID from intent or shared preferences
-        userId = getIntent().getStringExtra("user_id");
-        if (userId == null) {
-            // In a real app, this would come from authentication
-            userId = "default_user";
+        // Get user ID from SharedPreferences (from authentication)
+        com.cc106.bidhub.utils.SharedPreferencesHelper prefsHelper = 
+            new com.cc106.bidhub.utils.SharedPreferencesHelper(this);
+        userId = prefsHelper.getUserId();
+        
+        if (userId == null || userId.isEmpty()) {
+            // Fallback to intent
+            userId = getIntent().getStringExtra("user_id");
+            if (userId == null || userId.isEmpty()) {
+                android.util.Log.w("BidHistoryActivity", "No user ID found, cannot load bid history");
+                // Show error message
+                runOnUiThread(() -> {
+                    if (emptyStateLayout != null) {
+                        emptyStateLayout.setVisibility(android.view.View.VISIBLE);
+                        bidHistoryRecycler.setVisibility(android.view.View.GONE);
+                    }
+                });
+            }
         }
         
         allBids = new ArrayList<>();
@@ -109,15 +122,39 @@ public class BidHistoryActivity extends AppCompatActivity {
     }
     
     private void loadBidHistory() {
-        // Load all bids for user
-        allBids = biddingEngine.getUserBids(userId);
+        if (userId == null || userId.isEmpty()) {
+            android.util.Log.w("BidHistoryActivity", "Cannot load bid history: no user ID");
+            return;
+        }
         
-        // Apply current filter
-        applyFilter();
+        // Show loading state
+        runOnUiThread(() -> {
+            bidHistoryRecycler.setVisibility(android.view.View.GONE);
+            emptyStateLayout.setVisibility(android.view.View.GONE);
+        });
         
-        // Update UI
-        updateStats();
-        updateBidList();
+        // Load bids in background thread
+        new Thread(() -> {
+            try {
+                // Load all bids for user from backend
+                allBids = biddingEngine.getUserBids(userId);
+                
+                runOnUiThread(() -> {
+                    // Apply current filter
+                    applyFilter();
+                    
+                    // Update UI
+                    updateStats();
+                    updateBidList();
+                });
+            } catch (Exception e) {
+                android.util.Log.e("BidHistoryActivity", "Error loading bid history", e);
+                runOnUiThread(() -> {
+                    bidHistoryRecycler.setVisibility(android.view.View.GONE);
+                    emptyStateLayout.setVisibility(android.view.View.VISIBLE);
+                });
+            }
+        }).start();
     }
     
     private void applyFilter() {

@@ -55,6 +55,7 @@ public class BrowseItemAdapter extends RecyclerView.Adapter<BrowseItemAdapter.Br
         private TextView itemTitle;
         private TextView itemBid;
         private TextView itemTimeLeft;
+        private TextView itemStatusBadge;
 
         public BrowseItemViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -62,12 +63,28 @@ public class BrowseItemAdapter extends RecyclerView.Adapter<BrowseItemAdapter.Br
             itemTitle = itemView.findViewById(R.id.itemTitle);
             itemBid = itemView.findViewById(R.id.itemBid);
             itemTimeLeft = itemView.findViewById(R.id.itemTimeLeft);
+            itemStatusBadge = itemView.findViewById(R.id.itemStatusBadge);
         }
 
         public void bind(BrowseItem item) {
             itemTitle.setText(item.getTitle());
             itemBid.setText(item.getCurrentBid());
             itemTimeLeft.setText(item.getTimeLeft());
+            
+            // Handle status badge
+            if (itemStatusBadge != null) {
+                if (item.isBuyNow()) {
+                    itemStatusBadge.setText("Buy Now");
+                    itemStatusBadge.setVisibility(View.VISIBLE);
+                    itemStatusBadge.setBackgroundColor(itemView.getContext().getColor(R.color.success));
+                } else if (item.getStatus() != null && item.getStatus().equals("ending_soon")) {
+                    itemStatusBadge.setText("Ending Soon");
+                    itemStatusBadge.setVisibility(View.VISIBLE);
+                    itemStatusBadge.setBackgroundColor(itemView.getContext().getColor(R.color.warning));
+                } else {
+                    itemStatusBadge.setVisibility(View.GONE);
+                }
+            }
 
             // Load image - use user image if available, otherwise fallback to sample images
             if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {

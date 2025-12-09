@@ -17,8 +17,12 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.textfield.TextInputEditText;
 import com.cc106.bidhub.adapters.BrowseItemAdapter;
 import com.cc106.bidhub.api.ItemApiClient;
 import com.cc106.bidhub.items.Item;
@@ -31,19 +35,23 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class BrowseActivity extends BaseActivity {
 
     private String loggedInUserEmail;
     
     // UI Components
-    private EditText searchEditText;
-    private ImageButton btnSearch, btnFilter;
-    private Button btnElectronics, btnFashion, btnHome, btnCollectibles;
+    private TextInputEditText searchEditText;
+    private ImageButton btnSearch;
+    private com.google.android.material.button.MaterialButton btnFilter;
+    private Chip btnElectronics, btnFashion, btnHome, btnCollectibles;
     private RecyclerView recyclerViewBrowse;
     private BrowseItemAdapter browseItemAdapter;
+    private SwipeRefreshLayout swipeRefreshLayout;
     
     // Data
     private List<BrowseItem> allItems;
@@ -107,29 +115,23 @@ public class BrowseActivity extends BaseActivity {
         btnHome = findViewById(R.id.btnHome);
         btnCollectibles = findViewById(R.id.btnCollectibles);
         recyclerViewBrowse = findViewById(R.id.recyclerViewBrowse);
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
+        progressBar = findViewById(R.id.progressBar);
+        emptyStateText = findViewById(R.id.emptyStateText);
         
-        // Try to find progress bar and empty state (may not exist in layout)
-        try {
-            int progressBarId = getResources().getIdentifier("progressBar", "id", getPackageName());
-            if (progressBarId != 0) {
-                View progressBarView = findViewById(progressBarId);
-                if (progressBarView instanceof ProgressBar) {
-                    progressBar = (ProgressBar) progressBarView;
+        // Setup SwipeRefreshLayout
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setColorSchemeColors(
+                getResources().getColor(R.color.primary, null),
+                getResources().getColor(R.color.primary_light, null)
+            );
+            swipeRefreshLayout.setOnRefreshListener(() -> {
+                if (!isLoading) {
+                    loadItemsFromApi();
+                } else {
+                    swipeRefreshLayout.setRefreshing(false);
                 }
-            }
-        } catch (Exception e) {
-            Log.d(TAG, "Progress bar not found in layout");
-        }
-        try {
-            int emptyStateId = getResources().getIdentifier("emptyStateText", "id", getPackageName());
-            if (emptyStateId != 0) {
-                View emptyStateView = findViewById(emptyStateId);
-                if (emptyStateView instanceof TextView) {
-                    emptyStateText = (TextView) emptyStateView;
-                }
-            }
-        } catch (Exception e) {
-            Log.d(TAG, "Empty state text not found in layout");
+            });
         }
     }
 
@@ -138,17 +140,47 @@ public class BrowseActivity extends BaseActivity {
         filteredItems = new ArrayList<>();
         
         browseItemAdapter = new BrowseItemAdapter(filteredItems, this::onItemClick);
-        recyclerViewBrowse.setLayoutManager(new GridLayoutManager(this, 2));
+        GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
+        recyclerViewBrowse.setLayoutManager(layoutManager);
         recyclerViewBrowse.setAdapter(browseItemAdapter);
+        
+        // Accessibility improvements
+        recyclerViewBrowse.setContentDescription("Browse items grid");
+        if (searchEditText != null) {
+            searchEditText.setContentDescription("Search items");
+            searchEditText.setHint("Search for items...");
+        }
+        if (btnSearch != null) {
+            btnSearch.setContentDescription("Search button");
+        }
+        if (btnFilter != null) {
+            btnFilter.setContentDescription("Filter items");
+        }
+        
+        // Add smooth item animations
+        recyclerViewBrowse.setItemAnimator(new DefaultItemAnimator() {
+            @Override
+            public boolean animateAdd(RecyclerView.ViewHolder holder) {
+                holder.itemView.setAlpha(0f);
+                holder.itemView.animate()
+                    .alpha(1f)
+                    .setDuration(300)
+                    .start();
+                return super.animateAdd(holder);
+            }
+        });
     }
 
     private void loadItemsFromApi() {
         if (isLoading) {
+            Log.d(TAG, "Already loading, skipping API call.");
             return; // Prevent multiple simultaneous loads
         }
         
         isLoading = true;
         showLoading(true);
+        // Don't clear items here - wait until we have new data
+        Log.d(TAG, "Starting to load items from API. Current items count: " + allItems.size());
         
         // Load items on background thread
         new Thread(() -> {
@@ -162,6 +194,7 @@ public class BrowseActivity extends BaseActivity {
                         isLoading = false;
                         showLoading(false);
                         showEmptyState("Please log in to browse items");
+                        ToastHelper.showInfo(this, "Please log in to view items");
                     });
                     return;
                 }
@@ -176,6 +209,7 @@ public class BrowseActivity extends BaseActivity {
                 }
                 
                 // Fetch items from API - always get all items, filter locally
+                // Use a high limit to ensure we get all items (adjust if needed)
                 ItemApiClient apiClient = new ItemApiClient(this);
                 ItemApiClient.ApiResponse response = apiClient.getItems(
                     null, // categoryId - always null, load all items
@@ -183,7 +217,7 @@ public class BrowseActivity extends BaseActivity {
                     null, // minPrice
                     null, // maxPrice
                     null, // sellerEmail
-                    100,  // limit
+                    1000, // limit - increased to get all items
                     0     // offset
                 );
                 
@@ -208,24 +242,78 @@ public class BrowseActivity extends BaseActivity {
                     List<BrowseItem> browseItems = convertItemsToBrowseItems(activeItems);
                     
                     runOnUiThread(() -> {
-                        // Replace all items with fresh data from API
-                        // Since we're loading ALL items (no category filter), this preserves all items
+                        // Only update items if we got new data
+                        if (browseItems != null && !browseItems.isEmpty()) {
+                            // Store old count for logging
+                            int oldCount = allItems.size();
+                            
+                            // CRITICAL FIX: Atomic update - create new list first, then replace
+                            // This prevents items from vanishing if something goes wrong during update
+                            List<BrowseItem> newItemsList = new ArrayList<>(browseItems);
+                            
+                            // Only replace allItems if we successfully created the new list
+                            if (!newItemsList.isEmpty()) {
+                                // Log warning if significant drop in item count
+                                if (oldCount > 0 && newItemsList.size() < oldCount * 0.5) {
+                                    Log.w(TAG, "WARNING: API returned only " + newItemsList.size() + " items (had " + oldCount + "), possible data loss");
+                                }
+                                
+                                // Atomic replacement - this is the only place we clear allItems
+                                allItems.clear();
+                                allItems.addAll(newItemsList);
+                                
+                                if (oldCount == 0) {
+                                    Log.d(TAG, "First load: Added " + newItemsList.size() + " items");
+                                } else {
+                                    Log.d(TAG, "Refresh: Replaced " + oldCount + " -> " + newItemsList.size() + " items from API");
+                                }
+                            } else {
+                                Log.w(TAG, "New items list is empty after creation, keeping existing " + oldCount + " items");
+                            }
+                        } else if (browseItems != null && browseItems.isEmpty()) {
+                            // API returned empty list - but don't clear existing items on refresh
+                            // This might be a temporary API issue or the user might have filtered items
+                            // Only clear if we have no existing items (first load)
+                            if (allItems.isEmpty()) {
+                                Log.w(TAG, "API returned empty list on first load");
         allItems.clear();
-                        allItems.addAll(browseItems);
+                            } else {
+                                Log.w(TAG, "API returned empty list on refresh, keeping existing " + allItems.size() + " items");
+                            }
+                        } else {
+                            // browseItems is null - API error, keep existing items
+                            Log.w(TAG, "No items returned from API (null response), keeping existing " + allItems.size() + " items");
+                        }
                         isLoading = false;
                         showLoading(false);
+                        // Stop swipe refresh if active
+                        if (swipeRefreshLayout != null) {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
                         // Apply filters to show items based on current category/search
                         applyFilters();
-                        Log.d(TAG, "Loaded " + browseItems.size() + " items from API, showing " + filteredItems.size() + " after filtering");
+                        Log.d(TAG, "Showing " + filteredItems.size() + " items after filtering (out of " + allItems.size() + " total)");
                     });
                 } else {
-                    // API call failed
+                    // API call failed - preserve existing items instead of clearing them
                     Log.w(TAG, "Failed to load items: " + (response.getMessage() != null ? response.getMessage() : "Unknown error"));
                     runOnUiThread(() -> {
                         isLoading = false;
                         showLoading(false);
-                        showEmptyState("Failed to load items. Please try again.");
-                        ToastHelper.showError(this, "Failed to load items");
+                        // Stop swipe refresh if active
+                        if (swipeRefreshLayout != null) {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                        // Don't clear items on error - keep existing items visible
+                        if (allItems.isEmpty()) {
+                            showEmptyState("Unable to load items. Please check your connection and try again.");
+                            ToastHelper.showError(this, "Failed to load items. Tap to retry.");
+                        } else {
+                            // Reapply filters to show existing items
+                            Log.d(TAG, "API call failed, but keeping existing " + allItems.size() + " items visible");
+                            applyFilters();
+                            ToastHelper.showWarning(this, "Showing cached items. Pull down to refresh.");
+                        }
                     });
                 }
             } catch (Exception e) {
@@ -233,8 +321,20 @@ public class BrowseActivity extends BaseActivity {
                 runOnUiThread(() -> {
                     isLoading = false;
                     showLoading(false);
-                    showEmptyState("Error loading items. Please try again.");
-                    ToastHelper.showError(this, "Error loading items");
+                    // Stop swipe refresh if active
+                    if (swipeRefreshLayout != null) {
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
+                    // Don't clear items on error - keep existing items visible
+                    if (allItems.isEmpty()) {
+                        showEmptyState("Something went wrong. Please check your connection and try again.");
+                        ToastHelper.showError(this, "Error loading items. Tap to retry.");
+                    } else {
+                        // Reapply filters to show existing items
+                        Log.d(TAG, "Error loading items, but keeping existing " + allItems.size() + " items visible");
+                        applyFilters();
+                        ToastHelper.showWarning(this, "Showing cached items. Pull down to refresh.");
+                    }
                 });
             }
         }).start();
@@ -442,21 +542,77 @@ public class BrowseActivity extends BaseActivity {
     }
     
     private void showLoading(boolean show) {
-        if (progressBar != null) {
-            progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+        // Handle SwipeRefreshLayout
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setRefreshing(show);
         }
-        recyclerViewBrowse.setVisibility(show ? View.GONE : View.VISIBLE);
+        
+        // Show progress bar only for initial load (when no items)
+        if (progressBar != null && allItems.isEmpty()) {
+            if (show) {
+                progressBar.setVisibility(View.VISIBLE);
+                progressBar.setAlpha(0f);
+                progressBar.animate()
+                    .alpha(1f)
+                    .setDuration(200)
+                    .start();
+            } else {
+                progressBar.animate()
+                    .alpha(0f)
+                    .setDuration(200)
+                    .withEndAction(() -> progressBar.setVisibility(View.GONE))
+                    .start();
+            }
+        }
+        
+        // Don't hide recyclerView during loading - keep items visible
+        // Only hide if we have no items to show
+        if (!show) {
+            recyclerViewBrowse.setVisibility(filteredItems.isEmpty() ? View.GONE : View.VISIBLE);
+            // Smooth fade-in for RecyclerView
+            if (!filteredItems.isEmpty() && recyclerViewBrowse.getVisibility() == View.VISIBLE) {
+                recyclerViewBrowse.setAlpha(0f);
+                recyclerViewBrowse.animate()
+                    .alpha(1f)
+                    .setDuration(300)
+                    .start();
+            }
+        }
+        // Progress bar overlay is enough to indicate loading
         if (!show && emptyStateText != null) {
-            emptyStateText.setVisibility(filteredItems.isEmpty() ? View.VISIBLE : View.GONE);
+            boolean shouldShowEmpty = filteredItems.isEmpty();
+            if (shouldShowEmpty) {
+                emptyStateText.setAlpha(0f);
+                emptyStateText.setVisibility(View.VISIBLE);
+                emptyStateText.animate()
+                    .alpha(1f)
+                    .setDuration(300)
+                    .start();
+            } else {
+                emptyStateText.setVisibility(View.GONE);
+            }
         }
     }
     
     private void showEmptyState(String message) {
         if (emptyStateText != null) {
             emptyStateText.setText(message);
+            emptyStateText.setAlpha(0f);
             emptyStateText.setVisibility(View.VISIBLE);
+            emptyStateText.animate()
+                .alpha(1f)
+                .setDuration(300)
+                .start();
         }
-        recyclerViewBrowse.setVisibility(View.GONE);
+        if (recyclerViewBrowse.getVisibility() == View.VISIBLE) {
+            recyclerViewBrowse.animate()
+                .alpha(0f)
+                .setDuration(200)
+                .withEndAction(() -> recyclerViewBrowse.setVisibility(View.GONE))
+                .start();
+        } else {
+            recyclerViewBrowse.setVisibility(View.GONE);
+        }
     }
 
     private void setupClickListeners() {
@@ -484,33 +640,64 @@ public class BrowseActivity extends BaseActivity {
 
         btnSearch.setOnClickListener(v -> {
             // Focus on search field
-            searchEditText.requestFocus();
+            if (searchEditText != null) {
+                searchEditText.requestFocus();
+            }
         });
+        
+        // Setup search field enter key listener
+        if (searchEditText != null) {
+            searchEditText.setOnEditorActionListener((v, actionId, event) -> {
+                if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
+                    // Perform search
+                    loadItemsFromApi();
+                    // Hide keyboard
+                    android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
+                    }
+                    return true;
+                }
+                return false;
+            });
+        }
 
         btnFilter.setOnClickListener(v -> showFilterDialog());
 
-        // Category buttons
-        btnElectronics.setOnClickListener(v -> selectCategory("Electronics"));
-        btnFashion.setOnClickListener(v -> selectCategory("Fashion"));
-        btnHome.setOnClickListener(v -> selectCategory("Home"));
-        btnCollectibles.setOnClickListener(v -> selectCategory("Collectibles"));
+        // Category chips - Material Chips handle their own checked state
+        if (btnElectronics != null) {
+            btnElectronics.setOnClickListener(v -> selectCategory("Electronics"));
+        }
+        if (btnFashion != null) {
+            btnFashion.setOnClickListener(v -> selectCategory("Fashion"));
+        }
+        if (btnHome != null) {
+            btnHome.setOnClickListener(v -> selectCategory("Home"));
+        }
+        if (btnCollectibles != null) {
+            btnCollectibles.setOnClickListener(v -> selectCategory("Collectibles"));
+        }
+        
+        // Make sure "All" category is available - if no category button is selected, show all
+        // This is handled by default currentCategory = "All"
     }
 
     private void selectCategory(String category) {
         currentCategory = category;
         
-        // Update button states
-        btnElectronics.setBackgroundResource(category.equals("Electronics") ? R.drawable.chip_background_primary : R.drawable.chip_background);
-        btnElectronics.setTextColor(getResources().getColor(category.equals("Electronics") ? R.color.primary : R.color.text_secondary));
-        
-        btnFashion.setBackgroundResource(category.equals("Fashion") ? R.drawable.chip_background_primary : R.drawable.chip_background);
-        btnFashion.setTextColor(getResources().getColor(category.equals("Fashion") ? R.color.primary : R.color.text_secondary));
-        
-        btnHome.setBackgroundResource(category.equals("Home") ? R.drawable.chip_background_primary : R.drawable.chip_background);
-        btnHome.setTextColor(getResources().getColor(category.equals("Home") ? R.color.primary : R.color.text_secondary));
-        
-        btnCollectibles.setBackgroundResource(category.equals("Collectibles") ? R.drawable.chip_background_primary : R.drawable.chip_background);
-        btnCollectibles.setTextColor(getResources().getColor(category.equals("Collectibles") ? R.color.primary : R.color.text_secondary));
+        // Update chip states using Material Chip API
+        if (btnElectronics != null) {
+            btnElectronics.setChecked(category.equals("Electronics"));
+        }
+        if (btnFashion != null) {
+            btnFashion.setChecked(category.equals("Fashion"));
+        }
+        if (btnHome != null) {
+            btnHome.setChecked(category.equals("Home"));
+        }
+        if (btnCollectibles != null) {
+            btnCollectibles.setChecked(category.equals("Collectibles"));
+        }
         
         // Always apply local filters - never reload from API with category filter
         // This ensures all items stay loaded and filtering is done locally
@@ -519,7 +706,7 @@ public class BrowseActivity extends BaseActivity {
             loadItemsFromApi();
         } else {
             // Just apply filters to existing items - this preserves all items
-        applyFilters();
+            applyFilters();
         }
     }
 
@@ -527,6 +714,17 @@ public class BrowseActivity extends BaseActivity {
         filteredItems.clear();
         
         Log.d(TAG, "Applying filters - Category: '" + currentCategory + "', Search: '" + currentSearchQuery + "', Total items: " + allItems.size());
+        
+        // If no items available, don't filter
+        if (allItems.isEmpty()) {
+            Log.w(TAG, "No items to filter");
+            browseItemAdapter.updateItems(filteredItems);
+            if (emptyStateText != null) {
+                emptyStateText.setVisibility(View.VISIBLE);
+            }
+            recyclerViewBrowse.setVisibility(View.GONE);
+            return;
+        }
         
         for (BrowseItem item : allItems) {
             // Category matching - case insensitive and handle "All"
@@ -568,13 +766,39 @@ public class BrowseActivity extends BaseActivity {
         
         Log.d(TAG, "Filter applied - Showing " + filteredItems.size() + " items out of " + allItems.size() + " total");
         
+        // Safety check: If filtering resulted in zero items but we have items in allItems,
+        // and category is "All" with no search, show all items (might be a filtering bug)
+        if (filteredItems.isEmpty() && !allItems.isEmpty() && 
+            (currentCategory == null || currentCategory.equals("All")) && 
+            (currentSearchQuery == null || currentSearchQuery.isEmpty())) {
+            Log.w(TAG, "Filter resulted in zero items but category is 'All' - showing all items as fallback");
+            filteredItems.addAll(allItems);
+        }
+        
         browseItemAdapter.updateItems(filteredItems);
         
-        // Update empty state
-        if (emptyStateText != null) {
-            emptyStateText.setVisibility(filteredItems.isEmpty() ? View.VISIBLE : View.GONE);
+        // Update empty state with helpful message
+        if (filteredItems.isEmpty()) {
+            String emptyMessage;
+            if (!allItems.isEmpty()) {
+                // We have items but they don't match the filter
+                if (currentSearchQuery != null && !currentSearchQuery.isEmpty()) {
+                    emptyMessage = String.format("No items found for \"%s\". Try a different search term.", currentSearchQuery);
+                } else if (currentCategory != null && !currentCategory.equals("All")) {
+                    emptyMessage = String.format("No items in %s category. Try browsing all categories.", currentCategory);
+                } else {
+                    emptyMessage = "No items available. Check back later!";
+                }
+            } else {
+                emptyMessage = "No items available. Pull down to refresh.";
+            }
+            showEmptyState(emptyMessage);
+        } else {
+            if (emptyStateText != null) {
+                emptyStateText.setVisibility(View.GONE);
+            }
+            recyclerViewBrowse.setVisibility(View.VISIBLE);
         }
-        recyclerViewBrowse.setVisibility(filteredItems.isEmpty() ? View.GONE : View.VISIBLE);
     }
 
     private void showFilterDialog() {
@@ -653,15 +877,16 @@ public class BrowseActivity extends BaseActivity {
     protected void onResume() {
         super.onResume();
         // When returning from ItemDetailActivity, make sure items are still visible
-        // Only reload if we don't have items
+        // Only reload if we don't have items - otherwise just reapply filters
         if (allItems.isEmpty() && !isLoading) {
             Log.d(TAG, "No items loaded, refreshing on resume");
             loadItemsFromApi();
-        } else {
-            // Just reapply filters to ensure items are visible
+        } else if (!allItems.isEmpty()) {
+            // Just reapply filters to ensure items are visible - don't reload
             Log.d(TAG, "Reapplying filters on resume - " + allItems.size() + " items available");
             applyFilters();
         }
+        // If isLoading is true, don't do anything - let the current load finish
     }
 
     @Override

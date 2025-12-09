@@ -392,4 +392,172 @@ router.post('/place', authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/bids/history
+ * Get current user's bid history
+ */
+router.get('/history', authenticateToken, async (req, res) => {
+  const connection = await pool.getConnection();
+  
+  try {
+    const userId = req.user.id;
+    const { status, limit = 50, offset = 0 } = req.query;
+    
+    // Build query
+    let query = `
+      SELECT 
+        b.id,
+        b.item_id,
+        b.bidder_id,
+        b.amount,
+        b.status,
+        b.created_at as placed_at,
+        i.title as item_title,
+        i.images as item_images,
+        i.status as item_status,
+        i.end_date,
+        i.current_bid,
+        i.seller_id,
+        u.alias as bidder_alias
+      FROM bids b
+      JOIN items i ON b.item_id = i.id
+      LEFT JOIN users u ON b.bidder_id = u.id
+      WHERE b.bidder_id = ?
+    `;
+    const params = [userId];
+    
+    // Add status filter if provided
+    if (status) {
+      query += ' AND b.status = ?';
+      params.push(status);
+    }
+    
+    // Add pagination
+    query += ' ORDER BY b.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const [bids] = await connection.query(query, params);
+    
+    // Get total count
+    let countQuery = 'SELECT COUNT(*) as total FROM bids WHERE bidder_id = ?';
+    const countParams = [userId];
+    
+    if (status) {
+      countQuery += ' AND status = ?';
+      countParams.push(status);
+    }
+    
+    const [countResult] = await connection.query(countQuery, countParams);
+    const total = countResult[0].total;
+    
+    // Format response
+    const formattedBids = bids.map(bid => ({
+      id: bid.id,
+      item_id: bid.item_id,
+      item_title: bid.item_title,
+      amount: parseFloat(bid.amount),
+      status: bid.status,
+      placed_at: bid.placed_at,
+      item_status: bid.item_status,
+      item_end_date: bid.end_date,
+      current_bid: bid.current_bid ? parseFloat(bid.current_bid) : null,
+      bidder_alias: bid.bidder_alias
+    }));
+    
+    res.json({
+      success: true,
+      bids: formattedBids,
+      total: total,
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+    
+  } catch (error) {
+    console.error('Error fetching bid history:', error);
+    res.status(500).json({
+      error: 'Failed to fetch bid history',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    connection.release();
+  }
+});
+
+/**
+ * GET /api/bids/item/:itemId
+ * Get all bids for a specific item
+ */
+router.get('/item/:itemId', async (req, res) => {
+  const connection = await pool.getConnection();
+  
+  try {
+    const itemId = req.params.itemId;
+    const { limit = 50, offset = 0 } = req.query;
+    
+    // First, resolve item ID (handle UUID or numeric ID)
+    const { found, item } = await getItemWithErrorInfo(connection, itemId);
+    
+    if (!found || !item) {
+      return res.status(404).json({
+        error: 'item_not_found',
+        message: 'Item not found'
+      });
+    }
+    
+    const numericItemId = item.id;
+    
+    // Get bids for this item
+    const [bids] = await connection.query(
+      `SELECT 
+        b.id,
+        b.bidder_id,
+        b.amount,
+        b.status,
+        b.created_at as placed_at,
+        u.alias as bidder_alias,
+        u.email as bidder_email
+      FROM bids b
+      LEFT JOIN users u ON b.bidder_id = u.id
+      WHERE b.item_id = ?
+      ORDER BY b.amount DESC, b.created_at ASC
+      LIMIT ? OFFSET ?`,
+      [numericItemId, parseInt(limit), parseInt(offset)]
+    );
+    
+    // Get total count
+    const [countResult] = await connection.query(
+      'SELECT COUNT(*) as total FROM bids WHERE item_id = ?',
+      [numericItemId]
+    );
+    const total = countResult[0].total;
+    
+    // Format response
+    const formattedBids = bids.map(bid => ({
+      id: bid.id,
+      bidder_id: bid.bidder_id,
+      bidder_alias: bid.bidder_alias || 'Anonymous',
+      amount: parseFloat(bid.amount),
+      status: bid.status,
+      placed_at: bid.placed_at
+    }));
+    
+    res.json({
+      success: true,
+      bids: formattedBids,
+      total: total,
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+    
+  } catch (error) {
+    console.error('Error fetching item bids:', error);
+    res.status(500).json({
+      error: 'Failed to fetch item bids',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  } finally {
+    connection.release();
+  }
+});
+
 module.exports = router;

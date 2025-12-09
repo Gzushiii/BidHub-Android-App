@@ -900,6 +900,43 @@ public class ItemDetailActivity extends AppCompatActivity {
     }
     
     /**
+     * Refresh item data from backend API (used after successful bid)
+     */
+    private void refreshItemData() {
+        if (currentItem == null || currentItem.getItemId() == null) {
+            return;
+        }
+        
+        // Run on background thread
+        new Thread(() -> {
+            try {
+                com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(this);
+                com.cc106.bidhub.api.ItemApiClient.ApiResponse response = apiClient.getItemById(currentItem.getItemId());
+                
+                if (response.isSuccess() && response.getData() != null) {
+                    // Parse the updated item from response
+                    Item updatedItem = parseItemFromApiResponse(response.getData());
+                    if (updatedItem != null) {
+                        // Update ItemManager with fresh data
+                        itemManager.storeItem(updatedItem);
+                        
+                        // Update UI on main thread
+                        runOnUiThread(() -> {
+                            currentItem = updatedItem;
+                            populateItemDataFromDatabase();
+                            setupBidHistory(); // Refresh bid history with updated data
+                            android.util.Log.i("ItemDetailActivity", "Item data refreshed from backend");
+                        });
+                    }
+                }
+            } catch (Exception e) {
+                android.util.Log.e("ItemDetailActivity", "Error refreshing item data", e);
+                // Silent fail - item data will be stale but app won't crash
+            }
+        }).start();
+    }
+    
+    /**
      * Fetch item from backend API when not found in ItemManager
      * FIX: Improved error handling for 500 errors and better user feedback
      * @param forceRefresh If true, always update UI even if item already exists
@@ -1734,6 +1771,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                         
                         // FIX: Force refresh item data to ensure UI reflects latest server state in real-time
                         // This ensures bid count, current price, and other fields are immediately updated
+                        String itemId = currentItem != null ? currentItem.getItemId() : null;
                         if (itemId != null) {
                             android.util.Log.d("ItemDetailActivity", "Refreshing item data after successful bid");
                             loadItemData(itemId, true); // true = force refresh from API

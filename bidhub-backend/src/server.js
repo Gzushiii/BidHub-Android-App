@@ -127,17 +127,35 @@ const startServer = async () => {
     // Initialize database connection
     await initializeDatabase();
     
-    // Auto-fix PlaceBid procedure if enabled
-    if (process.env.AUTO_FIX_PLACEBID === 'true') {
-      try {
-        console.log('🔧 Auto-fixing PlaceBid procedure...');
-        const { fixProcedure } = require('../scripts/fix_placebid_procedure_simple');
-        await fixProcedure();
-        console.log('✅ PlaceBid procedure fixed successfully');
-      } catch (fixError) {
-        console.error('⚠️  Warning: Failed to auto-fix PlaceBid procedure:', fixError.message);
-        console.error('   You may need to run: npm run fix:placebid');
-      }
+    // Auto-fix stored procedures on startup
+    try {
+      const { fixStoredProcedures } = require('./utils/fixStoredProcedures');
+      await fixStoredProcedures(pool);
+    } catch (fixError) {
+      console.error('⚠️  Warning: Failed to auto-fix stored procedures:', fixError.message);
+      console.error('   Server will continue, but bid placement may fail.');
+      console.error('   If you see SQL errors, manually apply the fix from sql/fix_placebid_groupby_error_simple.sql');
+    }
+    
+    // Auto-process ended auctions on startup and set up periodic processing
+    try {
+      const AuctionEndService = require('./services/auctionEndService');
+      console.log('🔍 Checking for ended auctions...');
+      await AuctionEndService.processEndedAuctions();
+      
+      // Set up periodic processing every 5 minutes
+      setInterval(async () => {
+        try {
+          await AuctionEndService.processEndedAuctions();
+        } catch (error) {
+          console.error('Error in periodic auction processing:', error);
+        }
+      }, 5 * 60 * 1000); // 5 minutes
+      
+      console.log('✅ Auction end processing scheduled (every 5 minutes)');
+    } catch (auctionError) {
+      console.error('⚠️  Warning: Failed to set up auction end processing:', auctionError.message);
+      console.error('   Auctions may not be automatically closed when they end.');
     }
     
     // Start the server
