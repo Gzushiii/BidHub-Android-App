@@ -20,6 +20,9 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.textfield.TextInputEditText;
 import com.cc106.bidhub.adapters.BrowseItemAdapter;
 import com.cc106.bidhub.api.ItemApiClient;
 import com.cc106.bidhub.items.Item;
@@ -42,11 +45,13 @@ public class BrowseActivity extends BaseActivity {
     private String loggedInUserEmail;
     
     // UI Components
-    private EditText searchEditText;
-    private ImageButton btnSearch, btnFilter;
-    private Button btnElectronics, btnFashion, btnHome, btnCollectibles;
+    private TextInputEditText searchEditText;
+    private ImageButton btnSearch;
+    private com.google.android.material.button.MaterialButton btnFilter;
+    private Chip btnElectronics, btnFashion, btnHome, btnCollectibles;
     private RecyclerView recyclerViewBrowse;
     private BrowseItemAdapter browseItemAdapter;
+    private SwipeRefreshLayout swipeRefreshLayout;
     
     // Data
     private List<BrowseItem> allItems;
@@ -110,29 +115,23 @@ public class BrowseActivity extends BaseActivity {
         btnHome = findViewById(R.id.btnHome);
         btnCollectibles = findViewById(R.id.btnCollectibles);
         recyclerViewBrowse = findViewById(R.id.recyclerViewBrowse);
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
+        progressBar = findViewById(R.id.progressBar);
+        emptyStateText = findViewById(R.id.emptyStateText);
         
-        // Try to find progress bar and empty state (may not exist in layout)
-        try {
-            int progressBarId = getResources().getIdentifier("progressBar", "id", getPackageName());
-            if (progressBarId != 0) {
-                View progressBarView = findViewById(progressBarId);
-                if (progressBarView instanceof ProgressBar) {
-                    progressBar = (ProgressBar) progressBarView;
+        // Setup SwipeRefreshLayout
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setColorSchemeColors(
+                getResources().getColor(R.color.primary, null),
+                getResources().getColor(R.color.primary_light, null)
+            );
+            swipeRefreshLayout.setOnRefreshListener(() -> {
+                if (!isLoading) {
+                    loadItemsFromApi();
+                } else {
+                    swipeRefreshLayout.setRefreshing(false);
                 }
-            }
-        } catch (Exception e) {
-            Log.d(TAG, "Progress bar not found in layout");
-        }
-        try {
-            int emptyStateId = getResources().getIdentifier("emptyStateText", "id", getPackageName());
-            if (emptyStateId != 0) {
-                View emptyStateView = findViewById(emptyStateId);
-                if (emptyStateView instanceof TextView) {
-                    emptyStateText = (TextView) emptyStateView;
-                }
-            }
-        } catch (Exception e) {
-            Log.d(TAG, "Empty state text not found in layout");
+            });
         }
     }
 
@@ -284,6 +283,10 @@ public class BrowseActivity extends BaseActivity {
                         }
                         isLoading = false;
                         showLoading(false);
+                        // Stop swipe refresh if active
+                        if (swipeRefreshLayout != null) {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
                         // Apply filters to show items based on current category/search
                         applyFilters();
                         Log.d(TAG, "Showing " + filteredItems.size() + " items after filtering (out of " + allItems.size() + " total)");
@@ -294,6 +297,10 @@ public class BrowseActivity extends BaseActivity {
                     runOnUiThread(() -> {
                         isLoading = false;
                         showLoading(false);
+                        // Stop swipe refresh if active
+                        if (swipeRefreshLayout != null) {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
                         // Don't clear items on error - keep existing items visible
                         if (allItems.isEmpty()) {
                             showEmptyState("Unable to load items. Please check your connection and try again.");
@@ -311,6 +318,10 @@ public class BrowseActivity extends BaseActivity {
                 runOnUiThread(() -> {
                     isLoading = false;
                     showLoading(false);
+                    // Stop swipe refresh if active
+                    if (swipeRefreshLayout != null) {
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
                     // Don't clear items on error - keep existing items visible
                     if (allItems.isEmpty()) {
                         showEmptyState("Something went wrong. Please check your connection and try again.");
@@ -528,7 +539,13 @@ public class BrowseActivity extends BaseActivity {
     }
     
     private void showLoading(boolean show) {
-        if (progressBar != null) {
+        // Handle SwipeRefreshLayout
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setRefreshing(show);
+        }
+        
+        // Show progress bar only for initial load (when no items)
+        if (progressBar != null && allItems.isEmpty()) {
             if (show) {
                 progressBar.setVisibility(View.VISIBLE);
                 progressBar.setAlpha(0f);
@@ -544,6 +561,7 @@ public class BrowseActivity extends BaseActivity {
                     .start();
             }
         }
+        
         // Don't hide recyclerView during loading - keep items visible
         // Only hide if we have no items to show
         if (!show) {
@@ -619,16 +637,43 @@ public class BrowseActivity extends BaseActivity {
 
         btnSearch.setOnClickListener(v -> {
             // Focus on search field
-            searchEditText.requestFocus();
+            if (searchEditText != null) {
+                searchEditText.requestFocus();
+            }
         });
+        
+        // Setup search field enter key listener
+        if (searchEditText != null) {
+            searchEditText.setOnEditorActionListener((v, actionId, event) -> {
+                if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
+                    // Perform search
+                    loadItemsFromApi();
+                    // Hide keyboard
+                    android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
+                    }
+                    return true;
+                }
+                return false;
+            });
+        }
 
         btnFilter.setOnClickListener(v -> showFilterDialog());
 
-        // Category buttons
-        btnElectronics.setOnClickListener(v -> selectCategory("Electronics"));
-        btnFashion.setOnClickListener(v -> selectCategory("Fashion"));
-        btnHome.setOnClickListener(v -> selectCategory("Home"));
-        btnCollectibles.setOnClickListener(v -> selectCategory("Collectibles"));
+        // Category chips - Material Chips handle their own checked state
+        if (btnElectronics != null) {
+            btnElectronics.setOnClickListener(v -> selectCategory("Electronics"));
+        }
+        if (btnFashion != null) {
+            btnFashion.setOnClickListener(v -> selectCategory("Fashion"));
+        }
+        if (btnHome != null) {
+            btnHome.setOnClickListener(v -> selectCategory("Home"));
+        }
+        if (btnCollectibles != null) {
+            btnCollectibles.setOnClickListener(v -> selectCategory("Collectibles"));
+        }
         
         // Make sure "All" category is available - if no category button is selected, show all
         // This is handled by default currentCategory = "All"
@@ -637,18 +682,19 @@ public class BrowseActivity extends BaseActivity {
     private void selectCategory(String category) {
         currentCategory = category;
         
-        // Update button states
-        btnElectronics.setBackgroundResource(category.equals("Electronics") ? R.drawable.chip_background_primary : R.drawable.chip_background);
-        btnElectronics.setTextColor(getResources().getColor(category.equals("Electronics") ? R.color.primary : R.color.text_secondary));
-        
-        btnFashion.setBackgroundResource(category.equals("Fashion") ? R.drawable.chip_background_primary : R.drawable.chip_background);
-        btnFashion.setTextColor(getResources().getColor(category.equals("Fashion") ? R.color.primary : R.color.text_secondary));
-        
-        btnHome.setBackgroundResource(category.equals("Home") ? R.drawable.chip_background_primary : R.drawable.chip_background);
-        btnHome.setTextColor(getResources().getColor(category.equals("Home") ? R.color.primary : R.color.text_secondary));
-        
-        btnCollectibles.setBackgroundResource(category.equals("Collectibles") ? R.drawable.chip_background_primary : R.drawable.chip_background);
-        btnCollectibles.setTextColor(getResources().getColor(category.equals("Collectibles") ? R.color.primary : R.color.text_secondary));
+        // Update chip states using Material Chip API
+        if (btnElectronics != null) {
+            btnElectronics.setChecked(category.equals("Electronics"));
+        }
+        if (btnFashion != null) {
+            btnFashion.setChecked(category.equals("Fashion"));
+        }
+        if (btnHome != null) {
+            btnHome.setChecked(category.equals("Home"));
+        }
+        if (btnCollectibles != null) {
+            btnCollectibles.setChecked(category.equals("Collectibles"));
+        }
         
         // Always apply local filters - never reload from API with category filter
         // This ensures all items stay loaded and filtering is done locally
@@ -657,7 +703,7 @@ public class BrowseActivity extends BaseActivity {
             loadItemsFromApi();
         } else {
             // Just apply filters to existing items - this preserves all items
-        applyFilters();
+            applyFilters();
         }
     }
 
