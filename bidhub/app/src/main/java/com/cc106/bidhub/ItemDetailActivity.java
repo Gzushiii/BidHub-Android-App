@@ -1748,7 +1748,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                     
                     // Reload item data from server to get latest bid count and current price
                     // This ensures UI reflects the actual server state, not just local updates
-                    String itemId = currentItem != null ? currentItem.getItemId() : null;
+                    final String itemId = currentItem != null ? currentItem.getItemId() : null;
                     if (itemId != null) {
                         // Fetch fresh item data from API
                         com.cc106.bidhub.api.ItemApiClient apiClient = new com.cc106.bidhub.api.ItemApiClient(ItemDetailActivity.this);
@@ -1771,7 +1771,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                         
                         // FIX: Force refresh item data to ensure UI reflects latest server state in real-time
                         // This ensures bid count, current price, and other fields are immediately updated
-                        String itemId = currentItem != null ? currentItem.getItemId() : null;
+                        // Reuse itemId from outer scope (made final for lambda capture)
                         if (itemId != null) {
                             android.util.Log.d("ItemDetailActivity", "Refreshing item data after successful bid");
                             loadItemData(itemId, true); // true = force refresh from API

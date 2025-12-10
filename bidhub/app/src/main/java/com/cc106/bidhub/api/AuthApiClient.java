@@ -3,6 +3,7 @@ package com.cc106.bidhub.api;
 import android.content.Context;
 import android.util.Log;
 import com.cc106.bidhub.utils.SharedPreferencesHelper;
+import com.cc106.bidhub.utils.NetworkUtils;
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -43,6 +44,14 @@ public class AuthApiClient {
      * @return ApiResponse with login result
      */
     private ApiResponse loginWithRetry(String email, String password, int maxRetries) {
+        // Check network connectivity before attempting login
+        if (!NetworkUtils.isNetworkAvailable(context)) {
+            Log.w(TAG, "Login attempted without network connectivity");
+            return new ApiResponse(false, 
+                "No internet connection detected. Please check your Wi-Fi or mobile data and try again.", 
+                null);
+        }
+        
         int retryCount = 0;
         long baseDelayMs = 1000; // Start with 1 second delay
         
@@ -136,7 +145,8 @@ public class AuthApiClient {
                 
             } catch (java.net.UnknownHostException e) {
                 Log.e(TAG, "Login error: Unable to resolve host - " + e.getMessage(), e);
-                return new ApiResponse(false, "Unable to connect to server. Please check your internet connection.", null);
+                String errorMessage = NetworkUtils.getNetworkErrorMessage(context, e);
+                return new ApiResponse(false, errorMessage, null);
             } catch (java.io.IOException e) {
                 // Check if it's a connection timeout wrapped in IOException
                 String errorMsg = e.getMessage();
@@ -278,6 +288,14 @@ public class AuthApiClient {
      */
     public ApiResponse register(String username, String email, String password, 
                               String phoneNumber, String firstName, String lastName, String alias) {
+        // Check network connectivity before attempting registration
+        if (!NetworkUtils.isNetworkAvailable(context)) {
+            Log.w(TAG, "Register attempted without network connectivity");
+            return new ApiResponse(false, 
+                "No internet connection detected. Please check your Wi-Fi or mobile data and try again.", 
+                null);
+        }
+        
         try {
             URL url = new URL(REGISTER_ENDPOINT);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -377,7 +395,8 @@ public class AuthApiClient {
             
         } catch (java.net.UnknownHostException e) {
             Log.e(TAG, "Register error: Unable to resolve host - " + e.getMessage(), e);
-            return new ApiResponse(false, "Unable to connect to server. Please check your internet connection.", null);
+            String errorMessage = NetworkUtils.getNetworkErrorMessage(context, e);
+            return new ApiResponse(false, errorMessage, null);
         } catch (java.net.SocketTimeoutException e) {
             Log.e(TAG, "Register error: Connection timed out - " + e.getMessage(), e);
             return new ApiResponse(false, "Connection timed out. The server may be busy. Please try again.", null);

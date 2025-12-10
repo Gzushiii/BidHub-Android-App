@@ -117,10 +117,8 @@ public class CreditsActivity extends BaseActivity {
             btnTransactionHistory.setOnClickListener(v -> showTransactionHistory());
         }
         
-        // Add test button only in debug builds
-        if (com.cc106.bidhub.BuildConfig.DEBUG) {
-            addTestButton();
-        }
+        // Add test button (removed BuildConfig check for compatibility)
+        // addTestButton();
     }
     
     private void loadCreditInformation() {

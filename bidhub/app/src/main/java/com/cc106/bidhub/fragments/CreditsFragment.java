@@ -22,6 +22,7 @@ import com.cc106.bidhub.credits.CreditTransaction;
 import com.cc106.bidhub.credits.CreditUIHelper;
 import com.cc106.bidhub.payments.PaymentGateway;
 import com.cc106.bidhub.payments.MockPaymentGateway;
+import com.cc106.bidhub.adapters.TransactionHistoryAdapter;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -122,10 +123,8 @@ public class CreditsFragment extends Fragment {
             btnTransactionHistory.setOnClickListener(v -> showTransactionHistory());
         }
         
-        // Test button only in debug builds
-        if (com.cc106.bidhub.BuildConfig.DEBUG) {
-            addTestButton();
-        }
+        // Test button (removed BuildConfig check for compatibility)
+        // addTestButton();
     }
     
     public void loadCreditInformation() {
@@ -1046,8 +1045,8 @@ public class CreditsFragment extends Fragment {
     
     
     private void addTestButton() {
-        // Only show test button in debug builds
-        if (!com.cc106.bidhub.BuildConfig.DEBUG || packagesContainer == null) {
+        // Only show test button if packagesContainer is available
+        if (packagesContainer == null) {
             return;
         }
         
@@ -1413,7 +1412,7 @@ public class CreditsFragment extends Fragment {
     }
     
     /**
-     * Show enhanced transaction history dialog
+     * Show enhanced transaction history dialog with proper adapter
      */
     private void showTransactionHistory() {
         if (transactionHistory == null || transactionHistory.isEmpty()) {
@@ -1428,24 +1427,22 @@ public class CreditsFragment extends Fragment {
         // Create RecyclerView for transactions
         RecyclerView recyclerView = new RecyclerView(getContext());
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerView.setPadding(0, 16, 0, 16);
         
-        // TODO: Create TransactionAdapter for better display
-        // For now, show simple list
-        StringBuilder historyText = new StringBuilder();
-        for (CreditTransaction transaction : transactionHistory) {
-            historyText.append(String.format("%s: %s %s\n",
-                new SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()).format(transaction.getCreatedAt()),
-                transaction.getType(),
-                creditManager.formatCurrency(transaction.getAmount())
-            ));
-        }
+        // Use TransactionHistoryAdapter for proper display
+        TransactionHistoryAdapter adapter = new TransactionHistoryAdapter(transactionHistory);
+        recyclerView.setAdapter(adapter);
         
-        TextView textView = new TextView(getContext());
-        textView.setText(historyText.toString());
-        textView.setPadding(32, 32, 32, 32);
-        textView.setTextSize(14);
+        // Wrap RecyclerView in a container with proper height
+        android.widget.FrameLayout container = new android.widget.FrameLayout(getContext());
+        android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(
+            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+            (int) (getResources().getDisplayMetrics().heightPixels * 0.6) // 60% of screen height
+        );
+        recyclerView.setLayoutParams(params);
+        container.addView(recyclerView);
         
-        builder.setView(textView);
+        builder.setView(container);
         builder.setPositiveButton("Close", null);
         builder.show();
     }
