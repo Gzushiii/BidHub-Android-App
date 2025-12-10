@@ -94,12 +94,38 @@ public class ImageLoader {
         try {
             // Check if it's a URL, sample image name, or local file path
             if (isUrl(imagePath)) {
-                // Load image from URL using Glide
+                // Load image from URL using Glide with error handling
                 Glide.with(context)
                     .load(imagePath)
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .placeholder(R.drawable.placeholder)
                     .error(R.drawable.placeholder)
+                    .listener(new com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(com.bumptech.glide.load.engine.GlideException e, 
+                                                 Object model, 
+                                                 com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, 
+                                                 boolean isFirstResource) {
+                            // Log at debug level for 404 errors (expected for missing images)
+                            if (e != null && e.getCause() instanceof java.io.FileNotFoundException) {
+                                android.util.Log.d(TAG, "Image not found (404): " + imagePath + " - showing placeholder");
+                            } else {
+                                android.util.Log.w(TAG, "Failed to load image from URL: " + imagePath, e);
+                            }
+                            // Return false to allow Glide to show the error placeholder
+                            return false;
+                        }
+                        
+                        @Override
+                        public boolean onResourceReady(android.graphics.drawable.Drawable resource, 
+                                                     Object model, 
+                                                     com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, 
+                                                     com.bumptech.glide.load.DataSource dataSource, 
+                                                     boolean isFirstResource) {
+                            android.util.Log.d(TAG, "Successfully loaded image from URL: " + imagePath);
+                            return false;
+                        }
+                    })
                     .into(imageView);
                 
                 android.util.Log.d(TAG, "Loading image from URL: " + imagePath);
@@ -152,13 +178,39 @@ public class ImageLoader {
         try {
             // Check if it's a URL, sample image name, or local file path
             if (isUrl(imagePath)) {
-                // Load circular image from URL using Glide
+                // Load circular image from URL using Glide with error handling
                 Glide.with(context)
                     .load(imagePath)
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .placeholder(R.drawable.placeholder)
                     .error(R.drawable.placeholder)
                     .apply(RequestOptions.circleCropTransform())
+                    .listener(new com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(com.bumptech.glide.load.engine.GlideException e, 
+                                                 Object model, 
+                                                 com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, 
+                                                 boolean isFirstResource) {
+                            // Log at debug level for 404 errors (expected for missing images)
+                            if (e != null && e.getCause() instanceof java.io.FileNotFoundException) {
+                                android.util.Log.d(TAG, "Image not found (404): " + imagePath + " - showing placeholder");
+                            } else {
+                                android.util.Log.w(TAG, "Failed to load circular image from URL: " + imagePath, e);
+                            }
+                            // Return false to allow Glide to show the error placeholder
+                            return false;
+                        }
+                        
+                        @Override
+                        public boolean onResourceReady(android.graphics.drawable.Drawable resource, 
+                                                     Object model, 
+                                                     com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, 
+                                                     com.bumptech.glide.load.DataSource dataSource, 
+                                                     boolean isFirstResource) {
+                            android.util.Log.d(TAG, "Successfully loaded circular image from URL: " + imagePath);
+                            return false;
+                        }
+                    })
                     .into(imageView);
                 
                 android.util.Log.d(TAG, "Loading circular image from URL: " + imagePath);

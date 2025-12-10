@@ -119,8 +119,8 @@ public class LostAuctionsActivity extends AppCompatActivity {
     }
     
     private void loadLostAuctions() {
-        // Load all bids for user
-        allBids = biddingEngine.getUserBids(userId);
+        // Load all bids for user from cache only (no network call on UI thread)
+        allBids = biddingEngine.getUserBidsFromCache(userId);
         lostBids.clear();
         
         // Filter for lost bids

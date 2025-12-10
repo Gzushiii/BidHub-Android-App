@@ -117,8 +117,8 @@ public class WonAuctionsActivity extends AppCompatActivity {
     }
     
     private void loadWonAuctions() {
-        // Load all bids for user
-        List<Bid> allBids = biddingEngine.getUserBids(userId);
+        // Load all bids for user from cache only (no network call on UI thread)
+        List<Bid> allBids = biddingEngine.getUserBidsFromCache(userId);
         wonBids.clear();
         
         // Filter for won bids

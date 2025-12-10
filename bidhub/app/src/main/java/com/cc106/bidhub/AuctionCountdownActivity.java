@@ -197,8 +197,8 @@ public class AuctionCountdownActivity extends AppCompatActivity {
     }
     
     private boolean hasUserBid(Item item) {
-        // Check if user has bid on this item
-        List<Bid> userBids = biddingEngine.getUserBids(userId);
+        // Check if user has bid on this item (use cache only to avoid network on UI thread)
+        List<Bid> userBids = biddingEngine.getUserBidsFromCache(userId);
         for (Bid bid : userBids) {
             if (bid.getItemId().equals(item.getItemId()) && bid.isActive()) {
                 return true;

@@ -765,9 +765,12 @@ public class HomeFragment extends Fragment {
                         }
                     }
                     
-                    // For now, load bids from local database (they should be synced when bids are placed)
-                    // In the future, we could add a dedicated API endpoint for user bids
-                    android.util.Log.d("HomeFragment", "Items synced, now loading bids from local database");
+                    // Populate bid cache from API on background thread (to avoid NetworkOnMainThreadException)
+                    // This ensures cache is available when loadActiveBidsFromLocal() is called on UI thread
+                    android.util.Log.d("HomeFragment", "Items synced, now fetching user bids from API to populate cache");
+                    biddingEngine.getUserBids(userId); // This populates the cache on background thread
+                    
+                    android.util.Log.d("HomeFragment", "Bid cache populated, now loading bids from cache");
                     
                     if (getActivity() != null && !getActivity().isFinishing()) {
                         getActivity().runOnUiThread(() -> loadActiveBidsFromLocal());
@@ -820,8 +823,9 @@ public class HomeFragment extends Fragment {
                 return;
             }
             
-            // Get all active bids for the user from local database
-            List<Bid> allUserBids = biddingEngine.getUserBids(userId);
+            // Get all active bids for the user from cache only (no network call on UI thread)
+            // Network calls are handled in syncBidsFromApi() on background thread
+            List<Bid> allUserBids = biddingEngine.getUserBidsFromCache(userId);
             if (allUserBids == null) {
                 allUserBids = new ArrayList<>();
             }

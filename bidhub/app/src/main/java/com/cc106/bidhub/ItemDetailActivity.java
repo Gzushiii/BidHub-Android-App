@@ -585,7 +585,10 @@ public class ItemDetailActivity extends AppCompatActivity {
             if (currentItem != null) {
                 // Load real bid history from BiddingEngine
                 com.cc106.bidhub.bidding.BiddingEngine biddingEngine = com.cc106.bidhub.bidding.BiddingEngine.getInstance(this);
-                List<com.cc106.bidhub.bidding.Bid> bids = biddingEngine.getItemBids(currentItem.getItemId());
+                String itemId = currentItem.getItemId();
+                
+                // First, try to load from cache (safe on main thread)
+                List<com.cc106.bidhub.bidding.Bid> bids = biddingEngine.getItemBidsFromCache(itemId);
                 
                 if (bids != null && !bids.isEmpty()) {
                     // Sort bids by amount (highest first)
@@ -595,9 +598,39 @@ public class ItemDetailActivity extends AppCompatActivity {
                         createBidHistoryItem(bid);
                     }
                 } else {
-                    // No bids yet - show empty state
+                    // No bids in cache - show empty state initially
                     createEmptyBidHistory();
                 }
+                
+                // Fetch from API on background thread to populate cache and refresh UI
+                new Thread(() -> {
+                    try {
+                        // This will fetch from API and populate the cache
+                        List<com.cc106.bidhub.bidding.Bid> fetchedBids = biddingEngine.getItemBids(itemId);
+                        
+                        // Update UI on main thread
+                        runOnUiThread(() -> {
+                            if (layoutBidHistory != null && fetchedBids != null && !fetchedBids.isEmpty()) {
+                                // Clear existing views
+                                layoutBidHistory.removeAllViews();
+                                
+                                // Sort bids by amount (highest first)
+                                Collections.sort(fetchedBids, (b1, b2) -> Double.compare(b2.getAmount(), b1.getAmount()));
+                                
+                                for (com.cc106.bidhub.bidding.Bid bid : fetchedBids) {
+                                    createBidHistoryItem(bid);
+                                }
+                            } else if (layoutBidHistory != null && (fetchedBids == null || fetchedBids.isEmpty())) {
+                                // Still no bids after fetching - show empty state
+                                layoutBidHistory.removeAllViews();
+                                createEmptyBidHistory();
+                            }
+                        });
+                    } catch (Exception e) {
+                        android.util.Log.e("ItemDetailActivity", "Error fetching bid history from API: " + e.getMessage(), e);
+                        // Don't update UI on error - keep showing what we have from cache
+                    }
+                }).start();
             } else {
                 // Fallback to sample data
                 createSampleBidHistory();

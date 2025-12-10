@@ -38,7 +38,9 @@ import java.util.Locale;
 public class ProfileFragment extends Fragment {
 
     private TextView textViewWelcome, textViewCredits, textViewAlias, textViewEmail, textViewUsername;
-    private Button buttonLogout, buttonRegenerateAlias;
+    private Button buttonLogout;
+    private com.google.android.material.card.MaterialCardView buttonRegenerateAlias;
+    private android.widget.ImageButton imageButtonRegenerateAlias;
     private ImageButton buttonFAQ;
     private ImageView imageViewProfilePicture;
     private DatabaseHelper dbHelper;
@@ -68,6 +70,7 @@ public class ProfileFragment extends Fragment {
         textViewUsername = view.findViewById(R.id.textViewUsername);
         buttonLogout = view.findViewById(R.id.buttonLogout);
         buttonRegenerateAlias = view.findViewById(R.id.buttonRegenerateAlias);
+        imageButtonRegenerateAlias = view.findViewById(R.id.imageButtonRegenerateAlias);
         buttonFAQ = view.findViewById(R.id.buttonFAQ);
         imageViewProfilePicture = view.findViewById(R.id.imageViewProfilePicture);
         
@@ -94,8 +97,18 @@ public class ProfileFragment extends Fragment {
             });
         }
         
+        // Set click listener on both the card and the image button to ensure clicks work
         if (buttonRegenerateAlias != null) {
             buttonRegenerateAlias.setOnClickListener(v -> {
+                android.util.Log.d("ProfileFragment", "Regenerate alias button clicked (card)");
+                regenerateAlias();
+            });
+        }
+        
+        // Also set listener on ImageButton as backup
+        if (imageButtonRegenerateAlias != null) {
+            imageButtonRegenerateAlias.setOnClickListener(v -> {
+                android.util.Log.d("ProfileFragment", "Regenerate alias button clicked (image)");
                 regenerateAlias();
             });
         }
@@ -191,14 +204,34 @@ public class ProfileFragment extends Fragment {
     }
 
     private void regenerateAlias() {
-        String newAlias = AliasGenerator.generateAlias();
-        
-        // Update SharedPreferences (backend sync will happen on next login)
-        prefsHelper.setAlias(newAlias);
-        
-        // Update UI
-        textViewAlias.setText(newAlias);
-        ToastHelper.showSuccess(getContext(), "Alias regenerated: " + newAlias);
+        try {
+            android.util.Log.d("ProfileFragment", "regenerateAlias() called");
+            String newAlias = AliasGenerator.generateAlias();
+            android.util.Log.d("ProfileFragment", "Generated new alias: " + newAlias);
+            
+            // Update SharedPreferences (backend sync will happen on next login)
+            prefsHelper.setAlias(newAlias);
+            
+            // Reload UserRepository from SharedPreferences to keep it in sync
+            com.cc106.bidhub.repository.UserRepository userRepo = 
+                com.cc106.bidhub.repository.UserRepository.getInstance(getContext());
+            if (userRepo != null) {
+                userRepo.loadUserDataFromPreferences();
+            }
+            
+            // Update UI
+            if (textViewAlias != null) {
+                textViewAlias.setText(newAlias);
+                android.util.Log.d("ProfileFragment", "Alias updated in UI: " + newAlias);
+            } else {
+                android.util.Log.w("ProfileFragment", "textViewAlias is null, cannot update UI");
+            }
+            
+            ToastHelper.showSuccess(getContext(), "Alias regenerated: " + newAlias);
+        } catch (Exception e) {
+            android.util.Log.e("ProfileFragment", "Error regenerating alias", e);
+            ToastHelper.showError(getContext(), "Failed to regenerate alias: " + e.getMessage());
+        }
     }
 
     private void loadProfilePicture() {

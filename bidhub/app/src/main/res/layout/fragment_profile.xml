@@ -248,17 +248,33 @@
                             android:textColor="@color/on_surface"
                             android:textStyle="bold" />
 
-                        <com.google.android.material.button.MaterialButton
+                        <com.google.android.material.card.MaterialCardView
                             android:id="@+id/buttonRegenerateAlias"
-                            android:layout_width="wrap_content"
+                            android:layout_width="36dp"
                             android:layout_height="36dp"
-                            android:text="Regenerate"
-                            style="@style/Widget.BidHub.Button.Primary"
-                            android:textSize="12sp"
-                            android:textColor="@color/on_primary"
-                            android:minHeight="36dp"
-                            android:paddingHorizontal="@dimen/spacing_3"
-                            app:cornerRadius="8dp" />
+                            app:cardCornerRadius="18dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="@color/primary"
+                            app:strokeWidth="0dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:foreground="?attr/selectableItemBackgroundBorderless"
+                            android:layout_marginStart="@dimen/spacing_2">
+
+                            <ImageButton
+                                android:id="@+id/imageButtonRegenerateAlias"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:src="@drawable/ic_refresh"
+                                android:background="@android:color/transparent"
+                                android:contentDescription="Regenerate Alias"
+                                android:padding="8dp"
+                                android:scaleType="centerInside"
+                                android:stateListAnimator="@null"
+                                android:tint="@color/on_primary"
+                                android:clickable="false"
+                                android:focusable="false" />
+                        </com.google.android.material.card.MaterialCardView>
 
                     </LinearLayout>
 

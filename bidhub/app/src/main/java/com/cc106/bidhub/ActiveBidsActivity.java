@@ -123,8 +123,8 @@ public class ActiveBidsActivity extends AppCompatActivity {
     }
     
     private void loadActiveBids() {
-        // Load active bids for user
-        List<Bid> allBids = biddingEngine.getUserBids(userId);
+        // Load active bids for user from cache only (no network call on UI thread)
+        List<Bid> allBids = biddingEngine.getUserBidsFromCache(userId);
         activeBids.clear();
         
         for (Bid bid : allBids) {

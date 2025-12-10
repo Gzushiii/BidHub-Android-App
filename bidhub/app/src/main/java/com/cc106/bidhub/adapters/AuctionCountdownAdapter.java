@@ -186,8 +186,8 @@ public class AuctionCountdownAdapter extends RecyclerView.Adapter<AuctionCountdo
                 return;
             }
             
-            // Check if user has bid on this item
-            List<Bid> userBids = biddingEngine.getUserBids(userId);
+            // Check if user has bid on this item (use cache only to avoid network on UI thread)
+            List<Bid> userBids = biddingEngine.getUserBidsFromCache(userId);
             Bid userBid = null;
             
             for (Bid bid : userBids) {

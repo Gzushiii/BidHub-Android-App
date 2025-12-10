@@ -316,7 +316,42 @@ public class BiddingEngine {
     }
     
     /**
+     * Get all bids by a user from cache only (no network call)
+     * Use this when called from UI thread to avoid NetworkOnMainThreadException
+     */
+    public List<Bid> getUserBidsFromCache(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // Only return cached data, no network call
+        if (userBidsCache.containsKey(userId)) {
+            return new ArrayList<>(userBidsCache.get(userId));
+        }
+        
+        return new ArrayList<>();
+    }
+    
+    /**
+     * Get bids for an item from cache only (no network call)
+     * Use this when called from UI thread to avoid NetworkOnMainThreadException
+     */
+    public List<Bid> getItemBidsFromCache(String itemId) {
+        if (itemId == null || itemId.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // Only return cached data, no network call
+        if (itemBidsCache.containsKey(itemId)) {
+            return new ArrayList<>(itemBidsCache.get(itemId));
+        }
+        
+        return new ArrayList<>();
+    }
+    
+    /**
      * Get all bids by a user - FIXED: Now fetches from backend API
+     * WARNING: This method performs network operations. Do not call from main thread.
      */
     public List<Bid> getUserBids(String userId) {
         if (userId == null || userId.trim().isEmpty()) {
@@ -328,7 +363,7 @@ public class BiddingEngine {
             return new ArrayList<>(userBidsCache.get(userId));
         }
         
-        // Fetch from backend API
+        // Fetch from backend API - MUST be called from background thread
         try {
             String authToken = prefsHelper.getAuthToken();
             if (authToken == null || authToken.isEmpty()) {
